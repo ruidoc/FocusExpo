@@ -1,0 +1,147 @@
+import { CusPage } from '@/components';
+import CustomDivider from '@/components/cus-divider';
+import { UserStore } from '@/stores';
+import { toast } from '@/utils';
+import Icon from '@expo/vector-icons/Ionicons';
+import { ActionSheet, Flex, Space } from '@fruits-chain/react-native-xiaoshu';
+import { useNavigation, useTheme } from '@react-navigation/native';
+import { observer, useLocalObservable } from 'mobx-react';
+import React, { useEffect } from 'react';
+import {
+  Linking,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+const App = observer(() => {
+  const store = useLocalObservable(() => UserStore);
+  const { colors, dark } = useTheme();
+  const navigation = useNavigation();
+
+  const ItemDom = (label: string, opts: any) => (
+    <TouchableOpacity onPress={() => onClick(opts.tag)} activeOpacity={0.7}>
+      <Flex justify="between" align="center" style={styles.itemBox}>
+        <Text style={styles.itemText}>{label}</Text>
+        <Flex align="center">
+          <Text style={styles.labelText}>{opts.label}</Text>
+          <Icon
+            name="chevron-forward"
+            style={styles.labelText}
+            size={17}
+            color={colors.text}
+          />
+        </Flex>
+      </Flex>
+      {!opts.noborder && <CustomDivider />}
+    </TouchableOpacity>
+  );
+
+  const onClick = (tag: string) => {
+    switch (tag) {
+    }
+  };
+
+  const openStore = () => {
+    let storeUrl = Platform.select({
+      ios: 'itms-apps://itunes.apple.com/app/com.focusone.app',
+      android: 'market://details?id=com.focusone',
+    });
+    Linking.canOpenURL(storeUrl!)
+      .then(supported => {
+        if (supported) {
+          return Linking.openURL(storeUrl!);
+        } else {
+          toast('无法打开应用市场');
+        }
+      })
+      .catch(() => toast('打开应用市场失败'));
+  };
+
+  const toLogout = () => {
+    ActionSheet({
+      actions: ['确认'],
+      cancelText: '取消',
+      description: '确认退出登录吗？',
+    })
+      .then(() => {
+        store.logout();
+        navigation.goBack();
+      })
+      .catch(e => {});
+  };
+
+  useEffect(() => {}, []);
+
+  const styles = StyleSheet.create({
+    userBox: {
+      paddingHorizontal: 30,
+      paddingBottom: 30,
+      paddingTop: 75,
+      // borderBottomColor: colors.border,
+      // borderBottomWidth: 0.5,
+      marginBottom: 10,
+      // backgroundColor: colors.card,
+    },
+    userTitle: {
+      fontSize: 25,
+      marginBottom: 5,
+      fontWeight: '500',
+      color: colors.text,
+    },
+    userDesc: {
+      fontSize: 14,
+      color: '#666',
+    },
+    itemBoxWrap: {
+      marginBottom: 20,
+      overflow: 'hidden',
+      backgroundColor: colors.card,
+    },
+    itemBox: {
+      paddingHorizontal: 16,
+      paddingVertical: 15,
+    },
+    itemText: {
+      fontSize: 16,
+      color: colors.text,
+    },
+    labelText: {
+      fontSize: 16,
+      color: colors.text,
+      opacity: 0.5,
+    },
+    avator: {
+      width: 60,
+      height: 60,
+      borderRadius: 21,
+      marginRight: 14,
+    },
+  });
+
+  return (
+    <CusPage>
+      {/* <View
+        style={{ backgroundColor: '#232323', height: 0.5, margin: 0 }}></View> */}
+      <CustomDivider />
+      <Space gapVertical={10} tail={40}>
+        {store.uInfo && (
+          <View style={styles.itemBoxWrap}>
+            {ItemDom('用户名', { tag: 'check', label: store.uInfo.username })}
+            {ItemDom('手机号', { tag: 'privicy', label: store.uInfo.phone })}
+            {ItemDom('性别', { tag: 'privicy', label: store.uInfo.sex })}
+            {ItemDom('微信', {
+              tag: 'evaluate',
+              label: store.uInfo.openid ? '已绑定' : '未绑定',
+            })}
+            {ItemDom('修改密码', { tag: 'clear', noborder: true })}
+          </View>
+        )}
+      </Space>
+    </CusPage>
+  );
+});
+
+export default App;

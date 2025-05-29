@@ -1,0 +1,186 @@
+import CustomDivider from '@/components/cus-divider';
+import { UserStore } from '@/stores';
+import { toast } from '@/utils';
+import Icon from '@expo/vector-icons/Ionicons';
+import { Flex, Space } from '@fruits-chain/react-native-xiaoshu';
+import { useNavigation, useTheme } from '@react-navigation/native';
+import { observer, useLocalObservable } from 'mobx-react';
+import React, { useEffect } from 'react';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+const App = observer(() => {
+  const store = useLocalObservable(() => UserStore);
+  const { colors, dark } = useTheme();
+
+  const navigation = useNavigation();
+
+  const toLogin = () => {
+    if (!store.uInfo) {
+      navigation.navigate('WXLogin' as never);
+    } else {
+      navigation.navigate('UserEdit' as never);
+    }
+  };
+
+  const toNavigate = (route: string) => {
+    if (route === 'Vip') {
+      return toast('VIP功能暂未开放');
+    }
+    if (route) {
+      navigation.navigate(route as never);
+    }
+  };
+
+  const ItemDom = (color: string, label: string, icon: any, opts: any = {}) => (
+    <TouchableOpacity
+      onPress={() => toNavigate(opts.route || '')}
+      activeOpacity={0.7}>
+      <Flex justify="between" align="center" style={{ ...styles.itemBox }}>
+        <Flex>
+          <View
+            style={{
+              backgroundColor: color,
+              padding: 5,
+              borderRadius: 9,
+            }}>
+            <Icon name={icon} size={opts.size || 17} color="#ffffff99" />
+          </View>
+          <Text style={styles.itemText}>{label}</Text>
+        </Flex>
+        <Icon name="chevron-forward" size={17} color={colors.text} />
+      </Flex>
+      {opts.border && <CustomDivider />}
+    </TouchableOpacity>
+  );
+
+  useEffect(() => {}, []);
+
+  const styles = StyleSheet.create({
+    userBox: {
+      paddingHorizontal: 30,
+      paddingBottom: 30,
+      paddingTop: 75,
+      marginBottom: 10,
+    },
+    userTitle: {
+      fontSize: 25,
+      marginBottom: 5,
+      fontWeight: '500',
+      color: colors.text,
+    },
+    userDesc: {
+      fontSize: 14,
+      color: '#666',
+    },
+    itemBoxWrap: {
+      marginHorizontal: 20,
+      borderRadius: 10,
+      overflow: 'hidden',
+    },
+    itemBox: {
+      backgroundColor: colors.card,
+      paddingHorizontal: 16,
+      paddingVertical: 15,
+    },
+    itemText: {
+      fontSize: 17,
+      color: colors.text,
+      marginLeft: 14,
+    },
+    avator: {
+      width: 60,
+      height: 60,
+      borderRadius: 20,
+      marginRight: 14,
+    },
+  });
+
+  return (
+    <ScrollView style={{ flex: 1 }}>
+      <Flex justify="between" align="center" style={styles.userBox}>
+        <Flex onPress={toLogin}>
+          {store.uInfo?.avatar && (
+            <Image source={{ uri: store.uInfo.avatar }} style={styles.avator} />
+          )}
+          {!store.uInfo?.avatar && (
+            <Image
+              source={require('@/assets/logo2.png')}
+              style={styles.avator}
+            />
+          )}
+          <View>
+            {store.uInfo && (
+              <>
+                <Text style={styles.userTitle}>{store.uInfo.username}</Text>
+                <Text style={styles.userDesc}>{store.uInfo.phone}</Text>
+              </>
+            )}
+            {!store.uInfo && <Text style={styles.userTitle}>请登录</Text>}
+          </View>
+        </Flex>
+        {store.uInfo && false && (
+          <TouchableOpacity
+            onPress={() => toNavigate('Vip')}
+            activeOpacity={0.7}>
+            <Flex
+              align="center"
+              justify="center"
+              style={{
+                backgroundColor: dark ? '#232323' : '#ffffff',
+                padding: 8,
+                paddingHorizontal: 12,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: 'transparent',
+              }}>
+              <Icon name="diamond-outline" size={18} color="#FFC107" />
+              <Text style={{ color: '#FFC107', fontSize: 14, marginLeft: 5 }}>
+                VIP
+              </Text>
+            </Flex>
+          </TouchableOpacity>
+        )}
+      </Flex>
+      <Space>
+        {store.uInfo && (
+          <View style={styles.itemBoxWrap}>
+            {ItemDom('#FFA238', '打卡', 'brush-sharp', {
+              size: 15,
+              route: 'PunchCard',
+            })}
+          </View>
+        )}
+        <View style={styles.itemBoxWrap}>
+          {ItemDom('#34B545', '权限管理', 'cube-sharp', {
+            border: true,
+            route: 'Permission',
+          })}
+          {ItemDom('#1BA2FC', '意见反馈', 'mail-open', {
+            border: true,
+            route: 'Feedback',
+          })}
+          {ItemDom('#0065FE', '关于我们', 'people-sharp', { route: 'About' })}
+        </View>
+        <View style={styles.itemBoxWrap}>
+          {ItemDom('#7D45E6', '设置', 'settings-sharp', { route: 'Setting' })}
+        </View>
+        {/* {store.uInfo && (
+          <TouchableOpacity onPress={toLogout} activeOpacity={0.7}>
+            <Flex justify="center" align="center" style={styles.itemBox}>
+              <Text style={styles.itemText}>退出</Text>
+            </Flex>
+          </TouchableOpacity>
+        )} */}
+      </Space>
+    </ScrollView>
+  );
+});
+
+export default App;

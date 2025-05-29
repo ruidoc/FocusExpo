@@ -1,19 +1,18 @@
+import { Provider, Theme } from '@fruits-chain/react-native-xiaoshu';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+} from '@react-navigation/native';
 import React, { useEffect } from 'react';
 import {
-  NavigationContainer,
-  DefaultTheme,
-  DarkTheme,
-} from '@react-navigation/native';
-import {
-  Alert,
   AppState,
   NativeEventEmitter,
   NativeModules,
   Platform,
 } from 'react-native';
-import { Provider, Theme } from '@fruits-chain/react-native-xiaoshu';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as RNBBootSplash from 'react-native-bootsplash';
+// import * as RNBBootSplash from 'react-native-bootsplash';
 import {
   AppStore,
   GuideStore,
@@ -24,7 +23,7 @@ import {
   UserStore,
 } from '@/stores';
 import { observer, useLocalObservable } from 'mobx-react';
-import * as Sentry from '@sentry/react-native';
+// import * as Sentry from '@sentry/react-native';
 import { toast } from '@/utils';
 import Routes from './routes';
 
@@ -56,7 +55,7 @@ const App = observer(() => {
     border: '#ffffff20',
     desc: '#666',
   };
-  let CusTheme = {
+  let CusTheme: any = {
     dark: isDark,
     colors: {
       ...colors,
@@ -102,7 +101,7 @@ const App = observer(() => {
     gstore.init();
     setTimeout(() => {
       if (Platform.OS === 'android') {
-        RNBBootSplash.hide({ fade: true });
+        // RNBBootSplash.hide({ fade: true });
       }
     }, 200);
     if (!uinfo) return;
@@ -136,11 +135,11 @@ const App = observer(() => {
     if (store.all_apps.length === 0) {
       store.loadApps();
     }
-    Sentry.init({
-      dsn: 'https://cc6b3e31087a119340690e60212ce4fe@o4507773251223552.ingest.us.sentry.io/4507773257449472',
-      // uncomment the line below to enable Spotlight (https://spotlightjs.com)
-      autoInitializeNativeSdk: true,
-    });
+    // Sentry.init({
+    //   dsn: 'https://cc6b3e31087a119340690e60212ce4fe@o4507773251223552.ingest.us.sentry.io/4507773257449472',
+    //   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+    //   autoInitializeNativeSdk: true,
+    // });
   };
 
   const execHandle = (state: VpnState) => {
@@ -246,5 +245,5 @@ const App = observer(() => {
   );
 });
 
-export default Sentry.wrap(App);
-// export default App;
+// export default Sentry.wrap(App);
+export default App;

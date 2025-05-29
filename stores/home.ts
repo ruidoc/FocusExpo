@@ -1,13 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  Alert,
-  AppStateStatus,
-  NativeModules,
-  useColorScheme,
-  Appearance,
-} from 'react-native';
 import { makeAutoObservable } from 'mobx';
-import { Dialog } from '@fruits-chain/react-native-xiaoshu';
+import { Appearance, AppStateStatus, NativeModules } from 'react-native';
 import { PlanStore } from './index';
 
 const { NativeClass } = NativeModules;
@@ -84,7 +77,7 @@ class HomeStore {
   handleThemeChange = ({
     colorScheme,
   }: {
-    colorScheme: 'dark' | 'light' | null;
+    colorScheme: 'dark' | 'light' | null | undefined;
   }) => {
     if (this.followSystem) {
       this.setThem(colorScheme === 'dark' ? 'dark' : 'light');

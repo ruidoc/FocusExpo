@@ -1,6 +1,6 @@
-import { makeAutoObservable } from 'mobx';
-import { registerApp, requestPayment } from 'native-wechat';
 import http from '@/request';
+import { registerApp, requestPayment } from 'expo-native-wechat';
+import { makeAutoObservable } from 'mobx';
 
 interface Product {
   id: string;

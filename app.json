@@ -25,6 +25,7 @@
       ]
     },
     "android": {
+      "package": "com.focusexpo",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -47,7 +48,7 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "native-wechat"
+      "expo-native-wechat"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,9 +1,8 @@
+import { Dialog } from '@fruits-chain/react-native-xiaoshu';
+import * as Notifications from 'expo-notifications';
 import { makeAutoObservable } from 'mobx';
-import http from '@/request';
-import { Dialog, Toast } from '@fruits-chain/react-native-xiaoshu';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeModules, Platform } from 'react-native';
-import Permissions, { PERMISSIONS } from 'react-native-permissions';
+
 import { toast } from '@/utils';
 
 const { NativeClass } = NativeModules;
@@ -34,9 +33,9 @@ class PermissionStore {
   // 检查通知权限
   checkNotify = async () => {
     try {
-      const result = await Permissions.checkNotifications();
-      this.setPmNotify(result.status === 'granted');
-      return result.status;
+      const { status } = await Notifications.getPermissionsAsync();
+      this.setPmNotify(status === 'granted');
+      return status;
     } catch (error) {
       console.error('检查通知权限失败:', error);
       return null;
@@ -52,7 +51,8 @@ class PermissionStore {
         if (status === 'granted') return;
 
         // 请求权限
-        let result = await Permissions.requestNotifications(['alert', 'sound']);
+        let result = await Notifications.requestPermissionsAsync();
+        // let result = await Permissions.requestNotifications(['alert', 'sound']);
         console.log('通知权限结果:', result);
 
         if (result.status !== 'granted') {
@@ -66,7 +66,7 @@ class PermissionStore {
           }).then(action => {
             if (action === 'confirm') {
               console.log('用户确认打开设置');
-              Permissions.openSettings().catch(() => {
+              Notifications.requestPermissionsAsync().catch(() => {
                 toast('请手动打开设置页面并允许通知');
               });
             }
