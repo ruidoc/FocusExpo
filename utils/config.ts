@@ -1,6 +1,6 @@
+import { modes, repeats } from '@/utils/static.json';
 import { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
-import { repeats, modes } from '@/utils/static.json';
 import { PressableAndroidRippleConfig } from 'react-native';
 
 export const ScreenOptions: NativeStackNavigationOptions = {
@@ -9,7 +9,7 @@ export const ScreenOptions: NativeStackNavigationOptions = {
   headerLargeTitleShadowVisible: false, // 隐藏大标题阴影
   headerTitleAlign: 'center', // 标题居中
   statusBarTranslucent: true, // 状态栏沉浸
-  statusBarColor: 'transparent', // 状态栏透明
+  // statusBarColor: 'transparent', // 状态栏透明
   // gestureEnabled: true, // 启用手势
   // animationTypeForReplace: 'push', // 替换动画
   animation: 'fade_from_bottom', // 屏幕转换动画

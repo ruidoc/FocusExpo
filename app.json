@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "FocusExpo",
-    "slug": "FocusExpo",
+    "name": "FocusOne",
+    "slug": "FocusOne",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": [
-      "focusexpo",
+      "focusone",
       "wxdc022c6a39cb32b7"
     ],
     "userInterfaceStyle": "automatic",
@@ -21,11 +21,11 @@
         ]
       },
       "associatedDomains": [
-        "applinks:focusexpo.com"
+        "applinks:focusone.com"
       ]
     },
     "android": {
-      "package": "com.focusexpo",
+      "package": "com.focusone",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -47,8 +47,7 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ],
-      "expo-native-wechat"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

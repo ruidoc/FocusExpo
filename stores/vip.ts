@@ -1,5 +1,5 @@
 import http from '@/request';
-import { registerApp, requestPayment } from 'expo-native-wechat';
+// import { registerApp, requestPayment } from 'expo-native-wechat';
 import { makeAutoObservable } from 'mobx';
 
 interface Product {
@@ -50,9 +50,9 @@ export class VipStore {
         amount: price,
         description: name,
       });
-      registerApp({ appid: 'wxdc022c6a39cb32b7' });
-      const result = await requestPayment(res.data);
-      console.log('支付成功：', result);
+      // registerApp({ appid: 'wxdc022c6a39cb32b7' });
+      // const result = await requestPayment(res.data);
+      console.log('支付结果：', res);
     } catch (error) {
       console.log('支付错误：', error);
     }

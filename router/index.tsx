@@ -25,7 +25,6 @@ import {
 import { observer, useLocalObservable } from 'mobx-react';
 // import * as Sentry from '@sentry/react-native';
 import { toast } from '@/utils';
-import Routes from './routes';
 
 const { NativeClass } = NativeModules;
 
@@ -238,9 +237,7 @@ const App = observer(() => {
 
   return (
     <NavigationContainer theme={CusTheme}>
-      <Provider theme={UITheme}>
-        <Routes />
-      </Provider>
+      <Provider theme={UITheme}>{/* <Routes /> */}</Provider>
     </NavigationContainer>
   );
 });
