@@ -1,0 +1,17 @@
+{
+  "repeats": [
+    { "value": "evary", "label": "每天" },
+    { "value": "workday", "label": "工作日" },
+    { "value": "weekend", "label": "周末" },
+    { "value": "once", "label": "一次性" }
+  ],
+  "modes": [
+    { "value": "focus", "label": "专注模式" },
+    { "value": "shield", "label": "屏蔽模式" }
+  ],
+  "ripple": {
+    "color": "#00000030",
+    "borderless": true,
+    "radius": 20
+  }
+}

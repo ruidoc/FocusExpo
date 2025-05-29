@@ -5,11 +5,24 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "focusexpo",
+    "scheme": [
+      "focusexpo",
+      "wxdc022c6a39cb32b7"
+    ],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "weixin",
+          "weixinULAPI",
+          "weixinURLParamsAPI"
+        ]
+      },
+      "associatedDomains": [
+        "applinks:focusexpo.com"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -33,7 +46,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "native-wechat"
     ],
     "experiments": {
       "typedRoutes": true
