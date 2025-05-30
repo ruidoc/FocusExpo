@@ -22,7 +22,8 @@
       },
       "associatedDomains": [
         "applinks:focusone.com"
-      ]
+      ],
+      "bundleIdentifier": "com.focusone.ruidoc"
     },
     "android": {
       "package": "com.focusone",
@@ -47,7 +48,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-native-wechat"
     ],
     "experiments": {
       "typedRoutes": true

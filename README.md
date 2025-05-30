@@ -71,3 +71,15 @@ WorkManager API (适合定时任务)
       blockAppWork
   )
 ```
+
+## IOS 方法
+
+因为账号没付钱，所以删除了下面的方法。
+
+```json
+{
+    "associatedDomains": [
+        "applinks:focusone.com"
+    ]
+},
+```
