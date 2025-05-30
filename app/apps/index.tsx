@@ -3,7 +3,7 @@ import { AppStore, HomeStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, NoticeBar, Space } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 
@@ -22,8 +22,6 @@ const App = observer(() => {
   const astore = useLocalObservable(() => AppStore);
   const [refreshing, setRefreshing] = useState(false);
   const { colors, dark } = useTheme();
-
-  const router = useRouter();
 
   const styles = StyleSheet.create({
     cardTitle: {

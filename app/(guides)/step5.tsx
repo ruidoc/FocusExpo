@@ -4,6 +4,7 @@ import Wechat from '@/components/wecaht';
 import { GuideStore, HomeStore, UserStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
@@ -29,10 +30,7 @@ export const GuideStep5 = observer(() => {
     }
     ustore.login(result as Record<string, any>, val => {
       if (val) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Index' }],
-        });
+        router.replace('/(tabs)');
       }
     });
   };

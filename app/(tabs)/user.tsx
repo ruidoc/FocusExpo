@@ -4,7 +4,7 @@ import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, Space } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
 import {
@@ -19,8 +19,6 @@ import {
 const App = observer(() => {
   const store = useLocalObservable(() => UserStore);
   const { colors, dark } = useTheme();
-
-  const router = useRouter();
 
   const toLogin = () => {
     if (!store.uInfo) {

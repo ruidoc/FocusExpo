@@ -1,8 +1,8 @@
-import { makeAutoObservable } from 'mobx';
 import http from '@/request';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
-import { NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { makeAutoObservable } from 'mobx';
+import { NativeModules } from 'react-native';
 import { HomeStore } from './index';
 
 const { NativeClass } = NativeModules;
@@ -17,13 +17,13 @@ class AppStore {
 
   setFocusApps = (apps: string[]) => {
     this.focus_apps = apps;
-    NativeClass.updateFocusApps(JSON.stringify(apps));
+    // NativeClass.updateFocusApps(JSON.stringify(apps));
     AsyncStorage.setItem('focus_apps', JSON.stringify(apps));
   };
 
   setShieldApps = (apps: string[]) => {
     this.shield_apps = apps;
-    NativeClass.updateShieldApps(JSON.stringify(apps));
+    // NativeClass.updateShieldApps(JSON.stringify(apps));
     AsyncStorage.setItem('shield_apps', JSON.stringify(apps));
   };
 

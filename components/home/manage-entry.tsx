@@ -2,7 +2,7 @@ import { AppStore, PlanStore, UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -11,7 +11,6 @@ const ManageEntry: React.FC = () => {
   const ustore = useLocalObservable(() => UserStore);
   const pstore = useLocalObservable(() => PlanStore);
   const astore = useLocalObservable(() => AppStore);
-  const router = useRouter();
   const { colors, dark } = useTheme();
 
   const plan_count = pstore.cus_plans.length;

@@ -4,7 +4,7 @@ import Typewriter from '@/components/type-writer';
 import palette from '@/constants/Colors';
 import { GuideStore, HomeStore } from '@/stores';
 import { useTheme } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useState } from 'react';
 import {
@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 
 const GuideStep2 = observer(() => {
-  const router = useRouter();
   const store = useLocalObservable(() => HomeStore);
   const gstore = useLocalObservable(() => GuideStore);
   const step1Completed = store.vpn_init;

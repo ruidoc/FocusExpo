@@ -5,7 +5,7 @@ import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { ActionSheet, Flex, Space } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
 import {
@@ -20,7 +20,6 @@ import {
 const App = observer(() => {
   const store = useLocalObservable(() => UserStore);
   const { colors, dark } = useTheme();
-  const router = useRouter();
 
   const ItemDom = (label: string, opts: any) => (
     <TouchableOpacity onPress={() => onClick(opts.tag)} activeOpacity={0.7}>

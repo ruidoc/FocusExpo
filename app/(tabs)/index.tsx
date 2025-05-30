@@ -21,7 +21,7 @@ import {
   Theme,
 } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 
@@ -53,8 +53,6 @@ const App = observer(() => {
   const xcolor = Theme.useThemeTokens();
 
   const [refreshing, setRefreshing] = useState(false);
-
-  const router = useRouter();
 
   const apps = pstore.is_focus_mode ? astore.focus_apps : astore.shield_apps;
 

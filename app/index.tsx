@@ -4,7 +4,8 @@ import { observer, useLocalObservable } from 'mobx-react';
 
 const Index = observer(() => {
   const store = useLocalObservable(() => UserStore);
-  const initialRoute = store.uInfo ? '/(tabs)' : '/(guides)/step1';
+  // const initialRoute = store.uInfo ? '/(tabs)' : '/(guides)/step1';
+  const initialRoute = '/(tabs)';
 
   return <Redirect href={initialRoute} />;
 });

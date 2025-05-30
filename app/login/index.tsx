@@ -7,6 +7,7 @@ import { Button, TextInput, Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -55,7 +56,7 @@ const App = observer(() => {
     store.register(submitForm as Record<string, any>, val => {
       setLoading(false);
       if (val) {
-        navigation.replace('Index');
+        router.replace('/(tabs)');
       }
     });
   };
@@ -72,10 +73,7 @@ const App = observer(() => {
     }
     store.login(result as Record<string, any>, val => {
       if (val) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Index' }],
-        });
+        router.replace('/(tabs)');
       }
     });
   };
@@ -90,7 +88,7 @@ const App = observer(() => {
     store.login(form as Record<string, any>, val => {
       setLoading(false);
       if (val) {
-        navigation.replace('Index');
+        router.replace('/(tabs)');
       }
     });
   };

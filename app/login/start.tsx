@@ -8,6 +8,7 @@ import {
 } from '@react-navigation/native';
 // import * as Sentry from '@sentry/react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -55,7 +56,7 @@ const App = observer(() => {
     }
     store.login(result as Record<string, any>, val => {
       if (val) {
-        navigation.replace('Index');
+        router.replace('/(tabs)');
       }
     });
   };

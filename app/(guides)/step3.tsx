@@ -5,13 +5,12 @@ import { GuideStore, HomeStore, PlanStore } from '@/stores';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 const GuideStep3 = observer(() => {
-  const router = useRouter();
   const store = useLocalObservable(() => HomeStore);
   const gstore = useLocalObservable(() => GuideStore);
   const pstore = useLocalObservable(() => PlanStore);

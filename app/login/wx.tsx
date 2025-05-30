@@ -4,6 +4,7 @@ import { UserStore } from '@/stores';
 import { Button, Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -33,7 +34,7 @@ const App = observer(() => {
     store.login(result as Record<string, any>, val => {
       setLoading(false);
       if (val) {
-        navigation.replace('Index');
+        router.replace('/(tabs)');
       }
     });
   };

@@ -1,9 +1,9 @@
-import { makeAutoObservable } from 'mobx';
 import http from '@/request';
-import { Toast } from '@fruits-chain/react-native-xiaoshu';
-import { NativeModules } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentMinute } from '@/utils';
+import { Toast } from '@fruits-chain/react-native-xiaoshu';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { makeAutoObservable } from 'mobx';
+import { NativeModules } from 'react-native';
 
 const { NativeClass } = NativeModules;
 class PlanStore {
@@ -50,7 +50,7 @@ class PlanStore {
       repeat: plan.repeat,
       mode: plan.mode,
     }));
-    NativeClass.setTimerange(JSON.stringify(plan_arrs));
+    // NativeClass.setTimerange(JSON.stringify(plan_arrs));
   };
 
   // 重新获取当前任务
