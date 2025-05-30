@@ -41,21 +41,21 @@ class HomeStore {
   };
 
   checkVpn = (start = false) => {
-    NativeClass.isVpnInit()
-      .then((init: boolean) => {
-        this.setVpnInit(init);
-        if (init && start) {
-          this.startVpn();
-        }
-      })
-      .catch((error: any) => {
-        console.log(error);
-      });
+    // NativeClass.isVpnInit()
+    //   .then((init: boolean) => {
+    //     this.setVpnInit(init);
+    //     if (init && start) {
+    //       this.startVpn();
+    //     }
+    //   })
+    //   .catch((error: any) => {
+    //     console.log(error);
+    //   });
   };
 
   startVpn = (onlyInit: boolean = false) => {
     // if (this.vpn_init) {
-    NativeClass.startVpn(onlyInit);
+    // NativeClass.startVpn(onlyInit);
     // } else {
     //   Dialog({
     //     title: '使用声明',
@@ -70,7 +70,7 @@ class HomeStore {
 
   stopVpn = () => {
     PlanStore.clearPlans();
-    NativeClass.stopVpn();
+    // NativeClass.stopVpn();
   };
 
   // 监听系统主题变化
@@ -103,9 +103,9 @@ class HomeStore {
   };
 
   loadApps = () => {
-    NativeClass.getApps().then((list: any) => {
-      this.setApps(JSON.parse(list));
-    });
+    // NativeClass.getApps().then((list: any) => {
+    //   this.setApps(JSON.parse(list));
+    // });
   };
 
   setApps = (apps: any[]) => {

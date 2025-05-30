@@ -48,3 +48,26 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## 安卓方法
+
+WorkManager API (适合定时任务)
+
+- 功能：可以设置定时任务，配合其他 API 使用
+- 优势：即使应用关闭也能运行
+
+```kotlin
+  val constraints = Constraints.Builder()
+      .setRequiresDeviceIdle(false)
+      .build()
+
+  val blockAppWork = PeriodicWorkRequestBuilder<BlockAppWorker>(
+      15, TimeUnit.MINUTES
+  ).setConstraints(constraints).build()
+
+  WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+      "blockApps",
+      ExistingPeriodicWorkPolicy.REPLACE,
+      blockAppWork
+  )
+```

@@ -2,9 +2,11 @@ import { CusCard, CusPage } from '@/components';
 import { AppStore, HomeStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, NoticeBar, Space } from '@fruits-chain/react-native-xiaoshu';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useTheme } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
+
 import {
   Image,
   RefreshControl,
@@ -21,7 +23,7 @@ const App = observer(() => {
   const [refreshing, setRefreshing] = useState(false);
   const { colors, dark } = useTheme();
 
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const styles = StyleSheet.create({
     cardTitle: {
@@ -71,7 +73,12 @@ const App = observer(() => {
   };
 
   const toAddApp = (mode: string) => {
-    (navigation as any).navigate('AddApp', { mode });
+    router.push({
+      pathname: '/apps/add',
+      params: {
+        mode,
+      },
+    });
   };
 
   useEffect(() => {

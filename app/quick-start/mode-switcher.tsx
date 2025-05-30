@@ -1,6 +1,6 @@
 import Icon from '@expo/vector-icons/Ionicons';
 import { Button, Flex } from '@fruits-chain/react-native-xiaoshu';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
@@ -27,10 +27,15 @@ const ModeSwitcher: React.FC<Props> = ({
   allApps,
 }) => {
   const anim = useRef(new Animated.Value(mode === 'focus' ? 0 : 1)).current;
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const addApp = (m: 'focus' | 'shield') => {
-    (navigation as any).navigate('AddApp', { mode: m });
+    router.push({
+      pathname: '/apps/add',
+      params: {
+        mode: m,
+      },
+    });
   };
 
   useEffect(() => {

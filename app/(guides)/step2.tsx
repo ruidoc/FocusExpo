@@ -3,8 +3,8 @@ import CusButton from '@/components/cus-button';
 import Typewriter from '@/components/type-writer';
 import palette from '@/constants/Colors';
 import { GuideStore, HomeStore } from '@/stores';
-import { useNavigation, useTheme } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTheme } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useState } from 'react';
 import {
@@ -15,10 +15,8 @@ import {
   View,
 } from 'react-native';
 
-type NavigationProp = NativeStackNavigationProp<any>;
-
 const GuideStep2 = observer(() => {
-  const navigation = useNavigation<NavigationProp>();
+  const router = useRouter();
   const store = useLocalObservable(() => HomeStore);
   const gstore = useLocalObservable(() => GuideStore);
   const step1Completed = store.vpn_init;
@@ -77,15 +75,18 @@ const GuideStep2 = observer(() => {
   };
 
   const handleStep2 = () => {
-    (navigation as any).navigate('AddApp', {
-      mode: gstore.problem === 'study' ? 'focus' : 'shield',
+    router.push({
+      pathname: '/apps/add',
+      params: {
+        mode: gstore.problem === 'study' ? 'focus' : 'shield',
+      },
     });
   };
 
   const handleNext = () => {
     if (step1Completed && step2Completed) {
       gstore.setCurrentStep('step3');
-      navigation.navigate('step3');
+      router.push('/(guides)/step3');
       gstore.updateGuide();
     }
   };

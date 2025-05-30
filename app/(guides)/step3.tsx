@@ -3,22 +3,15 @@ import CusButton from '@/components/cus-button';
 import Typewriter from '@/components/type-writer';
 import { GuideStore, HomeStore, PlanStore } from '@/stores';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
+import { useRouter } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-type OnboardingStackParamList = {
-  AddictionSelection: undefined;
-  AddApp: undefined;
-  Schedule: undefined;
-  Home: undefined;
-  Step4: { selectedAppName?: string } | undefined;
-};
-
 const GuideStep3 = observer(() => {
-  const navigation = useNavigation();
+  const router = useRouter();
   const store = useLocalObservable(() => HomeStore);
   const gstore = useLocalObservable(() => GuideStore);
   const pstore = useLocalObservable(() => PlanStore);
@@ -154,7 +147,10 @@ const GuideStep3 = observer(() => {
     gstore.setSelectedAppName(selectedApp);
 
     // 跳转到成功页面，并传递选中的应用名称
-    navigation.navigate('step4', { selectedAppName: selectedApp });
+    router.push({
+      pathname: '/(guides)/step4',
+      params: { selectedAppName: selectedApp },
+    });
   };
 
   return (

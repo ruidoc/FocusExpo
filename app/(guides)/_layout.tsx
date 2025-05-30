@@ -82,7 +82,7 @@ const OnboardingNavigator = () => {
     <SafeAreaView style={{ flex: 1 }}>
       <ProgressBar />
       <Stack
-        initialRouteName="Step1"
+        initialRouteName="step1"
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',

@@ -6,8 +6,16 @@
     "skipLibCheck": true,
     "strictNullChecks": false,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "types/**/*.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "types/**/*.d.ts",
+    "expo-env.d.ts"
+  ]
 }
