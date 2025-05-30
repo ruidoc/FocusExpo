@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet } from 'react-native';
-import ModeSwitcher from './mode-switcher.tsx';
-import TimeSlider from './time-slider.tsx';
 import { CusButton } from '@/components';
-import { useNavigation, useTheme } from '@react-navigation/native';
-import { observer, useLocalObservable } from 'mobx-react';
-import { PlanStore, HomeStore, AppStore, UserStore } from '@/stores';
-import { toast } from '@/utils';
-import styles from './styles.ts';
-import dayjs from 'dayjs';
+import { AppStore, HomeStore, PlanStore } from '@/stores';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
+import { useNavigation, useTheme } from '@react-navigation/native';
+import dayjs from 'dayjs';
+import { observer, useLocalObservable } from 'mobx-react';
+import React, { useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
+import ModeSwitcher from './mode-switcher';
+import styles from './styles';
+import TimeSlider from './time-slider';
 
 const QuickStartPage = observer(() => {
   const [mode, setMode] = useState<'focus' | 'shield'>('shield');

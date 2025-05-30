@@ -1,18 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-} from 'react-native';
-import { observer, useLocalObservable } from 'mobx-react-lite';
+import Privicy from '@/components/privicy';
+import Typewriter from '@/components/type-writer';
+import Wechat from '@/components/wecaht';
+import { GuideStore, HomeStore, UserStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Typewriter from '@/components/type-writer';
-import { GuideStore, HomeStore, UserStore } from '@/stores';
-import Wechat from '@/components/wecaht';
-import Privicy from '@/components/privicy';
+import { observer, useLocalObservable } from 'mobx-react-lite';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 

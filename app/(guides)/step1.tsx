@@ -1,18 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-} from 'react-native';
-import { observer, useLocalObservable } from 'mobx-react-lite';
+import AnimatedCascade from '@/components/cascade';
+import CusButton from '@/components/cus-button';
+import Typewriter from '@/components/type-writer';
 import { GuideStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Typewriter from '@/components/type-writer';
-import AnimatedCascade from '@/components/cascade';
-import CusButton from '@/components/cus-button';
+import { observer, useLocalObservable } from 'mobx-react-lite';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
@@ -53,7 +53,7 @@ export const GuideStep1 = observer(() => {
   const handleNext = () => {
     store.setCurrentStep('step2');
     store.setSelectedApps([]);
-    navigation.navigate('Step2');
+    navigation.navigate('step2');
     store.createGuide();
   };
 

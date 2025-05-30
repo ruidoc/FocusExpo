@@ -1,20 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Image, Text, View } from 'react-native';
-import { StyleSheet } from 'react-native';
-import { Button, Flex, Dialog } from '@fruits-chain/react-native-xiaoshu';
-import * as Sentry from '@sentry/react-native';
+import { HomeStore, UserStore } from '@/stores';
+import { Button, Dialog, Flex } from '@fruits-chain/react-native-xiaoshu';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  useFocusEffect,
   useNavigation,
   useTheme,
-  useFocusEffect,
 } from '@react-navigation/native';
+// import * as Sentry from '@sentry/react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { observer, useLocalObservable } from 'mobx-react';
-import { AppStore, HomeStore, UserStore } from '@/stores';
-import LinearGradient from 'react-native-linear-gradient';
-import Privicy from '@/components/privicy';
-import Wechat from '@/components/wecaht';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { toast } from '@/utils';
+import React, { useCallback, useState } from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 const PRIVACY_KEY = 'privacy_readed';
 
@@ -91,11 +87,11 @@ const App = observer(() => {
   const handlePrivacyAgree = async (yes = true) => {
     if (yes) {
       await AsyncStorage.setItem(PRIVACY_KEY, '1');
-      Sentry.init({
-        dsn: 'https://cc6b3e31087a119340690e60212ce4fe@o4507773251223552.ingest.us.sentry.io/4507773257449472',
-        // uncomment the line below to enable Spotlight (https://spotlightjs.com)
-        autoInitializeNativeSdk: true,
-      });
+      // Sentry.init({
+      //   dsn: 'https://cc6b3e31087a119340690e60212ce4fe@o4507773251223552.ingest.us.sentry.io/4507773257449472',
+      //   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+      //   autoInitializeNativeSdk: true,
+      // });
       hstore.loadApps();
       setPrivacyVisible(false);
     }
@@ -110,7 +106,7 @@ const App = observer(() => {
   // 跳转隐私政策页面
   const handlePrivacyLink = () => {
     setPrivacyVisible(false);
-    navigation.navigate('WebView');
+    navigation.navigate('others/webview');
   };
 
   return (

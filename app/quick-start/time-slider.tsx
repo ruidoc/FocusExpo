@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Slider from '@react-native-community/slider';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
+import Slider from '@react-native-community/slider';
 import { useTheme } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface Props {
   minute: number;

@@ -1,21 +1,13 @@
-import { useEffect, useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Animated,
-} from 'react-native';
-import { observer, useLocalObservable } from 'mobx-react-lite';
-import { HomeStore, AppStore, PlanStore, GuideStore } from '@/stores';
-import { useNavigation, useTheme } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Flex } from '@fruits-chain/react-native-xiaoshu';
-import dayjs from 'dayjs';
-import Typewriter from '@/components/type-writer';
 import AnimatedCascade from '@/components/cascade';
 import CusButton from '@/components/cus-button';
+import Typewriter from '@/components/type-writer';
+import { GuideStore, HomeStore, PlanStore } from '@/stores';
+import { Flex } from '@fruits-chain/react-native-xiaoshu';
+import { useNavigation, useTheme } from '@react-navigation/native';
+import dayjs from 'dayjs';
+import { observer, useLocalObservable } from 'mobx-react-lite';
+import { useEffect, useRef, useState } from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 type OnboardingStackParamList = {
   AddictionSelection: undefined;
@@ -25,10 +17,8 @@ type OnboardingStackParamList = {
   Step4: { selectedAppName?: string } | undefined;
 };
 
-type NavigationProp = NativeStackNavigationProp<OnboardingStackParamList>;
-
 const GuideStep3 = observer(() => {
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation();
   const store = useLocalObservable(() => HomeStore);
   const gstore = useLocalObservable(() => GuideStore);
   const pstore = useLocalObservable(() => PlanStore);
@@ -164,7 +154,7 @@ const GuideStep3 = observer(() => {
     gstore.setSelectedAppName(selectedApp);
 
     // 跳转到成功页面，并传递选中的应用名称
-    navigation.navigate('Step4', { selectedAppName: selectedApp });
+    navigation.navigate('step4', { selectedAppName: selectedApp });
   };
 
   return (

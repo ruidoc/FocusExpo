@@ -117,7 +117,7 @@ const GuideStep4 = () => {
   }, [typewriterDone]);
 
   const handleNext = () => {
-    navigation.navigate('Step5');
+    navigation.navigate('step5');
   };
 
   const descColor = dark ? '#aaa' : '#666';

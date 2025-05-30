@@ -9,10 +9,12 @@ export const ScreenOptions: NativeStackNavigationOptions = {
   headerLargeTitleShadowVisible: false, // 隐藏大标题阴影
   headerTitleAlign: 'center', // 标题居中
   statusBarTranslucent: true, // 状态栏沉浸
+  headerTintColor: '#fff',
+  headerBackTitle: '',
   // statusBarColor: 'transparent', // 状态栏透明
   // gestureEnabled: true, // 启用手势
   // animationTypeForReplace: 'push', // 替换动画
-  animation: 'fade_from_bottom', // 屏幕转换动画
+  // animation: 'fade_from_bottom', // 屏幕转换动画
   // animationDuration: 100, // 动画持续时间
   // presentation: 'modal', // 模态动画
   headerTitleStyle: {

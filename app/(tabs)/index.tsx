@@ -20,9 +20,11 @@ import {
   Space,
   Theme,
 } from '@fruits-chain/react-native-xiaoshu';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useTheme } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
+
 import {
   Image,
   NativeModules,
@@ -52,7 +54,7 @@ const App = observer(() => {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const apps = pstore.is_focus_mode ? astore.focus_apps : astore.shield_apps;
 
@@ -205,9 +207,9 @@ const App = observer(() => {
 
   const toRoute = (path: string) => {
     if (!ustore.uInfo) {
-      return navigation.navigate('Login' as never);
+      return router.push('/login');
     }
-    navigation.navigate(path as never);
+    router.push(path as never);
   };
 
   const timeLong = (minutes: number) => {
@@ -250,14 +252,14 @@ const App = observer(() => {
   };
 
   const toGuide = () => {
-    navigation.navigate('Plans' as never);
+    router.push('/plans');
   };
 
   const quickStart = () => {
     if (!ustore.uInfo) {
-      return navigation.navigate('WXLogin' as never);
+      return router.push('/login/wx');
     }
-    navigation.navigate('QuickSt' as never);
+    router.push('/quick-start');
   };
 
   const initapp = () => {
@@ -266,7 +268,10 @@ const App = observer(() => {
     if (!ustore.uInfo) return;
     if (!pstore.all_plans[0]) {
       setTimeout(() => {
-        (navigation as any).navigate('Guide', { type: 'start' });
+        router.push({
+          pathname: '/quick-start',
+          params: { type: 'start' },
+        } as never);
       }, 2000);
     } else {
       setTimeout(() => {
@@ -419,14 +424,14 @@ const App = observer(() => {
             onPress={() => pmstore.openNotify(true)}
           />
         )}
-        {!pmstore.pm_battery && (
+        {/* {!pmstore.pm_battery && (
           <NoticeBar
             message="检查电池优化权限"
             mode="link"
             status="primary"
             onPress={() => pmstore.checkBattery(true)}
           />
-        )}
+        )} */}
       </View>
     </SafeAreaView>
   );

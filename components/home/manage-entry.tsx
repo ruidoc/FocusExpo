@@ -1,7 +1,8 @@
 import { AppStore, PlanStore, UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useTheme } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -10,7 +11,7 @@ const ManageEntry: React.FC = () => {
   const ustore = useLocalObservable(() => UserStore);
   const pstore = useLocalObservable(() => PlanStore);
   const astore = useLocalObservable(() => AppStore);
-  const navigation = useNavigation();
+  const router = useRouter();
   const { colors, dark } = useTheme();
 
   const plan_count = pstore.cus_plans.length;
@@ -37,9 +38,9 @@ const ManageEntry: React.FC = () => {
 
   const toRoute = (path: string) => {
     if (!ustore.uInfo) {
-      return navigation.navigate('Login' as never);
+      return router.push('/login');
     }
-    navigation.navigate(path as never);
+    router.push(path as never);
   };
 
   if (pstore.cur_plan) return null;
@@ -49,7 +50,7 @@ const ManageEntry: React.FC = () => {
       <Flex
         align="center"
         justify="center"
-        onPress={() => toRoute('Apps')}
+        onPress={() => toRoute('apps')}
         style={{
           flex: 1,
           height: 60,
@@ -77,7 +78,7 @@ const ManageEntry: React.FC = () => {
       <Flex
         align="center"
         justify="center"
-        onPress={() => toRoute('Plans')}
+        onPress={() => toRoute('plans')}
         style={{
           flex: 1,
           height: 60,

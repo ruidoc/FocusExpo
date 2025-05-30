@@ -3,7 +3,8 @@ import { UserStore } from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, Space } from '@fruits-chain/react-native-xiaoshu';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useTheme } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
 import {
@@ -19,22 +20,22 @@ const App = observer(() => {
   const store = useLocalObservable(() => UserStore);
   const { colors, dark } = useTheme();
 
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const toLogin = () => {
     if (!store.uInfo) {
-      navigation.navigate('WXLogin' as never);
+      router.push('/login/wx');
     } else {
-      navigation.navigate('UserEdit' as never);
+      router.push('/user/edit');
     }
   };
 
-  const toNavigate = (route: string) => {
+  const toNavigate = (route: any) => {
     if (route === 'Vip') {
       return toast('VIP功能暂未开放');
     }
     if (route) {
-      navigation.navigate(route as never);
+      router.push(route);
     }
   };
 
@@ -127,7 +128,7 @@ const App = observer(() => {
         </Flex>
         {store.uInfo && false && (
           <TouchableOpacity
-            onPress={() => toNavigate('Vip')}
+            onPress={() => toNavigate('user/vip')}
             activeOpacity={0.7}>
             <Flex
               align="center"
@@ -153,23 +154,25 @@ const App = observer(() => {
           <View style={styles.itemBoxWrap}>
             {ItemDom('#FFA238', '打卡', 'brush-sharp', {
               size: 15,
-              route: 'PunchCard',
+              route: 'punchCard',
             })}
           </View>
         )}
         <View style={styles.itemBoxWrap}>
           {ItemDom('#34B545', '权限管理', 'cube-sharp', {
             border: true,
-            route: 'Permission',
+            route: 'setting/permission',
           })}
           {ItemDom('#1BA2FC', '意见反馈', 'mail-open', {
             border: true,
-            route: 'Feedback',
+            route: 'setting/feedback',
           })}
-          {ItemDom('#0065FE', '关于我们', 'people-sharp', { route: 'About' })}
+          {ItemDom('#0065FE', '关于我们', 'people-sharp', {
+            route: 'setting/about',
+          })}
         </View>
         <View style={styles.itemBoxWrap}>
-          {ItemDom('#7D45E6', '设置', 'settings-sharp', { route: 'Setting' })}
+          {ItemDom('#7D45E6', '设置', 'settings-sharp', { route: 'setting' })}
         </View>
         {/* {store.uInfo && (
           <TouchableOpacity onPress={toLogout} activeOpacity={0.7}>

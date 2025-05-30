@@ -1,25 +1,18 @@
 import { GuideStore } from '@/stores';
 import { useTheme } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Stack } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useRef } from 'react';
 import { Animated, SafeAreaView, StyleSheet, View } from 'react-native';
-import GuideStep1 from './step1';
-import GuideStep2 from './step2';
-import GuideStep3 from './step3';
-import GuideStep4 from './step4';
-import GuideStep5 from './step5';
 
 export type OnboardingStackParamList = {
-  Step1: undefined;
-  Step2: undefined;
-  Step3: undefined;
-  Step4: undefined;
-  Step5: undefined;
+  step1: undefined;
+  step2: undefined;
+  step3: undefined;
+  step4: undefined;
+  step5: undefined;
 };
-
-const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
 const ProgressBar = observer(() => {
   const store = useLocalObservable(() => GuideStore);
@@ -88,7 +81,7 @@ const OnboardingNavigator = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ProgressBar />
-      <Stack.Navigator
+      <Stack
         initialRouteName="Step1"
         screenOptions={{
           headerShown: false,
@@ -99,12 +92,12 @@ const OnboardingNavigator = () => {
           fullScreenGestureEnabled: true,
         }}
         screenListeners={screenListeners}>
-        <Stack.Screen name="Step1" component={GuideStep1} />
-        <Stack.Screen name="Step2" component={GuideStep2} />
-        <Stack.Screen name="Step3" component={GuideStep3} />
-        <Stack.Screen name="Step4" component={GuideStep4} />
-        <Stack.Screen name="Step5" component={GuideStep5} />
-      </Stack.Navigator>
+        <Stack.Screen name="step1" />
+        <Stack.Screen name="step2" />
+        <Stack.Screen name="step3" />
+        <Stack.Screen name="step4" />
+        <Stack.Screen name="step5" />
+      </Stack>
     </SafeAreaView>
   );
 };

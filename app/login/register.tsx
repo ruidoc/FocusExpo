@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { StyleSheet } from 'react-native';
+import Keyboard from '@/components/keybord';
+import Privicy from '@/components/privicy';
+import { UserStore } from '@/stores';
+import { toast } from '@/utils';
 import {
   Button,
   Flex,
@@ -8,12 +9,10 @@ import {
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { observer, useLocalObservable } from 'mobx-react';
-import { UserStore } from '@/stores';
-import LinearGradient from 'react-native-linear-gradient';
-import Privicy from '@/components/privicy';
-import Keyboard from '@/components/keybord';
-import { toast } from '@/utils';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const App = observer(() => {
   const store = useLocalObservable(() => UserStore);
@@ -32,7 +31,7 @@ const App = observer(() => {
   });
 
   const toRoute = () => {
-    navigation.replace('Login' as never);
+    navigation.replace('/login' as never);
   };
 
   const setInfo = (val: any, key: string) => {

@@ -54,7 +54,7 @@ const App = observer(() => {
       headerRight: () => (
         <Pressable
           android_ripple={buttonRipple}
-          onPress={() => toRoute('AddPlan')}>
+          onPress={() => toRoute('plans/add')}>
           <Icon name="add" size={27} color={colors.text} />
         </Pressable>
       ),

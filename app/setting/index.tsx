@@ -44,11 +44,11 @@ const App = observer(() => {
       case 'check':
         return toast('已是最新版本');
       case 'privicy':
-        return navigation.navigate('WebView' as never);
+        return navigation.navigate('others/webview' as never);
       case 'evaluate':
         return openStore();
       case 'logoff':
-        return navigation.navigate('Logoff' as never);
+        return navigation.navigate('setting/logoff' as never);
       case 'clear':
         return toast('已清理');
     }

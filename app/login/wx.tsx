@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Image, Text, View } from 'react-native';
-import { StyleSheet } from 'react-native';
-import { Button, Flex } from '@fruits-chain/react-native-xiaoshu';
-import { useNavigation, useTheme } from '@react-navigation/native';
-import { observer, useLocalObservable } from 'mobx-react';
-import { UserStore } from '@/stores';
-import LinearGradient from 'react-native-linear-gradient';
 import Privicy from '@/components/privicy';
 import Wechat from '@/components/wecaht';
+import { UserStore } from '@/stores';
+import { Button, Flex } from '@fruits-chain/react-native-xiaoshu';
+import { useNavigation, useTheme } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { observer, useLocalObservable } from 'mobx-react';
+import React, { useState } from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 const App = observer(() => {
   const store = useLocalObservable(() => UserStore);
@@ -18,12 +17,12 @@ const App = observer(() => {
   const navigation = useNavigation<any>();
 
   const toRoute = () => {
-    navigation.replace('Login');
+    navigation.replace('login/index');
   };
 
   const toRegister = (data: any) => {
     store.setWxInfo(data);
-    navigation.replace('Login', { type: 'bind' });
+    navigation.replace('login/index', { type: 'bind' });
   };
 
   const loginResult = (result: any) => {
