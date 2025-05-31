@@ -83,3 +83,80 @@ WorkManager API (适合定时任务)
     ]
 },
 ```
+
+# Android 开发国内镜像配置指南
+
+## 已配置的镜像
+
+### 1. Bun/NPM 镜像
+
+- 配置文件：`.bunfig.toml`
+- 镜像源：`https://registry.npmmirror.com`
+
+### 2. Gradle 镜像
+
+- 全局配置：`~/.gradle/init.gradle`
+- 属性配置：`~/.gradle/gradle.properties`
+- 主要镜像：阿里云 Maven 仓库
+
+## 其他可选配置
+
+### Android SDK 镜像（如需要）
+
+如果你需要下载 Android SDK 组件，可以在 Android Studio 中配置：
+
+1. 打开 Android Studio
+2. 进入 `Preferences` → `Appearance & Behavior` → `System Settings` → `HTTP Proxy`
+3. 配置代理或使用以下镜像：
+   - 清华大学镜像：`https://mirrors.tuna.tsinghua.edu.cn/android/`
+   - 中科大镜像：`https://mirrors.ustc.edu.cn/android/`
+
+### Gradle Wrapper 镜像
+
+如果项目有 `gradle-wrapper.properties`，可以将下载 URL 替换为：
+
+```distributionUrl=https://mirrors.cloud.tencent.com/gradle/gradle-8.0-bin.zip
+
+```
+
+### React Native 镜像
+
+对于 React Native 相关依赖：
+
+```bash
+# 使用 React Native 中文网镜像
+npm config set registry https://registry.npm.taobao.org
+npm config set disturl https://npm.taobao.org/dist
+```
+
+## 验证配置
+
+运行以下命令验证配置是否生效：
+
+```bash
+# 检查 bun 镜像
+bun install --verbose
+
+# 运行 Android 构建
+expo run:android
+```
+
+## 镜像源列表
+
+### NPM 镜像
+
+- 淘宝镜像：`https://registry.npmmirror.com`
+- 腾讯云镜像：`https://mirrors.cloud.tencent.com/npm/`
+- 华为云镜像：`https://repo.huaweicloud.com/repository/npm/`
+
+### Maven 镜像
+
+- 阿里云：`https://maven.aliyun.com/repository/central`
+- 腾讯云：`https://mirrors.cloud.tencent.com/nexus/repository/maven-public/`
+- 华为云：`https://repo.huaweicloud.com/repository/maven/`
+
+### Android SDK 镜像
+
+- 清华大学：`https://mirrors.tuna.tsinghua.edu.cn/android/`
+- 中科大：`https://mirrors.ustc.edu.cn/android/`
+- 东软信息学院：`https://mirrors.neusoft.edu.cn/android/`
