@@ -1,9 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
-import { Appearance, AppStateStatus, NativeModules } from 'react-native';
-import { PlanStore } from './index';
-
-const { NativeClass } = NativeModules;
+import { Appearance, AppStateStatus } from 'react-native';
+import PlanStore from './plan';
 
 class HomeStore {
   constructor() {

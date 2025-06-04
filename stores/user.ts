@@ -1,9 +1,11 @@
-import { makeAutoObservable } from 'mobx';
 import http from '@/request';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { makeAutoObservable } from 'mobx';
 
-import { AppStore, PlanStore, HomeStore } from './index';
+import HomeStore from './home';
+import AppStore from './osapp';
+import PlanStore from './plan';
 
 class UserStore {
   constructor() {

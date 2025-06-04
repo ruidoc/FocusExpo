@@ -6,8 +6,8 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": [
-      "focusone",
-      "wxdc022c6a39cb32b7"
+      "wxdc022c6a39cb32b7",
+      "focusone"
     ],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -21,9 +21,9 @@
         ]
       },
       "associatedDomains": [
-        "applinks:focusone.com"
+        "applinks:(focusone.com)"
       ],
-      "bundleIdentifier": "com.focusone.ruidoc"
+      "bundleIdentifier": "com.focusone"
     },
     "android": {
       "package": "com.focusone",
@@ -43,10 +43,20 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/logo2.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#151718"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/logo.png",
+          "color": "#ffffff",
+          "defaultChannel": "default",
+          "sounds": [],
+          "enableBackgroundRemoteNotifications": false
         }
       ],
       "expo-native-wechat"

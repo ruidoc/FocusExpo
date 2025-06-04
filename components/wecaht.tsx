@@ -1,7 +1,8 @@
 import colors from '@/constants/Colors';
+import http from '@/request';
 import { toast } from '@/utils';
 import { Button } from '@fruits-chain/react-native-xiaoshu';
-// import { registerApp, sendAuthRequest } from "expo-native-wechat";
+import { registerApp, sendAuthRequest } from 'expo-native-wechat';
 import { useEffect, useState } from 'react';
 import { Text } from 'react-native';
 import CusButton from './cus-button';
@@ -20,21 +21,26 @@ const App = (props: Props) => {
     if (props.disabled) {
       return toast('请阅读并勾选下方隐私政策');
     }
-    // let {
-    //   data: { code },
-    // } = await sendAuthRequest();
-    setLoading(true);
-    // console.log('微信登录结果', code);
-    // let result: any = await http.post("/user/wechat", { code });
-    // if (result?.statusCode) {
-    //   props.onSuccess(result);
-    // }
+    try {
+      let {
+        data: { code },
+      } = await sendAuthRequest();
+      setLoading(true);
+      console.log('微信登录结果', code);
+      let result: any = await http.post('/user/wechat', { code });
+      if (result?.statusCode) {
+        props.onSuccess(result);
+      }
+    } catch (error) {
+      console.log('微信登录失败', error);
+    }
   };
 
   useEffect(() => {
-    // registerApp({
-    //   appid: "wxdc022c6a39cb32b7",
-    // });
+    registerApp({
+      appid: 'wxdc022c6a39cb32b7',
+      universalLink: 'https://com.focusone/wechat/',
+    });
   }, []);
 
   return (

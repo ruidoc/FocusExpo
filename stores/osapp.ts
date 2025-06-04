@@ -2,10 +2,7 @@ import http from '@/request';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
-import { NativeModules } from 'react-native';
-import { HomeStore } from './index';
-
-const { NativeClass } = NativeModules;
+import HomeStore from './home';
 
 class AppStore {
   constructor() {

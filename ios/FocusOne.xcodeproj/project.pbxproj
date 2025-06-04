@@ -341,7 +341,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = FocusOne/FocusOne.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = XQJHW6D3N8;
+				DEVELOPMENT_TEAM = G497923Y9M;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -360,8 +360,8 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.focusone.ruidoc;
-				PRODUCT_NAME = "FocusOne";
+				PRODUCT_BUNDLE_IDENTIFIER = com.focusone;
+				PRODUCT_NAME = FocusOne;
 				SWIFT_OBJC_BRIDGING_HEADER = "FocusOne/FocusOne-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -392,8 +392,8 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.focusone.ruidoc";
-				PRODUCT_NAME = "FocusOne";
+				PRODUCT_BUNDLE_IDENTIFIER = com.focusone;
+				PRODUCT_NAME = FocusOne;
 				SWIFT_OBJC_BRIDGING_HEADER = "FocusOne/FocusOne-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

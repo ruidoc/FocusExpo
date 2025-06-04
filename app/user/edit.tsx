@@ -1,21 +1,13 @@
 import { CusPage } from '@/components';
 import CustomDivider from '@/components/cus-divider';
 import { UserStore } from '@/stores';
-import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { ActionSheet, Flex, Space } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
-import {
-  Linking,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const App = observer(() => {
   const store = useLocalObservable(() => UserStore);
@@ -42,22 +34,6 @@ const App = observer(() => {
   const onClick = (tag: string) => {
     switch (tag) {
     }
-  };
-
-  const openStore = () => {
-    let storeUrl = Platform.select({
-      ios: 'itms-apps://itunes.apple.com/app/com.focusone.app',
-      android: 'market://details?id=com.focusone',
-    });
-    Linking.canOpenURL(storeUrl!)
-      .then(supported => {
-        if (supported) {
-          return Linking.openURL(storeUrl!);
-        } else {
-          toast('无法打开应用市场');
-        }
-      })
-      .catch(() => toast('打开应用市场失败'));
   };
 
   const toLogout = () => {

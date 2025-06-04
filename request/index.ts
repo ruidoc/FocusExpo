@@ -1,7 +1,7 @@
-import axios, { AxiosInstance } from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { UserStore } from '@/stores';
+import { Toast } from '@fruits-chain/react-native-xiaoshu';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios, { AxiosInstance } from 'axios';
 
 const instance: AxiosInstance = axios.create({
   baseURL: 'https://focusone.ruidoc.cn/dev-api',
@@ -18,7 +18,6 @@ const instance: AxiosInstance = axios.create({
 instance.interceptors.request.use(async request => {
   if (request.data instanceof FormData) {
     request.headers['Content-Type'] = 'multipart/form-data';
-    request.headers;
   }
   console.log('【网络请求】', request.method, request.url);
   request.headers.Authorization = `Bearer ${
