@@ -52,6 +52,8 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>NSFamilyControlsUsageDescription</key>
+    <string>需要您的同意以访问屏幕使用时间权限，用于专注管理等功能。</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

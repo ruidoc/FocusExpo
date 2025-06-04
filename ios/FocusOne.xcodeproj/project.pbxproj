@@ -3,11 +3,17 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		14663DC12DF02EDD00B0C458 /* NativeModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 14663DC02DF02EDD00B0C458 /* NativeModuleBridge.m */; };
+		14663DC22DF02EDD00B0C458 /* NativeModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14663DBF2DF02EDD00B0C458 /* NativeModule.swift */; };
+		14663DD42DF03E7300B0C458 /* ReportExtension.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 14663DC82DF03E7200B0C458 /* ReportExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		14663DE02DF03E9A00B0C458 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14663DDF2DF03E9A00B0C458 /* ManagedSettings.framework */; };
+		14663DE22DF03E9A00B0C458 /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14663DE12DF03E9A00B0C458 /* ManagedSettingsUI.framework */; };
+		14663DEA2DF03E9A00B0C458 /* ShieldExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 14663DDE2DF03E9A00B0C458 /* ShieldExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		24AEF103806C3FA8CDF21803 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 67355E71B64D9B1F19CC4C39 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		578605AFEA2CAB3B43E97875 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 625F08E9E7D41DA3209E9386 /* ExpoModulesProvider.swift */; };
@@ -16,11 +22,61 @@
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		14663DD22DF03E7300B0C458 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 14663DC72DF03E7200B0C458;
+			remoteInfo = ReportExtension;
+		};
+		14663DE82DF03E9A00B0C458 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 14663DDD2DF03E9A00B0C458;
+			remoteInfo = ShieldExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		14663DD92DF03E7300B0C458 /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				14663DD42DF03E7300B0C458 /* ReportExtension.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		14663DEF2DF03E9A00B0C458 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				14663DEA2DF03E9A00B0C458 /* ShieldExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		03A3672E11266278D8EA733F /* Pods-FocusOne.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FocusOne.debug.xcconfig"; path = "Target Support Files/Pods-FocusOne/Pods-FocusOne.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* FocusOne.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FocusOne.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = FocusOne/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = FocusOne/Info.plist; sourceTree = "<group>"; };
+		14663DBB2DF0292E00B0C458 /* FamilyControls.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FamilyControls.framework; path = System/Library/Frameworks/FamilyControls.framework; sourceTree = SDKROOT; };
+		14663DBD2DF0293E00B0C458 /* DeviceActivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DeviceActivity.framework; path = System/Library/Frameworks/DeviceActivity.framework; sourceTree = SDKROOT; };
+		14663DBF2DF02EDD00B0C458 /* NativeModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeModule.swift; sourceTree = "<group>"; };
+		14663DC02DF02EDD00B0C458 /* NativeModuleBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NativeModuleBridge.m; sourceTree = "<group>"; };
+		14663DC82DF03E7200B0C458 /* ReportExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = ReportExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		14663DDE2DF03E9A00B0C458 /* ShieldExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShieldExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		14663DDF2DF03E9A00B0C458 /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
+		14663DE12DF03E9A00B0C458 /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
 		186E5FA133169DBB27E79E8E /* Pods-FocusOne.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FocusOne.release.xcconfig"; path = "Target Support Files/Pods-FocusOne/Pods-FocusOne.release.xcconfig"; sourceTree = "<group>"; };
 		29D9A2C5DE75038B3D980F6D /* libPods-FocusOne.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FocusOne.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		625F08E9E7D41DA3209E9386 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-FocusOne/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
@@ -32,6 +88,28 @@
 		F11748442D0722820044C1D9 /* FocusOne-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FocusOne-Bridging-Header.h"; path = "FocusOne/FocusOne-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		14663DD52DF03E7300B0C458 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 14663DC72DF03E7200B0C458 /* ReportExtension */;
+		};
+		14663DEB2DF03E9A00B0C458 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 14663DDD2DF03E9A00B0C458 /* ShieldExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		14663DC92DF03E7200B0C458 /* ReportExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (14663DD52DF03E7300B0C458 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ReportExtension; sourceTree = "<group>"; };
+		14663DE32DF03E9A00B0C458 /* ShieldExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (14663DEB2DF03E9A00B0C458 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ShieldExtension; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -41,12 +119,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		14663DC52DF03E7200B0C458 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		14663DDB2DF03E9A00B0C458 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				14663DE02DF03E9A00B0C458 /* ManagedSettings.framework in Frameworks */,
+				14663DE22DF03E9A00B0C458 /* ManagedSettingsUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		13B07FAE1A68108700A75B9A /* FocusOne */ = {
 			isa = PBXGroup;
 			children = (
+				14663DBF2DF02EDD00B0C458 /* NativeModule.swift */,
+				14663DC02DF02EDD00B0C458 /* NativeModuleBridge.m */,
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748442D0722820044C1D9 /* FocusOne-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
@@ -70,8 +166,12 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				14663DBD2DF0293E00B0C458 /* DeviceActivity.framework */,
+				14663DBB2DF0292E00B0C458 /* FamilyControls.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				29D9A2C5DE75038B3D980F6D /* libPods-FocusOne.a */,
+				14663DDF2DF03E9A00B0C458 /* ManagedSettings.framework */,
+				14663DE12DF03E9A00B0C458 /* ManagedSettingsUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -104,6 +204,8 @@
 			children = (
 				13B07FAE1A68108700A75B9A /* FocusOne */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
+				14663DC92DF03E7200B0C458 /* ReportExtension */,
+				14663DE32DF03E9A00B0C458 /* ShieldExtension */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				14AFC906BDA2F81E27F2C2F5 /* Pods */,
@@ -118,6 +220,8 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* FocusOne.app */,
+				14663DC82DF03E7200B0C458 /* ReportExtension.appex */,
+				14663DDE2DF03E9A00B0C458 /* ShieldExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,15 +250,63 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
 				6A4F82A493FC220016285EB5 /* [CP] Embed Pods Frameworks */,
+				14663DD92DF03E7300B0C458 /* Embed ExtensionKit Extensions */,
+				14663DEF2DF03E9A00B0C458 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				14663DD32DF03E7300B0C458 /* PBXTargetDependency */,
+				14663DE92DF03E9A00B0C458 /* PBXTargetDependency */,
 			);
 			name = FocusOne;
 			productName = FocusOne;
 			productReference = 13B07F961A680F5B00A75B9A /* FocusOne.app */;
 			productType = "com.apple.product-type.application";
+		};
+		14663DC72DF03E7200B0C458 /* ReportExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 14663DD62DF03E7300B0C458 /* Build configuration list for PBXNativeTarget "ReportExtension" */;
+			buildPhases = (
+				14663DC42DF03E7200B0C458 /* Sources */,
+				14663DC52DF03E7200B0C458 /* Frameworks */,
+				14663DC62DF03E7200B0C458 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				14663DC92DF03E7200B0C458 /* ReportExtension */,
+			);
+			name = ReportExtension;
+			packageProductDependencies = (
+			);
+			productName = ReportExtension;
+			productReference = 14663DC82DF03E7200B0C458 /* ReportExtension.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
+		14663DDD2DF03E9A00B0C458 /* ShieldExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 14663DEC2DF03E9A00B0C458 /* Build configuration list for PBXNativeTarget "ShieldExtension" */;
+			buildPhases = (
+				14663DDA2DF03E9A00B0C458 /* Sources */,
+				14663DDB2DF03E9A00B0C458 /* Frameworks */,
+				14663DDC2DF03E9A00B0C458 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				14663DE32DF03E9A00B0C458 /* ShieldExtension */,
+			);
+			name = ShieldExtension;
+			packageProductDependencies = (
+			);
+			productName = ShieldExtension;
+			productReference = 14663DDE2DF03E9A00B0C458 /* ShieldExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -162,10 +314,17 @@
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 1630;
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1250;
+					};
+					14663DC72DF03E7200B0C458 = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					14663DDD2DF03E9A00B0C458 = {
+						CreatedOnToolsVersion = 16.3;
 					};
 				};
 			};
@@ -183,6 +342,8 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* FocusOne */,
+				14663DC72DF03E7200B0C458 /* ReportExtension */,
+				14663DDD2DF03E9A00B0C458 /* ShieldExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -196,6 +357,20 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				24AEF103806C3FA8CDF21803 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		14663DC62DF03E7200B0C458 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		14663DDC2DF03E9A00B0C458 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -325,12 +500,41 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				14663DC12DF02EDD00B0C458 /* NativeModuleBridge.m in Sources */,
+				14663DC22DF02EDD00B0C458 /* NativeModule.swift in Sources */,
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				578605AFEA2CAB3B43E97875 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		14663DC42DF03E7200B0C458 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		14663DDA2DF03E9A00B0C458 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		14663DD32DF03E7300B0C458 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 14663DC72DF03E7200B0C458 /* ReportExtension */;
+			targetProxy = 14663DD22DF03E7300B0C458 /* PBXContainerItemProxy */;
+		};
+		14663DE92DF03E9A00B0C458 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 14663DDD2DF03E9A00B0C458 /* ShieldExtension */;
+			targetProxy = 14663DE82DF03E9A00B0C458 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
@@ -348,7 +552,7 @@
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = FocusOne/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -378,9 +582,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = FocusOne/FocusOne.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = XQJHW6D3N8;
+				DEVELOPMENT_TEAM = G497923Y9M;
 				INFOPLIST_FILE = FocusOne/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -398,6 +602,176 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		14663DD72DF03E7300B0C458 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = ReportExtension/ReportExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = G497923Y9M;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ReportExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ReportExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.focusone.ReportExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		14663DD82DF03E7300B0C458 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = ReportExtension/ReportExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = G497923Y9M;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ReportExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ReportExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.focusone.ReportExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		14663DED2DF03E9A00B0C458 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = ShieldExtension/ShieldExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = G497923Y9M;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShieldExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ShieldExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.focusone.ShieldExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		14663DEE2DF03E9A00B0C458 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = ShieldExtension/ShieldExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = G497923Y9M;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShieldExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ShieldExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.focusone.ShieldExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -527,6 +901,24 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		14663DD62DF03E7300B0C458 /* Build configuration list for PBXNativeTarget "ReportExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				14663DD72DF03E7300B0C458 /* Debug */,
+				14663DD82DF03E7300B0C458 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		14663DEC2DF03E9A00B0C458 /* Build configuration list for PBXNativeTarget "ShieldExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				14663DED2DF03E9A00B0C458 /* Debug */,
+				14663DEE2DF03E9A00B0C458 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

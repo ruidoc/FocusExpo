@@ -3,12 +3,17 @@ import CusButton from '@/components/cus-button';
 import Typewriter from '@/components/type-writer';
 import palette from '@/constants/Colors';
 import { GuideStore, HomeStore } from '@/stores';
+import {
+  checkScreenTimePermission,
+  getScreenTimePermission,
+} from '@/utils/permission';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useState } from 'react';
 import {
   InteractionManager,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -69,8 +74,31 @@ const GuideStep2 = observer(() => {
     });
   }, []);
 
+  const checkIOSPermission = async () => {
+    const status = await checkScreenTimePermission();
+    switch (status) {
+      case 'approved':
+        // 已有权限，执行功能
+        break;
+      case 'denied':
+        // 已拒绝，提示用户手动开启
+        break;
+      case 'notDetermined':
+        // 未决定，请求权限
+        const granted = await getScreenTimePermission();
+        if (granted) {
+          // 成功获取权限
+        }
+        break;
+    }
+  };
+
   const handleStep1 = () => {
-    store.startVpn(true);
+    if (Platform.OS === 'ios') {
+      checkIOSPermission();
+    } else {
+      store.startVpn(true);
+    }
   };
 
   const handleStep2 = () => {

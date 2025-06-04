@@ -19,7 +19,7 @@ class HomeStore {
   followSystem: boolean = true; // 是否跟随系统主题
 
   vpn_state: VpnState = 'close'; // VPN 状态
-  vpn_init = true; // VPN 是否初始化
+  vpn_init = false; // VPN 是否初始化
 
   app_state: AppStateStatus = 'unknown'; // 应用的状态
 
