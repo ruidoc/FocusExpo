@@ -14,6 +14,8 @@
 		14663DE02DF03E9A00B0C458 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14663DDF2DF03E9A00B0C458 /* ManagedSettings.framework */; };
 		14663DE22DF03E9A00B0C458 /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14663DE12DF03E9A00B0C458 /* ManagedSettingsUI.framework */; };
 		14663DEA2DF03E9A00B0C458 /* ShieldExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 14663DDE2DF03E9A00B0C458 /* ShieldExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1496B6602DF13A3100C46D4D /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14663DBD2DF0293E00B0C458 /* DeviceActivity.framework */; };
+		1496B6682DF13A3100C46D4D /* MonitorExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1496B65F2DF13A3000C46D4D /* MonitorExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		24AEF103806C3FA8CDF21803 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 67355E71B64D9B1F19CC4C39 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		578605AFEA2CAB3B43E97875 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 625F08E9E7D41DA3209E9386 /* ExpoModulesProvider.swift */; };
@@ -37,6 +39,13 @@
 			remoteGlobalIDString = 14663DDD2DF03E9A00B0C458;
 			remoteInfo = ShieldExtension;
 		};
+		1496B6662DF13A3100C46D4D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1496B65E2DF13A3000C46D4D;
+			remoteInfo = MonitorExtension;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -58,6 +67,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				14663DEA2DF03E9A00B0C458 /* ShieldExtension.appex in Embed Foundation Extensions */,
+				1496B6682DF13A3100C46D4D /* MonitorExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -77,6 +87,7 @@
 		14663DDE2DF03E9A00B0C458 /* ShieldExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShieldExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		14663DDF2DF03E9A00B0C458 /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
 		14663DE12DF03E9A00B0C458 /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
+		1496B65F2DF13A3000C46D4D /* MonitorExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MonitorExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		186E5FA133169DBB27E79E8E /* Pods-FocusOne.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FocusOne.release.xcconfig"; path = "Target Support Files/Pods-FocusOne/Pods-FocusOne.release.xcconfig"; sourceTree = "<group>"; };
 		29D9A2C5DE75038B3D980F6D /* libPods-FocusOne.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FocusOne.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		625F08E9E7D41DA3209E9386 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-FocusOne/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
@@ -103,11 +114,19 @@
 			);
 			target = 14663DDD2DF03E9A00B0C458 /* ShieldExtension */;
 		};
+		1496B66B2DF13A3100C46D4D /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 1496B65E2DF13A3000C46D4D /* MonitorExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		14663DC92DF03E7200B0C458 /* ReportExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (14663DD52DF03E7300B0C458 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ReportExtension; sourceTree = "<group>"; };
 		14663DE32DF03E9A00B0C458 /* ShieldExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (14663DEB2DF03E9A00B0C458 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ShieldExtension; sourceTree = "<group>"; };
+		1496B6612DF13A3100C46D4D /* MonitorExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (1496B66B2DF13A3100C46D4D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = MonitorExtension; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +151,14 @@
 			files = (
 				14663DE02DF03E9A00B0C458 /* ManagedSettings.framework in Frameworks */,
 				14663DE22DF03E9A00B0C458 /* ManagedSettingsUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1496B65C2DF13A3000C46D4D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1496B6602DF13A3100C46D4D /* DeviceActivity.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -206,6 +233,7 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				14663DC92DF03E7200B0C458 /* ReportExtension */,
 				14663DE32DF03E9A00B0C458 /* ShieldExtension */,
+				1496B6612DF13A3100C46D4D /* MonitorExtension */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				14AFC906BDA2F81E27F2C2F5 /* Pods */,
@@ -222,6 +250,7 @@
 				13B07F961A680F5B00A75B9A /* FocusOne.app */,
 				14663DC82DF03E7200B0C458 /* ReportExtension.appex */,
 				14663DDE2DF03E9A00B0C458 /* ShieldExtension.appex */,
+				1496B65F2DF13A3000C46D4D /* MonitorExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -258,6 +287,7 @@
 			dependencies = (
 				14663DD32DF03E7300B0C458 /* PBXTargetDependency */,
 				14663DE92DF03E9A00B0C458 /* PBXTargetDependency */,
+				1496B6672DF13A3100C46D4D /* PBXTargetDependency */,
 			);
 			name = FocusOne;
 			productName = FocusOne;
@@ -308,6 +338,28 @@
 			productReference = 14663DDE2DF03E9A00B0C458 /* ShieldExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		1496B65E2DF13A3000C46D4D /* MonitorExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1496B66C2DF13A3100C46D4D /* Build configuration list for PBXNativeTarget "MonitorExtension" */;
+			buildPhases = (
+				1496B65B2DF13A3000C46D4D /* Sources */,
+				1496B65C2DF13A3000C46D4D /* Frameworks */,
+				1496B65D2DF13A3000C46D4D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				1496B6612DF13A3100C46D4D /* MonitorExtension */,
+			);
+			name = MonitorExtension;
+			packageProductDependencies = (
+			);
+			productName = MonitorExtension;
+			productReference = 1496B65F2DF13A3000C46D4D /* MonitorExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -324,6 +376,9 @@
 						CreatedOnToolsVersion = 16.3;
 					};
 					14663DDD2DF03E9A00B0C458 = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					1496B65E2DF13A3000C46D4D = {
 						CreatedOnToolsVersion = 16.3;
 					};
 				};
@@ -344,6 +399,7 @@
 				13B07F861A680F5B00A75B9A /* FocusOne */,
 				14663DC72DF03E7200B0C458 /* ReportExtension */,
 				14663DDD2DF03E9A00B0C458 /* ShieldExtension */,
+				1496B65E2DF13A3000C46D4D /* MonitorExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -368,6 +424,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		14663DDC2DF03E9A00B0C458 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1496B65D2DF13A3000C46D4D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -521,6 +584,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1496B65B2DF13A3000C46D4D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -533,6 +603,11 @@
 			isa = PBXTargetDependency;
 			target = 14663DDD2DF03E9A00B0C458 /* ShieldExtension */;
 			targetProxy = 14663DE82DF03E9A00B0C458 /* PBXContainerItemProxy */;
+		};
+		1496B6672DF13A3100C46D4D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1496B65E2DF13A3000C46D4D /* MonitorExtension */;
+			targetProxy = 1496B6662DF13A3100C46D4D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -775,6 +850,91 @@
 			};
 			name = Release;
 		};
+		1496B6692DF13A3100C46D4D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = MonitorExtension/MonitorExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = G497923Y9M;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MonitorExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MonitorExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.focusone.MonitorExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1496B66A2DF13A3100C46D4D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = MonitorExtension/MonitorExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = G497923Y9M;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MonitorExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MonitorExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.focusone.MonitorExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		83CBBA201A601CBA00E9B192 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -919,6 +1079,15 @@
 			buildConfigurations = (
 				14663DED2DF03E9A00B0C458 /* Debug */,
 				14663DEE2DF03E9A00B0C458 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1496B66C2DF13A3100C46D4D /* Build configuration list for PBXNativeTarget "MonitorExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1496B6692DF13A3100C46D4D /* Debug */,
+				1496B66A2DF13A3100C46D4D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

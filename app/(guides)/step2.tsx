@@ -6,6 +6,8 @@ import { GuideStore, HomeStore } from '@/stores';
 import {
   checkScreenTimePermission,
   getScreenTimePermission,
+  selectAppsToLimit,
+  startAppLimits,
 } from '@/utils/permission';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
@@ -102,12 +104,18 @@ const GuideStep2 = observer(() => {
   };
 
   const handleStep2 = () => {
-    router.push({
-      pathname: '/apps/add',
-      params: {
-        mode: gstore.problem === 'study' ? 'focus' : 'shield',
-      },
-    });
+    if (Platform.OS === 'ios') {
+      selectAppsToLimit().then(() => {
+        startAppLimits();
+      });
+    } else {
+      router.push({
+        pathname: '/apps/add',
+        params: {
+          mode: gstore.problem === 'study' ? 'focus' : 'shield',
+        },
+      });
+    }
   };
 
   const handleNext = () => {
