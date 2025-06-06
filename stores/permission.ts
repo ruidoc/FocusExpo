@@ -25,10 +25,10 @@ class PermissionStore {
 
   // 检查电池优化
   checkBattery = async (apply = false) => {
-    this.setPmBattery(true);
-    // NativeClass.checkBattery(apply).then((ok: boolean) => {
-    //   this.setPmBattery(ok);
-    // });
+    if (Platform.OS !== 'android') return;
+    NativeClass.checkBattery(apply).then((ok: boolean) => {
+      this.setPmBattery(ok);
+    });
   };
 
   // 检查通知权限

@@ -117,6 +117,7 @@ android {
             crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
         }
     }
+
     packagingOptions {
         jniLibs {
             useLegacyPackaging (findProperty('expo.useLegacyPackaging')?.toBoolean() ?: false)
@@ -150,6 +151,10 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("joda-time:joda-time:2.12.7")
+    implementation('com.squareup.okhttp3:okhttp:4.12.0')
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";

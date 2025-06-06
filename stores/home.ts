@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
-import { Appearance, AppStateStatus } from 'react-native';
+import { Appearance, AppStateStatus, NativeModules, Platform } from 'react-native';
 import PlanStore from './plan';
+
+const { NativeClass } = NativeModules;
 
 class HomeStore {
   constructor() {
@@ -39,21 +41,23 @@ class HomeStore {
   };
 
   checkVpn = (start = false) => {
-    // NativeClass.isVpnInit()
-    //   .then((init: boolean) => {
-    //     this.setVpnInit(init);
-    //     if (init && start) {
-    //       this.startVpn();
-    //     }
-    //   })
-    //   .catch((error: any) => {
-    //     console.log(error);
-    //   });
+    if (Platform.OS !== 'android') return;
+    NativeClass.isVpnInit()
+      .then((init: boolean) => {
+        this.setVpnInit(init);
+        if (init && start) {
+          this.startVpn();
+        }
+      })
+      .catch((error: any) => {
+        console.log(error);
+      });
   };
 
   startVpn = (onlyInit: boolean = false) => {
+    if (Platform.OS !== 'android') return;
     // if (this.vpn_init) {
-    // NativeClass.startVpn(onlyInit);
+    NativeClass.startVpn(onlyInit);
     // } else {
     //   Dialog({
     //     title: '使用声明',
@@ -67,6 +71,7 @@ class HomeStore {
   };
 
   stopVpn = () => {
+    if (Platform.OS !== 'android') return;
     PlanStore.clearPlans();
     // NativeClass.stopVpn();
   };
@@ -101,9 +106,10 @@ class HomeStore {
   };
 
   loadApps = () => {
-    // NativeClass.getApps().then((list: any) => {
-    //   this.setApps(JSON.parse(list));
-    // });
+    if (Platform.OS !== 'android') return;
+    NativeClass.getApps().then((list: any) => {
+      this.setApps(JSON.parse(list));
+    });
   };
 
   setApps = (apps: any[]) => {
