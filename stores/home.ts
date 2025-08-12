@@ -1,6 +1,7 @@
+import { checkScreenTimePermission } from '@/utils/permission';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
-import { Appearance, AppStateStatus } from 'react-native';
+import { Appearance, AppStateStatus, Platform } from 'react-native';
 import PlanStore from './plan';
 
 class HomeStore {
@@ -20,6 +21,7 @@ class HomeStore {
 
   vpn_state: VpnState = 'close'; // VPN 状态
   vpn_init = false; // VPN 是否初始化
+  ios_screen_time_permission = false; // iOS 屏幕时间权限状态
 
   app_state: AppStateStatus = 'unknown'; // 应用的状态
 
@@ -34,11 +36,20 @@ class HomeStore {
   setVpnInit = (init: boolean) => {
     this.vpn_init = init;
   };
+
+  setIOSScreenTimePermission = (granted: boolean) => {
+    this.ios_screen_time_permission = granted;
+  };
+
   setAppState = (state: AppStateStatus) => {
     this.app_state = state;
   };
 
   checkVpn = (start = false) => {
+    // 检查iOS屏幕时间权限
+    if (Platform.OS === 'ios') {
+      this.checkIOSScreenTimePermission();
+    }
     // NativeClass.isVpnInit()
     //   .then((init: boolean) => {
     //     this.setVpnInit(init);
@@ -49,6 +60,19 @@ class HomeStore {
     //   .catch((error: any) => {
     //     console.log(error);
     //   });
+  };
+
+  // 检查iOS屏幕时间权限
+  checkIOSScreenTimePermission = async () => {
+    if (Platform.OS !== 'ios') return;
+    try {
+      const status = await checkScreenTimePermission();
+      const granted = status === 'approved';
+      this.setIOSScreenTimePermission(granted);
+    } catch (error) {
+      console.log('检查iOS屏幕时间权限失败:', error);
+      this.setIOSScreenTimePermission(false);
+    }
   };
 
   startVpn = (onlyInit: boolean = false) => {

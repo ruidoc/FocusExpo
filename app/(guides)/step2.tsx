@@ -25,7 +25,9 @@ import {
 const GuideStep2 = observer(() => {
   const store = useLocalObservable(() => HomeStore);
   const gstore = useLocalObservable(() => GuideStore);
-  const step1Completed = store.vpn_init;
+  // iOS下检查屏幕时间权限，Android下检查VPN权限
+  const step1Completed =
+    Platform.OS === 'ios' ? store.ios_screen_time_permission : store.vpn_init;
   const step2Completed = gstore.selected_apps.length > 0;
   const { colors, dark } = useTheme();
 
@@ -80,16 +82,21 @@ const GuideStep2 = observer(() => {
     const status = await checkScreenTimePermission();
     switch (status) {
       case 'approved':
-        // 已有权限，执行功能
+        // 已有权限，更新状态
+        store.setIOSScreenTimePermission(true);
         break;
       case 'denied':
         // 已拒绝，提示用户手动开启
+        store.setIOSScreenTimePermission(false);
         break;
       case 'notDetermined':
         // 未决定，请求权限
         const granted = await getScreenTimePermission();
         if (granted) {
-          // 成功获取权限
+          // 成功获取权限，更新状态
+          store.setIOSScreenTimePermission(true);
+        } else {
+          store.setIOSScreenTimePermission(false);
         }
         break;
     }
@@ -327,7 +334,11 @@ const GuideStep2 = observer(() => {
                   {step1Completed ? '✓' : '1'}
                 </Text>
               </View>
-              <Text style={styles.stepText}>获取网络屏蔽权限</Text>
+              <Text style={styles.stepText}>
+                {Platform.OS === 'ios'
+                  ? '获取屏幕时间权限'
+                  : '获取网络屏蔽权限'}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.step, step2Completed && styles.stepCompleted]}
