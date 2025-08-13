@@ -49,7 +49,7 @@ struct CustomFamilyActivityPicker: View {
 }
 
 @objc(NativeModule)
-class NativeModule: NSObject {
+class NativeModule: NSObject, Sendable {
   private let center = DeviceActivityCenter()
   private let activityName = DeviceActivityName("FocusOne.ScreenTime")
   
@@ -212,31 +212,109 @@ class NativeModule: NSObject {
     resolve(true)
   }
   
+  // 渲染所有选择的应用Label为图片并返回base64数组
+  @objc
+  func renderAppLabelToImage(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    // 从UserDefaults获取已保存的应用选择
+    guard let selection = self.loadSelection() else {
+      reject("NO_SELECTION", "没有选择需要限制的应用", nil)
+      return
+    }
+    
+    DispatchQueue.main.async {
+      var appIcons: [[String: Any]] = []
+      
+      // 处理应用令牌
+      for token in selection.applicationTokens {
+        do {
+          // 创建Label视图
+          let labelView = Label(token)
+            .labelStyle(.iconOnly)
+            .frame(width: 40, height: 40)
+          
+          // 将token编码为base64以便传递给RN
+          let tokenData = try JSONEncoder().encode(token)
+          let tokenBase64 = tokenData.base64EncodedString()
+          
+          let appIcon: [String: Any] = [
+            "id": "\(token.hashValue)",
+            "name": "应用",
+            "tokenData": tokenBase64,
+            "type": "application"
+          ]
+          
+          appIcons.append(appIcon)
+        } catch {
+          // 跳过无法渲染的应用
+          continue
+        }
+      }
+      
+      // 处理网站令牌
+      for token in selection.webDomainTokens {
+        let webIcon: [String: Any] = [
+          "id": "\(token.hashValue)",
+          "name": "网站",
+          "type": "webDomain",
+          "iconBase64": ""
+        ]
+        appIcons.append(webIcon)
+      }
+      
+      // 处理类别令牌
+      for token in selection.categoryTokens {
+        do {
+          // 创建Label视图来展示类别
+          let labelView = Label(token)
+            .labelStyle(.iconOnly)
+            .frame(width: 40, height: 40)
+          
+          // 将token编码为base64以便传递给RN
+          let tokenData = try JSONEncoder().encode(token)
+          let tokenBase64 = tokenData.base64EncodedString()
+          
+          let categoryIcon: [String: Any] = [
+            "id": "\(token.hashValue)",
+            "name": "应用类别",
+            "tokenData": tokenBase64,
+            "type": "category",
+          ]
+          
+          appIcons.append(categoryIcon)
+        } catch {
+          // 跳过无法渲染的类别
+          continue
+        }
+      }
+      
+      resolve(appIcons)
+    }
+  }
+  
   // 获取选择应用的详细信息
   private func getSelectedAppDetails(from selection: FamilyActivitySelection) -> [[String: Any]] {
-    let store = ManagedSettingsStore()
+    // let store = ManagedSettingsStore()
     var appDetails: [[String: Any]] = []
     
     // 处理应用令牌
     for token in selection.applicationTokens {
-      // 尝试获取应用信息
-      var appName = "未知应用"
-      var iconBase64: String? = nil
-      
-      // 创建应用详情字典
-      let appDetail: [String: Any] = [
-        "id": "\(token.hashValue)",
-        "name": appName,
-        "icon": iconBase64 ?? "",
-        "type": "application"
-      ]
-      
-      appDetails.append(appDetail)
+      // 将token编码为base64以便传递给RN
+      if let tokenData = try? JSONEncoder().encode(token) {
+        let tokenBase64 = tokenData.base64EncodedString()
+        
+        let appDetail: [String: Any] = [
+          "id": "\(token.hashValue)",
+          "name": "应用",
+          "tokenData": tokenBase64,
+          "type": "application"
+        ]
+        
+        appDetails.append(appDetail)
+      }
     }
     
     // 处理网站令牌
     for token in selection.webDomainTokens {
-      // 网站域名信息
       let webDetail: [String: Any] = [
         "id": "\(token.hashValue)",
         "name": "网站",
@@ -248,7 +326,6 @@ class NativeModule: NSObject {
     
     // 处理类别令牌
     for token in selection.categoryTokens {
-      // 类别信息
       let categoryDetail: [String: Any] = [
         "id": "\(token.hashValue)",
         "name": "应用类别",
@@ -277,5 +354,37 @@ class NativeModule: NSObject {
       return nil
     }
     return selection
+  }
+  
+  // 尝试获取类别显示名称
+  private func getCategoryDisplayName(for token: ActivityCategoryToken) -> String {
+    // 方法1: 尝试通过反射获取更多信息
+    let mirror = Mirror(reflecting: token)
+    
+    // 方法2: 尝试获取描述信息
+    let description = String(describing: token)
+    
+    // 方法3: 尝试通过hash值映射到预定义的类别名称
+    let categoryNames: [Int: String] = [
+      // 这些是基于常见的iOS应用类别，具体值需要实际测试
+      1: "社交网络",
+      2: "游戏",
+      3: "生产力",
+      4: "娱乐",
+      5: "教育",
+      6: "健康与健身",
+      7: "购物",
+      8: "旅行",
+      9: "工具",
+      10: "新闻"
+    ]
+    
+    // 尝试从映射中获取名称
+    if let name = categoryNames[token.hashValue] {
+      return name
+    }
+    
+    // 如果都失败了，返回默认名称
+    return "应用类别"
   }
 } 

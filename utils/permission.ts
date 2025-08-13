@@ -78,3 +78,16 @@ export async function stopAppLimits(): Promise<boolean> {
     return false;
   }
 }
+
+// 渲染应用Label为图片列表
+export async function renderAppLabelToImage(): Promise<string[]> {
+  if (Platform.OS !== 'ios') return null;
+  try {
+    let appIcons = await NativeModules.NativeModule.renderAppLabelToImage();
+    console.log('渲染图片数据：', appIcons);
+    return appIcons.filter((item: any) => item.type === 'application');
+  } catch (error) {
+    console.log('渲染图片数据异常：', error);
+    return null;
+  }
+}

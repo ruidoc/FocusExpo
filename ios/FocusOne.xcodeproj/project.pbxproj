@@ -22,6 +22,9 @@
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		E75B287BEAA6C9D46581B7A9 /* libPods-FocusOne.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29D9A2C5DE75038B3D980F6D /* libPods-FocusOne.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		AF0000010000000000000001 /* TokenLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0000040000000000000001 /* TokenLabelView.swift */; };
+		AF0000020000000000000001 /* TokenLabelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0000050000000000000001 /* TokenLabelManager.swift */; };
+		AF0000030000000000000001 /* TokenLabelManager.m in Sources */ = {isa = PBXBuildFile; fileRef = AF0000060000000000000001 /* TokenLabelManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,6 +100,9 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = FocusOne/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* FocusOne-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FocusOne-Bridging-Header.h"; path = "FocusOne/FocusOne-Bridging-Header.h"; sourceTree = "<group>"; };
+		AF0000040000000000000001 /* TokenLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenLabelView.swift; sourceTree = "<group>"; };
+		AF0000050000000000000001 /* TokenLabelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenLabelManager.swift; sourceTree = "<group>"; };
+		AF0000060000000000000001 /* TokenLabelManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TokenLabelManager.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -191,6 +197,7 @@
 			children = (
 				14663DBF2DF02EDD00B0C458 /* NativeModule.swift */,
 				14663DC02DF02EDD00B0C458 /* NativeModuleBridge.m */,
+				AF0001000000000000000001 /* NativeComponents */,
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748442D0722820044C1D9 /* FocusOne-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
@@ -200,6 +207,25 @@
 				67355E71B64D9B1F19CC4C39 /* PrivacyInfo.xcprivacy */,
 			);
 			name = FocusOne;
+			sourceTree = "<group>";
+		};
+		AF0001000000000000000001 /* NativeComponents */ = {
+			isa = PBXGroup;
+			children = (
+				AF0002000000000000000001 /* TokenLabel */,
+			);
+			name = NativeComponents;
+			sourceTree = "<group>";
+		};
+		AF0002000000000000000001 /* TokenLabel */ = {
+			isa = PBXGroup;
+			children = (
+				AF0000040000000000000001 /* TokenLabelView.swift */,
+				AF0000050000000000000001 /* TokenLabelManager.swift */,
+				AF0000060000000000000001 /* TokenLabelManager.m */,
+			);
+			name = TokenLabel;
+			path = NativeComponents/TokenLabel;
 			sourceTree = "<group>";
 		};
 		14AFC906BDA2F81E27F2C2F5 /* Pods */ = {
@@ -556,6 +582,9 @@
 				14663DC22DF02EDD00B0C458 /* NativeModule.swift in Sources */,
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
 				578605AFEA2CAB3B43E97875 /* ExpoModulesProvider.swift in Sources */,
+				AF0000010000000000000001 /* TokenLabelView.swift in Sources */,
+				AF0000020000000000000001 /* TokenLabelManager.swift in Sources */,
+				AF0000030000000000000001 /* TokenLabelManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

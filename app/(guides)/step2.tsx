@@ -1,11 +1,13 @@
 import AnimatedCascade from '@/components/cascade';
 import CusButton from '@/components/cus-button';
+import TokenLabel from '@/components/native/TokenLabel';
 import Typewriter from '@/components/type-writer';
 import palette from '@/constants/Colors';
 import { GuideStore, HomeStore } from '@/stores';
 import {
   checkScreenTimePermission,
   getScreenTimePermission,
+  renderAppLabelToImage,
   selectAppsToLimit,
   startAppLimits,
 } from '@/utils/permission';
@@ -28,7 +30,8 @@ const GuideStep2 = observer(() => {
   // iOS下检查屏幕时间权限，Android下检查VPN权限
   const step1Completed =
     Platform.OS === 'ios' ? store.ios_screen_time_permission : store.vpn_init;
-  const step2Completed = gstore.selected_apps.length > 0;
+  const step2Completed =
+    Platform.OS === 'ios' ? false : gstore.selected_apps.length > 0;
   const { colors, dark } = useTheme();
 
   // 控制步骤卡片和按钮的动画显示
@@ -36,6 +39,7 @@ const GuideStep2 = observer(() => {
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [optionsAllShown, setOptionsAllShown] = useState(false);
   const [buttonVisible, setButtonVisible] = useState(false);
+  const [appIcons, setAppIcons] = useState<any[]>([]);
   const buttonOpacity = React.useRef(
     new (require('react-native').Animated.Value)(0),
   ).current;
@@ -114,6 +118,9 @@ const GuideStep2 = observer(() => {
     if (Platform.OS === 'ios') {
       selectAppsToLimit().then(() => {
         startAppLimits();
+        renderAppLabelToImage().then(appIcons => {
+          setAppIcons(appIcons);
+        });
       });
     } else {
       router.push({
@@ -358,6 +365,16 @@ const GuideStep2 = observer(() => {
             </TouchableOpacity>
           </AnimatedCascade>
         )}
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
+        {appIcons.map(item => (
+          <TokenLabel
+            key={item.id}
+            tokenHash={item.id}
+            size={40}
+            style={{ width: 40, height: 40 }}
+          />
+        ))}
       </View>
       {/* 下一步按钮动画，所有步骤完成后再出现 */}
       {step2Completed && step1Completed && <CusButton onPress={handleNext} />}
