@@ -6,13 +6,13 @@ import { useColorScheme as useRNColorScheme } from 'react-native';
  */
 export function useColorScheme() {
   const [hasHydrated, setHasHydrated] = useState(false);
+  const colorScheme = useRNColorScheme();
 
   useEffect(() => {
     setHasHydrated(true);
   }, []);
 
-  const colorScheme = useRNColorScheme();
-
+  // 确保 hooks 调用顺序一致
   if (hasHydrated) {
     return colorScheme;
   }

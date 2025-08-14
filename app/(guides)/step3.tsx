@@ -1,14 +1,16 @@
 import AnimatedCascade from '@/components/cascade';
 import CusButton from '@/components/cus-button';
+import TokenLabel from '@/components/native/TokenLabel';
 import Typewriter from '@/components/type-writer';
 import { GuideStore, HomeStore, PlanStore } from '@/stores';
+import { startAppLimits } from '@/utils/permission';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 
 const GuideStep3 = observer(() => {
   const store = useLocalObservable(() => HomeStore);
@@ -133,22 +135,25 @@ const GuideStep3 = observer(() => {
       mode: gstore.mode,
     });
 
-    // 启动 VPN
-    store.startVpn();
+    if (Platform.OS === 'ios') {
+      startAppLimits();
+    } else {
+      // 启动 VPN
+      store.startVpn();
 
-    // 获取选中的应用名称
-    const selectedApp =
-      store.all_apps
-        .filter(app => gstore.selected_apps.includes(app.packageName))
-        .map(app => app.appName)[0] || '';
+      // 获取选中的应用名称
+      const selectedApp =
+        store.all_apps
+          .filter(app => gstore.selected_apps.includes(app.packageName))
+          .map(app => app.appName)[0] || '';
 
-    // 存储选中的应用名称到全局状态
-    gstore.setSelectedAppName(selectedApp);
-
+      // 存储选中的应用名称到全局状态
+      gstore.setSelectedAppName(selectedApp);
+    }
     // 跳转到成功页面，并传递选中的应用名称
     router.push({
       pathname: '/(guides)/step4',
-      params: { selectedAppName: selectedApp },
+      params: { selectedAppName: '' },
     });
   };
 
@@ -172,6 +177,17 @@ const GuideStep3 = observer(() => {
             direction="bottom"
             style={{ marginTop: 30, marginBottom: 10 }}
             onFinish={() => setAppsAllShown(true)}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
+              {store.selected_app_icons.map(item => (
+                <TokenLabel
+                  key={item.id}
+                  tokenBase64={item.tokenData}
+                  tokenType={item.type}
+                  size={40}
+                  style={{ width: 40, height: 40 }}
+                />
+              ))}
+            </View>
             {store.all_apps
               .filter(app => gstore.selected_apps.includes(app.packageName))
               .map(app => (

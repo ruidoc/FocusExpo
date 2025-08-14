@@ -1,15 +1,9 @@
 import AnimatedCascade from '@/components/cascade';
 import CusButton from '@/components/cus-button';
-import TokenLabel from '@/components/native/TokenLabel';
 import Typewriter from '@/components/type-writer';
 import palette from '@/constants/Colors';
 import { GuideStore, HomeStore } from '@/stores';
-import {
-  checkScreenTimePermission,
-  getScreenTimePermission,
-  selectAppsToLimit,
-  startAppLimits,
-} from '@/utils/permission';
+import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
@@ -33,7 +27,7 @@ const GuideStep2 = observer(() => {
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [optionsAllShown, setOptionsAllShown] = useState(false);
   const [buttonVisible, setButtonVisible] = useState(false);
-  const [appIcons, setAppIcons] = useState<any[]>([]);
+  // 选中图标存储已迁移至 HomeStore.selected_app_icons
   const buttonOpacity = React.useRef(new Animated.Value(0)).current;
 
   // iOS下检查屏幕时间权限，Android下检查VPN权限
@@ -41,7 +35,7 @@ const GuideStep2 = observer(() => {
     Platform.OS === 'ios' ? store.ios_screen_time_permission : store.vpn_init;
   const step2Completed =
     Platform.OS === 'ios'
-      ? appIcons.length > 0
+      ? store.selected_app_icons.length > 0
       : gstore.selected_apps.length > 0;
 
   const { colors, dark } = useTheme();
@@ -89,26 +83,15 @@ const GuideStep2 = observer(() => {
   }, [store]);
 
   const checkIOSPermission = async () => {
-    const status = await checkScreenTimePermission();
-    switch (status) {
-      case 'approved':
-        // 已有权限，更新状态
+    const status = await store.checkIOSScreenTimePermission();
+    if (!status) {
+      const granted = await getScreenTimePermission();
+      if (granted) {
+        // 成功获取权限，更新状态
         store.setIOSScreenTimePermission(true);
-        break;
-      case 'denied':
-        // 已拒绝，提示用户手动开启
+      } else {
         store.setIOSScreenTimePermission(false);
-        break;
-      case 'notDetermined':
-        // 未决定，请求权限
-        const granted = await getScreenTimePermission();
-        if (granted) {
-          // 成功获取权限，更新状态
-          store.setIOSScreenTimePermission(true);
-        } else {
-          store.setIOSScreenTimePermission(false);
-        }
-        break;
+      }
     }
   };
 
@@ -124,8 +107,7 @@ const GuideStep2 = observer(() => {
     if (Platform.OS === 'ios') {
       selectAppsToLimit().then(data => {
         // console.log('获取数据：', data);
-        startAppLimits();
-        setAppIcons(data.apps);
+        store.setSelectedAppIcons(data.apps);
       });
     } else {
       router.push({
@@ -370,17 +352,6 @@ const GuideStep2 = observer(() => {
             </TouchableOpacity>
           </AnimatedCascade>
         )}
-      </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
-        {appIcons.map(item => (
-          <TokenLabel
-            key={item.id}
-            tokenBase64={item.tokenData}
-            tokenType={item.type}
-            size={40}
-            style={{ width: 40, height: 40 }}
-          />
-        ))}
       </View>
       {/* 下一步按钮动画，所有步骤完成后再出现 */}
       {step2Completed && step1Completed && <CusButton onPress={handleNext} />}

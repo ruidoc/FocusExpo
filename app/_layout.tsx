@@ -97,7 +97,7 @@ export default function RootLayout() {
             name="quick-start/index"
             options={{
               title: '快速开始',
-              animation: 'fade_from_bottom',
+              // animation: 'fade_from_bottom',
               presentation: 'modal',
             }}
           />

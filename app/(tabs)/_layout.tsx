@@ -10,7 +10,40 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@react-navigation/native';
 import { Pressable } from 'react-native';
 
-export default function TabLayout() {
+// 左侧组件
+const LeftDom = ({
+  colors,
+  toRoute,
+}: {
+  colors: any;
+  toRoute: (path: string) => void;
+}) => (
+  <Space direction="horizontal" align="center" gap={16} head={16}>
+    <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Guide')}>
+      <Icon name="help-circle-outline" size={23} color={colors.text} />
+    </Pressable>
+  </Space>
+);
+
+// 右侧组件
+const RightDom = ({
+  colors,
+  toRoute,
+}: {
+  colors: any;
+  toRoute: (path: string) => void;
+}) => (
+  <Space direction="horizontal" align="center" gap={16} tail={16}>
+    <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Apps')}>
+      <Icon name="grid-outline" size={19} color={colors.text} />
+    </Pressable>
+    <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Plans')}>
+      <Icon name="time-outline" size={22} color={colors.text} />
+    </Pressable>
+  </Space>
+);
+
+const TabLayout = () => {
   // const colorScheme = useColorScheme();
   const { colors } = useTheme();
   const navigation = useNavigation();
@@ -22,25 +55,6 @@ export default function TabLayout() {
     }
     navigation.navigate(path as never);
   };
-
-  const LeftDom = () => (
-    <Space direction="horizontal" align="center" gap={16} head={16}>
-      <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Guide')}>
-        <Icon name="help-circle-outline" size={23} color={colors.text} />
-      </Pressable>
-    </Space>
-  );
-
-  const RightDom = () => (
-    <Space direction="horizontal" align="center" gap={16} tail={16}>
-      <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Apps')}>
-        <Icon name="grid-outline" size={19} color={colors.text} />
-      </Pressable>
-      <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Plans')}>
-        <Icon name="time-outline" size={22} color={colors.text} />
-      </Pressable>
-    </Space>
-  );
 
   return (
     <Tabs screenOptions={BottomTabOptions}>
@@ -56,8 +70,8 @@ export default function TabLayout() {
               color={focused ? colors.primary : colors.text}
             />
           ),
-          headerRight: RightDom,
-          headerLeft: LeftDom,
+          headerRight: () => <RightDom colors={colors} toRoute={toRoute} />,
+          headerLeft: () => <LeftDom colors={colors} toRoute={toRoute} />,
         }}
       />
       <Tabs.Screen
@@ -76,4 +90,6 @@ export default function TabLayout() {
       />
     </Tabs>
   );
-}
+};
+
+export default TabLayout;

@@ -138,13 +138,21 @@ class NativeModule: NSObject {
             )
           )
           
-          // 设置全屏呈现风格
-          pickerViewController.modalPresentationStyle = .fullScreen
+          // 以 Sheet 模态呈现，并设置为多半屏（支持中/大两档）
+          pickerViewController.modalPresentationStyle = .pageSheet
+          if let sheet = pickerViewController.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = false
+          }
           
-          // 获取顶层窗口并展示选择器
+          // 获取顶层窗口并展示选择器（从顶层VC弹出，避免被现有弹窗阻挡）
           if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
              let rootViewController = windowScene.windows.first?.rootViewController {
-            rootViewController.present(pickerViewController, animated: true)
+            var top = rootViewController
+            while let presented = top.presentedViewController {
+              top = presented
+            }
+            top.present(pickerViewController, animated: true)
           } else {
             reject("PRESENTATION_ERROR", "无法打开应用选择器", nil)
           }

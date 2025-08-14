@@ -15,6 +15,7 @@ class HomeStore {
 
   all_apps: any[] = []; // 所有已安装的app
   exit_times: number[] = []; // 中途退出记录
+  selected_app_icons: any[] = []; // 已选择的应用图标（iOS）
 
   them: 'dark' | 'light' = 'light'; // 主题
   followSystem: boolean = true; // 是否跟随系统主题
@@ -69,9 +70,11 @@ class HomeStore {
       const status = await checkScreenTimePermission();
       const granted = status === 'approved';
       this.setIOSScreenTimePermission(granted);
+      return granted;
     } catch (error) {
       console.log('检查iOS屏幕时间权限失败:', error);
       this.setIOSScreenTimePermission(false);
+      return false;
     }
   };
 
@@ -132,6 +135,11 @@ class HomeStore {
 
   setApps = (apps: any[]) => {
     this.all_apps = apps;
+  };
+
+  // 设置已选择的应用图标（用于 iOS 屏幕时间限制返回的数据）
+  setSelectedAppIcons = (icons: any[]) => {
+    this.selected_app_icons = Array.isArray(icons) ? icons : [];
   };
 
   setVpnState = (state: VpnState) => {

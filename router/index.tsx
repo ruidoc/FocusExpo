@@ -25,6 +25,7 @@ import {
 import { observer, useLocalObservable } from 'mobx-react';
 // import * as Sentry from '@sentry/react-native';
 import { toast } from '@/utils';
+import { getSelectIosApps } from '@/utils/permission';
 
 const { NativeClass } = NativeModules;
 
@@ -96,15 +97,19 @@ const App = observer(() => {
       AsyncStorage.getItem('exit_times'),
       AsyncStorage.getItem('privacy_readed'),
     ]);
-    store.checkVpn(true);
     gstore.init();
-    setTimeout(() => {
-      if (Platform.OS === 'android') {
-        // RNBBootSplash.hide({ fade: true });
-      }
-    }, 200);
     if (!uinfo) return;
     ustore.setUinfo(JSON.parse(uinfo));
+    // 根据环境初始化
+    if (Platform.OS === 'ios') {
+      let apps = await getSelectIosApps();
+      store.setSelectedAppIcons(apps);
+    } else {
+      store.checkVpn(true);
+      setTimeout(() => {
+        // RNBBootSplash.hide({ fade: true });
+      }, 200);
+    }
     if (focus_apps) {
       astore.setFocusApps(JSON.parse(focus_apps));
     }

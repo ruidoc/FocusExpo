@@ -5,8 +5,9 @@ import { useNavigation, useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Platform, ScrollView, Text, View } from 'react-native';
 import ModeSwitcher from './mode-switcher';
+import SelectApps from './select-apps';
 import styles from './styles';
 import TimeSlider from './time-slider';
 
@@ -63,17 +64,20 @@ const QuickStartPage = observer(() => {
       <ScrollView style={{ flex: 1 }}>
         <View style={{ marginTop: 10, marginBottom: 8 }}>
           <Text style={[styles.titleStyle, { color: dark ? '#fff' : '#222' }]}>
-            选择模式
+            {Platform.OS === 'ios' ? '选择APP' : '选择模式'}
           </Text>
         </View>
-        <ModeSwitcher
-          mode={mode}
-          setMode={setMode}
-          desc={modeDescMap[mode]}
-          focusApps={astore.focus_apps}
-          shieldApps={astore.shield_apps}
-          allApps={store.all_apps}
-        />
+        {Platform.OS === 'ios' && <SelectApps />}
+        {Platform.OS === 'android' && (
+          <ModeSwitcher
+            mode={mode}
+            setMode={setMode}
+            desc={modeDescMap[mode]}
+            focusApps={astore.focus_apps}
+            shieldApps={astore.shield_apps}
+            allApps={store.all_apps}
+          />
+        )}
         <View style={{ marginTop: 18, marginBottom: 8 }}>
           <Text style={[styles.titleStyle, { color: dark ? '#fff' : '#222' }]}>
             设置时长

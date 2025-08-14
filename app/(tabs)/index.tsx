@@ -11,6 +11,7 @@ import {
 } from '@/stores';
 import { toast } from '@/utils';
 import { buttonRipple } from '@/utils/config';
+import { getScreenTimePermission } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import {
   Button,
@@ -24,10 +25,11 @@ import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
-
 import {
+  AppState,
   Image,
   NativeModules,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -37,10 +39,89 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { NativeClass } = NativeModules;
 const statusBarHeight = StatusBar.currentHeight;
+
+// 屏幕时间权限获取页面组件
+const ScreenTimePermissionPage = ({
+  colors,
+  xcolor,
+}: {
+  colors: any;
+  xcolor: any;
+}) => {
+  const handleRequestPermission = async () => {
+    const granted = await getScreenTimePermission();
+    if (granted) {
+      // 成功获取权限，更新状态
+      HomeStore.setIOSScreenTimePermission(true);
+    } else {
+      HomeStore.setIOSScreenTimePermission(false);
+    }
+  };
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 40,
+      backgroundColor: colors.background,
+    },
+    icon: {
+      fontSize: 80,
+      color: xcolor.brand_6,
+      marginBottom: 30,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 20,
+      textAlign: 'center',
+    },
+    description: {
+      fontSize: 16,
+      color: xcolor.gray_8,
+      textAlign: 'center',
+      lineHeight: 24,
+      marginBottom: 40,
+    },
+    button: {
+      backgroundColor: xcolor.brand_6,
+      paddingHorizontal: 40,
+      borderRadius: 25,
+    },
+    buttonText: {
+      color: 'white',
+      fontSize: 18,
+      fontWeight: '600',
+    },
+  });
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <Icon name="shield-checkmark" style={styles.icon} />
+        <Text style={styles.title}>需要屏幕时间权限</Text>
+        <Text style={styles.description}>
+          为了帮助您专注工作和学习，我们需要获取屏幕时间权限来管理应用使用。
+          {'\n\n'}
+          请在设置中授予权限，然后返回应用继续使用。
+        </Text>
+        <Button
+          style={styles.button}
+          onPress={handleRequestPermission}
+          textStyle={styles.buttonText}>
+          获取权限
+        </Button>
+      </View>
+    </SafeAreaView>
+  );
+};
 
 const App = observer(() => {
   const store = useLocalObservable(() => HomeStore);
@@ -55,6 +136,14 @@ const App = observer(() => {
   const [refreshing, setRefreshing] = useState(false);
 
   const apps = pstore.is_focus_mode ? astore.focus_apps : astore.shield_apps;
+
+  // 如果没有屏幕时间权限，显示权限获取页面
+  const shouldShowPermissionPage =
+    Platform.OS === 'ios' && !store.ios_screen_time_permission;
+
+  if (shouldShowPermissionPage) {
+    return <ScreenTimePermissionPage colors={colors} xcolor={xcolor} />;
+  }
 
   const getColor = (state: string) => {
     let grey = '#70809990';
@@ -264,14 +353,7 @@ const App = observer(() => {
     pmstore.checkBattery();
     pmstore.checkNotify();
     if (!ustore.uInfo) return;
-    if (!pstore.all_plans[0]) {
-      setTimeout(() => {
-        router.push({
-          pathname: '/quick-start',
-          params: { type: 'start' },
-        } as never);
-      }, 2000);
-    } else {
+    if (pstore.all_plans[0]) {
       setTimeout(() => {
         startVpn();
       }, 1500);
@@ -279,7 +361,32 @@ const App = observer(() => {
   };
 
   useEffect(() => {
-    initapp();
+    // 当用户状态恢复后，执行初始化
+    if (ustore.uInfo) {
+      initapp();
+    }
+  }, [ustore.uInfo]);
+
+  // 应用回到前台时，立刻检查 iOS 屏幕时间权限
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    const sub = AppState.addEventListener('change', async state => {
+      if (state === 'active') {
+        try {
+          const { checkScreenTimePermission } = await import(
+            '@/utils/permission'
+          );
+          const status = await checkScreenTimePermission();
+          const isApproved = status === 'approved';
+          if (isApproved !== store.ios_screen_time_permission) {
+            store.setIOSScreenTimePermission(isApproved);
+          }
+        } catch (error) {
+          console.log('前台检查屏幕时间权限失败:', error);
+        }
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   useEffect(() => {
