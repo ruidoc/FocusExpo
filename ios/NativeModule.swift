@@ -1,6 +1,6 @@
 import Foundation
 import React
-import DeviceActivity
+@preconcurrency import DeviceActivity
 import FamilyControls
 import UIKit
 import ManagedSettings
@@ -44,12 +44,16 @@ struct CustomFamilyActivityPicker: View {
             }
           }
         }
+        .onAppear {
+          // 进入选择器时，将上次已保存的选择作为初始选中
+          selectedApps = selection
+        }
     }
   }
 }
 
 @objc(NativeModule)
-class NativeModule: NSObject, Sendable {
+class NativeModule: NSObject {
   private let center = DeviceActivityCenter()
   private let activityName = DeviceActivityName("FocusOne.ScreenTime")
   
@@ -102,8 +106,8 @@ class NativeModule: NSObject, Sendable {
         
         // 在主线程显示应用选择器
         DispatchQueue.main.async {
-          // 创建自定义选择器
-          var selection = FamilyActivitySelection()
+          // 创建自定义选择器，默认带入上一次保存的选择
+          var selection = self.loadSelection() ?? FamilyActivitySelection()
           
           let pickerViewController = UIHostingController(
             rootView: CustomFamilyActivityPicker(
@@ -222,16 +226,19 @@ class NativeModule: NSObject, Sendable {
     }
     
     DispatchQueue.main.async {
+      var appIcons = self.getSelectedAppDetails(from: selection)
+      
+      resolve(appIcons)
+    }
+  }
+  
+  // 获取选择应用的详细信息
+  private func getSelectedAppDetails(from selection: FamilyActivitySelection) -> [[String: Any]] {
       var appIcons: [[String: Any]] = []
       
       // 处理应用令牌
       for token in selection.applicationTokens {
         do {
-          // 创建Label视图
-          let labelView = Label(token)
-            .labelStyle(.iconOnly)
-            .frame(width: 40, height: 40)
-          
           // 将token编码为base64以便传递给RN
           let tokenData = try JSONEncoder().encode(token)
           let tokenBase64 = tokenData.base64EncodedString()
@@ -252,23 +259,21 @@ class NativeModule: NSObject, Sendable {
       
       // 处理网站令牌
       for token in selection.webDomainTokens {
-        let webIcon: [String: Any] = [
-          "id": "\(token.hashValue)",
-          "name": "网站",
-          "type": "webDomain",
-          "iconBase64": ""
-        ]
-        appIcons.append(webIcon)
+        if let tokenData = try? JSONEncoder().encode(token) {
+          let tokenBase64 = tokenData.base64EncodedString()
+          let webIcon: [String: Any] = [
+            "id": "\(token.hashValue)",
+            "name": "网站",
+            "type": "webDomain",
+            "tokenData": tokenBase64
+          ]
+          appIcons.append(webIcon)
+        }
       }
       
       // 处理类别令牌
       for token in selection.categoryTokens {
         do {
-          // 创建Label视图来展示类别
-          let labelView = Label(token)
-            .labelStyle(.iconOnly)
-            .frame(width: 40, height: 40)
-          
           // 将token编码为base64以便传递给RN
           let tokenData = try JSONEncoder().encode(token)
           let tokenBase64 = tokenData.base64EncodedString()
@@ -287,56 +292,8 @@ class NativeModule: NSObject, Sendable {
         }
       }
       
-      resolve(appIcons)
+      return appIcons
     }
-  }
-  
-  // 获取选择应用的详细信息
-  private func getSelectedAppDetails(from selection: FamilyActivitySelection) -> [[String: Any]] {
-    // let store = ManagedSettingsStore()
-    var appDetails: [[String: Any]] = []
-    
-    // 处理应用令牌
-    for token in selection.applicationTokens {
-      // 将token编码为base64以便传递给RN
-      if let tokenData = try? JSONEncoder().encode(token) {
-        let tokenBase64 = tokenData.base64EncodedString()
-        
-        let appDetail: [String: Any] = [
-          "id": "\(token.hashValue)",
-          "name": "应用",
-          "tokenData": tokenBase64,
-          "type": "application"
-        ]
-        
-        appDetails.append(appDetail)
-      }
-    }
-    
-    // 处理网站令牌
-    for token in selection.webDomainTokens {
-      let webDetail: [String: Any] = [
-        "id": "\(token.hashValue)",
-        "name": "网站",
-        "type": "webDomain"
-      ]
-      
-      appDetails.append(webDetail)
-    }
-    
-    // 处理类别令牌
-    for token in selection.categoryTokens {
-      let categoryDetail: [String: Any] = [
-        "id": "\(token.hashValue)",
-        "name": "应用类别",
-        "type": "category"
-      ]
-      
-      appDetails.append(categoryDetail)
-    }
-    
-    return appDetails
-  }
   
   // 保存选择的应用到UserDefaults
   private func saveSelection(selection: FamilyActivitySelection) {
@@ -356,35 +313,5 @@ class NativeModule: NSObject, Sendable {
     return selection
   }
   
-  // 尝试获取类别显示名称
-  private func getCategoryDisplayName(for token: ActivityCategoryToken) -> String {
-    // 方法1: 尝试通过反射获取更多信息
-    let mirror = Mirror(reflecting: token)
-    
-    // 方法2: 尝试获取描述信息
-    let description = String(describing: token)
-    
-    // 方法3: 尝试通过hash值映射到预定义的类别名称
-    let categoryNames: [Int: String] = [
-      // 这些是基于常见的iOS应用类别，具体值需要实际测试
-      1: "社交网络",
-      2: "游戏",
-      3: "生产力",
-      4: "娱乐",
-      5: "教育",
-      6: "健康与健身",
-      7: "购物",
-      8: "旅行",
-      9: "工具",
-      10: "新闻"
-    ]
-    
-    // 尝试从映射中获取名称
-    if let name = categoryNames[token.hashValue] {
-      return name
-    }
-    
-    // 如果都失败了，返回默认名称
-    return "应用类别"
-  }
-} 
+
+}

@@ -10,6 +10,10 @@ import DeviceActivity
     @objc var tokenBase64: NSString? { didSet { updateContentIfPossible() } }
     @objc var tokenHash: NSString? { didSet { updateContentIfPossible() } }
     @objc var size: NSNumber = 40 { didSet { updateContentIfPossible() } }
+    // application | category | webDomain
+    @objc var tokenType: NSString? { didSet { updateContentIfPossible() } }
+    // icon | title
+    @objc var display: NSString? { didSet { updateContentIfPossible() } }
 
     private var hostingController: UIHostingController<AnyView>?
 
@@ -29,16 +33,61 @@ import DeviceActivity
     }
 
     private func updateContentIfPossible() {
-        guard let tokenHashStr = tokenHash as String? else { return }
-        guard let selection = loadSelection() else { return }
-        guard let token = selection.applicationTokens.first(where: { "\($0.hashValue)" == tokenHashStr }) else { return }
+        // Determine kind and display mode
+        let kind = (tokenType as String?) ?? "application"
+        let displayMode = (display as String?) ?? "icon"
+
+        // Try to get token either from base64 or by hash from saved selection
+        var anyView: AnyView?
 
         let dimension = CGFloat(truncating: size)
-        let swiftUIView = Label(token)
-            .labelStyle(.iconOnly)
-            .frame(width: dimension, height: dimension)
 
-        let controller = UIHostingController(rootView: AnyView(swiftUIView))
+        func applyStyle<V: View>(_ view: V) -> AnyView {
+            switch displayMode {
+            case "title":
+                return AnyView(view.labelStyle(.titleOnly).frame(width: dimension, height: dimension))
+            default:
+                return AnyView(view.labelStyle(.iconOnly).frame(width: dimension, height: dimension))
+            }
+        }
+
+        // Prefer tokenBase64 if provided
+        if let base64 = tokenBase64 as String?, let data = Data(base64Encoded: base64) {
+            let decoder = JSONDecoder()
+            switch kind {
+            case "category":
+                if let token = try? decoder.decode(ActivityCategoryToken.self, from: data) {
+                    anyView = applyStyle(Label(token))
+                }
+            case "webDomain":
+                if let token = try? decoder.decode(WebDomainToken.self, from: data) {
+                    anyView = applyStyle(Label(token))
+                }
+            default:
+                if let token = try? decoder.decode(ApplicationToken.self, from: data) {
+                    anyView = applyStyle(Label(token))
+                }
+            }
+        } else if let tokenHashStr = tokenHash as String?, let selection = loadSelection() {
+            switch kind {
+            case "category":
+                if let token = selection.categoryTokens.first(where: { "\($0.hashValue)" == tokenHashStr }) {
+                    anyView = applyStyle(Label(token))
+                }
+            case "webDomain":
+                if let token = selection.webDomainTokens.first(where: { "\($0.hashValue)" == tokenHashStr }) {
+                    anyView = applyStyle(Label(token))
+                }
+            default:
+                if let token = selection.applicationTokens.first(where: { "\($0.hashValue)" == tokenHashStr }) {
+                    anyView = applyStyle(Label(token))
+                }
+            }
+        }
+
+        guard let swiftUIView = anyView else { return }
+
+        let controller = UIHostingController(rootView: swiftUIView)
         controller.view.backgroundColor = UIColor.clear
 
         hostingController?.view.removeFromSuperview()

@@ -7,7 +7,6 @@ import { GuideStore, HomeStore } from '@/stores';
 import {
   checkScreenTimePermission,
   getScreenTimePermission,
-  renderAppLabelToImage,
   selectAppsToLimit,
   startAppLimits,
 } from '@/utils/permission';
@@ -16,6 +15,7 @@ import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useState } from 'react';
 import {
+  Animated,
   InteractionManager,
   Platform,
   StyleSheet,
@@ -27,12 +27,6 @@ import {
 const GuideStep2 = observer(() => {
   const store = useLocalObservable(() => HomeStore);
   const gstore = useLocalObservable(() => GuideStore);
-  // iOS下检查屏幕时间权限，Android下检查VPN权限
-  const step1Completed =
-    Platform.OS === 'ios' ? store.ios_screen_time_permission : store.vpn_init;
-  const step2Completed =
-    Platform.OS === 'ios' ? false : gstore.selected_apps.length > 0;
-  const { colors, dark } = useTheme();
 
   // 控制步骤卡片和按钮的动画显示
   const [typewriterDone, setTypewriterDone] = useState(false);
@@ -40,9 +34,17 @@ const GuideStep2 = observer(() => {
   const [optionsAllShown, setOptionsAllShown] = useState(false);
   const [buttonVisible, setButtonVisible] = useState(false);
   const [appIcons, setAppIcons] = useState<any[]>([]);
-  const buttonOpacity = React.useRef(
-    new (require('react-native').Animated.Value)(0),
-  ).current;
+  const buttonOpacity = React.useRef(new Animated.Value(0)).current;
+
+  // iOS下检查屏幕时间权限，Android下检查VPN权限
+  const step1Completed =
+    Platform.OS === 'ios' ? store.ios_screen_time_permission : store.vpn_init;
+  const step2Completed =
+    Platform.OS === 'ios'
+      ? appIcons.length > 0
+      : gstore.selected_apps.length > 0;
+
+  const { colors, dark } = useTheme();
 
   // 打字机完成后再显示步骤卡片
   useEffect(() => {
@@ -55,13 +57,11 @@ const GuideStep2 = observer(() => {
   useEffect(() => {
     if (optionsAllShown && step1Completed && step2Completed && !buttonVisible) {
       setButtonVisible(true);
-      require('react-native')
-        .Animated.timing(buttonOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        })
-        .start();
+      Animated.timing(buttonOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
     }
     if (
       (!step1Completed || !step2Completed || !optionsAllShown) &&
@@ -70,7 +70,13 @@ const GuideStep2 = observer(() => {
       setButtonVisible(false);
       buttonOpacity.setValue(0);
     }
-  }, [optionsAllShown, step1Completed, step2Completed]);
+  }, [
+    optionsAllShown,
+    step1Completed,
+    step2Completed,
+    buttonVisible,
+    buttonOpacity,
+  ]);
 
   useEffect(() => {
     store.checkVpn();
@@ -80,7 +86,7 @@ const GuideStep2 = observer(() => {
         store.loadApps();
       }
     });
-  }, []);
+  }, [store]);
 
   const checkIOSPermission = async () => {
     const status = await checkScreenTimePermission();
@@ -116,11 +122,10 @@ const GuideStep2 = observer(() => {
 
   const handleStep2 = () => {
     if (Platform.OS === 'ios') {
-      selectAppsToLimit().then(() => {
+      selectAppsToLimit().then(data => {
+        // console.log('获取数据：', data);
         startAppLimits();
-        renderAppLabelToImage().then(appIcons => {
-          setAppIcons(appIcons);
-        });
+        setAppIcons(data.apps);
       });
     } else {
       router.push({
@@ -370,7 +375,8 @@ const GuideStep2 = observer(() => {
         {appIcons.map(item => (
           <TokenLabel
             key={item.id}
-            tokenHash={item.id}
+            tokenBase64={item.tokenData}
+            tokenType={item.type}
             size={40}
             style={{ width: 40, height: 40 }}
           />

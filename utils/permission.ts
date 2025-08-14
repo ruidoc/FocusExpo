@@ -30,8 +30,9 @@ export async function checkScreenTimePermission(): Promise<string> {
 export interface AppDetail {
   id: string;
   name: string;
-  icon?: string; // Base64编码的图标
   type: 'application' | 'webDomain' | 'category';
+  tokenData?: string; // Base64编码的原生token数据，推荐使用
+  icon?: string; // 兼容旧字段
 }
 
 // 应用选择结果接口
@@ -80,14 +81,14 @@ export async function stopAppLimits(): Promise<boolean> {
 }
 
 // 渲染应用Label为图片列表
-export async function renderAppLabelToImage(): Promise<string[]> {
-  if (Platform.OS !== 'ios') return null;
+export async function renderAppLabelToImage(): Promise<AppDetail[]> {
+  if (Platform.OS !== 'ios') return [];
   try {
     let appIcons = await NativeModules.NativeModule.renderAppLabelToImage();
     console.log('渲染图片数据：', appIcons);
-    return appIcons.filter((item: any) => item.type === 'application');
+    return appIcons as AppDetail[];
   } catch (error) {
     console.log('渲染图片数据异常：', error);
-    return null;
+    return [];
   }
 }
