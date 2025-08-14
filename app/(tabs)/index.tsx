@@ -141,10 +141,6 @@ const App = observer(() => {
   const shouldShowPermissionPage =
     Platform.OS === 'ios' && !store.ios_screen_time_permission;
 
-  if (shouldShowPermissionPage) {
-    return <ScreenTimePermissionPage colors={colors} xcolor={xcolor} />;
-  }
-
   const getColor = (state: string) => {
     let grey = '#70809990';
     switch (state) {
@@ -395,6 +391,11 @@ const App = observer(() => {
       pmstore.checkNotify();
     }
   }, [store.app_state]);
+
+  // 如果需要显示权限页面，在这里返回
+  if (shouldShowPermissionPage) {
+    return <ScreenTimePermissionPage colors={colors} xcolor={xcolor} />;
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
