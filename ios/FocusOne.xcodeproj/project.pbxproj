@@ -19,12 +19,12 @@
 		24AEF103806C3FA8CDF21803 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 67355E71B64D9B1F19CC4C39 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		578605AFEA2CAB3B43E97875 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 625F08E9E7D41DA3209E9386 /* ExpoModulesProvider.swift */; };
-		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		E75B287BEAA6C9D46581B7A9 /* libPods-FocusOne.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29D9A2C5DE75038B3D980F6D /* libPods-FocusOne.a */; };
-		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 		AF0000010000000000000001 /* TokenLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0000040000000000000001 /* TokenLabelView.swift */; };
 		AF0000020000000000000001 /* TokenLabelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0000050000000000000001 /* TokenLabelManager.swift */; };
 		AF0000030000000000000001 /* TokenLabelManager.m in Sources */ = {isa = PBXBuildFile; fileRef = AF0000060000000000000001 /* TokenLabelManager.m */; };
+		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		E75B287BEAA6C9D46581B7A9 /* libPods-FocusOne.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 29D9A2C5DE75038B3D980F6D /* libPods-FocusOne.a */; };
+		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -96,13 +96,13 @@
 		625F08E9E7D41DA3209E9386 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-FocusOne/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		67355E71B64D9B1F19CC4C39 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = FocusOne/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = FocusOne/SplashScreen.storyboard; sourceTree = "<group>"; };
+		AF0000040000000000000001 /* TokenLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenLabelView.swift; sourceTree = "<group>"; };
+		AF0000050000000000000001 /* TokenLabelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenLabelManager.swift; sourceTree = "<group>"; };
+		AF0000060000000000000001 /* TokenLabelManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TokenLabelManager.m; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = FocusOne/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* FocusOne-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FocusOne-Bridging-Header.h"; path = "FocusOne/FocusOne-Bridging-Header.h"; sourceTree = "<group>"; };
-		AF0000040000000000000001 /* TokenLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenLabelView.swift; sourceTree = "<group>"; };
-		AF0000050000000000000001 /* TokenLabelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenLabelManager.swift; sourceTree = "<group>"; };
-		AF0000060000000000000001 /* TokenLabelManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TokenLabelManager.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -209,25 +209,6 @@
 			name = FocusOne;
 			sourceTree = "<group>";
 		};
-		AF0001000000000000000001 /* NativeComponents */ = {
-			isa = PBXGroup;
-			children = (
-				AF0002000000000000000001 /* TokenLabel */,
-			);
-			name = NativeComponents;
-			sourceTree = "<group>";
-		};
-		AF0002000000000000000001 /* TokenLabel */ = {
-			isa = PBXGroup;
-			children = (
-				AF0000040000000000000001 /* TokenLabelView.swift */,
-				AF0000050000000000000001 /* TokenLabelManager.swift */,
-				AF0000060000000000000001 /* TokenLabelManager.m */,
-			);
-			name = TokenLabel;
-			path = NativeComponents/TokenLabel;
-			sourceTree = "<group>";
-		};
 		14AFC906BDA2F81E27F2C2F5 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -300,6 +281,25 @@
 				1496B65F2DF13A3000C46D4D /* MonitorExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		AF0001000000000000000001 /* NativeComponents */ = {
+			isa = PBXGroup;
+			children = (
+				AF0002000000000000000001 /* TokenLabel */,
+			);
+			name = NativeComponents;
+			sourceTree = "<group>";
+		};
+		AF0002000000000000000001 /* TokenLabel */ = {
+			isa = PBXGroup;
+			children = (
+				AF0000040000000000000001 /* TokenLabelView.swift */,
+				AF0000050000000000000001 /* TokenLabelManager.swift */,
+				AF0000060000000000000001 /* TokenLabelManager.m */,
+			);
+			name = TokenLabel;
+			path = NativeComponents/TokenLabel;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -526,9 +526,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FocusOne/Pods-FocusOne-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FocusOne/Pods-FocusOne-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -543,9 +547,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FocusOne/Pods-FocusOne-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FocusOne/Pods-FocusOne-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1014,10 +1022,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -1072,10 +1077,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

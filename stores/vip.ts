@@ -1,5 +1,5 @@
 import http from '@/request';
-// import { registerApp, requestPayment } from 'expo-native-wechat';
+import { registerApp, requestPayment } from 'expo-native-wechat';
 import { makeAutoObservable } from 'mobx';
 
 interface Product {
@@ -50,9 +50,16 @@ export class VipStore {
         amount: price,
         description: name,
       });
-      // registerApp({ appid: 'wxdc022c6a39cb32b7' });
-      // const result = await requestPayment(res.data);
-      console.log('支付结果：', res);
+      console.log('支付接口结果', res);
+      await registerApp({
+        appid: 'wxdc022c6a39cb32b7',
+        log: true,
+        universalLink: 'https://focusone.ruidoc.cn/iosapp/',
+      });
+      // const ready = await checkUniversalLinkReady();
+      // console.log('微信支付准备结果', ready);
+      const result = await requestPayment(res.data);
+      console.log('支付结果：', result);
     } catch (error) {
       console.log('支付错误：', error);
     }

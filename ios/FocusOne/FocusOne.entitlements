@@ -6,7 +6,7 @@
 	<string>development</string>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:(focusone.com)</string>
+		<string>applinks:(focusone.ruidoc.com)</string>
 	</array>
 	<key>com.apple.developer.family-controls</key>
 	<true/>

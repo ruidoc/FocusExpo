@@ -124,7 +124,7 @@ const App = observer(() => {
             {!store.uInfo && <Text style={styles.userTitle}>请登录</Text>}
           </View>
         </Flex>
-        {store.uInfo && false && (
+        {store.uInfo && (
           <TouchableOpacity
             onPress={() => toNavigate('user/vip')}
             activeOpacity={0.7}>

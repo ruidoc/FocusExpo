@@ -39,7 +39,7 @@ const App = (props: Props) => {
   useEffect(() => {
     registerApp({
       appid: 'wxdc022c6a39cb32b7',
-      universalLink: 'https://com.focusone/wechat/',
+      universalLink: 'https://focusone.ruidoc.cn/iosapp/',
     });
   }, []);
 
