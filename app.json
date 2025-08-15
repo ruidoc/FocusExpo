@@ -59,7 +59,8 @@
           "enableBackgroundRemoteNotifications": false
         }
       ],
-      "expo-native-wechat"
+      "expo-native-wechat",
+      "expo-iap"
     ],
     "experiments": {
       "typedRoutes": true

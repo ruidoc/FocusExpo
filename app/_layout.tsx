@@ -84,6 +84,7 @@ export default function RootLayout() {
           />
           <Stack.Screen name="user/edit" options={{ title: '个人信息' }} />
           <Stack.Screen name="user/vip" options={{ title: '会员中心' }} />
+          <Stack.Screen name="user/coins" options={{ title: '金币中心' }} />
           <Stack.Screen name="setting/index" options={{ title: '设置' }} />
           <Stack.Screen
             name="setting/permission"

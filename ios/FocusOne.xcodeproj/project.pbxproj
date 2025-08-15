@@ -16,6 +16,7 @@
 		14663DEA2DF03E9A00B0C458 /* ShieldExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 14663DDE2DF03E9A00B0C458 /* ShieldExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1496B6602DF13A3100C46D4D /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14663DBD2DF0293E00B0C458 /* DeviceActivity.framework */; };
 		1496B6682DF13A3100C46D4D /* MonitorExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1496B65F2DF13A3000C46D4D /* MonitorExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		14AD61782E4F1CE4004ECC20 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 14AD61772E4F1CE4004ECC20 /* StoreKit.framework */; };
 		24AEF103806C3FA8CDF21803 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 67355E71B64D9B1F19CC4C39 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		578605AFEA2CAB3B43E97875 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 625F08E9E7D41DA3209E9386 /* ExpoModulesProvider.swift */; };
@@ -91,6 +92,7 @@
 		14663DDF2DF03E9A00B0C458 /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
 		14663DE12DF03E9A00B0C458 /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
 		1496B65F2DF13A3000C46D4D /* MonitorExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MonitorExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		14AD61772E4F1CE4004ECC20 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		186E5FA133169DBB27E79E8E /* Pods-FocusOne.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FocusOne.release.xcconfig"; path = "Target Support Files/Pods-FocusOne/Pods-FocusOne.release.xcconfig"; sourceTree = "<group>"; };
 		29D9A2C5DE75038B3D980F6D /* libPods-FocusOne.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FocusOne.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		625F08E9E7D41DA3209E9386 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-FocusOne/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
@@ -162,6 +164,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E75B287BEAA6C9D46581B7A9 /* libPods-FocusOne.a in Frameworks */,
+				14AD61782E4F1CE4004ECC20 /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,6 +224,7 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				14AD61772E4F1CE4004ECC20 /* StoreKit.framework */,
 				14663DBD2DF0293E00B0C458 /* DeviceActivity.framework */,
 				14663DBB2DF0292E00B0C458 /* FamilyControls.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
@@ -526,13 +530,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FocusOne/Pods-FocusOne-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FocusOne/Pods-FocusOne-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -547,13 +547,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FocusOne/Pods-FocusOne-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FocusOne/Pods-FocusOne-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -666,7 +662,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.focusone;
-				PRODUCT_NAME = FocusOne;
+				PRODUCT_NAME = "FocusOne";
 				SWIFT_OBJC_BRIDGING_HEADER = "FocusOne/FocusOne-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -698,7 +694,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.focusone;
-				PRODUCT_NAME = FocusOne;
+				PRODUCT_NAME = "FocusOne";
 				SWIFT_OBJC_BRIDGING_HEADER = "FocusOne/FocusOne-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1022,7 +1018,10 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -1077,7 +1076,10 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

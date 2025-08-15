@@ -18,6 +18,7 @@
         "expo-constants": "~17.1.5",
         "expo-font": "~13.3.1",
         "expo-haptics": "~14.1.4",
+        "expo-iap": "^2.7.10",
         "expo-image": "~2.1.6",
         "expo-linear-gradient": "~14.1.4",
         "expo-linking": "~7.1.4",
@@ -865,6 +866,8 @@
     "expo-font": ["expo-font@13.3.1", "https://registry.npmmirror.com/expo-font/-/expo-font-13.3.1.tgz", { "dependencies": { "fontfaceobserver": "^2.1.0" }, "peerDependencies": { "expo": "*", "react": "*" } }, "sha512-d+xrHYvSM9WB42wj8vP9OOFWyxed5R1evphfDb6zYBmC1dA9Hf89FpT7TNFtj2Bk3clTnpmVqQTCYbbA2P3CLg=="],
 
     "expo-haptics": ["expo-haptics@14.1.4", "https://registry.npmmirror.com/expo-haptics/-/expo-haptics-14.1.4.tgz", { "peerDependencies": { "expo": "*" } }, "sha512-QZdE3NMX74rTuIl82I+n12XGwpDWKb8zfs5EpwsnGi/D/n7O2Jd4tO5ivH+muEG/OCJOMq5aeaVDqqaQOhTkcA=="],
+
+    "expo-iap": ["expo-iap@2.7.10", "https://registry.npmmirror.com/expo-iap/-/expo-iap-2.7.10.tgz", { "peerDependencies": { "expo": "*", "react": "*", "react-native": "*" } }, "sha512-KfFeq/42VSWpgTj0LimGgHTet67lwR0m/g1+I1nfKmW4DhE+Aj3XTMBaimbcYf0ZrhFnIda3rEg2Am5E+lOAMg=="],
 
     "expo-image": ["expo-image@2.1.7", "https://registry.npmmirror.com/expo-image/-/expo-image-2.1.7.tgz", { "peerDependencies": { "expo": "*", "react": "*", "react-native": "*", "react-native-web": "*" }, "optionalPeers": ["react-native-web"] }, "sha512-p2Gr8fP/YakFHHo4rbpJbRWwKNrZp1GzSD91WEG3ZYAbTVdTjheJ6gUxXgggFaxEbaY+4WeQ0c5j9tZq8+3cEg=="],
 
