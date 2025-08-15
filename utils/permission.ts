@@ -47,18 +47,26 @@ export async function selectAppsToLimit(): Promise<AppSelectionResult> {
   try {
     let result = await NativeModules.NativeModule.selectAppsToLimit();
     console.log('selectAppsToLimit result', result);
-    return result as AppSelectionResult;
+    if (result.success) {
+      return result as AppSelectionResult;
+    } else {
+      throw { success: false };
+    }
   } catch (error) {
     console.log('selectAppsToLimit error', error);
-    return { success: false };
+    throw { success: false };
   }
 }
 
 // 开始限制应用
-export async function startAppLimits(): Promise<boolean> {
+export async function startAppLimits(
+  durationMinutes?: number,
+): Promise<boolean> {
   if (Platform.OS !== 'ios') return false;
   try {
-    let result = await NativeModules.NativeModule.startAppLimits();
+    let result = await NativeModules.NativeModule.startAppLimits(
+      durationMinutes ?? 0,
+    );
     console.log('startAppLimits result', result);
     return result;
   } catch (error) {

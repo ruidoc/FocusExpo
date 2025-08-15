@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 // 请将以下 SKU 替换为你在 App Store Connect 配置的实际消耗型产品 ID
-const consumableSkus = ['com.focusone.coins_60', 'com.focusone.coins_300'];
+const consumableSkus = ['com.focusone.coins_10', 'com.focusone.coins_30'];
 
 export default function UserCoinsPage() {
   const [loading, setLoading] = React.useState<boolean>(false);

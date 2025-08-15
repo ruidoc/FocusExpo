@@ -165,20 +165,46 @@ class NativeModule: NSObject {
     }
   }
   
-  // 开始限制选中的应用
+  // 开始限制选中的应用（durationMinutes: 任务时长，单位：分钟）
   @objc
-  func startAppLimits(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  func startAppLimits(_ durationMinutes: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     guard let selection = self.loadSelection() else {
       reject("NO_SELECTION", "没有选择需要限制的应用", nil)
       return
     }
     
-    // 创建全天的时间表
-    let schedule = DeviceActivitySchedule(
-      intervalStart: DateComponents(hour: 0, minute: 0),
-      intervalEnd: DateComponents(hour: 23, minute: 59),
-      repeats: true
-    )
+    // 根据传入时长构造日程
+    let minutes = Int(truncating: durationMinutes)
+    let schedule: DeviceActivitySchedule
+    if minutes <= 0 {
+      // 兼容旧调用：无时长则全天、重复
+      schedule = DeviceActivitySchedule(
+        intervalStart: DateComponents(hour: 0, minute: 0),
+        intervalEnd: DateComponents(hour: 23, minute: 59),
+        repeats: true
+      )
+    } else {
+      // 计算开始/结束时间（同日内；跨日简单兜底为当日23:59）
+      let now = Date()
+      let endDate = now.addingTimeInterval(TimeInterval(minutes * 60))
+      let calendar = Calendar.current
+      let startComps = calendar.dateComponents([.hour, .minute], from: now)
+      let endCompsFull = calendar.dateComponents([.hour, .minute], from: endDate)
+      let startHM = (startComps.hour ?? 0) * 60 + (startComps.minute ?? 0)
+      let endHM = (endCompsFull.hour ?? 0) * 60 + (endCompsFull.minute ?? 0)
+      let endComps: DateComponents
+      if endHM <= startHM {
+        // 跨日，兜底到当日23:59（后续可拆分两段以完整覆盖跨日场景）
+        endComps = DateComponents(hour: 23, minute: 59)
+      } else {
+        endComps = endCompsFull
+      }
+      schedule = DeviceActivitySchedule(
+        intervalStart: DateComponents(hour: startComps.hour, minute: startComps.minute),
+        intervalEnd: endComps,
+        repeats: false
+      )
+    }
     
     // 定义事件监控
     let eventName = DeviceActivityEvent.Name("FocusOne.LimitApps")

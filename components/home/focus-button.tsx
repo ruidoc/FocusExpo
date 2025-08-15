@@ -1,10 +1,18 @@
 import { AppStore, HomeStore, PlanStore, UserStore } from '@/stores';
 import { getCurrentMinute, toast } from '@/utils';
+import { stopAppLimits } from '@/utils/permission';
 import { Flex, Theme } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 interface FocusButtonProps {
   timeLong: (min: number) => React.ReactNode;
@@ -15,7 +23,7 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
   const pstore = useLocalObservable(() => PlanStore);
   const store = useLocalObservable(() => HomeStore);
   const astore = useLocalObservable(() => AppStore);
-  const { colors, dark } = useTheme();
+  const { dark } = useTheme();
   const xcolor = Theme.useThemeTokens();
   const [minute, setMinute] = useState(0);
 
@@ -120,6 +128,49 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
     setMinute(total);
   }, [pstore.cur_plan]);
 
+  // iOS: 在专注期间本地递增已用分钟，用于实时刷新剩余时间显示
+  useEffect(() => {
+    if (!pstore.cur_plan) return;
+    let timer: any;
+    if (Platform.OS === 'ios') {
+      timer = setInterval(() => {
+        pstore.setCurPlanMinute(pstore.curplan_minute + 1);
+      }, 60 * 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [pstore, pstore.cur_plan, pstore.curplan_minute]);
+
+  // iOS: 到点自动结束后，前端同步重置计划与状态
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    if (!pstore.cur_plan) return;
+    if (minute - pstore.curplan_minute <= 0) {
+      pstore.setCurPlanMinute(0);
+      pstore.resetPlan();
+      store.setVpnState('close');
+    }
+  }, [pstore, store, pstore.cur_plan, pstore.curplan_minute, minute]);
+
+  const stopFocus = async () => {
+    if (!pstore.cur_plan) return;
+    if (Platform.OS === 'ios') {
+      try {
+        await stopAppLimits();
+        await Notifications.cancelAllScheduledNotificationsAsync();
+      } catch {}
+      store.setVpnState('close');
+      PlanStore.clearPlans();
+      pstore.resetPlan();
+      toast('已停止屏蔽');
+      return;
+    }
+    // Android 维持原有逻辑
+    store.stopVpn();
+    store.setVpnState('close');
+  };
+
   return (
     <>
       <Flex justify="center" style={{ marginTop: 46 }}>
@@ -132,6 +183,21 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
       <Flex justify="center" style={{ marginTop: 30, marginBottom: 50 }}>
         <View>{descDom}</View>
       </Flex>
+      {pstore.cur_plan && (
+        <Flex justify="center" style={{ marginTop: -30, marginBottom: 20 }}>
+          <TouchableOpacity
+            onPress={stopFocus}
+            activeOpacity={0.8}
+            style={{
+              paddingHorizontal: 18,
+              paddingVertical: 8,
+              borderRadius: 18,
+              backgroundColor: '#f0484855',
+            }}>
+            <Text style={{ color: '#fff', fontSize: 16 }}>停止屏蔽</Text>
+          </TouchableOpacity>
+        </Flex>
+      )}
     </>
   );
 });

@@ -1,8 +1,11 @@
 import { CusButton } from '@/components';
-import { AppStore, HomeStore, PlanStore } from '@/stores';
+import { AppStore, HomeStore, PermisStore, PlanStore } from '@/stores';
+import { startAppLimits } from '@/utils/permission';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
+import type { TimeIntervalTriggerInput } from 'expo-notifications';
+import * as Notifications from 'expo-notifications';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useState } from 'react';
 import { Platform, ScrollView, Text, View } from 'react-native';
@@ -17,6 +20,7 @@ const QuickStartPage = observer(() => {
   const navigation = useNavigation();
   const pstore = useLocalObservable(() => PlanStore);
   const store = useLocalObservable(() => HomeStore);
+  const pmstore = useLocalObservable(() => PermisStore);
   const astore = useLocalObservable(() => AppStore);
 
   const { dark } = useTheme();
@@ -44,18 +48,60 @@ const QuickStartPage = observer(() => {
     });
   };
 
-  const toSetting = () => {
+  const toSetting = async () => {
     if (pstore.cur_plan) {
       return Toast('当前有正在进行的任务');
     }
-    if (mode === 'focus' && astore.focus_apps.length === 0) {
-      return Toast('添加APP后开始专注');
+
+    if (Platform.OS === 'ios') {
+      // iOS: 使用屏幕时间限制开始屏蔽，并发送持续通知
+      try {
+        // 确保通知权限
+        // const perm = await pmstore.checkNotify();
+        // if (perm !== 'granted') {
+        //   await pmstore.openNotify(true);
+        // }
+        // // 立即展示一条通知
+        // await Notifications.presentNotificationAsync({
+        //   title: '专注一点',
+        //   body: '屏蔽已开启，保持专注',
+        // });
+        // 安排到点提醒（一次性）
+        const endTrigger: TimeIntervalTriggerInput = {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: Number(minute) * 60,
+          repeats: false,
+        };
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '专注结束',
+            body: '屏蔽已自动结束，做得很好！',
+          },
+          trigger: endTrigger,
+        });
+        setOncePlan();
+      } catch (error) {
+        console.log('通知权限错误：', error);
+      }
+
+      const ok = await startAppLimits(minute);
+      if (ok) {
+        Toast('已开始屏蔽');
+      } else {
+        Toast('开启屏蔽失败');
+      }
+    } else {
+      // Android: 维持原有逻辑
+      if (mode === 'focus' && astore.focus_apps.length === 0) {
+        return Toast('添加APP后开始专注');
+      }
+      if (mode === 'shield' && astore.shield_apps.length === 0) {
+        return Toast('添加APP后开始屏蔽');
+      }
+      setOncePlan();
+      pstore.resetPlan();
+      store.startVpn();
     }
-    if (mode === 'shield' && astore.shield_apps.length === 0) {
-      return Toast('添加APP后开始屏蔽');
-    }
-    setOncePlan();
-    store.startVpn();
     navigation.goBack();
   };
 

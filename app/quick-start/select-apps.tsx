@@ -6,7 +6,7 @@ import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const TimeSlider = () => {
   const store = useLocalObservable(() => HomeStore);
@@ -29,21 +29,26 @@ const TimeSlider = () => {
           shadowColor: dark ? 'transparent' : '#000',
         },
       ]}>
-      <Flex
-        direction="row"
-        align="center"
-        style={{ gap: 3 }}
-        onPress={selectApps}>
-        {store.selected_app_icons.map(item => (
-          <TokenLabel
-            key={item.id}
-            tokenBase64={item.tokenData}
-            tokenType={item.type}
-            size={40}
-            style={{ width: 40, height: 40 }}
-          />
-        ))}
-      </Flex>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 2 }}>
+        <Flex
+          direction="row"
+          align="center"
+          style={{ gap: 6 }}
+          onPress={selectApps}>
+          {store.selected_app_icons.map(item => (
+            <TokenLabel
+              key={item.id}
+              tokenBase64={item.tokenData}
+              tokenType={item.type}
+              size={40}
+              style={{ width: 40, height: 40 }}
+            />
+          ))}
+        </Flex>
+      </ScrollView>
       {store.selected_app_icons.length === 0 && (
         <Flex
           direction="row"
