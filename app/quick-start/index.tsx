@@ -1,10 +1,9 @@
 import { CusButton } from '@/components';
-import { AppStore, HomeStore, PermisStore, PlanStore } from '@/stores';
+import { AppStore, HomeStore, PlanStore } from '@/stores';
 import { startAppLimits } from '@/utils/permission';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
-import type { TimeIntervalTriggerInput } from 'expo-notifications';
 import * as Notifications from 'expo-notifications';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useState } from 'react';
@@ -20,7 +19,7 @@ const QuickStartPage = observer(() => {
   const navigation = useNavigation();
   const pstore = useLocalObservable(() => PlanStore);
   const store = useLocalObservable(() => HomeStore);
-  const pmstore = useLocalObservable(() => PermisStore);
+  // const pmstore = useLocalObservable(() => PermisStore);
   const astore = useLocalObservable(() => AppStore);
 
   const { dark } = useTheme();
@@ -54,30 +53,15 @@ const QuickStartPage = observer(() => {
     }
 
     if (Platform.OS === 'ios') {
-      // iOS: 使用屏幕时间限制开始屏蔽，并发送持续通知
+      // iOS: 使用屏幕时间限制开始屏蔽
       try {
-        // 确保通知权限
-        // const perm = await pmstore.checkNotify();
-        // if (perm !== 'granted') {
-        //   await pmstore.openNotify(true);
-        // }
-        // // 立即展示一条通知
-        // await Notifications.presentNotificationAsync({
-        //   title: '专注一点',
-        //   body: '屏蔽已开启，保持专注',
-        // });
-        // 安排到点提醒（一次性）
-        const endTrigger: TimeIntervalTriggerInput = {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: Number(minute) * 60,
-          repeats: false,
-        };
+        // 立即展示一条开始提示（结束通知改由系统事件触发于扩展内发送）
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: '专注结束',
-            body: '屏蔽已自动结束，做得很好！',
+            title: '专注一点',
+            body: '屏蔽已开启，保持专注',
           },
-          trigger: endTrigger,
+          trigger: null,
         });
         setOncePlan();
       } catch (error) {

@@ -88,6 +88,24 @@ export async function stopAppLimits(): Promise<boolean> {
   }
 }
 
+// iOS 查询当前屏蔽状态
+export async function getIOSFocusStatus(): Promise<{
+  active: boolean;
+  startAt?: number;
+  endAt?: number;
+  totalMinutes?: number;
+  elapsedMinutes?: number;
+}> {
+  if (Platform.OS !== 'ios') return { active: false };
+  try {
+    let result = await NativeModules.NativeModule.getFocusStatus();
+    return result as any;
+  } catch (error) {
+    console.log('getIOSFocusStatus error', error);
+    return { active: false };
+  }
+}
+
 // 渲染应用Label为图片列表
 export async function getSelectIosApps(): Promise<AppDetail[]> {
   if (Platform.OS !== 'ios') return [];

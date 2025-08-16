@@ -53,9 +53,70 @@ struct CustomFamilyActivityPicker: View {
 }
 
 @objc(NativeModule)
-class NativeModule: NSObject {
+class NativeModule: RCTEventEmitter {
   private let center = DeviceActivityCenter()
   private let activityName = DeviceActivityName("FocusOne.ScreenTime")
+  private var hasListeners: Bool = false
+  private var tickTimer: Timer?
+  private var endTimestamp: TimeInterval = 0
+  private var totalMinutes: Int = 0
+  // Event Emitter
+  override static func requiresMainQueueSetup() -> Bool { true }
+  override func supportedEvents() -> [String]! {
+    return ["focus-progress", "focus-ended"]
+  }
+  override func startObserving() {
+    hasListeners = true
+    NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
+  }
+  override func stopObserving() {
+    hasListeners = false
+    NotificationCenter.default.removeObserver(self)
+    invalidateTimer()
+  }
+  @objc private func appWillEnterForeground() {
+    guard endTimestamp > 0 else { return }
+    if Date().timeIntervalSince1970 >= endTimestamp {
+      emitEnded()
+      invalidateTimer()
+    } else {
+      emitProgress()
+    }
+  }
+  private func restartTimer() {
+    invalidateTimer()
+    guard totalMinutes > 0, endTimestamp > 0 else { return }
+    tickTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true, block: { [weak self] _ in
+      self?.emitProgress()
+    })
+    if let t = tickTimer {
+      RunLoop.main.add(t, forMode: .common)
+    }
+  }
+  private func invalidateTimer() {
+    tickTimer?.invalidate()
+    tickTimer = nil
+  }
+  private func emitProgress() {
+    if !hasListeners { return }
+    guard totalMinutes > 0, endTimestamp > 0 else { return }
+    let now = Date().timeIntervalSince1970
+    let elapsedSeconds = max(0, Int(endTimestamp - now) * -1)
+    let elapsedMinutes = max(0, min(totalMinutes, elapsedSeconds / 60))
+    sendEvent(withName: "focus-progress", body: [
+      "totalMinutes": totalMinutes,
+      "elapsedMinutes": elapsedMinutes,
+    ])
+  }
+  private func emitEnded() {
+    if !hasListeners { return }
+    sendEvent(withName: "focus-ended", body: [
+      "totalMinutes": totalMinutes,
+      "elapsedMinutes": totalMinutes,
+    ])
+    totalMinutes = 0
+    endTimestamp = 0
+  }
   
   // 屏幕时间权限
   @objc
@@ -184,9 +245,11 @@ class NativeModule: NSObject {
         repeats: true
       )
     } else {
-      // 计算开始/结束时间（同日内；跨日简单兜底为当日23:59）
+      // 计算开始/结束时间，若小于系统最小时长(约15分钟)，强制延长到15分钟，并在扩展的 intervalWillEndWarning 提前清理
+      let minDuration = 15
+      let realDuration = max(minutes, minDuration)
       let now = Date()
-      let endDate = now.addingTimeInterval(TimeInterval(minutes * 60))
+      let endDate = now.addingTimeInterval(TimeInterval(realDuration * 60))
       let calendar = Calendar.current
       let startComps = calendar.dateComponents([.hour, .minute], from: now)
       let endCompsFull = calendar.dateComponents([.hour, .minute], from: endDate)
@@ -199,11 +262,23 @@ class NativeModule: NSObject {
       } else {
         endComps = endCompsFull
       }
-      schedule = DeviceActivitySchedule(
-        intervalStart: DateComponents(hour: startComps.hour, minute: startComps.minute),
-        intervalEnd: endComps,
-        repeats: false
-      )
+      // 若原始 minutes 小于最小时长，则设置 warningTime 在到期时提前触发
+      if minutes < minDuration {
+        let warnAhead = minDuration - minutes // 距离区间结束前 warnAhead 分钟触发
+        let warning = DateComponents(minute: warnAhead)
+        schedule = DeviceActivitySchedule(
+          intervalStart: DateComponents(hour: startComps.hour, minute: startComps.minute),
+          intervalEnd: endComps,
+          repeats: false,
+          warningTime: warning
+        )
+      } else {
+        schedule = DeviceActivitySchedule(
+          intervalStart: DateComponents(hour: startComps.hour, minute: startComps.minute),
+          intervalEnd: endComps,
+          repeats: false
+        )
+      }
     }
     
     // 定义事件监控
@@ -231,6 +306,19 @@ class NativeModule: NSObject {
       store.shield.applications = selection.applicationTokens
       store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
       store.shield.webDomains = selection.webDomainTokens
+
+      // 初始化进度事件源（JS侧每分钟监听）
+      let startDate = Date()
+      self.totalMinutes = Int(truncating: durationMinutes)
+      self.endTimestamp = startDate.addingTimeInterval(TimeInterval(self.totalMinutes * 60)).timeIntervalSince1970
+      // 保存状态到 App Group，供查询与扩展使用
+      if let defaults = UserDefaults.groupUserDefaults() {
+        defaults.set(startDate.timeIntervalSince1970, forKey: "FocusOne.FocusStartAt")
+        defaults.set(self.endTimestamp, forKey: "FocusOne.FocusEndAt")
+        defaults.set(self.totalMinutes, forKey: "FocusOne.TotalMinutes")
+      }
+      self.restartTimer()
+      self.emitProgress()
       
       resolve(true)
     } catch {
@@ -246,8 +334,42 @@ class NativeModule: NSObject {
     // 清除所有限制
     let store = ManagedSettingsStore()
     store.clearAllSettings()
+    emitEnded()
+    invalidateTimer()
+    if let defaults = UserDefaults.groupUserDefaults() {
+      defaults.removeObject(forKey: "FocusOne.FocusStartAt")
+      defaults.removeObject(forKey: "FocusOne.FocusEndAt")
+      defaults.removeObject(forKey: "FocusOne.TotalMinutes")
+    }
     
     resolve(true)
+  }
+
+  // 查询当前屏蔽状态与进度
+  @objc
+  func getFocusStatus(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    guard let defaults = UserDefaults.groupUserDefaults() else {
+      resolve(["active": false])
+      return
+    }
+    let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
+    let endAt = defaults.double(forKey: "FocusOne.FocusEndAt")
+    let total = defaults.integer(forKey: "FocusOne.TotalMinutes")
+    if startAt <= 0 || endAt <= 0 || total <= 0 {
+      resolve(["active": false])
+      return
+    }
+    let now = Date().timeIntervalSince1970
+    let elapsed = max(0, min(Double(total * 60), now - startAt))
+    let elapsedMin = Int(elapsed / 60.0)
+    let active = now < endAt
+    resolve([
+      "active": active,
+      "startAt": startAt,
+      "endAt": endAt,
+      "totalMinutes": total,
+      "elapsedMinutes": elapsedMin,
+    ])
   }
   
   // 渲染所有选择的应用Label为图片并返回base64数组

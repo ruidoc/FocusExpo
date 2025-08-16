@@ -25,7 +25,8 @@ import {
 import { observer, useLocalObservable } from 'mobx-react';
 // import * as Sentry from '@sentry/react-native';
 import { toast } from '@/utils';
-import { getSelectIosApps } from '@/utils/permission';
+import { getIOSFocusStatus, getSelectIosApps } from '@/utils/permission';
+import * as Notifications from 'expo-notifications';
 
 const { NativeClass } = NativeModules;
 
@@ -224,6 +225,72 @@ const App = observer(() => {
   useEffect(() => {
     initapp();
     let eventEmitter = new NativeEventEmitter(NativeClass);
+    // iOS 原生事件来自 NativeModule（RCTEventEmitter）
+    const iosEmitter = new NativeEventEmitter(NativeModules.NativeModule);
+    // iOS 屏蔽进度与结束事件监听（来自原生事件转发）
+    const focusEnded = iosEmitter.addListener('focus-ended', async data => {
+      // 结束通知由原生扩展也会发，为确保 UI 同步，这里补一条应用内通知与状态同步
+      try {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '专注结束',
+            body: '屏蔽已自动结束，做得很好！',
+          },
+          trigger: null,
+        });
+      } catch {}
+      // 同步 UI 归位
+      pstore.setCurPlanMinute(0);
+      pstore.resetPlan();
+      store.setVpnState('close');
+    });
+    const focusProgress = iosEmitter.addListener(
+      'focus-progress',
+      (payload: { totalMinutes: number; elapsedMinutes: number }) => {
+        // 每分钟来自 iOS 的进度
+        const used = payload.elapsedMinutes || 0;
+        pstore.setCurPlanMinute(used);
+      },
+    );
+    // iOS：初始化/回前台时同步一次当前原生状态到 PlanStore
+    const syncIOSStatus = async () => {
+      if (Platform.OS !== 'ios') return;
+      try {
+        const s = await getIOSFocusStatus();
+        if (s.active) {
+          const start = new Date((s.startAt || 0) * 1000);
+          const end = new Date((s.endAt || 0) * 1000);
+          const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+          const startMin = start.getHours() * 60 + start.getMinutes();
+          const startSec = startMin * 60 + start.getSeconds();
+          const endMin = end.getHours() * 60 + end.getMinutes();
+          const endSec = endMin * 60 + end.getSeconds();
+          const plan = {
+            id: 'ios_active',
+            start: `${pad(start.getHours())}:${pad(start.getMinutes())}`,
+            start_min: startMin,
+            start_sec: startSec,
+            end: `${pad(end.getHours())}:${pad(end.getMinutes())}`,
+            end_min: endMin,
+            end_sec: endSec,
+            repeat: 'once',
+            mode: pstore.is_focus_mode ? 'focus' : 'shield',
+          } as any;
+          // 覆盖添加一次性计划
+          pstore.rmOncePlan('ios_active');
+          pstore.addOncePlan(plan);
+          pstore.setCurPlanMinute(s.elapsedMinutes || 0);
+          pstore.resetPlan();
+        } else {
+          pstore.rmOncePlan('ios_active');
+          pstore.setCurPlanMinute(0);
+          pstore.resetPlan();
+        }
+      } catch (e) {
+        console.log('syncIOSStatus error', e);
+      }
+    };
+    syncIOSStatus();
     // 监听 VPN 状态变化
     let listener = eventEmitter.addListener('vpn-change', data => {
       execHandle(data.state); // 处理 VPN 状态变化
@@ -233,9 +300,16 @@ const App = observer(() => {
     let appState = AppState.addEventListener('change', state => {
       store.setAppState(state);
       console.log('App 状态变化：', state);
+      if (state === 'active') {
+        syncIOSStatus();
+      }
     });
     return () => {
       listener?.remove();
+      focusEnded?.remove();
+      focusProgress?.remove();
+      iosEmitter.removeAllListeners('focus-ended');
+      iosEmitter.removeAllListeners('focus-progress');
       appState?.remove();
     };
   }, []);
