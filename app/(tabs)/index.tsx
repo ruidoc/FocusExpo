@@ -1,6 +1,7 @@
 import FocusButton from '@/components/home/focus-button';
 import FocusNotice from '@/components/home/focus-notice';
 import ManageEntry from '@/components/home/manage-entry';
+import TokenLabel from '@/components/native/TokenLabel';
 import {
   AppStore,
   HomeStore,
@@ -135,7 +136,12 @@ const App = observer(() => {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const apps = pstore.is_focus_mode ? astore.focus_apps : astore.shield_apps;
+  const apps =
+    Platform.OS === 'ios'
+      ? astore.ios_selected_apps
+      : pstore.is_focus_mode
+      ? astore.focus_apps
+      : astore.shield_apps;
 
   // 如果没有屏幕时间权限，显示权限获取页面
   const shouldShowPermissionPage =
@@ -476,27 +482,37 @@ const App = observer(() => {
                 wrap="wrap"
                 justify="center"
                 style={{ marginTop: 6, marginBottom: 4 }}>
-                {store.all_apps
-                  .filter(r => apps.includes(r.packageName))
-                  .map(app => (
-                    <Flex
-                      key={app.packageName}
-                      style={styles.appIconWrap}
-                      direction="column"
-                      onPress={() => toOpenApp(app.packageName)}
-                      align="center">
-                      <Image
-                        source={{
-                          uri: 'data:image/jpeg;base64,' + app.icon,
-                          width: 36,
-                          height: 36,
-                        }}
-                        style={{
-                          opacity: pstore.is_focus_mode ? 1 : 0.6,
-                        }}
+                {Platform.OS === 'ios'
+                  ? astore.ios_selected_apps.map(item => (
+                      <TokenLabel
+                        key={item.id}
+                        tokenBase64={item.tokenData}
+                        tokenType={item.type}
+                        size={40}
+                        style={{ width: 40, height: 40 }}
                       />
-                    </Flex>
-                  ))}
+                    ))
+                  : store.all_apps
+                      .filter(r => apps.includes(r.packageName))
+                      .map(app => (
+                        <Flex
+                          key={app.packageName}
+                          style={styles.appIconWrap}
+                          direction="column"
+                          onPress={() => toOpenApp(app.packageName)}
+                          align="center">
+                          <Image
+                            source={{
+                              uri: 'data:image/jpeg;base64,' + app.icon,
+                              width: 36,
+                              height: 36,
+                            }}
+                            style={{
+                              opacity: pstore.is_focus_mode ? 1 : 0.6,
+                            }}
+                          />
+                        </Flex>
+                      ))}
               </Flex>
             </Card>
           )}

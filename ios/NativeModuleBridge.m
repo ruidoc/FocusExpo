@@ -9,4 +9,5 @@ RCT_EXTERN_METHOD(startAppLimits:(nonnull NSNumber *)durationMinutes resolver:(R
 RCT_EXTERN_METHOD(stopAppLimits:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(getFocusStatus:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(renderAppLabelToImage:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(configurePlannedLimits:(NSString *)plansJSON resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 @end

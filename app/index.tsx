@@ -1,4 +1,10 @@
-import { HomeStore, PermisStore, PlanStore, UserStore } from '@/stores';
+import {
+  AppStore,
+  HomeStore,
+  PermisStore,
+  PlanStore,
+  UserStore,
+} from '@/stores';
 import {
   checkScreenTimePermission,
   getIOSFocusStatus,
@@ -23,6 +29,7 @@ const Index = observer(() => {
   const store = useLocalObservable(() => UserStore);
   const hstore = useLocalObservable(() => HomeStore);
   const pstore = useLocalObservable(() => PlanStore);
+  const astore = useLocalObservable(() => AppStore);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -47,7 +54,7 @@ const Index = observer(() => {
       try {
         // 获取选中的iOS应用
         const selectedApps = await getSelectIosApps();
-        hstore.setSelectedAppIcons(selectedApps);
+        astore.setIosSelectedApps(selectedApps);
         // 检查屏幕时间权限
         const screenTimeStatus = await checkScreenTimePermission();
         const isApproved = screenTimeStatus === 'approved';

@@ -64,6 +64,9 @@ const QuickStartPage = observer(() => {
           trigger: null,
         });
         setOncePlan();
+        // 立刻刷新当前计划，避免等待 AppState/原生事件导致 cur_plan 为空
+        pstore.setCurPlanMinute(0);
+        pstore.resetPlan();
       } catch (error) {
         console.log('通知权限错误：', error);
       }

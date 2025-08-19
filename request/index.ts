@@ -5,7 +5,7 @@ import axios, { AxiosInstance } from 'axios';
 
 const instance: AxiosInstance = axios.create({
   baseURL: 'https://focusone.ruidoc.cn/dev-api',
-  // baseURL: 'http://192.168.110.119:8849',
+  // baseURL: 'http://192.168.30.222:8849',
   // baseURL: 'http://192.168.0.5:8849',
   timeout: 6000,
   headers: {

@@ -8,14 +8,67 @@
 import DeviceActivity
 import ManagedSettings
 import UserNotifications
+import FamilyControls
 
 // Optionally override any of the functions below.
 // Make sure that your class name matches the NSExtensionPrincipalClass in your Info.plist.
 class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
-        
-        // Handle the start of the interval.
+        // 区间开始：仅当存在周期性计划（PlannedConfigs）时，才应用屏蔽与写入共享时间
+        guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
+        let now = Date()
+        var startAtTs = now.timeIntervalSince1970
+        var endAtTs = now.addingTimeInterval(60 * 60).timeIntervalSince1970 // 兜底1小时
+        var hasPlannedMatch = false
+        if let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"),
+           let cfgData = cfgStr.data(using: .utf8) {
+            struct PlanCfg: Codable { let start: Int; let end: Int; let repeatDays: [Int]? }
+            if let cfgs = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) {
+                let cal = Calendar.current
+                let comp = cal.dateComponents([.weekday, .hour, .minute], from: now)
+                let weekdayApple = comp.weekday ?? 1 // 1=周日
+                // 将 Apple weekday 转换为我们 1=周一..7=周日
+                let mondayFirst = (weekdayApple == 1) ? 7 : (weekdayApple - 1)
+                func hm(_ sec: Int) -> (Int, Int) { let m = max(0, sec/60); return (m/60, m%60) }
+                for c in cfgs {
+                    let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
+                    if !days.contains(mondayFirst) { continue }
+                    let (sh, sm) = hm(c.start); let (eh, em) = hm(c.end)
+                    let endHM = eh*60 + em
+                    let startHM = sh*60 + sm
+                    var eH = eh, eM = em
+                    if endHM <= startHM { eH = 23; eM = 59 }
+                    if let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: now) {
+                        startAtTs = sDate.timeIntervalSince1970
+                    }
+                    if let endDate = cal.date(bySettingHour: eH, minute: eM, second: 0, of: now) {
+                        endAtTs = endDate.timeIntervalSince1970
+                        hasPlannedMatch = true
+                        break
+                    }
+                }
+            }
+        }
+        // 若不存在周期性计划匹配（一次性任务场景），不覆盖由快速开始设定的时间
+        guard hasPlannedMatch else { return }
+        // 加载选择的应用并应用屏蔽
+        var selection: FamilyActivitySelection? = nil
+        if let data = defaults.data(forKey: "FocusOne.AppSelection"),
+           let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+            selection = sel
+        }
+        let store = ManagedSettingsStore()
+        if let sel = selection {
+            store.shield.applications = sel.applicationTokens
+            store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
+            store.shield.webDomains = sel.webDomainTokens
+        }
+        // 使用计划中的开始/结束时间
+        defaults.set(startAtTs, forKey: "FocusOne.FocusStartAt")
+        defaults.set(endAtTs, forKey: "FocusOne.FocusEndAt")
+        let totalMin = max(1, Int((endAtTs - startAtTs) / 60))
+        defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
     }
     
     override func intervalDidEnd(for activity: DeviceActivityName) {

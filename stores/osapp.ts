@@ -12,6 +12,8 @@ class AppStore {
   focus_apps: string[] = []; // 专注APP包名
   shield_apps: string[] = []; // 屏蔽APP包名
 
+  ios_selected_apps: any[] = []; // 已选择的应用（iOS）
+
   setFocusApps = (apps: string[]) => {
     this.focus_apps = apps;
     // NativeClass.updateFocusApps(JSON.stringify(apps));
@@ -22,6 +24,11 @@ class AppStore {
     this.shield_apps = apps;
     // NativeClass.updateShieldApps(JSON.stringify(apps));
     AsyncStorage.setItem('shield_apps', JSON.stringify(apps));
+  };
+
+  // 设置iOS选择的应用
+  setIosSelectedApps = (apps: any[]) => {
+    this.ios_selected_apps = apps;
   };
 
   addApps = async (form: Record<string, any>) => {

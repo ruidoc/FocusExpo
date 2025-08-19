@@ -1,47 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { CusPage, CusButton } from '@/components';
-import { StyleSheet } from 'react-native';
-import {
-  Cell,
-  Field,
-  Flex,
-  Notify,
-  Space,
-  Toast,
-} from '@fruits-chain/react-native-xiaoshu';
-import { Colors, Header } from 'react-native/Libraries/NewAppScreen';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useTheme } from '@react-navigation/native';
-import { observer, useLocalObservable } from 'mobx-react';
-import { HomeStore, PlanStore } from '@/stores';
+import { CusButton, CusPage } from '@/components';
+import { PlanStore } from '@/stores';
+// iOS 原生定时屏蔽，前端不做权限与应用选择校验，交由用户事先完成
 import { repeats } from '@/utils/static.json';
+import { Field, Toast } from '@fruits-chain/react-native-xiaoshu';
+import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
+import { observer, useLocalObservable } from 'mobx-react';
+import React, { useState } from 'react';
+import { NativeModules, Platform, ScrollView, View } from 'react-native';
 
 const App = observer(() => {
-  const store = useLocalObservable(() => HomeStore);
   const pstore = useLocalObservable(() => PlanStore);
-  const { colors, dark } = useTheme();
   const navigation = useNavigation();
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState(() => {
+  //
+  type FormState = {
+    start: Date;
+    end: Date;
+    repeat: number[];
+    mode: 'focus' | 'shield';
+  };
+  const [form, setForm] = useState<FormState>(() => {
     const start = new Date();
     const end = dayjs(start).add(20, 'minute').toDate();
     return {
       start,
       end,
-      repeat: 'evary',
+      repeat: [],
       mode: 'shield',
     };
   });
 
-  const initapp = async () => {
-    let sel_apps = await AsyncStorage.getItem('select_apps');
-  };
-
   const submit = async () => {
-    setLoading(true);
-    let { start, end } = form;
+    let { start, end, repeat } = form;
     let start_day = dayjs(start);
     let end_day = dayjs(end);
     if (!end_day.isAfter(start_day)) {
@@ -58,10 +48,13 @@ const App = observer(() => {
     }
     const newStart = start_day.hour() * 60 + start_day.minute();
     const newEnd = end_day.hour() * 60 + end_day.minute();
-    const overlap = pstore.all_plans.some(plan => {
-      if (plan.repeat !== form.repeat) return false;
-      return newStart < plan.end_min && newEnd > plan.start_min;
-    });
+    const overlap = pstore.all_plans
+      .filter(r => r.repeat !== 'once')
+      .some(plan => {
+        const share = (plan.repeat as number[]).some(d => repeat.includes(d));
+        if (!share) return false;
+        return newStart < plan.end_min && newEnd > plan.start_min;
+      });
     if (overlap) {
       return Toast({
         type: 'fail',
@@ -73,20 +66,50 @@ const App = observer(() => {
     subinfo.end = end_day.format('HH:mm');
     subinfo.start_min = start_day.hour() * 60 + start_day.minute();
     subinfo.end_min = end_day.hour() * 60 + end_day.minute();
-    pstore.addPlan(subinfo, res => {
-      if (res) {
-        Toast({
-          type: 'success',
-          message: '添加任务成功',
-        });
-        navigation.goBack();
-      } else {
-        Toast({
-          type: 'fail',
-          message: '添加任务失败',
-        });
+
+    const addPlanPromise: Promise<any> = new Promise(resolve =>
+      pstore.addPlan(subinfo, res => resolve(res)),
+    );
+    const iosPromise = configureIOS(subinfo);
+    const [addRes] = await Promise.all([addPlanPromise, iosPromise]);
+    if (addRes) {
+      Toast({ type: 'success', message: '添加任务成功' });
+      navigation.goBack();
+    } else {
+      Toast({ type: 'fail', message: '添加任务失败' });
+    }
+  };
+
+  // iOS 定时屏蔽配置：与保存计划并行执行
+  const configureIOS = async (subinfo: any) => {
+    try {
+      // 基于现有计划 + 当前即将新增的计划，组装下发的 iOS 周期任务
+      const existing = pstore.cus_plans
+        .filter((p: any) => Array.isArray(p.repeat))
+        .map((p: any) => ({
+          id: p.id,
+          start: p.start_min * 60,
+          end: p.end_min * 60,
+          repeatDays: p.repeat,
+          mode: p.mode,
+        }));
+      const current = {
+        id: `temp_${Date.now()}`,
+        start: subinfo.start_min * 60,
+        end: subinfo.end_min * 60,
+        repeatDays: subinfo.repeat,
+        mode: subinfo.mode,
+      };
+      const plans = [...existing, current];
+      const json = JSON.stringify(plans);
+      if ((NativeModules as any).NativeModule?.configurePlannedLimits) {
+        await (NativeModules as any).NativeModule.configurePlannedLimits(json);
       }
-    });
+      return true;
+    } catch (e) {
+      console.log('IOS添加时间段失败：', e);
+      return false;
+    }
   };
 
   const setInfo = (val: any, key: string) => {
@@ -120,22 +143,20 @@ const App = observer(() => {
     }
   };
 
-  useEffect(() => {
-    initapp();
-  }, []);
-
   return (
     <CusPage>
       <ScrollView style={{ padding: 15 }}>
-        <Field.Checkbox
-          title="模式"
-          options={[
-            { value: 'focus', label: '专注模式' },
-            { value: 'shield', label: '屏蔽模式' },
-          ]}
-          value={form.mode}
-          onChange={v => setInfo(v, 'mode')}
-        />
+        {Platform.OS !== 'ios' && (
+          <Field.Checkbox
+            title="模式"
+            options={[
+              { value: 'focus', label: '专注模式' },
+              { value: 'shield', label: '屏蔽模式' },
+            ]}
+            value={form.mode}
+            onChange={v => setInfo(v, 'mode')}
+          />
+        )}
         <Field.Date
           title="开始时间"
           placeholder="请选择"
@@ -152,7 +173,8 @@ const App = observer(() => {
         />
         <Field.Selector
           title="重复规则"
-          options={repeats.slice(0, 3)}
+          multiple
+          options={repeats}
           value={form.repeat}
           onChange={v => setInfo(v, 'repeat')}
         />

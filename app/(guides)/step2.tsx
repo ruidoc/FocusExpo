@@ -2,7 +2,7 @@ import AnimatedCascade from '@/components/cascade';
 import CusButton from '@/components/cus-button';
 import Typewriter from '@/components/type-writer';
 import palette from '@/constants/Colors';
-import { GuideStore, HomeStore } from '@/stores';
+import { AppStore, GuideStore, HomeStore } from '@/stores';
 import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
@@ -21,6 +21,7 @@ import {
 const GuideStep2 = observer(() => {
   const store = useLocalObservable(() => HomeStore);
   const gstore = useLocalObservable(() => GuideStore);
+  const astore = useLocalObservable(() => AppStore);
 
   // 控制步骤卡片和按钮的动画显示
   const [typewriterDone, setTypewriterDone] = useState(false);
@@ -35,7 +36,7 @@ const GuideStep2 = observer(() => {
     Platform.OS === 'ios' ? store.ios_screen_time_permission : store.vpn_init;
   const step2Completed =
     Platform.OS === 'ios'
-      ? store.selected_app_icons.length > 0
+      ? astore.ios_selected_apps.length > 0
       : gstore.selected_apps.length > 0;
 
   const { colors, dark } = useTheme();
@@ -107,7 +108,7 @@ const GuideStep2 = observer(() => {
     if (Platform.OS === 'ios') {
       selectAppsToLimit().then(data => {
         // console.log('获取数据：', data);
-        store.setSelectedAppIcons(data.apps);
+        astore.setIosSelectedApps(data.apps);
       });
     } else {
       router.push({

@@ -104,7 +104,7 @@ const App = observer(() => {
     // 根据环境初始化
     if (Platform.OS === 'ios') {
       let apps = await getSelectIosApps();
-      store.setSelectedAppIcons(apps);
+      astore.setIosSelectedApps(apps);
     } else {
       store.checkVpn(true);
       setTimeout(() => {

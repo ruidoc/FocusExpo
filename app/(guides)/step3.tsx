@@ -2,7 +2,7 @@ import AnimatedCascade from '@/components/cascade';
 import CusButton from '@/components/cus-button';
 import TokenLabel from '@/components/native/TokenLabel';
 import Typewriter from '@/components/type-writer';
-import { GuideStore, HomeStore, PlanStore } from '@/stores';
+import { AppStore, GuideStore, HomeStore, PlanStore } from '@/stores';
 import { startAppLimits } from '@/utils/permission';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
@@ -16,6 +16,7 @@ const GuideStep3 = observer(() => {
   const store = useLocalObservable(() => HomeStore);
   const gstore = useLocalObservable(() => GuideStore);
   const pstore = useLocalObservable(() => PlanStore);
+  const astore = useLocalObservable(() => AppStore);
   const { colors, dark } = useTheme();
 
   const descColor = dark ? '#aaa' : '#666';
@@ -178,7 +179,7 @@ const GuideStep3 = observer(() => {
             style={{ marginTop: 30, marginBottom: 10 }}
             onFinish={() => setAppsAllShown(true)}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
-              {store.selected_app_icons.map(item => (
+              {astore.ios_selected_apps.map(item => (
                 <TokenLabel
                   key={item.id}
                   tokenBase64={item.tokenData}

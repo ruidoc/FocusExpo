@@ -1,5 +1,7 @@
 import { CusCard, CusPage } from '@/components';
+import TokenLabel from '@/components/native/TokenLabel';
 import { AppStore, HomeStore } from '@/stores';
+import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, NoticeBar, Space } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
@@ -9,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 
 import {
   Image,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -71,12 +74,18 @@ const App = observer(() => {
   };
 
   const toAddApp = (mode: string) => {
-    router.push({
-      pathname: '/apps/add',
-      params: {
-        mode,
-      },
-    });
+    if (Platform.OS === 'ios') {
+      selectAppsToLimit().then(data => {
+        astore.setIosSelectedApps(data.apps);
+      });
+    } else {
+      router.push({
+        pathname: '/apps/add',
+        params: {
+          mode,
+        },
+      });
+    }
   };
 
   useEffect(() => {
@@ -102,46 +111,50 @@ const App = observer(() => {
 
   return (
     <CusPage>
-      <NoticeBar
-        wrapable
-        message="开始专注时，会对下方选择的APP生效"
-        status="primary"
-      />
+      {Platform.OS !== 'ios' && (
+        <NoticeBar
+          wrapable
+          message="开始专注时，会对下方选择的APP生效"
+          status="primary"
+        />
+      )}
       <ScrollView
         style={{ padding: 15 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
         <Space gap={20}>
-          <CusCard
-            title="专注的APP"
-            desc="推荐添加学习相关的应用"
-            action={
-              <TouchableOpacity
-                activeOpacity={0.7}
-                style={styles.addBtn}
-                onPress={() => toAddApp('focus')}>
-                <Icon name="add" size={20} color={colors.primary} />
-                <Text style={styles.addIcon}>添加</Text>
-              </TouchableOpacity>
-            }>
-            {store.all_apps.filter(r =>
-              astore.focus_apps.includes(r.packageName),
-            ).length === 0 ? (
-              <View style={{ alignItems: 'center', padding: 24 }}>
-                <Icon name="ban-outline" size={30} color="#ccc" />
-                <Text style={{ color: '#aaa', marginTop: 8, fontSize: 14 }}>
-                  还没有添加APP哦
-                </Text>
-              </View>
-            ) : (
-              <Flex wrap="wrap" justify="start">
-                {store.all_apps
-                  .filter(r => astore.focus_apps.includes(r.packageName))
-                  .map(app => AppItem(app))}
-              </Flex>
-            )}
-          </CusCard>
+          {Platform.OS !== 'ios' && (
+            <CusCard
+              title="专注的APP"
+              desc="推荐添加学习相关的应用"
+              action={
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  style={styles.addBtn}
+                  onPress={() => toAddApp('focus')}>
+                  <Icon name="add" size={20} color={colors.primary} />
+                  <Text style={styles.addIcon}>添加</Text>
+                </TouchableOpacity>
+              }>
+              {store.all_apps.filter(r =>
+                astore.focus_apps.includes(r.packageName),
+              ).length === 0 ? (
+                <View style={{ alignItems: 'center', padding: 24 }}>
+                  <Icon name="ban-outline" size={30} color="#ccc" />
+                  <Text style={{ color: '#aaa', marginTop: 8, fontSize: 14 }}>
+                    还没有添加APP哦
+                  </Text>
+                </View>
+              ) : (
+                <Flex wrap="wrap" justify="start">
+                  {store.all_apps
+                    .filter(r => astore.focus_apps.includes(r.packageName))
+                    .map(app => AppItem(app))}
+                </Flex>
+              )}
+            </CusCard>
+          )}
           <CusCard
             title="屏蔽的APP"
             desc="推荐添加游戏、短视频、社交类应用"
@@ -154,21 +167,49 @@ const App = observer(() => {
                 <Text style={styles.addIcon}>添加</Text>
               </TouchableOpacity>
             }>
-            {store.all_apps.filter(r =>
-              astore.shield_apps.includes(r.packageName),
-            ).length === 0 ? (
-              <View style={{ alignItems: 'center', padding: 24 }}>
-                <Icon name="ban-outline" size={30} color="#ccc" />
-                <Text style={{ color: '#aaa', marginTop: 8, fontSize: 14 }}>
-                  还没有添加APP哦
-                </Text>
+            {Platform.OS === 'android' && (
+              <View style={{ padding: 10 }}>
+                {store.all_apps.filter(r =>
+                  astore.shield_apps.includes(r.packageName),
+                ).length === 0 ? (
+                  <View style={{ alignItems: 'center', padding: 24 }}>
+                    <Icon name="ban-outline" size={30} color="#ccc" />
+                    <Text style={{ color: '#aaa', marginTop: 8, fontSize: 14 }}>
+                      还没有添加APP哦
+                    </Text>
+                  </View>
+                ) : (
+                  <Flex wrap="wrap" justify="start">
+                    {store.all_apps
+                      .filter(r => astore.shield_apps.includes(r.packageName))
+                      .map(app => AppItem(app))}
+                  </Flex>
+                )}
               </View>
-            ) : (
-              <Flex wrap="wrap" justify="start">
-                {store.all_apps
-                  .filter(r => astore.shield_apps.includes(r.packageName))
-                  .map(app => AppItem(app))}
-              </Flex>
+            )}
+            {Platform.OS === 'ios' && (
+              <View style={{ padding: 10 }}>
+                {astore.ios_selected_apps.length === 0 ? (
+                  <View style={{ alignItems: 'center', padding: 24 }}>
+                    <Icon name="ban-outline" size={30} color="#ccc" />
+                    <Text style={{ color: '#aaa', marginTop: 8, fontSize: 14 }}>
+                      还没有添加APP哦
+                    </Text>
+                  </View>
+                ) : (
+                  <Flex wrap="wrap" justify="start">
+                    {astore.ios_selected_apps.map(item => (
+                      <TokenLabel
+                        key={item.id}
+                        tokenBase64={item.tokenData}
+                        tokenType={item.type}
+                        size={40}
+                        style={{ width: 40, height: 40 }}
+                      />
+                    ))}
+                  </Flex>
+                )}
+              </View>
             )}
           </CusCard>
         </Space>

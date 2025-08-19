@@ -5,7 +5,7 @@ import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 const ManageEntry: React.FC = () => {
   const ustore = useLocalObservable(() => UserStore);
@@ -14,7 +14,10 @@ const ManageEntry: React.FC = () => {
   const { colors, dark } = useTheme();
 
   const plan_count = pstore.cus_plans.length;
-  const app_count = astore.focus_apps.length + astore.shield_apps.length;
+  const app_count =
+    Platform.OS === 'ios'
+      ? astore.ios_selected_apps.length
+      : astore.focus_apps.length + astore.shield_apps.length;
 
   const appManageBg = dark ? '#00BCD4' : '#4DD0E1';
   const taskManageBg = dark ? '#7d45e6' : '#818CF8';

@@ -68,6 +68,7 @@ class NativeModule: RCTEventEmitter {
   override func startObserving() {
     hasListeners = true
     NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
+    NotificationCenter.default.addObserver(self, selector: #selector(handleStopProgress), name: NSNotification.Name("FocusOne.StopProgress"), object: nil)
   }
   override func stopObserving() {
     hasListeners = false
@@ -82,6 +83,10 @@ class NativeModule: RCTEventEmitter {
     } else {
       emitProgress()
     }
+  }
+  @objc private func handleStopProgress() {
+    emitEnded()
+    invalidateTimer()
   }
   private func restartTimer() {
     invalidateTimer()
@@ -118,6 +123,80 @@ class NativeModule: RCTEventEmitter {
     endTimestamp = 0
   }
   
+  // MARK: - 批量配置按周几的定时屏蔽计划（与前端计划兼容）
+  // plansJSON: [{ id, start: 秒, end: 秒, repeatDays: [1..7], mode }]
+  // 说明：repeatDays 约定 1=周一 ... 7=周日；将转换为 iOS Calendar.weekday (1=周日 ... 7=周六)
+  @objc
+  func configurePlannedLimits(_ plansJSON: NSString, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    struct PlanCfg: Codable {
+      let id: String
+      let start: Int
+      let end: Int
+      let repeatDays: [Int]?
+      let mode: String?
+    }
+    func mondayFirstToAppleWeekday(_ day: Int) -> Int {
+      // 输入：1..7 (周一..周日)  -> 输出：1..7 (周日..周六)
+      if day == 7 { return 1 }
+      return day + 1
+    }
+    func hourMinute(from seconds: Int) -> (Int, Int) {
+      let m = max(0, seconds / 60)
+      return (m / 60, m % 60)
+    }
+    guard let data = (plansJSON as String).data(using: .utf8) else {
+      reject("PARAM_ERROR", "参数解析失败", nil)
+      return
+    }
+    let decoder = JSONDecoder()
+    guard let plans = try? decoder.decode([PlanCfg].self, from: data) else {
+      reject("PARAM_ERROR", "JSON 解析失败", nil)
+      return
+    }
+    // 清理历史监控
+    if let defaults = UserDefaults.groupUserDefaults(),
+       let names = defaults.array(forKey: "FocusOne.ActiveScheduleNames") as? [String] {
+      for n in names {
+        center.stopMonitoring([DeviceActivityName(n)])
+      }
+    }
+    var newNames: [String] = []
+    // 保存前端下发的计划配置，供扩展计算 endAt 使用
+    if let defaults = UserDefaults.groupUserDefaults() {
+      defaults.set(plansJSON as String, forKey: "FocusOne.PlannedConfigs")
+    }
+    // 使用已保存的应用选择作为屏蔽对象
+    // 注意：这里不直接应用屏蔽，由扩展在 intervalDidStart 中应用
+    for (idx, p) in plans.enumerated() {
+      let (sh, sm) = hourMinute(from: p.start)
+      let (eh, em) = hourMinute(from: p.end)
+      let days = (p.repeatDays?.isEmpty == false) ? p.repeatDays! : [1,2,3,4,5,6,7]
+      for d in days {
+        let wd = mondayFirstToAppleWeekday(d)
+        // 处理跨日：若 end <= start，兜底成 23:59（复杂跨日可拆分两段，这里先简化）
+        let endH = (eh * 60 + em) <= (sh * 60 + sm) ? 23 : eh
+        let endM = (eh * 60 + em) <= (sh * 60 + sm) ? 59 : em
+        let schedule = DeviceActivitySchedule(
+          intervalStart: DateComponents(hour: sh, minute: sm, weekday: wd),
+          intervalEnd: DateComponents(hour: endH, minute: endM, weekday: wd),
+          repeats: true
+        )
+        let name = "FocusOne.Schedule_\(idx)_\(d)_\(sh)_\(sm)_\(eh)_\(em)"
+        do {
+          try center.startMonitoring(DeviceActivityName(name), during: schedule)
+          newNames.append(name)
+        } catch {
+          // 某个计划失败不影响其它计划
+          continue
+        }
+      }
+    }
+    if let defaults = UserDefaults.groupUserDefaults() {
+      defaults.set(newNames, forKey: "FocusOne.ActiveScheduleNames")
+    }
+    resolve(true)
+  }
+
   // 屏幕时间权限
   @objc
   func requestScreenTimePermission(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {

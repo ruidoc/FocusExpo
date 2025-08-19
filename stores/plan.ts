@@ -3,9 +3,9 @@ import { getCurrentMinute } from '@/utils';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
-import { NativeModules } from 'react-native';
+import {} from 'react-native';
 
-const { NativeClass } = NativeModules;
+// const { NativeClass } = NativeModules;
 class PlanStore {
   constructor() {
     makeAutoObservable(this);
@@ -70,11 +70,14 @@ class PlanStore {
   };
 
   addPlan = async (
-    form: Record<string, string>,
+    form: Record<string, any>,
     fun: (data?: HttpRes) => void,
   ) => {
     try {
-      let res: HttpRes = await http.post('/plan/add', form);
+      // console.log('计划参数：', form);
+      let form_data = JSON.parse(JSON.stringify(form));
+      form_data.repeat = form_data.repeat.join(',');
+      let res: HttpRes = await http.post('/plan/add', form_data);
       if (res.statusCode === 200) {
         fun(res);
         this.getPlans();

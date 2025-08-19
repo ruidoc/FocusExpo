@@ -1,5 +1,5 @@
 import TokenLabel from '@/components/native/TokenLabel';
-import { HomeStore } from '@/stores';
+import { AppStore, HomeStore } from '@/stores';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
@@ -10,11 +10,12 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const TimeSlider = () => {
   const store = useLocalObservable(() => HomeStore);
+  const astore = useLocalObservable(() => AppStore);
   const { dark, colors } = useTheme();
 
   const selectApps = () => {
     selectAppsToLimit().then(data => {
-      store.setSelectedAppIcons(data.apps);
+      astore.setIosSelectedApps(data.apps);
     });
   };
 
@@ -38,7 +39,7 @@ const TimeSlider = () => {
           align="center"
           style={{ gap: 6 }}
           onPress={selectApps}>
-          {store.selected_app_icons.map(item => (
+          {astore.ios_selected_apps.map(item => (
             <TokenLabel
               key={item.id}
               tokenBase64={item.tokenData}
@@ -49,7 +50,7 @@ const TimeSlider = () => {
           ))}
         </Flex>
       </ScrollView>
-      {store.selected_app_icons.length === 0 && (
+      {astore.ios_selected_apps.length === 0 && (
         <Flex
           direction="row"
           align="center"
