@@ -5,6 +5,7 @@ import FamilyControls
 import UIKit
 import ManagedSettings
 import SwiftUI
+import UserNotifications
 
 // 用于共享数据的UserDefaults扩展
 extension UserDefaults {
@@ -53,6 +54,7 @@ struct CustomFamilyActivityPicker: View {
 }
 
 @objc(NativeModule)
+@MainActor
 class NativeModule: RCTEventEmitter {
   private let center = DeviceActivityCenter()
   private let activityName = DeviceActivityName("FocusOne.ScreenTime")
@@ -60,6 +62,7 @@ class NativeModule: RCTEventEmitter {
   private var tickTimer: Timer?
   private var endTimestamp: TimeInterval = 0
   private var totalMinutes: Int = 0
+  private var pausedUntil: TimeInterval = 0
   // Event Emitter
   override static func requiresMainQueueSetup() -> Bool { true }
   override func supportedEvents() -> [String]! {
@@ -106,6 +109,8 @@ class NativeModule: RCTEventEmitter {
     if !hasListeners { return }
     guard totalMinutes > 0, endTimestamp > 0 else { return }
     let now = Date().timeIntervalSince1970
+    // 暂停期内不推进已用分钟数
+    if pausedUntil > now { return }
     let elapsedSeconds = max(0, Int(endTimestamp - now) * -1)
     let elapsedMinutes = max(0, min(totalMinutes, elapsedSeconds / 60))
     sendEvent(withName: "focus-progress", body: [
@@ -245,7 +250,11 @@ class NativeModule: RCTEventEmitter {
         }
         
         // 在主线程显示应用选择器
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+          guard let self = self else {
+            resolve(["success": false])
+            return
+          }
           // 创建自定义选择器，默认带入上一次保存的选择
           var selection = self.loadSelection() ?? FamilyActivitySelection()
           
@@ -257,7 +266,8 @@ class NativeModule: RCTEventEmitter {
                   selection = newSelection
                 }
               ),
-              onDismiss: { success in
+              onDismiss: { [weak self] success in
+                guard let self = self else { return }
                 if success {
                   // 用户点击完成
                   self.saveSelection(selection: selection)
@@ -395,9 +405,16 @@ class NativeModule: RCTEventEmitter {
         defaults.set(startDate.timeIntervalSince1970, forKey: "FocusOne.FocusStartAt")
         defaults.set(self.endTimestamp, forKey: "FocusOne.FocusEndAt")
         defaults.set(self.totalMinutes, forKey: "FocusOne.TotalMinutes")
+        defaults.set("once", forKey: "FocusOne.FocusType")
       }
       self.restartTimer()
       self.emitProgress()
+      // 发送开始通知（一次性）
+      let content = UNMutableNotificationContent()
+      content.title = "专注一点"
+      content.body = "屏蔽已开启，保持专注"
+      let request = UNNotificationRequest(identifier: "FocusStartOnce", content: content, trigger: nil)
+      UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
       
       resolve(true)
     } catch {
@@ -415,10 +432,12 @@ class NativeModule: RCTEventEmitter {
     store.clearAllSettings()
     emitEnded()
     invalidateTimer()
+    pausedUntil = 0
     if let defaults = UserDefaults.groupUserDefaults() {
       defaults.removeObject(forKey: "FocusOne.FocusStartAt")
       defaults.removeObject(forKey: "FocusOne.FocusEndAt")
       defaults.removeObject(forKey: "FocusOne.TotalMinutes")
+      defaults.removeObject(forKey: "FocusOne.FocusType")
     }
     
     resolve(true)
@@ -442,13 +461,56 @@ class NativeModule: RCTEventEmitter {
     let elapsed = max(0, min(Double(total * 60), now - startAt))
     let elapsedMin = Int(elapsed / 60.0)
     let active = now < endAt
+    let ftype = defaults.string(forKey: "FocusOne.FocusType")
     resolve([
       "active": active,
       "startAt": startAt,
       "endAt": endAt,
       "totalMinutes": total,
       "elapsedMinutes": elapsedMin,
+      "focusType": ftype ?? NSNull(),
+      "pausedUntil": pausedUntil > 0 ? pausedUntil : NSNull()
     ])
+  }
+
+  // 暂停当前屏蔽（分钟数可选；不传表示暂停剩余全时长；不超过任务总长度）
+  @objc
+  func pauseAppLimits(_ durationMinutes: NSNumber?, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    let now = Date().timeIntervalSince1970
+    // 已在暂停中：直接无效返回
+    if pausedUntil > now {
+      resolve(false)
+      return
+    }
+    guard endTimestamp > now else { resolve(false); return }
+    let remainingSec = endTimestamp - now
+    var pauseSec: Double
+    if let dm = durationMinutes?.doubleValue {
+      pauseSec = min(Double(dm) * 60.0, remainingSec)
+    } else {
+      pauseSec = remainingSec
+    }
+    pausedUntil = now + pauseSec
+    // 暂停期间清空屏蔽
+    let store = ManagedSettingsStore()
+    store.clearAllSettings()
+    // 设置一个一次性定时器，到期后恢复屏蔽（仅一次性任务有效；周期任务由扩展 intervalDidStart 恢复）
+    DispatchQueue.main.asyncAfter(deadline: .now() + pauseSec) { [weak self] in
+      guard let self = self else { return }
+      // 若任务仍未结束，则恢复屏蔽（一次性任务场景）
+      let now2 = Date().timeIntervalSince1970
+      guard self.endTimestamp > now2 else { return }
+      self.pausedUntil = 0
+      // 依据已保存选择恢复屏蔽
+      if let data = UserDefaults.groupUserDefaults()?.data(forKey: "FocusOne.AppSelection"),
+         let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+        let store = ManagedSettingsStore()
+        store.shield.applications = sel.applicationTokens
+        store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
+        store.shield.webDomains = sel.webDomainTokens
+      }
+    }
+    resolve(true)
   }
   
   // 渲染所有选择的应用Label为图片并返回base64数组
@@ -460,9 +522,9 @@ class NativeModule: RCTEventEmitter {
       return
     }
     
-    DispatchQueue.main.async {
-      var appIcons = self.getSelectedAppDetails(from: selection)
-      
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      let appIcons = self.getSelectedAppDetails(from: selection)
       resolve(appIcons)
     }
   }

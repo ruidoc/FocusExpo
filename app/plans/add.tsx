@@ -25,7 +25,7 @@ const App = observer(() => {
     return {
       start,
       end,
-      repeat: [],
+      repeat: [1, 2, 3, 4, 5],
       mode: 'shield',
     };
   });

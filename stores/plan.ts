@@ -3,7 +3,7 @@ import { getCurrentMinute } from '@/utils';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
-import {} from 'react-native';
+import { NativeModules } from 'react-native';
 
 // const { NativeClass } = NativeModules;
 class PlanStore {
@@ -40,7 +40,7 @@ class PlanStore {
     this.curplan_minute = minute;
   };
 
-  // 更新计划列表
+  // 更新计划列表（Android原生占位，iOS不同步）
   updatePlans = () => {
     let plan_arrs = this.all_plans.map(plan => ({
       id: plan.id,
@@ -50,6 +50,7 @@ class PlanStore {
       repeat: plan.repeat,
       mode: plan.mode,
     }));
+    console.log('计划列表：', plan_arrs);
     // NativeClass.setTimerange(JSON.stringify(plan_arrs));
   };
 
@@ -112,7 +113,25 @@ class PlanStore {
       let res: HttpRes = await http.delete('/plan/remove/' + id);
       if (res.statusCode === 200) {
         if (fun) fun(res);
-        this.getPlans();
+        await this.getPlans();
+        // iOS: 删除后需要重新同步周期任务至原生
+        try {
+          const plans = this.cus_plans
+            .filter((p: any) => Array.isArray(p.repeat))
+            .map((p: any) => ({
+              id: p.id,
+              start: p.start_min * 60,
+              end: p.end_min * 60,
+              repeatDays: p.repeat as number[],
+              mode: p.mode,
+            }));
+          const json = JSON.stringify(plans);
+          const mod: any = (NativeModules as any).NativeModule;
+          if (mod?.configurePlannedLimits)
+            await mod.configurePlannedLimits(json);
+        } catch (e) {
+          console.log('iOS 同步删除后计划失败', e);
+        }
       }
     } catch (error) {
       console.log(error);

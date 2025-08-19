@@ -7,6 +7,7 @@ import * as Notifications from 'expo-notifications';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import {
+  NativeModules,
   Platform,
   StyleSheet,
   Text,
@@ -171,6 +172,13 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
     store.setVpnState('close');
   };
 
+  const pauseFocus = () => {
+    if (!pstore.cur_plan) return;
+    if (Platform.OS === 'ios') {
+      NativeModules.NativeModule.pauseAppLimits(1);
+    }
+  };
+
   return (
     <>
       <Flex justify="center" style={{ marginTop: 46 }}>
@@ -195,6 +203,17 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
               backgroundColor: '#f0484855',
             }}>
             <Text style={{ color: '#fff', fontSize: 16 }}>停止屏蔽</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={pauseFocus}
+            activeOpacity={0.8}
+            style={{
+              paddingHorizontal: 18,
+              paddingVertical: 8,
+              borderRadius: 18,
+              backgroundColor: '#f0484855',
+            }}>
+            <Text style={{ color: '#fff', fontSize: 16 }}>暂停一分钟</Text>
           </TouchableOpacity>
         </Flex>
       )}

@@ -69,6 +69,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults.set(endAtTs, forKey: "FocusOne.FocusEndAt")
         let totalMin = max(1, Int((endAtTs - startAtTs) / 60))
         defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
+        defaults.set("periodic", forKey: "FocusOne.FocusType")
+        // 发送开始通知（周期计划）
+        let content = UNMutableNotificationContent()
+        content.title = "专注一点"
+        content.body = "屏蔽已开启，保持专注"
+        let request = UNNotificationRequest(identifier: "FocusStartPeriodic", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
     
     override func intervalDidEnd(for activity: DeviceActivityName) {
