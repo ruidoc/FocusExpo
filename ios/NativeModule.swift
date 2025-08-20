@@ -58,25 +58,41 @@ struct CustomFamilyActivityPicker: View {
 class NativeModule: RCTEventEmitter {
   private let center = DeviceActivityCenter()
   private let activityName = DeviceActivityName("FocusOne.ScreenTime")
+  private let pauseResumeActivity = DeviceActivityName("FocusOne.PauseResume")
   private var hasListeners: Bool = false
   private var tickTimer: Timer?
+  private var stateTimer: Timer?
   private var endTimestamp: TimeInterval = 0
   private var totalMinutes: Int = 0
   private var pausedUntil: TimeInterval = 0
   // Event Emitter
   override static func requiresMainQueueSetup() -> Bool { true }
   override func supportedEvents() -> [String]! {
-    return ["focus-progress", "focus-ended"]
+    return ["focus-progress", "focus-ended", "focus-state"]
   }
   override func startObserving() {
     hasListeners = true
     NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
     NotificationCenter.default.addObserver(self, selector: #selector(handleStopProgress), name: NSNotification.Name("FocusOne.StopProgress"), object: nil)
+    // 轮询扩展写入的统一事件，确保前台也能及时收到
+    stateTimer?.invalidate()
+    stateTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { [weak self] _ in
+      guard let self = self else { return }
+      if let defaults = UserDefaults.groupUserDefaults() {
+        if let ev = defaults.string(forKey: "FocusOne.LastFocusEvent") {
+          defaults.removeObject(forKey: "FocusOne.LastFocusEvent")
+          self.emitState(ev)
+        }
+      }
+    })
+    if let t = stateTimer { RunLoop.main.add(t, forMode: .common) }
   }
   override func stopObserving() {
     hasListeners = false
     NotificationCenter.default.removeObserver(self)
     invalidateTimer()
+    stateTimer?.invalidate()
+    stateTimer = nil
   }
   @objc private func appWillEnterForeground() {
     guard endTimestamp > 0 else { return }
@@ -85,6 +101,12 @@ class NativeModule: RCTEventEmitter {
       invalidateTimer()
     } else {
       emitProgress()
+    }
+    if let defaults = UserDefaults.groupUserDefaults() {
+      if let ev = defaults.string(forKey: "FocusOne.LastFocusEvent") {
+        defaults.removeObject(forKey: "FocusOne.LastFocusEvent")
+        emitState(ev)
+      }
     }
   }
   @objc private func handleStopProgress() {
@@ -126,6 +148,12 @@ class NativeModule: RCTEventEmitter {
     ])
     totalMinutes = 0
     endTimestamp = 0
+  }
+  private func emitState(_ state: String, extra: [String: Any] = [:]) {
+    if !hasListeners { return }
+    var body: [String: Any] = ["state": state]
+    for (k, v) in extra { body[k] = v }
+    sendEvent(withName: "focus-state", body: body)
   }
   
   // MARK: - 批量配置按周几的定时屏蔽计划（与前端计划兼容）
@@ -409,6 +437,7 @@ class NativeModule: RCTEventEmitter {
       }
       self.restartTimer()
       self.emitProgress()
+      self.emitState("started", extra: ["type": "once"]) 
       // 发送开始通知（一次性）
       let content = UNMutableNotificationContent()
       content.title = "专注一点"
@@ -433,6 +462,7 @@ class NativeModule: RCTEventEmitter {
     emitEnded()
     invalidateTimer()
     pausedUntil = 0
+    emitState("ended")
     if let defaults = UserDefaults.groupUserDefaults() {
       defaults.removeObject(forKey: "FocusOne.FocusStartAt")
       defaults.removeObject(forKey: "FocusOne.FocusEndAt")
@@ -462,6 +492,7 @@ class NativeModule: RCTEventEmitter {
     let elapsedMin = Int(elapsed / 60.0)
     let active = now < endAt
     let ftype = defaults.string(forKey: "FocusOne.FocusType")
+    let pu = defaults.double(forKey: "FocusOne.PausedUntil")
     resolve([
       "active": active,
       "startAt": startAt,
@@ -469,7 +500,7 @@ class NativeModule: RCTEventEmitter {
       "totalMinutes": total,
       "elapsedMinutes": elapsedMin,
       "focusType": ftype ?? NSNull(),
-      "pausedUntil": pausedUntil > 0 ? pausedUntil : NSNull()
+      "pausedUntil": pu > 0 ? pu : NSNull()
     ])
   }
 
@@ -494,20 +525,41 @@ class NativeModule: RCTEventEmitter {
     // 暂停期间清空屏蔽
     let store = ManagedSettingsStore()
     store.clearAllSettings()
-    // 设置一个一次性定时器，到期后恢复屏蔽（仅一次性任务有效；周期任务由扩展 intervalDidStart 恢复）
-    DispatchQueue.main.asyncAfter(deadline: .now() + pauseSec) { [weak self] in
-      guard let self = self else { return }
-      // 若任务仍未结束，则恢复屏蔽（一次性任务场景）
-      let now2 = Date().timeIntervalSince1970
-      guard self.endTimestamp > now2 else { return }
-      self.pausedUntil = 0
-      // 依据已保存选择恢复屏蔽
-      if let data = UserDefaults.groupUserDefaults()?.data(forKey: "FocusOne.AppSelection"),
-         let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
-        let store = ManagedSettingsStore()
-        store.shield.applications = sel.applicationTokens
-        store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
-        store.shield.webDomains = sel.webDomainTokens
+    if let defaults = UserDefaults.groupUserDefaults() {
+      defaults.set(pausedUntil, forKey: "FocusOne.PausedUntil")
+      defaults.set("paused", forKey: "FocusOne.LastFocusEvent")
+    }
+    emitState("paused")
+    // 使用 DeviceActivity 安排一次性“恢复活动”，即便应用不在前台也可恢复
+    do {
+      // 先停止历史的恢复调度
+      center.stopMonitoring([pauseResumeActivity])
+      let resumeDate = Date(timeIntervalSinceNow: pauseSec)
+      let endDate = resumeDate.addingTimeInterval(120) // 持续2分钟，确保触发
+      let cal = Calendar.current
+      let s = cal.dateComponents([.hour, .minute], from: resumeDate)
+      let e = cal.dateComponents([.hour, .minute], from: endDate)
+      let schedule = DeviceActivitySchedule(
+        intervalStart: DateComponents(hour: s.hour, minute: s.minute),
+        intervalEnd: DateComponents(hour: e.hour, minute: e.minute),
+        repeats: false
+      )
+      try center.startMonitoring(pauseResumeActivity, during: schedule)
+    } catch {
+      // 回退：若系统不触发扩展，则仍保留 app 进程内的恢复逻辑（尽力而为）
+      DispatchQueue.main.asyncAfter(deadline: .now() + pauseSec) { [weak self] in
+        guard let self = self else { return }
+        let now2 = Date().timeIntervalSince1970
+        guard self.endTimestamp > now2 else { return }
+        self.pausedUntil = 0
+        if let data = UserDefaults.groupUserDefaults()?.data(forKey: "FocusOne.AppSelection"),
+           let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+          let store = ManagedSettingsStore()
+          store.shield.applications = sel.applicationTokens
+          store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
+          store.shield.webDomains = sel.webDomainTokens
+        }
+        self.emitState("resumed")
       }
     }
     resolve(true)

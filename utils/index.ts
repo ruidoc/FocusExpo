@@ -34,6 +34,26 @@ export const fenToYuan = (fen: number | string): string => {
   return (fen / 100).toFixed(2);
 };
 
+// 解析 repeat 字段：支持 'once' | number[] | '1,2,3'
+export const parseRepeat = (repeat: any): 'once' | number[] => {
+  if (repeat === 'once') return 'once';
+  if (Array.isArray(repeat)) {
+    return repeat
+      .map((d: any) => Number(d))
+      .filter((d: number) => d >= 1 && d <= 7);
+  }
+  if (typeof repeat === 'string') {
+    const parts = repeat
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(n => Number(n))
+      .filter(n => !Number.isNaN(n) && n >= 1 && n <= 7);
+    return parts.length > 0 ? parts : [];
+  }
+  return [];
+};
+
 // 获取当前分钟数
 export const getCurrentMinute = (more = false): number => {
   let today = dayjs();

@@ -26,7 +26,6 @@ import { observer, useLocalObservable } from 'mobx-react';
 // import * as Sentry from '@sentry/react-native';
 import { toast } from '@/utils';
 import { getIOSFocusStatus, getSelectIosApps } from '@/utils/permission';
-import * as Notifications from 'expo-notifications';
 
 const { NativeClass } = NativeModules;
 
@@ -229,16 +228,6 @@ const App = observer(() => {
     const iosEmitter = new NativeEventEmitter(NativeModules.NativeModule);
     // iOS 屏蔽进度与结束事件监听（来自原生事件转发）
     const focusEnded = iosEmitter.addListener('focus-ended', async data => {
-      // 结束通知由原生扩展也会发，为确保 UI 同步，这里补一条应用内通知与状态同步
-      try {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: '专注结束',
-            body: '屏蔽已自动结束，做得很好！',
-          },
-          trigger: null,
-        });
-      } catch {}
       // 同步 UI 归位
       pstore.setCurPlanMinute(0);
       pstore.resetPlan();

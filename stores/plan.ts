@@ -1,5 +1,5 @@
 import http from '@/request';
-import { getCurrentMinute } from '@/utils';
+import { getCurrentMinute, parseRepeat } from '@/utils';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
@@ -15,6 +15,7 @@ class PlanStore {
   once_plans: CusPlan[] = []; // 一次性任务列表
   cur_plan: CusPlan = null; // 当前任务
   next_plan: CusPlan = null; // 下一个
+  paused: boolean = false; // 是否处于暂停中（iOS）
 
   // 当前任务已运行时长，退出重进后重新计时
   curplan_minute: number = 0;
@@ -27,7 +28,11 @@ class PlanStore {
   }
 
   setCusPlans = (plans: any[]) => {
-    this.cus_plans = plans;
+    let final_plans = plans.map(r => ({
+      ...r,
+      repeat: parseRepeat(r.repeat),
+    }));
+    this.cus_plans = final_plans;
     AsyncStorage.setItem('cus_plans', JSON.stringify(plans));
   };
 
@@ -38,6 +43,34 @@ class PlanStore {
 
   setCurPlanMinute = (minute: number) => {
     this.curplan_minute = minute;
+  };
+  setPaused = (v: boolean) => {
+    this.paused = v;
+  };
+
+  // 根据计划ID设置暂停状态（同时尝试在一次性与周期列表中更新）
+  setPlanPauseById = (planId: string | undefined, paused: boolean) => {
+    if (!planId) return;
+    const updatePause = (arr: CusPlan[]) => {
+      const idx = arr.findIndex(p => p.id === planId);
+      if (idx > -1) {
+        arr[idx] = { ...arr[idx], is_pause: paused } as CusPlan;
+      }
+    };
+    updatePause(this.cus_plans);
+    updatePause(this.once_plans);
+  };
+
+  // 设置当前任务的暂停状态，并同步到列表中
+  setCurrentPlanPause = (paused: boolean) => {
+    if (this.cur_plan?.id) {
+      this.setPlanPauseById(this.cur_plan.id, paused);
+      this.cur_plan = {
+        ...(this.cur_plan as any),
+        is_pause: paused,
+      } as CusPlan;
+    }
+    this.setPaused(paused);
   };
 
   // 更新计划列表（Android原生占位，iOS不同步）
@@ -57,16 +90,32 @@ class PlanStore {
   // 重新获取当前任务
   resetPlan = () => {
     // 获取当前时间的分钟数（当天从0点开始的总分钟数）
-    let minutes = getCurrentMinute();
-    // start_min 和 end_min 存储的是一天中的分钟数，例如 8:30 对应 510 分钟（8*60+30）
-    // 这里查找当前时间分钟数在任务的开始和结束分钟数之间的计划
-    this.cur_plan = this.all_plans.find(
-      it => minutes >= it.start_min && minutes < it.end_min,
-    );
-    this.next_plan = this.all_plans.find(it => minutes < it.start_min);
-    let once = this.once_plans.find(it => minutes >= it.end_min);
-    if (once) {
-      this.rmOncePlan(once.id);
+    const minutes = getCurrentMinute();
+    // 今天是周几（1=周一 ... 7=周日）
+    const jsDay = new Date().getDay(); // 0=周日 ... 6=周六
+    const today = jsDay === 0 ? 7 : jsDay;
+
+    // 仅保留：一次性任务，或周期任务且今天在 repeat 中
+    const filteredPlans = this.all_plans.filter(p => {
+      const r = parseRepeat((p as any).repeat);
+      if (r === 'once') return true;
+      // 若没有有效 repeat 数组，默认认为不匹配（避免误触发）
+      if (!Array.isArray(r) || r.length === 0) return false;
+      return r.includes(today);
+    });
+
+    // 查找当前正在进行中的计划
+    this.cur_plan =
+      filteredPlans.find(p => minutes >= p.start_min && minutes < p.end_min) ||
+      null;
+
+    // 查找下一个计划（同日内开始时间在当前之后的第一个）
+    this.next_plan = filteredPlans.find(p => minutes < p.start_min) || null;
+
+    // 清理已过期的一次性任务
+    const finishedOnce = this.once_plans.find(p => minutes >= p.end_min);
+    if (finishedOnce) {
+      this.rmOncePlan(finishedOnce.id);
     }
   };
 
@@ -75,7 +124,7 @@ class PlanStore {
     fun: (data?: HttpRes) => void,
   ) => {
     try {
-      // console.log('计划参数：', form);
+      console.log('计划参数：', form);
       let form_data = JSON.parse(JSON.stringify(form));
       form_data.repeat = form_data.repeat.join(',');
       let res: HttpRes = await http.post('/plan/add', form_data);
@@ -97,7 +146,7 @@ class PlanStore {
       let res: HttpRes = await http.get('/plan/lists');
       if (res.statusCode === 200) {
         this.setCusPlans(res.data);
-        this.updatePlans();
+        // this.updatePlans();
         if (!this.cur_plan) {
           this.resetPlan();
         }

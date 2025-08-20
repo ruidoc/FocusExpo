@@ -47,7 +47,7 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
 
   const getStateName = () => {
     if (pstore.cur_plan) {
-      return '正在专注中';
+      return pstore.paused ? '已暂停' : '正在专注中';
     }
     switch (store.vpn_state) {
       case 'refuse':

@@ -15,12 +15,16 @@ import FamilyControls
 class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
-        // 区间开始：仅当存在周期性计划（PlannedConfigs）时，才应用屏蔽与写入共享时间
+        // 区间开始：周期计划或暂停恢复调度，均应处理
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
         let now = Date()
         var startAtTs = now.timeIntervalSince1970
         var endAtTs = now.addingTimeInterval(60 * 60).timeIntervalSince1970 // 兜底1小时
         var hasPlannedMatch = false
+        var isPauseResume = false
+        if activity.rawValue == "FocusOne.PauseResume" {
+            isPauseResume = true
+        }
         if let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"),
            let cfgData = cfgStr.data(using: .utf8) {
             struct PlanCfg: Codable { let start: Int; let end: Int; let repeatDays: [Int]? }
@@ -50,6 +54,29 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 }
             }
         }
+        // 暂停恢复：直接按当前一次性/周期状态恢复屏蔽
+        if isPauseResume {
+            // 恢复屏蔽：清除暂停标记
+            defaults.set(0, forKey: "FocusOne.PausedUntil")
+            defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
+            // 若任务仍有效则恢复屏蔽
+            let now2 = Date().timeIntervalSince1970
+            let endAt = defaults.double(forKey: "FocusOne.FocusEndAt")
+            if endAt > now2 {
+                var selection: FamilyActivitySelection? = nil
+                if let data = defaults.data(forKey: "FocusOne.AppSelection"),
+                   let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+                    selection = sel
+                }
+                let store = ManagedSettingsStore()
+                if let sel = selection {
+                    store.shield.applications = sel.applicationTokens
+                    store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
+                    store.shield.webDomains = sel.webDomainTokens
+                }
+            }
+            return
+        }
         // 若不存在周期性计划匹配（一次性任务场景），不覆盖由快速开始设定的时间
         guard hasPlannedMatch else { return }
         // 加载选择的应用并应用屏蔽
@@ -76,6 +103,8 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         content.body = "屏蔽已开启，保持专注"
         let request = UNNotificationRequest(identifier: "FocusStartPeriodic", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+        // 记录统一事件，供主 App 拉起后转发
+        defaults.set("started", forKey: "FocusOne.LastFocusEvent")
     }
     
     override func intervalDidEnd(for activity: DeviceActivityName) {
@@ -85,6 +114,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         let store = ManagedSettingsStore()
         store.clearAllSettings()
         notifyEnd()
+        // 记录统一事件，供主 App 拉起后转发
+        if let defaults = UserDefaults(suiteName: "group.com.focusone") {
+            defaults.set("ended", forKey: "FocusOne.LastFocusEvent")
+        }
     }
     
     override func eventDidReachThreshold(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {

@@ -9,6 +9,8 @@ import { observer, useLocalObservable } from 'mobx-react';
 import React, { useState } from 'react';
 import { NativeModules, Platform, ScrollView, View } from 'react-native';
 
+const { NativeModule } = NativeModules;
+
 const App = observer(() => {
   const pstore = useLocalObservable(() => PlanStore);
   const navigation = useNavigation();
@@ -31,52 +33,62 @@ const App = observer(() => {
   });
 
   const submit = async () => {
-    let { start, end, repeat } = form;
-    let start_day = dayjs(start);
-    let end_day = dayjs(end);
-    if (!end_day.isAfter(start_day)) {
-      return Toast({
-        type: 'fail',
-        message: '结束时间必须大于开始时间',
-      });
-    }
-    if (end_day.diff(start_day, 'minute') < 20) {
-      return Toast({
-        type: 'fail',
-        message: '时间间隔最少20分钟',
-      });
-    }
-    const newStart = start_day.hour() * 60 + start_day.minute();
-    const newEnd = end_day.hour() * 60 + end_day.minute();
-    const overlap = pstore.all_plans
-      .filter(r => r.repeat !== 'once')
-      .some(plan => {
-        const share = (plan.repeat as number[]).some(d => repeat.includes(d));
-        if (!share) return false;
-        return newStart < plan.end_min && newEnd > plan.start_min;
-      });
-    if (overlap) {
-      return Toast({
-        type: 'fail',
-        message: '任务时间不能重叠',
-      });
-    }
-    let subinfo: any = { ...form };
-    subinfo.start = start_day.format('HH:mm');
-    subinfo.end = end_day.format('HH:mm');
-    subinfo.start_min = start_day.hour() * 60 + start_day.minute();
-    subinfo.end_min = end_day.hour() * 60 + end_day.minute();
+    try {
+      let { start, end, repeat } = form;
+      let start_day = dayjs(start);
+      let end_day = dayjs(end);
+      if (!end_day.isAfter(start_day)) {
+        return Toast({
+          type: 'fail',
+          message: '结束时间必须大于开始时间',
+        });
+      }
+      if (end_day.diff(start_day, 'minute') < 20) {
+        return Toast({
+          type: 'fail',
+          message: '时间间隔最少20分钟',
+        });
+      }
+      const newStart = start_day.hour() * 60 + start_day.minute();
+      const newEnd = end_day.hour() * 60 + end_day.minute();
+      const overlap = pstore.all_plans
+        .filter(r => Array.isArray(r.repeat))
+        .some(plan => {
+          const share = (plan.repeat as number[]).some(d => repeat.includes(d));
+          if (!share) return false;
+          return newStart < plan.end_min && newEnd > plan.start_min;
+        });
+      console.log('overlap：', pstore.all_plans);
+      if (overlap) {
+        return Toast({
+          type: 'fail',
+          message: '任务时间不能重叠',
+        });
+      }
+      let subinfo: any = { ...form };
+      subinfo.start = start_day.format('HH:mm');
+      subinfo.end = end_day.format('HH:mm');
+      subinfo.start_min = start_day.hour() * 60 + start_day.minute();
+      subinfo.end_min = end_day.hour() * 60 + end_day.minute();
 
-    const addPlanPromise: Promise<any> = new Promise(resolve =>
-      pstore.addPlan(subinfo, res => resolve(res)),
-    );
-    const iosPromise = configureIOS(subinfo);
-    const [addRes] = await Promise.all([addPlanPromise, iosPromise]);
-    if (addRes) {
-      Toast({ type: 'success', message: '添加任务成功' });
-      navigation.goBack();
-    } else {
-      Toast({ type: 'fail', message: '添加任务失败' });
+      pstore.addPlan(subinfo, async res => {
+        // console.log('添加任务结果：', res);
+        if (res) {
+          subinfo.id = res.data.id;
+          const isok = await configureIOS(subinfo);
+          if (isok) {
+            Toast({ type: 'success', message: '添加任务成功' });
+            navigation.goBack();
+          } else {
+            Toast({ type: 'fail', message: '更新任务失败' });
+          }
+        } else {
+          Toast({ type: 'fail', message: '添加任务失败' });
+        }
+      });
+    } catch (error) {
+      Toast({ type: 'fail', message: '添加任务出错' });
+      console.log('添加任务失败：', error);
     }
   };
 
@@ -94,7 +106,7 @@ const App = observer(() => {
           mode: p.mode,
         }));
       const current = {
-        id: `temp_${Date.now()}`,
+        id: subinfo.id,
         start: subinfo.start_min * 60,
         end: subinfo.end_min * 60,
         repeatDays: subinfo.repeat,
@@ -102,9 +114,7 @@ const App = observer(() => {
       };
       const plans = [...existing, current];
       const json = JSON.stringify(plans);
-      if ((NativeModules as any).NativeModule?.configurePlannedLimits) {
-        await (NativeModules as any).NativeModule.configurePlannedLimits(json);
-      }
+      await NativeModule.configurePlannedLimits(json);
       return true;
     } catch (e) {
       console.log('IOS添加时间段失败：', e);

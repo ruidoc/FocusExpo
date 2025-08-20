@@ -9,10 +9,21 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import PlanStore from '@/stores/plan';
 import { buttonRipple, ScreenOptions } from '@/utils/config';
+import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Provider, Space, Theme } from '@fruits-chain/react-native-xiaoshu';
-import { Pressable } from 'react-native';
+import { useEffect } from 'react';
+import {
+  AppState,
+  NativeEventEmitter,
+  NativeModules,
+  Platform,
+  Pressable,
+} from 'react-native';
+
+const { NativeModule } = NativeModules;
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -20,6 +31,66 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
   let isDark = colorScheme === 'dark';
+  // 提前在组件第一层定义副作用，避免条件调用 Hook 的告警
+  useEffect(() => {
+    const isIOS = Platform.OS === 'ios';
+    const nativeListener = new NativeEventEmitter(NativeModule);
+
+    const focusProgress = nativeListener.addListener(
+      'focus-progress',
+      (payload: { totalMinutes: number; elapsedMinutes: number }) => {
+        console.log('【监听进度变化】', payload);
+        const used = payload?.elapsedMinutes || 0;
+        PlanStore.setCurPlanMinute(used);
+      },
+    );
+    const focusState = nativeListener.addListener(
+      'focus-state',
+      (payload: {
+        state: 'started' | 'ended' | 'paused' | 'resumed';
+        type?: 'once' | 'periodic';
+      }) => {
+        console.log('【监听状态变化】', payload);
+        if (payload?.state === 'paused') {
+          PlanStore.setCurrentPlanPause(true);
+        } else if (payload?.state === 'resumed') {
+          PlanStore.setCurrentPlanPause(false);
+        } else if (payload?.state === 'ended') {
+          PlanStore.setCurrentPlanPause(false);
+          PlanStore.setCurPlanMinute(0);
+          PlanStore.resetPlan();
+        }
+      },
+    );
+    const syncIOSStatus = async () => {
+      if (!isIOS) return;
+      try {
+        const s = await getIOSFocusStatus();
+        console.log('【同步iOS状态】', s);
+        if (s.active) {
+          PlanStore.setCurPlanMinute(s.elapsedMinutes || 0);
+          PlanStore.resetPlan();
+        } else {
+          PlanStore.setCurPlanMinute(0);
+          PlanStore.resetPlan();
+        }
+      } catch {}
+    };
+    // 首次同步（仅 iOS 执行）
+    if (isIOS) {
+      syncIOSStatus();
+    }
+    const appState = AppState.addEventListener('change', state => {
+      if (isIOS && state === 'active') {
+        syncIOSStatus();
+      }
+    });
+    return () => {
+      focusProgress?.remove?.();
+      focusState?.remove?.();
+      appState?.remove?.();
+    };
+  }, []);
 
   if (!loaded) {
     // Async font loading only occurs in development.
