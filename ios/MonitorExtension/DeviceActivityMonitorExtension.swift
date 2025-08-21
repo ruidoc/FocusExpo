@@ -42,16 +42,25 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 for c in cfgs {
                     let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
                     if !days.contains(mondayFirst) { continue }
-                    let (sh, sm) = hm(c.start); let (eh, em) = hm(c.end)
-                    let endHM = eh*60 + em
-                    let startHM = sh*60 + sm
-                    var eH = eh, eM = em
-                    if endHM <= startHM { eH = 23; eM = 59 }
-                    if let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: now) {
-                        startAtTs = sDate.timeIntervalSince1970
+                    let (sh, sm) = hm(c.start)
+                    let (eh, em) = hm(c.end)
+                    let startHM = sh * 60 + sm
+                    let endHM = eh * 60 + em
+
+                    guard let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: now) else { continue }
+                    guard var eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: now) else { continue }
+
+                    // 跨午夜：结束时间在开始时间之前/相等，则结束时间为次日同刻
+                    if endHM <= startHM {
+                        if let nextDay = cal.date(byAdding: .day, value: 1, to: eDate) {
+                            eDate = nextDay
+                        }
                     }
-                    if let endDate = cal.date(bySettingHour: eH, minute: eM, second: 0, of: now) {
-                        endAtTs = endDate.timeIntervalSince1970
+
+                    // 仅当当前时间位于该区间内才命中该计划
+                    if now >= sDate && now < eDate {
+                        startAtTs = sDate.timeIntervalSince1970
+                        endAtTs = eDate.timeIntervalSince1970
                         hasPlannedMatch = true
                         break
                     }
