@@ -4,7 +4,6 @@ import { startAppLimits } from '@/utils/permission';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
-import * as Notifications from 'expo-notifications';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useState } from 'react';
 import { Platform, ScrollView, Text, View } from 'react-native';
@@ -34,8 +33,9 @@ const QuickStartPage = observer(() => {
     let now = dayjs();
     let cur_minute = now.hour() * 60 + now.minute();
     let cur_secend = cur_minute * 60 + now.second();
+    const newId = `once_${Math.floor(Math.random() * 99999999)}`;
     pstore.addOncePlan({
-      id: `once_${Math.floor(Math.random() * 99999999)}`,
+      id: newId,
       start: now.format('HH:mm'),
       start_min: cur_minute,
       start_sec: cur_secend,
@@ -45,6 +45,7 @@ const QuickStartPage = observer(() => {
       repeat: 'once',
       mode: mode,
     });
+    return newId;
   };
 
   const toSetting = async () => {
@@ -54,24 +55,11 @@ const QuickStartPage = observer(() => {
 
     if (Platform.OS === 'ios') {
       // iOS: 使用屏幕时间限制开始屏蔽
-      try {
-        // 立即展示一条开始提示（结束通知改由系统事件触发于扩展内发送）
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: '专注一点',
-            body: '屏蔽已开启，保持专注',
-          },
-          trigger: null,
-        });
-        setOncePlan();
-        // 立刻刷新当前计划，避免等待 AppState/原生事件导致 cur_plan 为空
-        pstore.setCurPlanMinute(0);
-        pstore.resetPlan();
-      } catch (error) {
-        console.log('通知权限错误：', error);
-      }
-
-      const ok = await startAppLimits(minute);
+      let plan_id = setOncePlan();
+      // 立刻刷新当前计划，避免等待 AppState/原生事件导致 cur_plan 为空
+      pstore.setCurPlanMinute(0);
+      pstore.resetPlan();
+      const ok = await startAppLimits(minute, plan_id);
       if (ok) {
         Toast('已开始屏蔽');
       } else {

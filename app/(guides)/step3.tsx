@@ -124,8 +124,9 @@ const GuideStep3 = observer(() => {
     let now = dayjs();
     let cur_minute = now.hour() * 60 + now.minute();
     let cur_secend = cur_minute * 60 + now.second();
+    const newId = `once_${Math.floor(Math.random() * 99999999)}`;
     pstore.addOncePlan({
-      id: `once_${Math.floor(Math.random() * 99999999)}`,
+      id: newId,
       start: now.format('HH:mm'),
       start_min: cur_minute,
       start_sec: cur_secend,
@@ -137,7 +138,7 @@ const GuideStep3 = observer(() => {
     });
 
     if (Platform.OS === 'ios') {
-      startAppLimits();
+      startAppLimits(5, newId);
     } else {
       // 启动 VPN
       store.startVpn();

@@ -48,27 +48,10 @@ class PlanStore {
     this.paused = v;
   };
 
-  // 根据计划ID设置暂停状态（同时尝试在一次性与周期列表中更新）
-  setPlanPauseById = (planId: string | undefined, paused: boolean) => {
-    if (!planId) return;
-    const updatePause = (arr: CusPlan[]) => {
-      const idx = arr.findIndex(p => p.id === planId);
-      if (idx > -1) {
-        arr[idx] = { ...arr[idx], is_pause: paused } as CusPlan;
-      }
-    };
-    updatePause(this.cus_plans);
-    updatePause(this.once_plans);
-  };
-
   // 设置当前任务的暂停状态，并同步到列表中
   setCurrentPlanPause = (paused: boolean) => {
     if (this.cur_plan?.id) {
-      this.setPlanPauseById(this.cur_plan.id, paused);
-      this.cur_plan = {
-        ...(this.cur_plan as any),
-        is_pause: paused,
-      } as CusPlan;
+      this.cur_plan.is_pause = paused;
     }
     this.setPaused(paused);
   };

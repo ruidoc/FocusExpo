@@ -61,11 +61,13 @@ export async function selectAppsToLimit(): Promise<AppSelectionResult> {
 // 开始限制应用
 export async function startAppLimits(
   durationMinutes?: number,
+  planId?: string,
 ): Promise<boolean> {
   if (Platform.OS !== 'ios') return false;
   try {
     let result = await NativeModules.NativeModule.startAppLimits(
       durationMinutes ?? 0,
+      planId ?? null,
     );
     console.log('startAppLimits result', result);
     return result;
@@ -95,6 +97,8 @@ export async function getIOSFocusStatus(): Promise<{
   endAt?: number;
   totalMinutes?: number;
   elapsedMinutes?: number;
+  plan_id?: string;
+  paused?: boolean;
 }> {
   if (Platform.OS !== 'ios') return { active: false };
   try {

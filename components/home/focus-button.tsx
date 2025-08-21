@@ -3,7 +3,6 @@ import { getCurrentMinute, toast } from '@/utils';
 import { stopAppLimits } from '@/utils/permission';
 import { Flex, Theme } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
-import * as Notifications from 'expo-notifications';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import {
@@ -156,26 +155,33 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
 
   const stopFocus = async () => {
     if (!pstore.cur_plan) return;
-    if (Platform.OS === 'ios') {
-      try {
+    try {
+      if (Platform.OS === 'ios') {
         await stopAppLimits();
-        await Notifications.cancelAllScheduledNotificationsAsync();
-      } catch {}
-      store.setVpnState('close');
-      PlanStore.clearPlans();
-      pstore.resetPlan();
-      toast('已停止屏蔽');
-      return;
-    }
-    // Android 维持原有逻辑
-    store.stopVpn();
-    store.setVpnState('close');
+        // await Notifications.cancelAllScheduledNotificationsAsync();
+        PlanStore.rmOncePlan(pstore.cur_plan.id);
+        pstore.resetPlan();
+        toast('已停止屏蔽');
+        return;
+      } else {
+        // Android 维持原有逻辑
+        store.stopVpn();
+        store.setVpnState('close');
+      }
+    } catch {}
   };
 
   const pauseFocus = () => {
     if (!pstore.cur_plan) return;
     if (Platform.OS === 'ios') {
       NativeModules.NativeModule.pauseAppLimits(1);
+    }
+  };
+
+  const resumeFocus = () => {
+    if (!pstore.cur_plan) return;
+    if (Platform.OS === 'ios') {
+      NativeModules.NativeModule.resumeAppLimits();
     }
   };
 
@@ -193,28 +199,46 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
       </Flex>
       {pstore.cur_plan && (
         <Flex justify="center" style={{ marginTop: -30, marginBottom: 20 }}>
-          <TouchableOpacity
-            onPress={stopFocus}
-            activeOpacity={0.8}
-            style={{
-              paddingHorizontal: 18,
-              paddingVertical: 8,
-              borderRadius: 18,
-              backgroundColor: '#f0484855',
-            }}>
-            <Text style={{ color: '#fff', fontSize: 16 }}>停止屏蔽</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={pauseFocus}
-            activeOpacity={0.8}
-            style={{
-              paddingHorizontal: 18,
-              paddingVertical: 8,
-              borderRadius: 18,
-              backgroundColor: '#f0484855',
-            }}>
-            <Text style={{ color: '#fff', fontSize: 16 }}>暂停一分钟</Text>
-          </TouchableOpacity>
+          {pstore.cur_plan.repeat === 'once' && (
+            <TouchableOpacity
+              onPress={stopFocus}
+              activeOpacity={0.8}
+              style={{
+                paddingHorizontal: 18,
+                paddingVertical: 8,
+                borderRadius: 18,
+                backgroundColor: '#f0484855',
+                marginRight: 8,
+              }}>
+              <Text style={{ color: '#fff', fontSize: 16 }}>停止屏蔽</Text>
+            </TouchableOpacity>
+          )}
+          {!pstore.cur_plan.is_pause && (
+            <TouchableOpacity
+              onPress={pauseFocus}
+              activeOpacity={0.8}
+              style={{
+                paddingHorizontal: 18,
+                paddingVertical: 8,
+                borderRadius: 18,
+                backgroundColor: '#f0484855',
+              }}>
+              <Text style={{ color: '#fff', fontSize: 16 }}>暂停任务</Text>
+            </TouchableOpacity>
+          )}
+          {pstore.cur_plan.is_pause && (
+            <TouchableOpacity
+              onPress={resumeFocus}
+              activeOpacity={0.8}
+              style={{
+                paddingHorizontal: 18,
+                paddingVertical: 8,
+                borderRadius: 18,
+                backgroundColor: '#f0484855',
+              }}>
+              <Text style={{ color: '#fff', fontSize: 16 }}>继续任务</Text>
+            </TouchableOpacity>
+          )}
         </Flex>
       )}
     </>

@@ -14,6 +14,7 @@ import { buttonRipple, ScreenOptions } from '@/utils/config';
 import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Provider, Space, Theme } from '@fruits-chain/react-native-xiaoshu';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
 import {
   AppState,
@@ -31,6 +32,15 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
   let isDark = colorScheme === 'dark';
+
+  const asyncData = async () => {
+    const [once_plans] = await Promise.all([
+      AsyncStorage.getItem('once_plans'),
+    ]);
+    if (once_plans) {
+      PlanStore.setOncePlans(JSON.parse(once_plans));
+    }
+  };
   // 提前在组件第一层定义副作用，避免条件调用 Hook 的告警
   useEffect(() => {
     const isIOS = Platform.OS === 'ios';
@@ -62,6 +72,7 @@ export default function RootLayout() {
         }
       },
     );
+    asyncData();
     const syncIOSStatus = async () => {
       if (!isIOS) return;
       try {
@@ -69,7 +80,9 @@ export default function RootLayout() {
         console.log('【同步iOS状态】', s);
         if (s.active) {
           PlanStore.setCurPlanMinute(s.elapsedMinutes || 0);
-          PlanStore.resetPlan();
+          if (PlanStore.cur_plan?.id === s.plan_id) {
+            PlanStore.setCurrentPlanPause(s.paused);
+          }
         } else {
           PlanStore.setCurPlanMinute(0);
           PlanStore.resetPlan();

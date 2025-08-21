@@ -209,6 +209,7 @@ class NativeModule: RCTEventEmitter {
         // 处理跨日：若 end <= start，兜底成 23:59（复杂跨日可拆分两段，这里先简化）
         let endH = (eh * 60 + em) <= (sh * 60 + sm) ? 23 : eh
         let endM = (eh * 60 + em) <= (sh * 60 + sm) ? 59 : em
+        // 【核心】创建屏蔽时间表
         let schedule = DeviceActivitySchedule(
           intervalStart: DateComponents(hour: sh, minute: sm, weekday: wd),
           intervalEnd: DateComponents(hour: endH, minute: endM, weekday: wd),
@@ -216,6 +217,7 @@ class NativeModule: RCTEventEmitter {
         )
         let name = "FocusOne.Schedule_\(idx)_\(d)_\(sh)_\(sm)_\(eh)_\(em)"
         do {
+          // 开始触发监控，扩展侧统一执行
           try center.startMonitoring(DeviceActivityName(name), during: schedule)
           newNames.append(name)
         } catch {
@@ -345,7 +347,7 @@ class NativeModule: RCTEventEmitter {
   
   // 开始限制选中的应用（durationMinutes: 任务时长，单位：分钟）
   @objc
-  func startAppLimits(_ durationMinutes: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  func startAppLimits(_ durationMinutes: NSNumber, planId: NSString?, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     guard let selection = self.loadSelection() else {
       reject("NO_SELECTION", "没有选择需要限制的应用", nil)
       return
@@ -434,6 +436,9 @@ class NativeModule: RCTEventEmitter {
         defaults.set(self.endTimestamp, forKey: "FocusOne.FocusEndAt")
         defaults.set(self.totalMinutes, forKey: "FocusOne.TotalMinutes")
         defaults.set("once", forKey: "FocusOne.FocusType")
+        if let pid = planId as String? {
+          defaults.set(pid, forKey: "FocusOne.CurrentPlanId")
+        }
       }
       self.restartTimer()
       self.emitProgress()
@@ -468,6 +473,7 @@ class NativeModule: RCTEventEmitter {
       defaults.removeObject(forKey: "FocusOne.FocusEndAt")
       defaults.removeObject(forKey: "FocusOne.TotalMinutes")
       defaults.removeObject(forKey: "FocusOne.FocusType")
+      defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
     }
     
     resolve(true)
@@ -483,18 +489,79 @@ class NativeModule: RCTEventEmitter {
     let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
     let endAt = defaults.double(forKey: "FocusOne.FocusEndAt")
     let total = defaults.integer(forKey: "FocusOne.TotalMinutes")
+
+    // 若没有一次性/周期任务的时间信息，则认为未激活
     if startAt <= 0 || endAt <= 0 || total <= 0 {
       resolve(["active": false])
       return
     }
+
     let now = Date().timeIntervalSince1970
     let elapsed = max(0, min(Double(total * 60), now - startAt))
     let elapsedMin = Int(elapsed / 60.0)
-    let active = now < endAt
+
+    // 是否处于我们定义的专注任务窗口内（一次性或周期）
+    let inWindow = now < endAt
+
+    // 读取 iOS 当前是否正在屏蔽（依据 ManagedSettings 当前设置是否为空）
+    let store = ManagedSettingsStore()
+    let hasApps = !(store.shield.applications?.isEmpty ?? true)
+    let hasDomains = !(store.shield.webDomains?.isEmpty ?? true)
+    let hasCats = (store.shield.applicationCategories != nil)
+    let isShielding = hasApps || hasDomains || hasCats
+
+    // 暂停：当仍在专注窗口，但系统未在屏蔽（清空了 ManagedSettings）
+    let paused = inWindow && !isShielding
+
+    // 业务上的 active：在窗口内即为 true，即使暂停中也为 true
+    let active = inWindow
+
     let ftype = defaults.string(forKey: "FocusOne.FocusType")
     let pu = defaults.double(forKey: "FocusOne.PausedUntil")
+
+    // 计算当前命中的周期计划的 plan_id
+    var planId: String? = nil
+    if ftype == "periodic", let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"), let cfgData = cfgStr.data(using: .utf8) {
+      struct PlanCfg: Codable { let id: String; let start: Int; let end: Int; let repeatDays: [Int]? }
+      if let cfgs = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) {
+        let cal = Calendar.current
+        let comp = cal.dateComponents([.weekday, .hour, .minute], from: Date())
+        let weekdayApple = comp.weekday ?? 1 // 1=周日
+        // 转换为 1=周一..7=周日
+        let mondayFirst = (weekdayApple == 1) ? 7 : (weekdayApple - 1)
+        func hm(_ sec: Int) -> (Int, Int) { let m = max(0, sec/60); return (m/60, m%60) }
+        for c in cfgs {
+          let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
+          if !days.contains(mondayFirst) { continue }
+          let (sh, sm) = hm(c.start); let (eh, em) = hm(c.end)
+          let endHM = eh*60 + em
+          let startHM = sh*60 + sm
+          var eH = eh, eM = em
+          if endHM <= startHM { eH = 23; eM = 59 }
+          if let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: Date()),
+             let eDate = cal.date(bySettingHour: eH, minute: eM, second: 0, of: Date()) {
+            let sTs = sDate.timeIntervalSince1970
+            let eTs = eDate.timeIntervalSince1970
+            let nowTs = now
+            if nowTs >= sTs && nowTs < eTs {
+              planId = c.id
+              break
+            }
+          }
+        }
+      }
+    }
+    // 若为一次性任务，读取启动时保存的planId
+    if planId == nil, ftype == "once" {
+      if let pid = defaults.string(forKey: "FocusOne.CurrentPlanId"), !pid.isEmpty {
+        planId = pid
+      }
+    }
+
     resolve([
       "active": active,
+      "paused": paused,
+      "plan_id": planId ?? NSNull(),
       "startAt": startAt,
       "endAt": endAt,
       "totalMinutes": total,
@@ -513,8 +580,17 @@ class NativeModule: RCTEventEmitter {
       resolve(false)
       return
     }
-    guard endTimestamp > now else { resolve(false); return }
-    let remainingSec = endTimestamp - now
+    // 计算有效的结束时间：优先一次性任务的 endTimestamp；否则尝试匹配当前周期计划窗口
+    var effectiveEnd: TimeInterval = 0
+    if endTimestamp > now {
+      effectiveEnd = endTimestamp
+    } else if let window = currentPlannedWindow() {
+      if now >= window.start && now < window.end {
+        effectiveEnd = window.end
+      }
+    }
+    guard effectiveEnd > now else { resolve(false); return }
+    let remainingSec = effectiveEnd - now
     var pauseSec: Double
     if let dm = durationMinutes?.doubleValue {
       pauseSec = min(Double(dm) * 60.0, remainingSec)
@@ -530,39 +606,76 @@ class NativeModule: RCTEventEmitter {
       defaults.set("paused", forKey: "FocusOne.LastFocusEvent")
     }
     emitState("paused")
-    // 使用 DeviceActivity 安排一次性“恢复活动”，即便应用不在前台也可恢复
-    do {
-      // 先停止历史的恢复调度
-      center.stopMonitoring([pauseResumeActivity])
-      let resumeDate = Date(timeIntervalSinceNow: pauseSec)
-      let endDate = resumeDate.addingTimeInterval(120) // 持续2分钟，确保触发
-      let cal = Calendar.current
-      let s = cal.dateComponents([.hour, .minute], from: resumeDate)
-      let e = cal.dateComponents([.hour, .minute], from: endDate)
-      let schedule = DeviceActivitySchedule(
-        intervalStart: DateComponents(hour: s.hour, minute: s.minute),
-        intervalEnd: DateComponents(hour: e.hour, minute: e.minute),
-        repeats: false
-      )
-      try center.startMonitoring(pauseResumeActivity, during: schedule)
-    } catch {
-      // 回退：若系统不触发扩展，则仍保留 app 进程内的恢复逻辑（尽力而为）
-      DispatchQueue.main.asyncAfter(deadline: .now() + pauseSec) { [weak self] in
-        guard let self = self else { return }
-        let now2 = Date().timeIntervalSince1970
-        guard self.endTimestamp > now2 else { return }
-        self.pausedUntil = 0
-        if let data = UserDefaults.groupUserDefaults()?.data(forKey: "FocusOne.AppSelection"),
-           let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
-          let store = ManagedSettingsStore()
-          store.shield.applications = sel.applicationTokens
-          store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
-          store.shield.webDomains = sel.webDomainTokens
-        }
-        self.emitState("resumed")
+    resolve(true)
+  }
+
+  // 手动恢复屏蔽：撤销暂停并按一次性或周期状态恢复 ManagedSettings
+  @objc
+  func resumeAppLimits(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    let now = Date().timeIntervalSince1970
+    // 恢复前检查任务是否仍有效
+    var canResume = false
+    var selection: FamilyActivitySelection? = nil
+    if let data = UserDefaults.groupUserDefaults()?.data(forKey: "FocusOne.AppSelection"),
+       let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+      selection = sel
+    }
+    if endTimestamp > now {
+      canResume = true
+    } else if let window = currentPlannedWindow() {
+      if now >= window.start && now < window.end { canResume = true }
+    }
+    guard canResume, let sel = selection else {
+      resolve(false)
+      return
+    }
+    // 恢复屏蔽设置
+    let store = ManagedSettingsStore()
+    store.shield.applications = sel.applicationTokens
+    store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
+    store.shield.webDomains = sel.webDomainTokens
+    pausedUntil = 0
+    if let defaults = UserDefaults.groupUserDefaults() {
+      defaults.set(0, forKey: "FocusOne.PausedUntil")
+      defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
+    }
+    emitState("resumed")
+    resolve(true)
+  }
+
+  // 计算“当前时刻”命中的周期计划窗口（若存在）
+  // 返回当日窗口的开始/结束时间戳（秒）
+  private func currentPlannedWindow() -> (start: TimeInterval, end: TimeInterval)? {
+    guard let defaults = UserDefaults.groupUserDefaults(),
+          let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"),
+          let cfgData = cfgStr.data(using: .utf8) else { return nil }
+    struct PlanCfg: Codable { let start: Int; let end: Int; let repeatDays: [Int]? }
+    guard let cfgs = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) else { return nil }
+    let now = Date()
+    let cal = Calendar.current
+    let comp = cal.dateComponents([.weekday, .hour, .minute], from: now)
+    let weekdayApple = comp.weekday ?? 1 // 1=周日
+    // 转换为 1=周一..7=周日
+    let mondayFirst = (weekdayApple == 1) ? 7 : (weekdayApple - 1)
+    func hm(_ sec: Int) -> (Int, Int) { let m = max(0, sec/60); return (m/60, m%60) }
+    for c in cfgs {
+      let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
+      if !days.contains(mondayFirst) { continue }
+      let (sh, sm) = hm(c.start); let (eh, em) = hm(c.end)
+      let endHM = eh*60 + em
+      let startHM = sh*60 + sm
+      var eH = eh, eM = em
+      if endHM <= startHM { eH = 23; eM = 59 }
+      guard let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: now),
+            let eDate = cal.date(bySettingHour: eH, minute: eM, second: 0, of: now) else { continue }
+      let sTs = sDate.timeIntervalSince1970
+      let eTs = eDate.timeIntervalSince1970
+      let nowTs = now.timeIntervalSince1970
+      if nowTs >= sTs && nowTs < eTs {
+        return (start: sTs, end: eTs)
       }
     }
-    resolve(true)
+    return nil
   }
   
   // 渲染所有选择的应用Label为图片并返回base64数组
