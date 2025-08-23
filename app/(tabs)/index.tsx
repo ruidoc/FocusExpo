@@ -355,7 +355,8 @@ const App = observer(() => {
     pmstore.checkBattery();
     pmstore.checkNotify();
     if (!ustore.uInfo) return;
-    if (pstore.all_plans[0]) {
+    if (!pstore.all_plans[0]) return;
+    if (Platform.OS === 'android') {
       setTimeout(() => {
         startVpn();
       }, 1500);

@@ -50,9 +50,7 @@ class PlanStore {
 
   // 设置当前任务的暂停状态，并同步到列表中
   setCurrentPlanPause = (paused: boolean) => {
-    if (this.cur_plan?.id) {
-      this.cur_plan.is_pause = paused;
-    }
+    this.cur_plan.is_pause = paused;
     this.setPaused(paused);
   };
 
@@ -68,6 +66,16 @@ class PlanStore {
     }));
     console.log('计划列表：', plan_arrs);
     // NativeClass.setTimerange(JSON.stringify(plan_arrs));
+  };
+
+  setCurPlan = (id: string, is_pause: boolean) => {
+    let cur_plan = this.all_plans.find(p => p.id === id);
+    if (cur_plan) {
+      cur_plan.is_pause = is_pause;
+      this.cur_plan = cur_plan;
+    } else {
+      this.resetPlan();
+    }
   };
 
   // 重新获取当前任务
@@ -130,9 +138,9 @@ class PlanStore {
       if (res.statusCode === 200) {
         this.setCusPlans(res.data);
         // this.updatePlans();
-        if (!this.cur_plan) {
-          this.resetPlan();
-        }
+        // if (!this.cur_plan) {
+        //   this.resetPlan();
+        // }
         if (fun) fun(res);
       }
     } catch (error) {
@@ -185,6 +193,7 @@ class PlanStore {
     if (index > -1) {
       this.once_plans.splice(index, 1);
     }
+    AsyncStorage.setItem('once_plans', JSON.stringify(this.once_plans));
     this.updatePlans();
   };
 }

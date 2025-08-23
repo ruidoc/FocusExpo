@@ -34,11 +34,15 @@ export default function RootLayout() {
   let isDark = colorScheme === 'dark';
 
   const asyncData = async () => {
-    const [once_plans] = await Promise.all([
+    const [once_plans, cus_plans] = await Promise.all([
       AsyncStorage.getItem('once_plans'),
+      AsyncStorage.getItem('cus_plans'),
     ]);
     if (once_plans) {
       PlanStore.setOncePlans(JSON.parse(once_plans));
+    }
+    if (cus_plans) {
+      PlanStore.setCusPlans(JSON.parse(cus_plans));
     }
   };
   // 提前在组件第一层定义副作用，避免条件调用 Hook 的告警
@@ -80,6 +84,9 @@ export default function RootLayout() {
         console.log('【同步iOS状态】', s);
         if (s.active) {
           PlanStore.setCurPlanMinute(s.elapsedMinutes || 0);
+          if (!PlanStore.cur_plan) {
+            PlanStore.resetPlan();
+          }
           if (PlanStore.cur_plan?.id === s.plan_id) {
             PlanStore.setCurrentPlanPause(s.paused);
           }
