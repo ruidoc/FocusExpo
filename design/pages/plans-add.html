@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Add</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/app.css">
+</head>
+<body>
+  <div class="page">
+    <div class="nav"><div class="title">新建计划</div><a class="btn ghost">保存</a></div>
+    <div class="content">
+      <div class="field">
+        <label>计划名称</label>
+        <input class="input" placeholder="可选" />
+      </div>
+
+      <div class="field">
+        <label>周几</label>
+        <div class="week">
+          <div class="chip active">一</div>
+          <div class="chip active">二</div>
+          <div class="chip active">三</div>
+          <div class="chip active">四</div>
+          <div class="chip active">五</div>
+          <div class="chip">六</div>
+          <div class="chip">日</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field" style="flex:1">
+          <label>开始时间</label>
+          <input class="input" placeholder="07:30" />
+        </div>
+        <div class="field" style="flex:1">
+          <label>结束时间</label>
+          <input class="input" placeholder="09:00" />
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="stack">
+          <div style="font-weight:600">目标预览</div>
+          <div class="token-list"><div class="token"></div><div class="token"></div></div>
+          <div class="footer-actions"><a class="btn">管理目标</a></div>
+        </div>
+      </div>
+
+      <a class="btn primary">保存</a>
+    </div>
+  </div>
+</body>
+</html>
+
+

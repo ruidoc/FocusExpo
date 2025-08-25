@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FocusOne Design Previews</title>
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/ios.css">
+</head>
+<body>
+  <div class="toolbar">
+    <h1>FocusOne 设计稿预览（HTML）</h1>
+    <span class="thumb">iPhone 15 Pro 390×844</span>
+    <div class="spacer"></div>
+    <button class="theme" id="toggleTheme">切换主题</button>
+  </div>
+  <div class="grid">
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/home.html"></iframe></div>
+      <div class="label">首页 (/(tabs)/index)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/quick-start.html"></iframe></div>
+      <div class="label">快速开始 (/quick-start/index)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/plans-index.html"></iframe></div>
+      <div class="label">任务面板 (/plans/index)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/plans-add.html"></iframe></div>
+      <div class="label">新建/编辑计划 (/plans/add)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/setting-permission.html"></iframe></div>
+      <div class="label">权限设置 (/setting/permission)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/user.html"></iframe></div>
+      <div class="label">我的 (/(tabs)/user)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/login-index.html"></iframe></div>
+      <div class="label">登录 (/login/index)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/login-register.html"></iframe></div>
+      <div class="label">注册 (/login/register)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/login-start.html"></iframe></div>
+      <div class="label">登录起始 (/login/start)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/login-wx.html"></iframe></div>
+      <div class="label">微信登录 (/login/wx)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/not-found.html"></iframe></div>
+      <div class="label">异常页 (+not-found)</div>
+    </div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen"><iframe src="pages/shield.html"></iframe></div>
+      <div class="label">拦截页 (Shield)</div>
+    </div>
+  </div>
+  <script>
+    const btn = document.getElementById('toggleTheme');
+    btn.addEventListener('click', () => {
+      const cur = document.documentElement.getAttribute('data-theme');
+      document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+    });
+  </script>
+</body>
+</html>
+
+

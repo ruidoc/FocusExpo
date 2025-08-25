@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quick Start</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/app.css">
+  <style>
+    .preset { gap: var(--space-2); }
+    .preset .btn { 
+      min-width: 52px; 
+      height: 52px;
+      border-radius: var(--radius-full);
+      font-weight: 700;
+      font-size: var(--font-size-md);
+    }
+    .slider { 
+      appearance: none; 
+      width: 100%; 
+      height: 8px; 
+      border-radius: var(--radius-full); 
+      background: var(--bg-secondary);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .slider::-webkit-slider-thumb { 
+      -webkit-appearance: none; 
+      width: 28px; 
+      height: 28px; 
+      border-radius: 50%; 
+      background: var(--primary-gradient);
+      box-shadow: var(--shadow-elevated);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .slider::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+    }
+    .minute-display {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      color: var(--primary);
+      text-align: center;
+      margin: var(--space-4) 0;
+    }
+  </style>
+  <script type="module">
+    import { toast } from '../scripts/ui.js';
+    window.addEventListener('DOMContentLoaded', () => {
+      const output = document.getElementById('minute');
+      const slider = document.getElementById('slider');
+      const start = document.getElementById('start');
+      slider.addEventListener('input', () => { output.textContent = slider.value; });
+      document.querySelectorAll('[data-min]').forEach(b => b.addEventListener('click', () => {
+        slider.value = b.dataset.min; slider.dispatchEvent(new Event('input')); }));
+      start.addEventListener('click', () => toast('🚀 已开始屏蔽，专注开始！', 'success'));
+    });
+  </script>
+</head>
+<body>
+  <div class="page">
+    <div class="nav">
+      <div class="title">⚡ 快速开始</div>
+      <a class="btn ghost" style="min-width: auto; padding: 0 12px;">✕</a>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="stack">
+          <div style="font-weight:700; font-size: var(--font-size-lg); color: var(--text-primary);">⏰ 选择时长</div>
+          <div class="minute-display">
+            <span id="minute">25</span> 分钟
+          </div>
+          <div class="row preset">
+            <a class="btn" data-min="5">5</a>
+            <a class="btn" data-min="15">15</a>
+            <a class="btn primary" data-min="25">25</a>
+            <a class="btn" data-min="45">45</a>
+            <a class="btn" data-min="90">90</a>
+          </div>
+          <div class="kpi" style="text-align: center; margin: var(--space-3) 0;">滑动调节自定义时长</div>
+          <input id="slider" class="slider" type="range" min="5" max="120" value="25" step="5" />
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="stack">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-weight:700; font-size: var(--font-size-lg);">🎯 专注目标</div>
+            <div class="kpi">已选择 3 个</div>
+          </div>
+          <div class="token-list">
+            <div class="token" style="background: #FF6B6B;">📱</div>
+            <div class="token" style="background: #4ECDC4;">💬</div>
+            <div class="token" style="background: #45B7D1;">🎵</div>
+          </div>
+          <div class="footer-actions">
+            <a class="btn ghost">📝 管理目标</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="gap: var(--space-3);">
+        <a class="btn primary" id="start" style="flex: 2; height: 52px; font-size: var(--font-size-lg); font-weight: 700;">🚀 开始屏蔽</a>
+        <a class="btn ghost" style="flex: 1;">📋 任务面板</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+

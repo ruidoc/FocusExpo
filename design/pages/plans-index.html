@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plans</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/app.css">
+  <style>
+    .timeline { 
+      position: relative; 
+      height: 1200px; 
+      border-radius: var(--radius-lg); 
+      background: var(--bg-tertiary); 
+      box-shadow: var(--shadow-card);
+      margin: var(--space-4) 0;
+    }
+    .hour { 
+      position: absolute; 
+      left: 0; 
+      right: 0; 
+      height: 0; 
+      border-top: 1px dashed var(--separator); 
+    }
+    .tick { 
+      position: absolute; 
+      left: var(--space-2); 
+      font-size: var(--font-size-xs); 
+      color: var(--text-tertiary); 
+      background: transparent; 
+      font-weight: 500;
+    }
+    .bar { 
+      position: absolute; 
+      left: var(--space-3); 
+      right: var(--space-3); 
+      border-radius: var(--radius-md); 
+      opacity: .95; 
+      color: #fff; 
+      display: flex; 
+      align-items: center; 
+      padding: 0 var(--space-2); 
+      font-size: var(--font-size-xs); 
+      font-weight: 700;
+      box-shadow: var(--shadow-card);
+      transition: all 0.2s ease;
+    }
+    .bar:hover {
+      transform: translateX(2px);
+      box-shadow: var(--shadow-elevated);
+    }
+    .bar.focus { 
+      background: linear-gradient(135deg, var(--success) 0%, #2ECC71 100%); 
+    }
+    .bar.shield { 
+      background: linear-gradient(135deg, var(--error) 0%, #E74C3C 100%); 
+    }
+    .now { 
+      position: absolute; 
+      left: 0; 
+      right: 0; 
+      height: 3px; 
+      background: linear-gradient(90deg, var(--primary) 0%, #5AC8FA 100%);
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(0, 122, 255, 0.5);
+    }
+  </style>
+  <script type="module">
+    function timeToMinutes(str){ const [h,m]=str.split(':').map(Number); return h*60+m; }
+    function pos(min){ return Math.round(min/60*50) + 8; }
+    window.addEventListener('DOMContentLoaded', () => {
+      const tl = document.getElementById('tl');
+      for (let h=0; h<=24; h++){ const y = pos(h*60); const line = document.createElement('div'); line.className='hour'; line.style.top = y+'px'; tl.appendChild(line); const t = document.createElement('div'); t.className='tick'; t.style.top = (y-10)+'px'; t.textContent = String(h).padStart(2,'0')+':00'; tl.appendChild(t);} 
+      const bars=[
+        {start:'07:30', end:'09:00', mode:'focus'},
+        {start:'21:30', end:'22:30', mode:'shield'}
+      ];
+      bars.forEach(b=>{ const el=document.createElement('div'); el.className='bar '+b.mode; const top=pos(timeToMinutes(b.start)); const height=pos(timeToMinutes(b.end))-top; el.style.top=top+'px'; el.style.height=height+'px'; el.textContent = `${b.start}~${b.end}`; tl.appendChild(el); });
+      const now = new Date(); const cur = pos(now.getHours()*60+now.getMinutes()); const curEl = document.createElement('div'); curEl.className='now'; curEl.style.top = cur+'px'; tl.appendChild(curEl);
+    });
+  </script>
+</head>
+<body>
+  <div class="page">
+    <div class="nav">
+      <div class="title">📋 任务面板</div>
+      <a class="btn primary" style="min-width: auto; padding: 0 12px;">➕</a>
+    </div>
+    <div class="content">
+      <div class="card" style="background: var(--success-light); border: 1px solid var(--success);">
+        <div class="row" style="justify-content: space-between; align-items: center;">
+          <div class="stack">
+            <div style="font-weight:700; color: var(--success);">🌅 工作日晨间</div>
+            <div class="kpi">周一二三四五 · 07:30-09:00</div>
+            <div class="kpi" style="color: var(--success); font-weight: 600;">✅ 已启用</div>
+          </div>
+          <a class="btn success" style="min-width: auto; padding: 0 12px;">⚙️</a>
+        </div>
+      </div>
+      
+      <div class="card" style="background: var(--error-light); border: 1px solid var(--error);">
+        <div class="row" style="justify-content: space-between; align-items: center;">
+          <div class="stack">
+            <div style="font-weight:700; color: var(--error);">🌙 晚间阅读</div>
+            <div class="kpi">每天 · 21:30-22:30</div>
+            <div class="kpi" style="color: var(--error); font-weight: 600;">⏸️ 已停用</div>
+          </div>
+          <a class="btn error" style="min-width: auto; padding: 0 12px;">⚙️</a>
+        </div>
+      </div>
+      
+      <div class="card" style="border: 2px dashed var(--separator);">
+        <div class="stack" style="align-items:center; text-align:center;">
+          <div style="font-size: var(--font-size-3xl);">⏰</div>
+          <div style="font-weight:700; font-size: var(--font-size-lg); margin: var(--space-2) 0;">创建你的第一个周期计划</div>
+          <div class="kpi" style="margin-bottom: var(--space-3);">设置重复时间，让专注成为习惯</div>
+          <a class="btn primary" style="font-weight: 700;">🚀 新建计划</a>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="stack">
+          <div style="font-weight:700; font-size: var(--font-size-lg); text-align: center; margin-bottom: var(--space-3);">📊 今日时间线</div>
+          <div id="tl" class="timeline"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Permission</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/app.css">
+  <script type="module">
+    import { toast } from '../scripts/ui.js';
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('open-screen')?.addEventListener('click',()=>toast('🔐 前往系统设置', 'info'));
+      document.getElementById('open-notify')?.addEventListener('click',()=>toast('🔔 前往通知设置', 'info'));
+    });
+  </script>
+</head>
+<body>
+  <div class="page">
+    <div class="nav"><div class="title">权限设置</div></div>
+    <div class="content">
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <div class="stack">
+            <div style="font-weight:600">屏幕使用时间</div>
+            <div class="kpi">未开启 · 需要授权以开始专注</div>
+          </div>
+          <a id="open-screen" class="btn primary">去开启</a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <div class="stack">
+            <div style="font-weight:600">通知权限</div>
+            <div class="kpi">建议开启，用于开始/结束提醒</div>
+          </div>
+          <a id="open-notify" class="btn">去设置</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+
