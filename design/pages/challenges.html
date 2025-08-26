@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>挑战 - FocusOne</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/app.css">
+</head>
+<body>
+  <div class="app">
+    <div class="safe-area">
+      <div class="nav-header">
+        <div class="nav-title">挑战</div>
+        <button class="nav-button">历史</button>
+      </div>
+
+      <div class="content">
+        <!-- 筛选栏 -->
+        <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+          <select style="flex: 1; padding: 8px 12px; border: 1px solid var(--separator); border-radius: 8px; background: var(--bg-primary);">
+            <option>全部类型</option>
+            <option>永久奖励</option>
+            <option>临时奖励</option>
+          </select>
+          <select style="flex: 1; padding: 8px 12px; border: 1px solid var(--separator); border-radius: 8px; background: var(--bg-primary);">
+            <option>全部难度</option>
+            <option>10 币</option>
+            <option>20 币</option>
+            <option>50 币</option>
+          </select>
+        </div>
+
+        <!-- 挑战卡片列表 -->
+        <div class="challenge-card">
+          <div class="challenge-header">
+            <div>
+              <div style="font-weight: 600; margin-bottom: 4px;">工作日专注挑战</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">连续3天完成≥30分钟专注</div>
+            </div>
+            <div class="challenge-difficulty">20 币</div>
+          </div>
+          <div class="challenge-body">
+            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">必屏蔽应用：</div>
+            <div class="challenge-apps">
+              <div class="app-icon">📱</div>
+              <div class="app-icon">🎵</div>
+              <div class="app-icon">📺</div>
+            </div>
+            <div class="challenge-reward">奖励：永久 +1 App 上限</div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 16px;">领取挑战</button>
+          </div>
+        </div>
+
+        <div class="challenge-card">
+          <div class="challenge-header">
+            <div>
+              <div style="font-weight: 600; margin-bottom: 4px;">深度专注挑战</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">单次完成90分钟专注</div>
+            </div>
+            <div class="challenge-difficulty">50 币</div>
+          </div>
+          <div class="challenge-body">
+            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">必屏蔽应用：</div>
+            <div class="challenge-apps">
+              <div class="app-icon">📱</div>
+              <div class="app-icon">💬</div>
+              <div class="app-icon">🎮</div>
+              <div class="app-icon">📺</div>
+              <div class="app-icon">🛒</div>
+            </div>
+            <div class="challenge-reward">奖励：永久 +15 分钟上限</div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 16px;">领取挑战</button>
+          </div>
+        </div>
+
+        <div class="challenge-card">
+          <div class="challenge-header">
+            <div>
+              <div style="font-weight: 600; margin-bottom: 4px;">周末冲刺</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">进行中 - 1/2 完成</div>
+            </div>
+            <div class="challenge-difficulty">10 币</div>
+          </div>
+          <div class="challenge-body">
+            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">必屏蔽应用：</div>
+            <div class="challenge-apps">
+              <div class="app-icon">📱</div>
+              <div class="app-icon">🎵</div>
+            </div>
+            <div style="margin: 12px 0;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
+                <span>进度 1/2</span>
+                <span>剩余 1 天</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" style="width: 50%;"></div>
+              </div>
+            </div>
+            <div class="challenge-reward">奖励：7天临时 +2 Apps</div>
+            <button class="btn btn-secondary" style="width: 100%; margin-top: 16px;">查看详情</button>
+          </div>
+        </div>
+
+        <!-- 空状态示例（隐藏） -->
+        <div class="empty-state" style="display: none;">
+          <div class="empty-icon">🎯</div>
+          <div class="empty-title">暂无可领取挑战</div>
+          <div class="empty-subtitle">新挑战将在每周一更新</div>
+        </div>
+      </div>
+
+      <!-- 底部Tab栏 -->
+      <div class="tab-bar">
+        <a href="home.html" class="tab-item">
+          <div class="tab-icon">🏠</div>
+          <div class="tab-label">首页</div>
+        </a>
+        <a href="#" class="tab-item active">
+          <div class="tab-icon">🎯</div>
+          <div class="tab-label">挑战</div>
+        </a>
+        <a href="user.html" class="tab-item">
+          <div class="tab-icon">👤</div>
+          <div class="tab-label">我的</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

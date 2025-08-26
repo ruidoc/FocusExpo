@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>充值 - FocusOne</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/app.css">
+</head>
+<body>
+  <div class="app">
+    <div class="safe-area">
+      <div class="nav-header">
+        <button class="nav-button">返回</button>
+        <div class="nav-title">充值自律币</div>
+        <div style="width: 48px;"></div>
+      </div>
+
+      <div class="content">
+        <!-- 当前余额 -->
+        <div class="card" style="background: var(--bg-secondary); margin-bottom: 24px;">
+          <div class="card-body text-center">
+            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">当前余额</div>
+            <div style="font-size: 32px; font-weight: 600; color: var(--primary);">85 自律币</div>
+          </div>
+        </div>
+
+        <!-- 充值套餐 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">选择充值套餐</div>
+            <div class="card-subtitle">支持支付宝、微信支付</div>
+          </div>
+          <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+              <!-- 基础套餐 -->
+              <div class="recharge-item" data-amount="100" data-price="6">
+                <div style="text-align: center; padding: 16px; border: 2px solid var(--separator); border-radius: 12px; cursor: pointer;">
+                  <div style="font-size: 20px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">100</div>
+                  <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">自律币</div>
+                  <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">¥6</div>
+                </div>
+              </div>
+
+              <!-- 超值套餐 -->
+              <div class="recharge-item active" data-amount="300" data-price="15">
+                <div style="text-align: center; padding: 16px; border: 2px solid var(--primary); border-radius: 12px; background: var(--primary-light); cursor: pointer; position: relative;">
+                  <div style="position: absolute; top: -8px; right: -8px; background: var(--error); color: white; font-size: 10px; padding: 2px 6px; border-radius: 8px;">热门</div>
+                  <div style="font-size: 20px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">300</div>
+                  <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">自律币</div>
+                  <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">¥15</div>
+                  <div style="font-size: 10px; color: var(--success); margin-top: 4px;">送30币</div>
+                </div>
+              </div>
+
+              <!-- 豪华套餐 -->
+              <div class="recharge-item" data-amount="600" data-price="25">
+                <div style="text-align: center; padding: 16px; border: 2px solid var(--separator); border-radius: 12px; cursor: pointer; position: relative;">
+                  <div style="position: absolute; top: -8px; right: -8px; background: var(--warning); color: white; font-size: 10px; padding: 2px 6px; border-radius: 8px;">划算</div>
+                  <div style="font-size: 20px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">600</div>
+                  <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">自律币</div>
+                  <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">¥25</div>
+                  <div style="font-size: 10px; color: var(--success); margin-top: 4px;">送100币</div>
+                </div>
+              </div>
+
+              <!-- 至尊套餐 -->
+              <div class="recharge-item" data-amount="1200" data-price="40">
+                <div style="text-align: center; padding: 16px; border: 2px solid var(--separator); border-radius: 12px; cursor: pointer; position: relative;">
+                  <div style="position: absolute; top: -8px; right: -8px; background: var(--primary); color: white; font-size: 10px; padding: 2px 6px; border-radius: 8px;">VIP</div>
+                  <div style="font-size: 20px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">1200</div>
+                  <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">自律币</div>
+                  <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">¥40</div>
+                  <div style="font-size: 10px; color: var(--success); margin-top: 4px;">送300币</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 订单摘要 -->
+            <div style="background: var(--bg-secondary); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 14px;">购买数量：</span>
+                <span style="font-weight: 600;" id="selectedAmount">300 自律币</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 14px;">赠送：</span>
+                <span style="font-weight: 600; color: var(--success);" id="bonusAmount">+30 自律币</span>
+              </div>
+              <div style="border-top: 1px solid var(--separator); padding-top: 8px; margin-top: 8px;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="font-size: 16px; font-weight: 600;">支付金额：</span>
+                  <span style="font-size: 20px; font-weight: 600; color: var(--error);" id="totalPrice">¥15</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 支付方式 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">选择支付方式</div>
+          </div>
+          <div class="card-body" style="padding: 0;">
+            <div class="list-item payment-method active" data-method="alipay">
+              <div class="list-item-icon" style="background: var(--primary-light); color: var(--primary);">💳</div>
+              <div class="list-item-content">
+                <div class="list-item-title">支付宝</div>
+                <div class="list-item-subtitle">推荐使用</div>
+              </div>
+              <div style="width: 20px; height: 20px; border: 2px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 10px; height: 10px; background: var(--primary); border-radius: 50%;"></div>
+              </div>
+            </div>
+            <div class="list-item payment-method" data-method="wechat">
+              <div class="list-item-icon" style="background: var(--success-light); color: var(--success);">💬</div>
+              <div class="list-item-content">
+                <div class="list-item-title">微信支付</div>
+                <div class="list-item-subtitle">便捷支付</div>
+              </div>
+              <div style="width: 20px; height: 20px; border: 2px solid var(--separator); border-radius: 50%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="card">
+          <div class="card-body">
+            <div style="font-size: 14px; line-height: 1.5; color: var(--text-secondary);">
+              <p style="margin-bottom: 8px;">💡 <strong>使用说明：</strong></p>
+              <p style="margin-bottom: 8px;">• 自律币可用于专注下注和挑战领取</p>
+              <p style="margin-bottom: 8px;">• 完成专注任务可获得奖励返还</p>
+              <p style="margin-bottom: 8px;">• 仅限应用内使用，不可提现</p>
+              <p style="margin: 0;">• 购买即表示同意《用户协议》和《隐私政策》</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部支付按钮 -->
+      <div style="position: fixed; bottom: var(--safe-bottom); left: 0; right: 0; padding: 16px; background: var(--bg-primary); border-top: 1px solid var(--separator);">
+        <button class="btn btn-primary btn-large" id="payBtn">
+          立即支付 ¥15
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .recharge-item.active > div {
+      border-color: var(--primary) !important;
+      background: var(--primary-light) !important;
+    }
+    
+    .payment-method.active .list-item-icon {
+      background: var(--primary-light) !important;
+      color: var(--primary) !important;
+    }
+    
+    .payment-method.active div:last-child > div {
+      background: var(--primary) !important;
+    }
+  </style>
+
+  <script>
+    // 套餐选择
+    document.querySelectorAll('.recharge-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.recharge-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        
+        const amount = item.dataset.amount;
+        const price = item.dataset.price;
+        const bonus = amount === '100' ? '0' : amount === '300' ? '30' : amount === '600' ? '100' : '300';
+        
+        document.getElementById('selectedAmount').textContent = amount + ' 自律币';
+        document.getElementById('bonusAmount').textContent = bonus === '0' ? '无赠送' : '+' + bonus + ' 自律币';
+        document.getElementById('totalPrice').textContent = '¥' + price;
+        document.getElementById('payBtn').textContent = '立即支付 ¥' + price;
+      });
+    });
+
+    // 支付方式选择
+    document.querySelectorAll('.payment-method').forEach(method => {
+      method.addEventListener('click', () => {
+        document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+        method.classList.add('active');
+      });
+    });
+
+    // 支付按钮
+    document.getElementById('payBtn').addEventListener('click', () => {
+      const selectedMethod = document.querySelector('.payment-method.active').dataset.method;
+      const methodName = selectedMethod === 'alipay' ? '支付宝' : '微信支付';
+      alert('正在跳转到' + methodName + '支付...');
+    });
+  </script>
+</body>
+</html>

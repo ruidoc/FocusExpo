@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>挑战详情 - FocusOne</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="../styles/app.css">
+</head>
+<body>
+  <div class="app">
+    <div class="safe-area">
+      <div class="nav-header">
+        <button class="nav-button">返回</button>
+        <div class="nav-title">挑战详情</div>
+        <div style="width: 48px;"></div>
+      </div>
+
+      <div class="content">
+        <!-- 挑战信息 -->
+        <div class="card">
+          <div class="card-header">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <div class="card-title">工作日专注挑战</div>
+                <div class="card-subtitle">连续3天完成≥30分钟专注</div>
+              </div>
+              <div class="challenge-difficulty">20 币</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- 有效期 -->
+            <div style="background: var(--warning-light); border-radius: 8px; padding: 12px; margin-bottom: 16px; text-align: center;">
+              <div style="font-size: 14px; color: var(--warning); font-weight: 600;">
+                ⏰ 剩余时间：2天 14小时 32分钟
+              </div>
+            </div>
+
+            <!-- 必屏蔽应用 -->
+            <div style="margin-bottom: 20px;">
+              <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">必须屏蔽的应用</div>
+              <div class="challenge-apps">
+                <div class="app-icon">📱</div>
+                <div class="app-icon">🎵</div>
+                <div class="app-icon">📺</div>
+              </div>
+              <div style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;">
+                微信、网易云音乐、哔哩哔哩
+              </div>
+            </div>
+
+            <!-- 详细规则 -->
+            <div style="margin-bottom: 20px;">
+              <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">挑战规则</div>
+              <div style="background: var(--bg-secondary); border-radius: 8px; padding: 16px;">
+                <div style="font-size: 14px; line-height: 1.6; color: var(--text-secondary);">
+                  <p style="margin-bottom: 8px;">• 在工作日（周一至周五）完成专注任务</p>
+                  <p style="margin-bottom: 8px;">• 每次专注时长不少于30分钟</p>
+                  <p style="margin-bottom: 8px;">• 必须屏蔽指定的3个应用</p>
+                  <p style="margin-bottom: 8px;">• 连续3天完成，中断需重新开始</p>
+                  <p style="margin: 0;">• 暂停时长超过3分钟视为失败</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 奖励说明 -->
+            <div style="margin-bottom: 20px;">
+              <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">奖励内容</div>
+              <div class="challenge-reward">
+                🏆 永久 +1 App 屏蔽上限
+              </div>
+              <div style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;">
+                完成后您的应用屏蔽上限将从5个增加到6个，永久生效
+              </div>
+            </div>
+
+            <!-- 成功率统计 -->
+            <div style="background: var(--bg-secondary); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">历史成功率</div>
+                  <div style="font-size: 20px; font-weight: 600; color: var(--success);">67%</div>
+                </div>
+                <div>
+                  <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">参与人数</div>
+                  <div style="font-size: 20px; font-weight: 600; color: var(--primary);">1,248</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 进度跟踪（已领取时显示） -->
+        <div class="card" style="display: none;" id="progressCard">
+          <div class="card-header">
+            <div class="card-title">挑战进度</div>
+            <div class="card-subtitle">当前进度 1/3</div>
+          </div>
+          <div class="card-body">
+            <div style="margin-bottom: 16px;">
+              <div class="progress" style="height: 8px;">
+                <div class="progress-bar" style="width: 33%;"></div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+              <div style="text-align: center; padding: 8px; background: var(--success-light); border-radius: 6px;">
+                <div style="font-size: 12px; color: var(--success); font-weight: 600;">第1天</div>
+                <div style="font-size: 10px; color: var(--success);">✅ 已完成</div>
+              </div>
+              <div style="text-align: center; padding: 8px; background: var(--primary-light); border-radius: 6px;">
+                <div style="font-size: 12px; color: var(--primary); font-weight: 600;">第2天</div>
+                <div style="font-size: 10px; color: var(--primary);">🔄 进行中</div>
+              </div>
+              <div style="text-align: center; padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
+                <div style="font-size: 12px; color: var(--text-tertiary); font-weight: 600;">第3天</div>
+                <div style="font-size: 10px; color: var(--text-tertiary);">⏳ 待完成</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部操作区 -->
+      <div style="position: fixed; bottom: var(--safe-bottom); left: 0; right: 0; padding: 16px; background: var(--bg-primary); border-top: 1px solid var(--separator);">
+        <button class="btn btn-primary btn-large" id="acceptBtn">
+          领取挑战（消耗 20 自律币）
+        </button>
+        <div style="text-align: center; margin-top: 8px; font-size: 14px; color: var(--text-secondary);">
+          当前余额：85 自律币
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('acceptBtn').addEventListener('click', () => {
+      if (confirm('确认领取此挑战？将消耗 20 自律币。')) {
+        // 模拟领取成功
+        document.getElementById('acceptBtn').textContent = '已领取 - 查看进度';
+        document.getElementById('acceptBtn').className = 'btn btn-secondary btn-large';
+        document.getElementById('progressCard').style.display = 'block';
+        alert('挑战领取成功！开始您的专注之旅吧！');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,84 +1,131 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Home</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首页 - FocusOne</title>
   <link rel="stylesheet" href="../styles/tokens.css">
   <link rel="stylesheet" href="../styles/app.css">
-  <script type="module">
-    import { toast, countdown } from '../scripts/ui.js';
-    window.addEventListener('DOMContentLoaded', () => {
-      const go = document.getElementById('go');
-      const left = document.getElementById('left');
-      const endTs = Date.now() + 24 * 60 * 1000 + 12 * 1000;
-      countdown(endTs, left);
-      go?.addEventListener('click', () => toast('✨ 打开快速开始', 'info'));
-    });
-  </script>
-  <style>
-    body { background: #000; }
-  </style>
 </head>
 <body>
-  <div class="page">
-    <div class="nav">
-      <div class="title">专注一点</div>
-      <a class="btn ghost" href="#" style="min-width: auto; padding: 0 12px;">⚙️</a>
-    </div>
-    <div class="content">
-      <div class="banner primary">
-        <div class="stack">
-          <div style="font-weight:700; font-size: var(--font-size-lg);">🎯 专注进行中</div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="font-weight:600; font-size: var(--font-size-xl);" id="left">24:12</div>
-            <div class="kpi">剩余时间</div>
+  <div class="app">
+    <div class="safe-area">
+      <!-- 专注状态Banner -->
+      <div class="status-banner">
+        <div class="status-icon"></div>
+        <div class="status-text">
+          <div style="font-weight: 600;">专注进行中</div>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">剩余 23:45 分钟</div>
+        </div>
+        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 14px;">暂停</button>
+      </div>
+
+      <div class="content">
+        <!-- 段位与上限条 -->
+        <div class="card">
+          <div class="card-body" style="padding: 16px;">
+            <div class="flex items-center justify-between mb-3">
+              <div class="rank-badge">
+                <div class="rank-icon">L1</div>
+                <div class="rank-name">观星者</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 14px; font-weight: 600;">5 Apps / 60 分钟</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">当前上限</div>
+              </div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
+                <span>距下一阶还差 85 分钟</span>
+                <span>成功率 65%</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" style="width: 35%;"></div>
+              </div>
+            </div>
           </div>
-          <div class="kpi" style="opacity: 0.9;">当前已屏蔽 5 个干扰应用</div>
+        </div>
+
+        <!-- 快速开始卡 -->
+        <div class="card">
+          <div class="card-body text-center">
+            <div class="card-title mb-2">准备开始专注</div>
+            <div class="card-subtitle mb-4">推荐时长：45 分钟</div>
+            <button class="btn btn-primary btn-large" onclick="openQuickStart()">开始专注</button>
+          </div>
+        </div>
+
+        <!-- 目标预览 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="flex items-center justify-between">
+              <div class="card-title">专注目标</div>
+              <button class="nav-button">管理</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="app-icons-row">
+              <div class="app-icon">📱</div>
+              <div class="app-icon">🎵</div>
+              <div class="app-icon">📺</div>
+              <div class="app-icon">🎮</div>
+              <div class="app-icon">💬</div>
+            </div>
+            <div style="font-size: 14px; color: var(--text-secondary); text-align: center;">
+              已选择 5 个应用
+            </div>
+          </div>
+        </div>
+
+        <!-- 功能入口 -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="card" onclick="openPlans()">
+            <div class="card-body text-center">
+              <div style="font-size: 24px; margin-bottom: 8px;">📋</div>
+              <div style="font-weight: 600; margin-bottom: 4px;">计划管理</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">3 个计划</div>
+            </div>
+          </div>
+          <div class="card" onclick="openWallet()">
+            <div class="card-body text-center">
+              <div style="font-size: 24px; margin-bottom: 8px;">💰</div>
+              <div style="font-weight: 600; margin-bottom: 4px;">钱包</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">85 自律币</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="card" style="background: var(--success-light); border: 1px solid var(--success);">
-        <div class="stack">
-          <div style="font-size: var(--font-size-lg); font-weight:700; color: var(--success);">✨ 快速开始</div>
-          <div class="kpi" style="color: var(--text-secondary);">选择时长，一键开始专注模式</div>
-          <div class="row" style="margin-top: var(--space-2);">
-            <a class="btn primary" href="#" id="go" style="flex: 1;">开始专注</a>
-            <div class="kpi" style="align-self: center;">推荐 25 / 45 / 90 分钟</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="stack">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-size: var(--font-size-md); font-weight:600;">📱 专注目标</div>
-            <div class="kpi">已选择 5 个应用</div>
-          </div>
-          <div class="token-list">
-            <div class="token" style="background: #FF6B6B;">📱</div>
-            <div class="token" style="background: #4ECDC4;">💬</div>
-            <div class="token" style="background: #45B7D1;">🎵</div>
-            <div class="token" style="background: #96CEB4;">🎮</div>
-            <div class="token" style="background: #FFEAA7;">📺</div>
-          </div>
-          <div class="footer-actions">
-            <a class="btn ghost" href="#">管理目标</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="row" style="gap: var(--space-2);">
-        <a class="btn" href="#" style="flex: 1;">📋 任务面板</a>
-        <a class="btn" href="#" style="flex: 1;">➕ 新建任务</a>
-      </div>
-      
-      <div class="row">
-        <a class="btn ghost" href="#" style="flex: 1;">🔐 权限设置</a>
+      <!-- 底部Tab栏 -->
+      <div class="tab-bar">
+        <a href="#" class="tab-item active">
+          <div class="tab-icon">🏠</div>
+          <div class="tab-label">首页</div>
+        </a>
+        <a href="challenges.html" class="tab-item">
+          <div class="tab-icon">🎯</div>
+          <div class="tab-label">挑战</div>
+        </a>
+        <a href="user.html" class="tab-item">
+          <div class="tab-icon">👤</div>
+          <div class="tab-label">我的</div>
+        </a>
       </div>
     </div>
   </div>
+
+  <script>
+    function openQuickStart() {
+      window.parent.postMessage({type: 'navigate', page: 'quick-start.html'}, '*');
+    }
+    
+    function openPlans() {
+      window.parent.postMessage({type: 'navigate', page: 'plans-index.html'}, '*');
+    }
+    
+    function openWallet() {
+      window.parent.postMessage({type: 'navigate', page: 'coins.html'}, '*');
+    }
+  </script>
 </body>
 </html>
-
-

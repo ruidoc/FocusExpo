@@ -1,112 +1,181 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quick Start</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>快速开始 - FocusOne</title>
   <link rel="stylesheet" href="../styles/tokens.css">
   <link rel="stylesheet" href="../styles/app.css">
-  <style>
-    .preset { gap: var(--space-2); }
-    .preset .btn { 
-      min-width: 52px; 
-      height: 52px;
-      border-radius: var(--radius-full);
-      font-weight: 700;
-      font-size: var(--font-size-md);
-    }
-    .slider { 
-      appearance: none; 
-      width: 100%; 
-      height: 8px; 
-      border-radius: var(--radius-full); 
-      background: var(--bg-secondary);
-      outline: none;
-      transition: all 0.2s ease;
-    }
-    .slider::-webkit-slider-thumb { 
-      -webkit-appearance: none; 
-      width: 28px; 
-      height: 28px; 
-      border-radius: 50%; 
-      background: var(--primary-gradient);
-      box-shadow: var(--shadow-elevated);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .slider::-webkit-slider-thumb:hover {
-      transform: scale(1.1);
-    }
-    .minute-display {
-      font-size: var(--font-size-2xl);
-      font-weight: 700;
-      color: var(--primary);
-      text-align: center;
-      margin: var(--space-4) 0;
-    }
-  </style>
-  <script type="module">
-    import { toast } from '../scripts/ui.js';
-    window.addEventListener('DOMContentLoaded', () => {
-      const output = document.getElementById('minute');
-      const slider = document.getElementById('slider');
-      const start = document.getElementById('start');
-      slider.addEventListener('input', () => { output.textContent = slider.value; });
-      document.querySelectorAll('[data-min]').forEach(b => b.addEventListener('click', () => {
-        slider.value = b.dataset.min; slider.dispatchEvent(new Event('input')); }));
-      start.addEventListener('click', () => toast('🚀 已开始屏蔽，专注开始！', 'success'));
-    });
-  </script>
 </head>
 <body>
-  <div class="page">
-    <div class="nav">
-      <div class="title">⚡ 快速开始</div>
-      <a class="btn ghost" style="min-width: auto; padding: 0 12px;">✕</a>
-    </div>
-    <div class="content">
-      <div class="card">
-        <div class="stack">
-          <div style="font-weight:700; font-size: var(--font-size-lg); color: var(--text-primary);">⏰ 选择时长</div>
-          <div class="minute-display">
-            <span id="minute">25</span> 分钟
+  <div class="app">
+    <div class="safe-area">
+      <div class="nav-header">
+        <button class="nav-button">取消</button>
+        <div class="nav-title">快速开始</div>
+        <div style="width: 48px;"></div>
+      </div>
+
+      <div class="content">
+        <!-- 时长选择 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">选择时长</div>
           </div>
-          <div class="row preset">
-            <a class="btn" data-min="5">5</a>
-            <a class="btn" data-min="15">15</a>
-            <a class="btn primary" data-min="25">25</a>
-            <a class="btn" data-min="45">45</a>
-            <a class="btn" data-min="90">90</a>
+          <div class="card-body">
+            <!-- 预设档 -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+              <button class="btn btn-outline time-btn" data-time="5">5 分钟</button>
+              <button class="btn btn-outline time-btn" data-time="15">15 分钟</button>
+              <button class="btn btn-outline time-btn active" data-time="25">25 分钟</button>
+              <button class="btn btn-outline time-btn" data-time="45">45 分钟</button>
+              <button class="btn btn-outline time-btn" data-time="90">90 分钟</button>
+              <button class="btn btn-outline time-btn" data-time="custom">自定义</button>
+            </div>
+            
+            <!-- 自定义滑杆 -->
+            <div id="customSlider" style="display: none;">
+              <div style="margin-bottom: 12px;">
+                <label class="form-label">自定义时长：<span id="customTime">60</span> 分钟</label>
+                <input type="range" id="timeSlider" min="5" max="180" value="60" 
+                       style="width: 100%; margin: 8px 0;">
+              </div>
+            </div>
           </div>
-          <div class="kpi" style="text-align: center; margin: var(--space-3) 0;">滑动调节自定义时长</div>
-          <input id="slider" class="slider" type="range" min="5" max="120" value="25" step="5" />
+        </div>
+
+        <!-- 目标确认 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="flex items-center justify-between">
+              <div class="card-title">专注目标</div>
+              <button class="nav-button">管理</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="app-icons-row">
+              <div class="app-icon">📱</div>
+              <div class="app-icon">🎵</div>
+              <div class="app-icon">📺</div>
+              <div class="app-icon">🎮</div>
+              <div class="app-icon">💬</div>
+            </div>
+            <div style="font-size: 14px; color: var(--text-secondary); text-align: center;">
+              已选择 5 个应用
+            </div>
+          </div>
+        </div>
+
+        <!-- 下注选择 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">下注金额</div>
+            <div class="card-subtitle">成功完成可获得奖励</div>
+          </div>
+          <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px;">
+              <button class="btn btn-outline bet-btn active" data-bet="5">5 币</button>
+              <button class="btn btn-outline bet-btn" data-bet="10">10 币</button>
+              <button class="btn btn-outline bet-btn" data-bet="20">20 币</button>
+              <button class="btn btn-outline bet-btn" data-bet="50">50 币</button>
+            </div>
+            
+            <div style="background: var(--bg-secondary); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 14px;">下注金额：</span>
+                <span style="font-weight: 600;">5 自律币</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 14px;">成功奖励：</span>
+                <span style="font-weight: 600; color: var(--success);">+3 自律币</span>
+              </div>
+              <div style="border-top: 1px solid var(--separator); padding-top: 8px; margin-top: 8px;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="font-size: 14px;">完成后总计：</span>
+                  <span style="font-weight: 600; color: var(--success);">+8 自律币</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-secondary);">
+              <span>当前余额：85 自律币</span>
+              <button class="nav-button">去充值</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="stack">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-weight:700; font-size: var(--font-size-lg);">🎯 专注目标</div>
-            <div class="kpi">已选择 3 个</div>
-          </div>
-          <div class="token-list">
-            <div class="token" style="background: #FF6B6B;">📱</div>
-            <div class="token" style="background: #4ECDC4;">💬</div>
-            <div class="token" style="background: #45B7D1;">🎵</div>
-          </div>
-          <div class="footer-actions">
-            <a class="btn ghost">📝 管理目标</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="row" style="gap: var(--space-3);">
-        <a class="btn primary" id="start" style="flex: 2; height: 52px; font-size: var(--font-size-lg); font-weight: 700;">🚀 开始屏蔽</a>
-        <a class="btn ghost" style="flex: 1;">📋 任务面板</a>
+      <!-- 底部操作区 -->
+      <div style="position: fixed; bottom: var(--safe-bottom); left: 0; right: 0; padding: 16px; background: var(--bg-primary); border-top: 1px solid var(--separator);">
+        <button class="btn btn-primary btn-large" id="startBtn">开始专注</button>
+        <button class="btn btn-secondary btn-large" style="margin-top: 8px;">去任务面板</button>
       </div>
     </div>
   </div>
+
+  <style>
+    .time-btn.active, .bet-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: var(--bg-secondary);
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    // 时长选择逻辑
+    document.querySelectorAll('.time-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const customSlider = document.getElementById('customSlider');
+        if (btn.dataset.time === 'custom') {
+          customSlider.style.display = 'block';
+        } else {
+          customSlider.style.display = 'none';
+        }
+      });
+    });
+
+    // 下注选择逻辑
+    document.querySelectorAll('.bet-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // 自定义时长滑杆
+    const timeSlider = document.getElementById('timeSlider');
+    const customTimeDisplay = document.getElementById('customTime');
+    
+    if (timeSlider) {
+      timeSlider.addEventListener('input', (e) => {
+        customTimeDisplay.textContent = e.target.value;
+      });
+    }
+
+    // 开始按钮
+    document.getElementById('startBtn').addEventListener('click', () => {
+      alert('开始专注！');
+    });
+  </script>
 </body>
 </html>
-
-
