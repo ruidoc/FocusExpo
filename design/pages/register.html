@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>注册 - FocusOne</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: linear-gradient(135deg, #5AC8FA 0%, var(--primary) 100%);
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
+      position: relative;
+    }
+    
+    /* Background Animation */
+    .background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+    }
+    
+    .bg-circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      animation: float 8s ease-in-out infinite;
+    }
+    
+    .bg-circle:nth-child(1) {
+      width: 180px;
+      height: 180px;
+      top: 15%;
+      right: -8%;
+      animation-delay: -3s;
+    }
+    
+    .bg-circle:nth-child(2) {
+      width: 120px;
+      height: 120px;
+      top: 50%;
+      left: -6%;
+      animation-delay: -1s;
+    }
+    
+    .bg-circle:nth-child(3) {
+      width: 80px;
+      height: 80px;
+      top: 25%;
+      left: 30%;
+      animation-delay: -5s;
+    }
+    
+    .bg-circle:nth-child(4) {
+      width: 60px;
+      height: 60px;
+      top: 70%;
+      right: 25%;
+      animation-delay: -2s;
+    }
+    
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.4;
+      }
+      50% {
+        transform: translateY(-30px) rotate(180deg);
+        opacity: 0.7;
+      }
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: var(--safe-top) var(--space-6) var(--safe-bottom);
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--space-8);
+    }
+    
+    .back-btn {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 20px;
+    }
+    
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateX(-2px);
+    }
+    
+    .header-title {
+      flex: 1;
+      text-align: center;
+      font-size: var(--font-size-xl);
+      font-weight: 600;
+      color: white;
+      margin-right: 40px; /* Balance the back button */
+    }
+    
+    /* Welcome Section */
+    .welcome-section {
+      text-align: center;
+      margin-bottom: var(--space-8);
+    }
+    
+    .welcome-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      color: white;
+      margin-bottom: var(--space-2);
+    }
+    
+    .welcome-subtitle {
+      font-size: var(--font-size-md);
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.5;
+    }
+    
+    /* Register Form */
+    .register-form {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 320px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    
+    .form-group {
+      margin-bottom: var(--space-4);
+      position: relative;
+    }
+    
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      font-size: var(--font-size-md);
+      color: white;
+      transition: all 0.3s ease;
+    }
+    
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+    }
+    
+    .form-input.error {
+      border-color: rgba(255, 59, 48, 0.6);
+      background: rgba(255, 59, 48, 0.1);
+    }
+    
+    .password-input {
+      position: relative;
+    }
+    
+    .password-toggle {
+      position: absolute;
+      right: var(--space-4);
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      font-size: 18px;
+      transition: color 0.2s ease;
+    }
+    
+    .password-toggle:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .field-error {
+      position: absolute;
+      bottom: -20px;
+      left: var(--space-4);
+      font-size: var(--font-size-xs);
+      color: rgba(255, 59, 48, 0.9);
+      display: none;
+    }
+    
+    .field-error.show {
+      display: block;
+    }
+    
+    /* Password Strength */
+    .password-strength {
+      margin-top: var(--space-2);
+      padding: 0 var(--space-4);
+    }
+    
+    .strength-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-bottom: var(--space-2);
+    }
+    
+    .strength-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: all 0.3s ease;
+      width: 0%;
+    }
+    
+    .strength-fill.weak {
+      background: #FF6B6B;
+      width: 25%;
+    }
+    
+    .strength-fill.fair {
+      background: #FFE66D;
+      width: 50%;
+    }
+    
+    .strength-fill.good {
+      background: #4ECDC4;
+      width: 75%;
+    }
+    
+    .strength-fill.strong {
+      background: #45B7D1;
+      width: 100%;
+    }
+    
+    .strength-text {
+      font-size: var(--font-size-xs);
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    /* Verification Code */
+    .verification-group {
+      display: flex;
+      gap: var(--space-3);
+    }
+    
+    .verification-input {
+      flex: 1;
+    }
+    
+    .send-code-btn {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4) var(--space-5);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+    
+    .send-code-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+    
+    .send-code-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* Agreement */
+    .agreement {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      margin: var(--space-6) 0;
+      font-size: var(--font-size-sm);
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.5;
+    }
+    
+    .agreement-checkbox {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+    
+    .agreement-link {
+      color: white;
+      text-decoration: underline;
+    }
+    
+    .agreement-link:hover {
+      text-decoration: none;
+    }
+    
+    /* Register Button */
+    .register-button {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: var(--space-6);
+    }
+    
+    .register-button:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.2);
+    }
+    
+    .register-button:active {
+      transform: translateY(0);
+    }
+    
+    .register-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Footer Links */
+    .footer-links {
+      text-align: center;
+      margin-top: auto;
+    }
+    
+    .footer-text {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: var(--font-size-sm);
+      margin-bottom: var(--space-2);
+    }
+    
+    .footer-link {
+      color: white;
+      text-decoration: none;
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      transition: opacity 0.2s ease;
+    }
+    
+    .footer-link:hover {
+      opacity: 0.8;
+    }
+    
+    /* Success Message */
+    .success-message {
+      background: rgba(52, 199, 89, 0.2);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(52, 199, 89, 0.3);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      margin-bottom: var(--space-4);
+      color: white;
+      font-size: var(--font-size-sm);
+      text-align: center;
+      display: none;
+    }
+    
+    .success-message.show {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Loading State */
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-height: 700px) {
+      .welcome-section {
+        margin-bottom: var(--space-4);
+      }
+      
+      .welcome-title {
+        font-size: var(--font-size-xl);
+      }
+      
+      .form-group {
+        margin-bottom: var(--space-3);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Animation -->
+  <div class="background">
+    <div class="bg-circle"></div>
+    <div class="bg-circle"></div>
+    <div class="bg-circle"></div>
+    <div class="bg-circle"></div>
+  </div>
+  
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <button class="back-btn" onclick="history.back()">
+        <ion-icon name="chevron-back-outline"></ion-icon>
+      </button>
+      <div class="header-title">创建账户</div>
+    </div>
+    
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+      <div class="welcome-title">加入 FocusOne</div>
+      <div class="welcome-subtitle">开始你的专注之旅，成就更好的自己</div>
+    </div>
+    
+    <!-- Register Form -->
+    <div class="register-form">
+      <div class="success-message" id="successMessage">
+        <ion-icon name="checkmark-circle-outline"></ion-icon>
+        注册成功！正在跳转...
+      </div>
+      
+      <form id="registerForm">
+        <div class="form-group">
+          <input 
+            type="tel" 
+            class="form-input" 
+            placeholder="手机号" 
+            id="phone"
+            maxlength="11"
+            required
+          >
+          <div class="field-error" id="phoneError">请输入正确的手机号</div>
+        </div>
+        
+        <div class="form-group verification-group">
+          <div class="verification-input">
+            <input 
+              type="text" 
+              class="form-input" 
+              placeholder="验证码" 
+              id="verificationCode"
+              maxlength="6"
+              required
+            >
+            <div class="field-error" id="codeError">请输入6位验证码</div>
+          </div>
+          <button type="button" class="send-code-btn" id="sendCodeBtn">
+            获取验证码
+          </button>
+        </div>
+        
+        <div class="form-group">
+          <div class="password-input">
+            <input 
+              type="password" 
+              class="form-input" 
+              placeholder="设置密码" 
+              id="password"
+              required
+            >
+            <button type="button" class="password-toggle" id="passwordToggle">
+              <ion-icon name="eye-outline"></ion-icon>
+            </button>
+          </div>
+          <div class="password-strength" id="passwordStrength" style="display: none;">
+            <div class="strength-bar">
+              <div class="strength-fill" id="strengthFill"></div>
+            </div>
+            <div class="strength-text" id="strengthText">密码强度：弱</div>
+          </div>
+          <div class="field-error" id="passwordError">密码长度至少8位，包含字母和数字</div>
+        </div>
+        
+        <div class="form-group">
+          <div class="password-input">
+            <input 
+              type="password" 
+              class="form-input" 
+              placeholder="确认密码" 
+              id="confirmPassword"
+              required
+            >
+            <button type="button" class="password-toggle" id="confirmPasswordToggle">
+              <ion-icon name="eye-outline"></ion-icon>
+            </button>
+          </div>
+          <div class="field-error" id="confirmPasswordError">两次密码输入不一致</div>
+        </div>
+        
+        <div class="agreement">
+          <ion-icon name="checkbox-outline" class="agreement-checkbox" id="agreementCheck"></ion-icon>
+          <div>
+            我已阅读并同意 <a href="#" class="agreement-link">用户协议</a> 和 <a href="#" class="agreement-link">隐私政策</a>
+          </div>
+        </div>
+        
+        <button type="submit" class="register-button" id="registerButton" disabled>
+          <span class="button-text">立即注册</span>
+        </button>
+      </form>
+    </div>
+    
+    <!-- Footer Links -->
+    <div class="footer-links">
+      <div class="footer-text">已有账户？</div>
+      <a href="login.html" class="footer-link">立即登录</a>
+    </div>
+  </div>
+  
+  <script>
+    // Listen for theme changes from parent window
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'theme-change') {
+        document.documentElement.setAttribute('data-theme', event.data.theme);
+      }
+    });
+    
+    // Initialize theme from parent or localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Form elements
+    const phoneInput = document.getElementById('phone');
+    const codeInput = document.getElementById('verificationCode');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const sendCodeBtn = document.getElementById('sendCodeBtn');
+    const registerButton = document.getElementById('registerButton');
+    const agreementCheck = document.getElementById('agreementCheck');
+    const registerForm = document.getElementById('registerForm');
+    const successMessage = document.getElementById('successMessage');
+    
+    // Agreement checkbox
+    let isAgreed = false;
+    agreementCheck.addEventListener('click', () => {
+      isAgreed = !isAgreed;
+      agreementCheck.name = isAgreed ? 'checkbox' : 'checkbox-outline';
+      validateForm();
+    });
+    
+    // Password toggle functionality
+    function setupPasswordToggle(inputId, toggleId) {
+      const input = document.getElementById(inputId);
+      const toggle = document.getElementById(toggleId);
+      const icon = toggle.querySelector('ion-icon');
+      
+      toggle.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        icon.name = isPassword ? 'eye-off-outline' : 'eye-outline';
+      });
+    }
+    
+    setupPasswordToggle('password', 'passwordToggle');
+    setupPasswordToggle('confirmPassword', 'confirmPasswordToggle');
+    
+    // Phone validation
+    phoneInput.addEventListener('input', (e) => {
+      const value = e.target.value.replace(/\D/g, '');
+      e.target.value = value;
+      
+      const isValid = /^1[3-9]\d{9}$/.test(value);
+      toggleFieldError('phone', 'phoneError', !isValid && value.length === 11);
+      validateForm();
+    });
+    
+    // Password strength checker
+    passwordInput.addEventListener('input', (e) => {
+      const password = e.target.value;
+      const strengthContainer = document.getElementById('passwordStrength');
+      const strengthFill = document.getElementById('strengthFill');
+      const strengthText = document.getElementById('strengthText');
+      
+      if (password.length > 0) {
+        strengthContainer.style.display = 'block';
+        
+        let strength = 0;
+        let strengthLabel = '';
+        
+        if (password.length >= 8) strength++;
+        if (/[a-z]/.test(password)) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+        
+        const strengthClasses = ['weak', 'weak', 'fair', 'good', 'strong'];
+        const strengthLabels = ['弱', '弱', '一般', '良好', '强'];
+        
+        strengthFill.className = `strength-fill ${strengthClasses[strength]}`;
+        strengthText.textContent = `密码强度：${strengthLabels[strength]}`;
+        
+        const isValid = strength >= 2 && password.length >= 8;
+        toggleFieldError('password', 'passwordError', !isValid && password.length > 0);
+      } else {
+        strengthContainer.style.display = 'none';
+      }
+      
+      validateForm();
+    });
+    
+    // Confirm password validation
+    confirmPasswordInput.addEventListener('input', () => {
+      const isValid = confirmPasswordInput.value === passwordInput.value;
+      toggleFieldError('confirmPassword', 'confirmPasswordError', 
+        !isValid && confirmPasswordInput.value.length > 0);
+      validateForm();
+    });
+    
+    // Verification code input
+    codeInput.addEventListener('input', (e) => {
+      const value = e.target.value.replace(/\D/g, '');
+      e.target.value = value;
+      
+      const isValid = value.length === 6;
+      toggleFieldError('verificationCode', 'codeError', !isValid && value.length > 0);
+      validateForm();
+    });
+    
+    // Send verification code
+    let countdown = 0;
+    sendCodeBtn.addEventListener('click', async () => {
+      const phone = phoneInput.value;
+      if (!/^1[3-9]\d{9}$/.test(phone)) {
+        toggleFieldError('phone', 'phoneError', true);
+        return;
+      }
+      
+      sendCodeBtn.disabled = true;
+      sendCodeBtn.textContent = '发送中...';
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Start countdown
+      countdown = 60;
+      const timer = setInterval(() => {
+        if (countdown <= 0) {
+          clearInterval(timer);
+          sendCodeBtn.disabled = false;
+          sendCodeBtn.textContent = '获取验证码';
+        } else {
+          sendCodeBtn.textContent = `${countdown}秒后重发`;
+          countdown--;
+        }
+      }, 1000);
+    });
+    
+    // Form validation
+    function validateForm() {
+      const phone = phoneInput.value;
+      const code = codeInput.value;
+      const password = passwordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
+      
+      const isPhoneValid = /^1[3-9]\d{9}$/.test(phone);
+      const isCodeValid = code.length === 6;
+      const isPasswordValid = password.length >= 8 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
+      const isConfirmPasswordValid = confirmPassword === password;
+      
+      const isFormValid = isPhoneValid && isCodeValid && isPasswordValid && 
+                         isConfirmPasswordValid && isAgreed;
+      
+      registerButton.disabled = !isFormValid;
+    }
+    
+    // Helper function for field errors
+    function toggleFieldError(inputId, errorId, show) {
+      const input = document.getElementById(inputId);
+      const error = document.getElementById(errorId);
+      
+      if (show) {
+        input.classList.add('error');
+        error.classList.add('show');
+      } else {
+        input.classList.remove('error');
+        error.classList.remove('show');
+      }
+    }
+    
+    // Form submission
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      registerButton.disabled = true;
+      registerButton.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>注册中...</span>
+        </div>
+      `;
+      
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Show success message
+        successMessage.classList.add('show');
+        
+        // Simulate redirect
+        setTimeout(() => {
+          alert('注册成功！正在跳转到登录页面...');
+          // In real app: window.location.href = '/login';
+        }, 1500);
+        
+      } catch (error) {
+        registerButton.disabled = false;
+        registerButton.innerHTML = '<span class="button-text">立即注册</span>';
+        alert('注册失败，请重试');
+      }
+    });
+    
+    // Auto-focus first input
+    phoneInput.focus();
+  </script>
+</body>
+</html>

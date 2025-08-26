@@ -3,32 +3,382 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Shield</title>
+  <title>已被屏蔽</title>
   <link rel="stylesheet" href="../styles/tokens.css">
-  <link rel="stylesheet" href="../styles/app.css">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
   <style>
-    .shield {
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: #1a1a1a;
+      color: #ffffff;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-6);
+    }
+    
+    .container {
+      max-width: 320px;
+      width: 100%;
+    }
+    
+    /* Shield Icon */
+    .shield-icon {
+      font-size: 80px;
+      margin-bottom: var(--space-6);
+      opacity: 0.8;
+      animation: pulse 2s ease-in-out infinite;
+      color: #5AC8FA;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 0.8;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+    }
+    
+    /* Main Title */
+    .shield-title {
+      font-size: var(--font-size-3xl);
+      font-weight: 700;
+      margin-bottom: var(--space-4);
+      color: #ffffff;
+    }
+    
+    .shield-subtitle {
+      font-size: var(--font-size-lg);
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: var(--space-6);
+      line-height: 1.4;
+    }
+    
+    /* Focus Info Card */
+    .focus-info {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-6);
+      backdrop-filter: blur(10px);
+    }
+    
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-3);
+    }
+    
+    .info-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .info-label {
+      font-size: var(--font-size-md);
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .info-value {
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      color: #ffffff;
+    }
+    
+    .end-time {
+      color: #FFB84D;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .total-duration {
+      color: #5AC8FA;
+    }
+    
+    /* Progress Bar */
+    .progress-section {
+      margin-bottom: var(--space-6);
+    }
+    
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: var(--space-2);
+      font-size: var(--font-size-sm);
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-bottom: var(--space-2);
+    }
+    
+    .progress-fill {
       height: 100%;
+      background: linear-gradient(90deg, #5AC8FA 0%, #007AFF 100%);
+      border-radius: var(--radius-full);
+      width: 65%;
+      transition: width 0.3s ease;
+    }
+    
+    .time-remaining {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      color: #5AC8FA;
+      margin-bottom: var(--space-2);
+      font-variant-numeric: tabular-nums;
+    }
+    
+    /* Action Button */
+    .return-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-md);
+      padding: var(--space-4) var(--space-6);
+      color: #ffffff;
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+      margin-bottom: var(--space-4);
+    }
+    
+    .return-button:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .return-button:active {
+      transform: scale(0.98);
+    }
+    
+    /* Secondary Button */
+    .details-button {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    
+    .details-button:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+    }
+    
+    /* Blocked Apps */
+    .blocked-apps {
+      margin-bottom: var(--space-4);
+    }
+    
+    .blocked-title {
+      font-size: var(--font-size-sm);
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: var(--space-3);
+    }
+    
+    .app-list {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+    
+    .blocked-app {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(180deg, #0b1020, #0b152e);
-      color: #fff;
-      text-align: center;
+      font-size: var(--font-size-sm);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Motivational Quote */
+    .motivation {
+      margin-top: var(--space-6);
+      padding-top: var(--space-4);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .quote {
+      font-size: var(--font-size-md);
+      color: rgba(255, 255, 255, 0.8);
+      font-style: italic;
+      line-height: 1.5;
+      margin-bottom: var(--space-2);
+    }
+    
+    .quote-author {
+      font-size: var(--font-size-sm);
+      color: rgba(255, 255, 255, 0.5);
+    }
+    
+    /* Breathing Animation */
+    .breathing {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+      border: 2px solid rgba(90, 200, 250, 0.2);
+      border-radius: 50%;
+      animation: breathe 4s ease-in-out infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    @keyframes breathe {
+      0%, 100% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.3;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.1;
+      }
+    }
+    
+    /* Dark overlay for reduced attraction */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at center, rgba(26, 26, 26, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
+      z-index: -2;
     }
   </style>
 </head>
 <body>
-  <div class="shield">
-    <div class="stack" style="gap:12px;">
-      <div style="font-size:22px; font-weight:700;">已被屏蔽</div>
-      <div class="kpi" style="color:#c6d2ff;">总时长 25 分钟，22:30 结束</div>
-      <div class="footer-actions" style="justify-content:center;">
-        <a class="btn">返回</a>
+  <div class="overlay"></div>
+  <div class="breathing"></div>
+  
+  <div class="container">
+    <div class="shield-icon">
+      <ion-icon name="shield-checkmark"></ion-icon>
+    </div>
+    
+    <h1 class="shield-title">已被屏蔽</h1>
+    <p class="shield-subtitle">正在进行专注，此应用暂时不可使用</p>
+    
+    <div class="focus-info">
+      <div class="info-item">
+        <span class="info-label">总时长</span>
+        <span class="info-value total-duration">45 分钟</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">结束时间</span>
+        <span class="info-value end-time">21:45</span>
       </div>
     </div>
+    
+    <div class="progress-section">
+      <div class="progress-label">
+        <span>专注进度</span>
+        <span>65%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="time-remaining">15:30</div>
+    </div>
+    
+    <div class="blocked-apps">
+      <div class="blocked-title">已屏蔽的应用</div>
+      <div class="app-list">
+        <div class="blocked-app">微</div>
+        <div class="blocked-app">抖</div>
+        <div class="blocked-app">微</div>
+      </div>
+    </div>
+    
+    <button class="return-button">返回</button>
+    <button class="details-button">查看详情</button>
+    
+    <div class="motivation">
+      <div class="quote">"专注是一种超能力，让你在嘈杂的世界中保持内心的宁静。"</div>
+      <div class="quote-author">— 保持专注，你正在做得很好</div>
+    </div>
   </div>
+  
+  <script>
+    // Update countdown timer
+    function updateCountdown() {
+      const timeElement = document.querySelector('.time-remaining');
+      const progressElement = document.querySelector('.progress-fill');
+      
+      // Simulate countdown (in a real app, this would be calculated from actual end time)
+      let minutes = 15;
+      let seconds = 30;
+      
+      const interval = setInterval(() => {
+        seconds--;
+        if (seconds < 0) {
+          minutes--;
+          seconds = 59;
+        }
+        
+        if (minutes < 0) {
+          clearInterval(interval);
+          // Focus session ended
+          return;
+        }
+        
+        const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        timeElement.textContent = formattedTime;
+        
+        // Update progress bar (example calculation)
+        const totalSeconds = 45 * 60; // 45 minutes total
+        const remainingSeconds = minutes * 60 + seconds;
+        const progress = ((totalSeconds - remainingSeconds) / totalSeconds) * 100;
+        progressElement.style.width = `${progress}%`;
+      }, 1000);
+    }
+    
+    // Start countdown
+    updateCountdown();
+    
+    // Return button action
+    document.querySelector('.return-button').addEventListener('click', () => {
+      // In a real app, this would close the current app and return to home screen
+      window.close();
+    });
+    
+    // Listen for theme changes from parent window
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'theme-change') {
+        document.documentElement.setAttribute('data-theme', event.data.theme);
+      }
+    });
+    
+    // Initialize theme from parent or localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
 </body>
 </html>
-
-

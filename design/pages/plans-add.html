@@ -3,55 +3,621 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Plan Add</title>
+  <title>新建计划</title>
   <link rel="stylesheet" href="../styles/tokens.css">
-  <link rel="stylesheet" href="../styles/app.css">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: var(--bg-grouped);
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    
+    /* iOS Style Header */
+    .ios-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--separator);
+      position: relative;
+    }
+    
+    .back-btn {
+      position: absolute;
+      left: 16px;
+      background: none;
+      border: none;
+      font-size: 17px;
+      color: var(--primary);
+      cursor: pointer;
+    }
+    
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .save-btn {
+      position: absolute;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 17px;
+      color: var(--primary);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .save-btn:disabled {
+      color: var(--text-tertiary);
+      cursor: not-allowed;
+    }
+    
+    /* Content */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-4);
+    }
+    
+    /* Form Groups */
+    .form-group {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    
+    .form-item {
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--separator);
+    }
+    
+    .form-item:last-child {
+      border-bottom: none;
+    }
+    
+    .form-label {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+      display: block;
+    }
+    
+    .form-input {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      font-size: var(--font-size-md);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: var(--shadow-focus);
+    }
+    
+    .form-input::placeholder {
+      color: var(--text-tertiary);
+    }
+    
+    .form-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      margin-top: var(--space-1);
+    }
+    
+    /* Week Selector */
+    .week-selector {
+      display: flex;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+    }
+    
+    .day-chip {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--separator);
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .day-chip.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .day-chip:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    .day-chip.active:hover {
+      color: white;
+    }
+    
+    /* Time Inputs */
+    .time-row {
+      display: flex;
+      gap: var(--space-3);
+    }
+    
+    .time-group {
+      flex: 1;
+    }
+    
+    .time-input {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      font-size: var(--font-size-md);
+      color: var(--text-primary);
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .time-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: var(--shadow-focus);
+    }
+    
+    /* Target Preview */
+    .target-preview {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      margin-top: var(--space-2);
+    }
+    
+    .target-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-3);
+    }
+    
+    .target-title {
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .manage-btn {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .manage-btn:hover {
+      background: rgba(0, 122, 255, 0.2);
+    }
+    
+    .app-list {
+      display: flex;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+    
+    .app-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+    }
+    
+    .app-count {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      text-align: center;
+    }
+    
+    .limit-info {
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+      text-align: center;
+    }
+    
+    /* Betting Section */
+    .betting-section {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-card);
+    }
+    
+    .betting-title {
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-3);
+    }
+    
+    .balance-display {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+    
+    .balance-label {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    .balance-value {
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      color: var(--warning);
+    }
+    
+    .bet-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+    
+    .bet-chip {
+      background: var(--bg-secondary);
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-md);
+      padding: var(--space-2);
+      text-align: center;
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .bet-chip.active,
+    .bet-chip:hover {
+      background: var(--warning);
+      border-color: var(--warning);
+      color: white;
+      transform: scale(1.05);
+    }
+    
+    .bet-preview {
+      background: rgba(255, 185, 0, 0.1);
+      border: 1px solid var(--warning);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2);
+      font-size: var(--font-size-xs);
+      color: var(--warning);
+      text-align: center;
+    }
+    
+    /* Save Button */
+    .save-button {
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      box-shadow: var(--shadow-elevated);
+      width: 100%;
+      margin-top: var(--space-4);
+    }
+    
+    .save-button:active {
+      transform: scale(0.98);
+    }
+    
+    .save-button:disabled {
+      background: var(--text-tertiary);
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Validation */
+    .form-item.error .form-input,
+    .form-item.error .time-input {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
+    }
+    
+    .error-message {
+      color: var(--error);
+      font-size: var(--font-size-sm);
+      margin-top: var(--space-1);
+    }
+  </style>
 </head>
 <body>
-  <div class="page">
-    <div class="nav"><div class="title">新建计划</div><a class="btn ghost">保存</a></div>
+  <div class="container">
+    <div class="ios-header">
+      <button class="back-btn">取消</button>
+      <div class="header-title">新建计划</div>
+      <button class="save-btn">保存</button>
+    </div>
+    
     <div class="content">
-      <div class="field">
-        <label>计划名称</label>
-        <input class="input" placeholder="可选" />
-      </div>
-
-      <div class="field">
-        <label>周几</label>
-        <div class="week">
-          <div class="chip active">一</div>
-          <div class="chip active">二</div>
-          <div class="chip active">三</div>
-          <div class="chip active">四</div>
-          <div class="chip active">五</div>
-          <div class="chip">六</div>
-          <div class="chip">日</div>
+      <!-- Basic Info -->
+      <div class="form-group">
+        <div class="form-item">
+          <label class="form-label">计划名称</label>
+          <input class="form-input" placeholder="例如：工作日晨间专注" id="planName">
+          <div class="form-subtitle">可选，帮助你快速识别计划</div>
         </div>
       </div>
 
-      <div class="row">
-        <div class="field" style="flex:1">
-          <label>开始时间</label>
-          <input class="input" placeholder="07:30" />
+      <!-- Schedule -->
+      <div class="form-group">
+        <div class="form-item">
+          <label class="form-label">重复规则</label>
+          <div class="week-selector">
+            <div class="day-chip active" data-day="1">一</div>
+            <div class="day-chip active" data-day="2">二</div>
+            <div class="day-chip active" data-day="3">三</div>
+            <div class="day-chip active" data-day="4">四</div>
+            <div class="day-chip active" data-day="5">五</div>
+            <div class="day-chip" data-day="6">六</div>
+            <div class="day-chip" data-day="0">日</div>
+          </div>
+          <div class="form-subtitle">选择计划执行的日期</div>
         </div>
-        <div class="field" style="flex:1">
-          <label>结束时间</label>
-          <input class="input" placeholder="09:00" />
+        
+        <div class="form-item">
+          <label class="form-label">执行时间</label>
+          <div class="time-row">
+            <div class="time-group">
+              <input class="time-input" placeholder="07:30" id="startTime">
+              <div class="form-subtitle" style="text-align: center; margin-top: 4px;">开始时间</div>
+            </div>
+            <div class="time-group">
+              <input class="time-input" placeholder="09:00" id="endTime">
+              <div class="form-subtitle" style="text-align: center; margin-top: 4px;">结束时间</div>
+            </div>
+          </div>
+          <div class="form-subtitle">当前最长可专注 60 分钟</div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="stack">
-          <div style="font-weight:600">目标预览</div>
-          <div class="token-list"><div class="token"></div><div class="token"></div></div>
-          <div class="footer-actions"><a class="btn">管理目标</a></div>
+      <!-- Target Selection -->
+      <div class="form-group">
+        <div class="form-item">
+          <label class="form-label">专注目标</label>
+          <div class="target-preview">
+            <div class="target-header">
+              <div class="target-title">已选择的应用</div>
+              <button class="manage-btn">管理</button>
+            </div>
+            
+            <div class="app-list">
+              <div class="app-icon">微</div>
+              <div class="app-icon">抖</div>
+              <div class="app-icon">微</div>
+            </div>
+            
+            <div class="app-count">已选择 3 个应用</div>
+            <div class="limit-info">当前最多可选择 5 个 App</div>
+        </div>
         </div>
       </div>
 
-      <a class="btn primary">保存</a>
+      <!-- Betting Section -->
+      <div class="betting-section">
+        <div class="betting-title">自动下注设置</div>
+        
+        <div class="balance-display">
+          <span class="balance-label">自律币余额</span>
+          <span class="balance-value">156 币</span>
+        </div>
+        
+        <div class="bet-options">
+          <div class="bet-chip">5币</div>
+          <div class="bet-chip active">10币</div>
+          <div class="bet-chip">20币</div>
+          <div class="bet-chip">50币</div>
+        </div>
+        
+        <div class="bet-preview">
+          每次自动开始时下注 10币，成功返还并获得 15币 奖励
+        </div>
+      </div>
+
+      <button class="save-button">保存计划</button>
     </div>
   </div>
+  
+  <script>
+    // Day selector
+    document.querySelectorAll('.day-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        this.classList.toggle('active');
+        updateSaveButton();
+      });
+    });
+    
+    // Bet amount selector
+    document.querySelectorAll('.bet-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        document.querySelectorAll('.bet-chip').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        
+        const amount = parseInt(this.textContent);
+        const reward = Math.floor(amount * 1.5);
+        document.querySelector('.bet-preview').textContent = 
+          `每次自动开始时下注 ${amount}币，成功返还并获得 ${reward}币 奖励`;
+      });
+    });
+    
+    // Form validation
+    function validateForm() {
+      const planName = document.getElementById('planName').value;
+      const startTime = document.getElementById('startTime').value;
+      const endTime = document.getElementById('endTime').value;
+      const selectedDays = document.querySelectorAll('.day-chip.active').length;
+      
+      // Clear previous errors
+      document.querySelectorAll('.form-item').forEach(item => {
+        item.classList.remove('error');
+        const errorMsg = item.querySelector('.error-message');
+        if (errorMsg) errorMsg.remove();
+      });
+      
+      let isValid = true;
+      
+      // Validate selected days
+      if (selectedDays === 0) {
+        const dayItem = document.querySelector('.week-selector').closest('.form-item');
+        dayItem.classList.add('error');
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'error-message';
+        errorMsg.textContent = '请至少选择一天';
+        dayItem.appendChild(errorMsg);
+        isValid = false;
+      }
+      
+      // Validate time inputs
+      if (!startTime) {
+        const startItem = document.getElementById('startTime').closest('.form-item');
+        startItem.classList.add('error');
+        isValid = false;
+      }
+      
+      if (!endTime) {
+        const endItem = document.getElementById('endTime').closest('.form-item');
+        endItem.classList.add('error');
+        isValid = false;
+      }
+      
+      // Validate time range
+      if (startTime && endTime) {
+        const start = new Date(`2000-01-01 ${startTime}`);
+        const end = new Date(`2000-01-01 ${endTime}`);
+        const diffMinutes = (end - start) / (1000 * 60);
+        
+        if (diffMinutes <= 0) {
+          const timeItem = document.querySelector('.time-row').closest('.form-item');
+          timeItem.classList.add('error');
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'error-message';
+          errorMsg.textContent = '结束时间必须晚于开始时间';
+          timeItem.appendChild(errorMsg);
+          isValid = false;
+        } else if (diffMinutes > 60) {
+          const timeItem = document.querySelector('.time-row').closest('.form-item');
+          timeItem.classList.add('error');
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'error-message';
+          errorMsg.textContent = '专注时长不能超过 60 分钟';
+          timeItem.appendChild(errorMsg);
+          isValid = false;
+        }
+      }
+      
+      return isValid;
+    }
+    
+    function updateSaveButton() {
+      const saveBtn = document.querySelector('.save-btn');
+      const saveButton = document.querySelector('.save-button');
+      const isValid = validateForm();
+      
+      saveBtn.disabled = !isValid;
+      saveButton.disabled = !isValid;
+    }
+    
+    // Add event listeners for real-time validation
+    document.getElementById('startTime').addEventListener('input', updateSaveButton);
+    document.getElementById('endTime').addEventListener('input', updateSaveButton);
+    document.getElementById('planName').addEventListener('input', updateSaveButton);
+    
+    // Time input formatting
+    function formatTimeInput(input) {
+      input.addEventListener('blur', function() {
+        let value = this.value.replace(/[^\d:]/g, '');
+        if (value.length === 4 && !value.includes(':')) {
+          value = value.substring(0, 2) + ':' + value.substring(2);
+        }
+        
+        const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
+        if (timeRegex.test(value)) {
+          this.value = value;
+        }
+      });
+    }
+    
+    formatTimeInput(document.getElementById('startTime'));
+    formatTimeInput(document.getElementById('endTime'));
+    
+    // Initial validation
+    updateSaveButton();
+    
+    // Save button click
+    document.querySelector('.save-button').addEventListener('click', function() {
+      if (validateForm()) {
+        // Simulate save success
+        alert('计划保存成功！');
+      }
+    });
+    
+    // Listen for theme changes from parent window
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'theme-change') {
+        document.documentElement.setAttribute('data-theme', event.data.theme);
+      }
+    });
+    
+    // Initialize theme from parent or localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
 </body>
 </html>
-
-

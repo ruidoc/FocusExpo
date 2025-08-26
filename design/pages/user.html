@@ -1,138 +1,546 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的 - FocusOne</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我的</title>
   <link rel="stylesheet" href="../styles/tokens.css">
-  <link rel="stylesheet" href="../styles/app.css">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: var(--bg-grouped);
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    
+    /* iOS Style Header */
+    .ios-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--separator);
+      position: relative;
+    }
+    
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+    }
+    
+    /* Content */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 80px;
+    }
+    
+    /* Profile Header */
+    .profile-header {
+      background: var(--bg-tertiary);
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--separator);
+    }
+    
+    .profile-info {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+    
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-full);
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-2xl);
+      color: white;
+      font-weight: 700;
+    }
+    
+    .profile-details {
+      flex: 1;
+    }
+    
+    .username {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .join-date {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    .edit-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-md);
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--font-size-sm);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+    
+    /* Rank System - Like Alipay Member */
+    .rank-system {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .rank-system::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    
+    .rank-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+    
+    .rank-badge {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .rank-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-lg);
+    }
+    
+    .rank-info {
+      flex: 1;
+    }
+    
+    .rank-title {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      margin-bottom: var(--space-1);
+    }
+    
+    .rank-level {
+      font-size: var(--font-size-sm);
+      opacity: 0.9;
+    }
+    
+    .rank-privileges {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    
+    .privileges-title {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+    }
+    
+    .privileges-list {
+      font-size: var(--font-size-sm);
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+    
+    .rank-progress {
+      margin-bottom: var(--space-3);
+    }
+    
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--font-size-sm);
+      margin-bottom: var(--space-2);
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: white;
+      border-radius: var(--radius-full);
+      width: 65%;
+      transition: width 0.3s ease;
+    }
+    
+    .next-rank {
+      font-size: var(--font-size-xs);
+      opacity: 0.8;
+      text-align: center;
+    }
+    
+    /* Stats Grid */
+    .stats-section {
+      padding: var(--space-4);
+    }
+    
+    .section-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-3);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    
+    .stat-card {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      text-align: center;
+      box-shadow: var(--shadow-card);
+    }
+    
+    .stat-value {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .stat-label {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    /* Menu List */
+    .menu-section {
+      padding: 0 var(--space-4) var(--space-4);
+    }
+    
+    .menu-group {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: var(--space-4);
+      text-decoration: none;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--separator);
+      transition: background-color 0.2s ease;
+    }
+    
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+    
+    .menu-item:active {
+      background: var(--bg-secondary);
+    }
+    
+    .menu-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: var(--space-3);
+      font-size: var(--font-size-lg);
+    }
+    
+    .menu-icon.wallet {
+      background: linear-gradient(135deg, #FFB800 0%, #FFA000 100%);
+    }
+    
+    .menu-icon.settings {
+      background: linear-gradient(135deg, #8E8E93 0%, #636366 100%);
+    }
+    
+    .menu-icon.help {
+      background: linear-gradient(135deg, #34C759 0%, #30B550 100%);
+    }
+    
+    .menu-icon.about {
+      background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
+    }
+    
+    .menu-content {
+      flex: 1;
+    }
+    
+    .menu-title {
+      font-size: var(--font-size-md);
+      font-weight: 500;
+      margin-bottom: var(--space-1);
+    }
+    
+    .menu-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    .menu-arrow {
+      color: var(--text-tertiary);
+      font-size: var(--font-size-sm);
+    }
+    
+    .balance-highlight {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+    }
+    
+    /* Bottom Tab Bar */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--glass);
+      backdrop-filter: var(--blur);
+      border-top: 1px solid var(--glass-border);
+      padding: var(--space-2) var(--space-4) var(--safe-bottom);
+      display: flex;
+      justify-content: space-around;
+    }
+    
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: var(--font-size-xs);
+      font-weight: 500;
+      padding: var(--space-2);
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+    }
+    
+    .tab-item.active {
+      color: var(--primary);
+    }
+    
+    .tab-icon {
+      font-size: 24px;
+      margin-bottom: var(--space-1);
+    }
+  </style>
 </head>
 <body>
-  <div class="app">
-    <div class="safe-area">
-      <div class="nav-header">
-        <div class="nav-title">我的</div>
-        <button class="nav-button">设置</button>
+  <div class="container">
+    <div class="ios-header">
+      <div class="header-title">我的</div>
+    </div>
+    <div class="content">
+      <!-- Profile Header -->
+      <div class="profile-header">
+        <div class="profile-info">
+          <div class="avatar">张</div>
+          <div class="profile-details">
+            <div class="username">张三</div>
+            <div class="join-date">加入于 2024年1月</div>
+          </div>
+          <button class="edit-btn">编辑</button>
       </div>
 
-      <div class="content">
-        <!-- 用户信息头 -->
-        <div class="card">
-          <div class="card-body">
-            <div class="flex items-center gap-4">
-              <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 24px;">
-                👤
-              </div>
-              <div style="flex: 1;">
-                <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">专注达人</div>
-                <div style="font-size: 14px; color: var(--text-secondary);">ID: 123456</div>
-              </div>
-              <button class="btn btn-outline" style="padding: 8px 16px; font-size: 14px;">编辑</button>
+        <!-- Rank System (Like Alipay Member) -->
+        <div class="rank-system">
+          <div class="rank-header">
+            <div class="rank-badge">
+              <div class="rank-icon">⭐</div>
+              <div class="rank-info">
+                <div class="rank-title">观星者</div>
+                <div class="rank-level">L1 段位</div>
             </div>
           </div>
         </div>
 
-        <!-- 统计概览 -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-          <div class="card">
-            <div class="card-body text-center" style="padding: 16px 12px;">
-              <div style="font-size: 20px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">12</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">本周专注</div>
+          <div class="rank-privileges">
+            <div class="privileges-title">当前特权</div>
+            <div class="privileges-list">
+              • 最多选择 5 个应用<br>
+              • 最长专注 60 分钟<br>
+              • 专属段位徽章
             </div>
           </div>
-          <div class="card">
-            <div class="card-body text-center" style="padding: 16px 12px;">
-              <div style="font-size: 20px; font-weight: 600; color: var(--success); margin-bottom: 4px;">85%</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">完成率</div>
+          
+          <div class="rank-progress">
+            <div class="progress-label">
+              <span>升级进度</span>
+              <span>65%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill"></div>
             </div>
           </div>
-          <div class="card">
-            <div class="card-body text-center" style="padding: 16px 12px;">
-              <div style="font-size: 20px; font-weight: 600; color: var(--warning); margin-bottom: 4px;">7</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">连续天数</div>
+          
+          <div class="next-rank">
+            距离「逐月者」还差 85分钟专注时长 • 成功率需达到65%
             </div>
           </div>
         </div>
 
-        <!-- 功能入口 -->
-        <div class="card">
-          <a href="coins.html" class="list-item">
-            <div class="list-item-icon" style="background: var(--warning-light); color: var(--warning);">
-              💰
+      <!-- Stats Section -->
+      <div class="stats-section">
+        <div class="section-title">专注统计</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">15</div>
+            <div class="stat-label">今日专注(分钟)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">240</div>
+            <div class="stat-label">近7天专注</div>
             </div>
-            <div class="list-item-content">
-              <div class="list-item-title">钱包中心</div>
-              <div class="list-item-subtitle">85 自律币</div>
+          <div class="stat-card">
+            <div class="stat-value">85%</div>
+            <div class="stat-label">成功率</div>
             </div>
-            <div class="list-item-arrow">›</div>
-          </a>
-          <a href="rank.html" class="list-item">
-            <div class="list-item-icon" style="background: var(--primary-light); color: var(--primary);">
-              🏆
+          <div class="stat-card">
+            <div class="stat-value">1,250</div>
+            <div class="stat-label">累计专注</div>
             </div>
-            <div class="list-item-content">
-              <div class="list-item-title">段位成就</div>
-              <div class="list-item-subtitle">L1 观星者</div>
             </div>
-            <div class="list-item-arrow">›</div>
-          </a>
-          <a href="challenge-history.html" class="list-item">
-            <div class="list-item-icon" style="background: var(--success-light); color: var(--success);">
-              📊
             </div>
-            <div class="list-item-content">
-              <div class="list-item-title">专注统计</div>
-              <div class="list-item-subtitle">查看详细数据</div>
+      
+      <!-- Menu Section -->
+      <div class="menu-section">
+                <div class="menu-group">
+          <a href="#" class="menu-item">
+            <div class="menu-icon wallet">
+              <ion-icon name="wallet-outline"></ion-icon>
             </div>
-            <div class="list-item-arrow">›</div>
+            <div class="menu-content">
+              <div class="menu-title">自律币钱包</div>
+              <div class="menu-subtitle">余额: <span class="balance-highlight">156 币</span></div>
+            </div>
+            <div class="menu-arrow">
+              <ion-icon name="chevron-forward-outline"></ion-icon>
+            </div>
           </a>
         </div>
 
-        <!-- 设置入口 -->
-        <div class="card">
-          <a href="setting-index.html" class="list-item">
-            <div class="list-item-icon">⚙️</div>
-            <div class="list-item-content">
-              <div class="list-item-title">设置</div>
-              <div class="list-item-subtitle">权限、通知、关于</div>
+        <div class="menu-group">
+          <a href="#" class="menu-item">
+            <div class="menu-icon settings">
+              <ion-icon name="settings-outline"></ion-icon>
             </div>
-            <div class="list-item-arrow">›</div>
-          </a>
-          <a href="#" class="list-item">
-            <div class="list-item-icon">❓</div>
-            <div class="list-item-content">
-              <div class="list-item-title">帮助与反馈</div>
-              <div class="list-item-subtitle">使用指南、问题反馈</div>
+            <div class="menu-content">
+              <div class="menu-title">设置</div>
+              <div class="menu-subtitle">权限、通知、主题</div>
             </div>
-            <div class="list-item-arrow">›</div>
-          </a>
-          <a href="#" class="list-item">
-            <div class="list-item-icon">ℹ️</div>
-            <div class="list-item-content">
-              <div class="list-item-title">关于 FocusOne</div>
-              <div class="list-item-subtitle">版本 1.0.0</div>
+            <div class="menu-arrow">
+              <ion-icon name="chevron-forward-outline"></ion-icon>
             </div>
-            <div class="list-item-arrow">›</div>
           </a>
+          
+          <a href="#" class="menu-item">
+            <div class="menu-icon help">
+              <ion-icon name="help-circle-outline"></ion-icon>
+            </div>
+            <div class="menu-content">
+              <div class="menu-title">帮助与反馈</div>
+              <div class="menu-subtitle">使用指南、意见建议</div>
+            </div>
+            <div class="menu-arrow">
+              <ion-icon name="chevron-forward-outline"></ion-icon>
+            </div>
+          </a>
+          
+          <a href="#" class="menu-item">
+            <div class="menu-icon about">
+              <ion-icon name="information-circle-outline"></ion-icon>
+            </div>
+            <div class="menu-content">
+              <div class="menu-title">关于我们</div>
+              <div class="menu-subtitle">版本信息、隐私政策</div>
+            </div>
+            <div class="menu-arrow">
+              <ion-icon name="chevron-forward-outline"></ion-icon>
+            </div>
+          </a>
+        </div>
         </div>
       </div>
 
-      <!-- 底部Tab栏 -->
       <div class="tab-bar">
-        <a href="home.html" class="tab-item">
-          <div class="tab-icon">🏠</div>
-          <div class="tab-label">首页</div>
-        </a>
-        <a href="challenges.html" class="tab-item">
-          <div class="tab-icon">🎯</div>
-          <div class="tab-label">挑战</div>
+      <a href="#" class="tab-item">
+        <ion-icon name="home-outline" class="tab-icon"></ion-icon>
+        首页
+      </a>
+      <a href="#" class="tab-item">
+        <ion-icon name="trophy-outline" class="tab-icon"></ion-icon>
+        挑战
         </a>
         <a href="#" class="tab-item active">
-          <div class="tab-icon">👤</div>
-          <div class="tab-label">我的</div>
+        <ion-icon name="person" class="tab-icon"></ion-icon>
+        我的
         </a>
-      </div>
     </div>
   </div>
+  
+  <script>
+    // Listen for theme changes from parent window
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'theme-change') {
+        document.documentElement.setAttribute('data-theme', event.data.theme);
+      }
+    });
+    
+    // Initialize theme from parent or localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
 </body>
 </html>

@@ -1,131 +1,379 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>首页 - FocusOne</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>首页</title>
   <link rel="stylesheet" href="../styles/tokens.css">
-  <link rel="stylesheet" href="../styles/app.css">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: var(--bg-grouped);
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    
+    /* iOS Style Header */
+    .ios-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--separator);
+      position: relative;
+    }
+    
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+    }
+    
+    /* Status Bar Area */
+    .status-area {
+      padding: var(--space-4);
+    }
+    
+    .focus-status {
+      background: var(--primary-gradient);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      text-align: center;
+      color: white;
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-card);
+    }
+    
+    .focus-status.idle {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--separator);
+    }
+    
+    .status-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+    }
+    
+    .status-subtitle {
+      font-size: var(--font-size-sm);
+      opacity: 0.8;
+    }
+    
+    .countdown {
+      font-size: var(--font-size-3xl);
+      font-weight: 700;
+      margin: var(--space-4) 0;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    /* Quick Start Section */
+    .quick-start {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-card);
+    }
+    
+    .quick-start-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-3);
+    }
+    
+    .quick-start-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-4);
+    }
+    
+    .start-button {
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: var(--space-4) var(--space-6);
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      box-shadow: var(--shadow-elevated);
+    }
+    
+    .start-button:active {
+      transform: scale(0.98);
+    }
+    
+    /* Today Summary */
+    .today-summary {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-card);
+    }
+    
+    .summary-title {
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-3);
+    }
+    
+    .summary-stats {
+      display: flex;
+      gap: var(--space-4);
+    }
+    
+    .stat-item {
+      flex: 1;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .stat-label {
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+    }
+    
+    /* Action Buttons */
+    .actions {
+      display: flex;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    
+    .action-btn {
+      flex: 1;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      text-align: center;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-card);
+    }
+    
+    .action-btn:active {
+      transform: scale(0.98);
+    }
+    
+    .action-icon {
+      font-size: 20px;
+      margin-bottom: var(--space-1);
+      display: block;
+    }
+    
+    .tab-icon {
+      font-size: 24px;
+      margin-bottom: var(--space-1);
+    }
+    
+    /* Bottom Tab Bar */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--glass);
+      backdrop-filter: var(--blur);
+      border-top: 1px solid var(--glass-border);
+      padding: var(--space-2) var(--space-4) var(--safe-bottom);
+      display: flex;
+      justify-content: space-around;
+    }
+    
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: var(--font-size-xs);
+      font-weight: 500;
+      padding: var(--space-2);
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+    }
+    
+    .tab-item.active {
+      color: var(--primary);
+    }
+    
+
+    
+    /* Content Area */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 80px; /* Space for tab bar */
+    }
+    
+    /* Paused State */
+    .focus-status.paused {
+      background: linear-gradient(135deg, var(--warning) 0%, #FFB84D 100%);
+    }
+    
+    .pause-actions {
+      display: flex;
+      gap: var(--space-3);
+      margin-top: var(--space-4);
+    }
+    
+    .resume-btn {
+      flex: 2;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .end-btn {
+      flex: 1;
+      background: transparent;
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      font-weight: 500;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <div class="app">
-    <div class="safe-area">
-      <!-- 专注状态Banner -->
-      <div class="status-banner">
-        <div class="status-icon"></div>
-        <div class="status-text">
-          <div style="font-weight: 600;">专注进行中</div>
-          <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">剩余 23:45 分钟</div>
+  <div class="container">
+    <div class="ios-header">
+      <div class="header-title">专注</div>
         </div>
-        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 14px;">暂停</button>
+    <div class="content">
+      <div class="status-area">
+        <!-- Idle State -->
+        <div class="focus-status idle">
+          <div class="status-title">准备开始专注</div>
+          <div class="status-subtitle">选择目标和时长，开始你的专注之旅</div>
       </div>
 
-      <div class="content">
-        <!-- 段位与上限条 -->
-        <div class="card">
-          <div class="card-body" style="padding: 16px;">
-            <div class="flex items-center justify-between mb-3">
-              <div class="rank-badge">
-                <div class="rank-icon">L1</div>
-                <div class="rank-name">观星者</div>
-              </div>
-              <div style="text-align: right;">
-                <div style="font-size: 14px; font-weight: 600;">5 Apps / 60 分钟</div>
-                <div style="font-size: 12px; color: var(--text-secondary);">当前上限</div>
-              </div>
-            </div>
-            <div style="margin-bottom: 8px;">
-              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
-                <span>距下一阶还差 85 分钟</span>
-                <span>成功率 65%</span>
-              </div>
-              <div class="progress">
-                <div class="progress-bar" style="width: 35%;"></div>
-              </div>
-            </div>
+        <!-- Active State (Hidden by default) -->
+        <!-- <div class="focus-status" style="display: none;">
+          <div class="status-title">🎯 专注进行中</div>
+          <div class="countdown">25:30</div>
+          <div class="status-subtitle">已屏蔽 3 个应用 • 预计 21:45 结束</div>
+          <div class="pause-actions">
+            <button class="resume-btn">暂停</button>
+            <button class="end-btn">结束</button>
           </div>
+        </div> -->
+        
+        <!-- Paused State (Hidden by default) -->
+        <!-- <div class="focus-status paused" style="display: none;">
+          <div class="status-title">⏸️ 已暂停</div>
+          <div class="countdown">03:00</div>
+          <div class="status-subtitle">将于 3 分钟后自动恢复专注</div>
+          <div class="pause-actions">
+            <button class="resume-btn">立即恢复</button>
+            <button class="end-btn">结束</button>
+          </div>
+        </div> -->
         </div>
 
-        <!-- 快速开始卡 -->
-        <div class="card">
-          <div class="card-body text-center">
-            <div class="card-title mb-2">准备开始专注</div>
-            <div class="card-subtitle mb-4">推荐时长：45 分钟</div>
-            <button class="btn btn-primary btn-large" onclick="openQuickStart()">开始专注</button>
+      <div class="quick-start">
+        <div class="quick-start-title">快速开始</div>
+        <div class="quick-start-subtitle">一键开始专注，提升工作效率</div>
+        <button class="start-button">开始专注</button>
+            </div>
+      
+      <div class="today-summary">
+        <div class="summary-title">今日专注</div>
+        <div class="summary-stats">
+          <div class="stat-item">
+            <div class="stat-value">2</div>
+            <div class="stat-label">完成次数</div>
           </div>
-        </div>
-
-        <!-- 目标预览 -->
-        <div class="card">
-          <div class="card-header">
-            <div class="flex items-center justify-between">
-              <div class="card-title">专注目标</div>
-              <button class="nav-button">管理</button>
-            </div>
+          <div class="stat-item">
+            <div class="stat-value">85</div>
+            <div class="stat-label">专注分钟</div>
           </div>
-          <div class="card-body">
-            <div class="app-icons-row">
-              <div class="app-icon">📱</div>
-              <div class="app-icon">🎵</div>
-              <div class="app-icon">📺</div>
-              <div class="app-icon">🎮</div>
-              <div class="app-icon">💬</div>
-            </div>
-            <div style="font-size: 14px; color: var(--text-secondary); text-align: center;">
-              已选择 5 个应用
-            </div>
-          </div>
-        </div>
-
-        <!-- 功能入口 -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <div class="card" onclick="openPlans()">
-            <div class="card-body text-center">
-              <div style="font-size: 24px; margin-bottom: 8px;">📋</div>
-              <div style="font-weight: 600; margin-bottom: 4px;">计划管理</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">3 个计划</div>
-            </div>
-          </div>
-          <div class="card" onclick="openWallet()">
-            <div class="card-body text-center">
-              <div style="font-size: 24px; margin-bottom: 8px;">💰</div>
-              <div style="font-weight: 600; margin-bottom: 4px;">钱包</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">85 自律币</div>
-            </div>
+          <div class="stat-item">
+            <div class="stat-value">90%</div>
+            <div class="stat-label">成功率</div>
           </div>
         </div>
       </div>
 
-      <!-- 底部Tab栏 -->
-      <div class="tab-bar">
-        <a href="#" class="tab-item active">
-          <div class="tab-icon">🏠</div>
-          <div class="tab-label">首页</div>
+      <div class="actions">
+        <a href="#" class="action-btn">
+          <ion-icon name="calendar-outline" class="action-icon"></ion-icon>
+          计划管理
         </a>
-        <a href="challenges.html" class="tab-item">
-          <div class="tab-icon">🎯</div>
-          <div class="tab-label">挑战</div>
+        <a href="#" class="action-btn">
+          <ion-icon name="apps-outline" class="action-icon"></ion-icon>
+          应用管理
         </a>
-        <a href="user.html" class="tab-item">
-          <div class="tab-icon">👤</div>
-          <div class="tab-label">我的</div>
+        <a href="#" class="action-btn">
+          <ion-icon name="settings-outline" class="action-icon"></ion-icon>
+          权限设置
         </a>
       </div>
+    </div>
+    
+    <div class="tab-bar">
+      <a href="#" class="tab-item active">
+        <ion-icon name="home" class="tab-icon"></ion-icon>
+        首页
+      </a>
+      <a href="#" class="tab-item">
+        <ion-icon name="trophy-outline" class="tab-icon"></ion-icon>
+        挑战
+      </a>
+      <a href="#" class="tab-item">
+        <ion-icon name="person-outline" class="tab-icon"></ion-icon>
+        我的
+      </a>
     </div>
   </div>
 
   <script>
-    function openQuickStart() {
-      window.parent.postMessage({type: 'navigate', page: 'quick-start.html'}, '*');
-    }
+    // Listen for theme changes from parent window
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'theme-change') {
+        document.documentElement.setAttribute('data-theme', event.data.theme);
+      }
+    });
     
-    function openPlans() {
-      window.parent.postMessage({type: 'navigate', page: 'plans-index.html'}, '*');
-    }
-    
-    function openWallet() {
-      window.parent.postMessage({type: 'navigate', page: 'coins.html'}, '*');
-    }
+    // Initialize theme from parent or localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
 </body>
 </html>

@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>自律币钱包</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: var(--bg-grouped);
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    
+    /* iOS Style Header */
+    .ios-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--separator);
+      position: relative;
+    }
+    
+    .back-btn {
+      position: absolute;
+      left: 16px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: var(--primary);
+      cursor: pointer;
+    }
+    
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+    }
+    
+    /* Content */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-4);
+    }
+    
+    /* Balance Card */
+    .balance-card {
+      background: linear-gradient(135deg, #FFB800 0%, #FFA000 100%);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      color: white;
+      margin-bottom: var(--space-4);
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-elevated);
+    }
+    
+    .balance-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    
+    .balance-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+    
+    .balance-title {
+      font-size: var(--font-size-md);
+      opacity: 0.9;
+    }
+    
+    .balance-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .balance-amount {
+      font-size: var(--font-size-3xl);
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .balance-change {
+      font-size: var(--font-size-sm);
+      opacity: 0.8;
+    }
+    
+    .balance-change.positive {
+      color: #4CAF50;
+    }
+    
+    .balance-change.negative {
+      color: #F44336;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: var(--space-3);
+      margin-bottom: var(--space-6);
+    }
+    
+    .action-btn {
+      flex: 1;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--separator);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      text-align: center;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-card);
+    }
+    
+    .action-btn:active {
+      transform: scale(0.98);
+      background: var(--bg-secondary);
+    }
+    
+    .action-icon {
+      font-size: 28px;
+      margin-bottom: var(--space-2);
+      display: block;
+    }
+    
+    .action-btn.recharge .action-icon {
+      color: var(--success);
+    }
+    
+    .action-btn.earn .action-icon {
+      color: var(--warning);
+    }
+    
+    .action-title {
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      margin-bottom: var(--space-1);
+    }
+    
+    .action-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    /* Transaction History */
+    .history-section {
+      margin-bottom: var(--space-4);
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+    
+    .section-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .view-all {
+      color: var(--primary);
+      font-size: var(--font-size-sm);
+      text-decoration: none;
+    }
+    
+    .transaction-list {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    
+    .transaction-item {
+      display: flex;
+      align-items: center;
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--separator);
+    }
+    
+    .transaction-item:last-child {
+      border-bottom: none;
+    }
+    
+    .transaction-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: var(--space-3);
+      font-size: var(--font-size-lg);
+    }
+    
+    .transaction-icon.income {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    
+    .transaction-icon.expense {
+      background: var(--error-light);
+      color: var(--error);
+    }
+    
+    .transaction-icon.recharge {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    
+    .transaction-details {
+      flex: 1;
+    }
+    
+    .transaction-title {
+      font-size: var(--font-size-md);
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .transaction-time {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    .transaction-amount {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .transaction-amount.income {
+      color: var(--success);
+    }
+    
+    .transaction-amount.expense {
+      color: var(--error);
+    }
+    
+    .transaction-amount.recharge {
+      color: var(--primary);
+    }
+    
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    
+    .stat-card {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      text-align: center;
+      box-shadow: var(--shadow-card);
+    }
+    
+    .stat-value {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .stat-label {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-8) var(--space-4);
+      color: var(--text-secondary);
+    }
+    
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: var(--space-4);
+      opacity: 0.5;
+    }
+    
+    .empty-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+    }
+    
+    .empty-subtitle {
+      font-size: var(--font-size-sm);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="ios-header">
+      <button class="back-btn">
+        <ion-icon name="chevron-back-outline"></ion-icon>
+      </button>
+      <div class="header-title">钱包</div>
+    </div>
+    
+    <div class="content">
+      <!-- Balance Card -->
+      <div class="balance-card">
+        <div class="balance-header">
+          <div class="balance-title">自律币余额</div>
+          <div class="balance-icon">
+            <ion-icon name="wallet"></ion-icon>
+          </div>
+        </div>
+        <div class="balance-amount">156</div>
+        <div class="balance-change positive">今日 +25 币</div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <a href="#" class="action-btn recharge">
+          <ion-icon name="card-outline" class="action-icon"></ion-icon>
+          <div class="action-title">充值</div>
+          <div class="action-subtitle">购买自律币</div>
+        </a>
+        <a href="#" class="action-btn earn">
+          <ion-icon name="trophy-outline" class="action-icon"></ion-icon>
+          <div class="action-title">赚币</div>
+          <div class="action-subtitle">完成任务</div>
+        </a>
+      </div>
+      
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">1,250</div>
+          <div class="stat-label">累计收入</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">890</div>
+          <div class="stat-label">累计支出</div>
+        </div>
+      </div>
+      
+      <!-- Transaction History -->
+      <div class="history-section">
+        <div class="section-header">
+          <div class="section-title">交易记录</div>
+          <a href="#" class="view-all">查看全部</a>
+        </div>
+        
+        <div class="transaction-list">
+          <div class="transaction-item">
+            <div class="transaction-icon income">
+              <ion-icon name="checkmark-circle"></ion-icon>
+            </div>
+            <div class="transaction-details">
+              <div class="transaction-title">完成专注奖励</div>
+              <div class="transaction-time">今天 14:30</div>
+            </div>
+            <div class="transaction-amount income">+25</div>
+          </div>
+          
+          <div class="transaction-item">
+            <div class="transaction-icon expense">
+              <ion-icon name="pause-circle"></ion-icon>
+            </div>
+            <div class="transaction-details">
+              <div class="transaction-title">专注暂停扣费</div>
+              <div class="transaction-time">今天 10:15</div>
+            </div>
+            <div class="transaction-amount expense">-5</div>
+          </div>
+          
+          <div class="transaction-item">
+            <div class="transaction-icon recharge">
+              <ion-icon name="card"></ion-icon>
+            </div>
+            <div class="transaction-details">
+              <div class="transaction-title">充值到账</div>
+              <div class="transaction-time">昨天 20:45</div>
+            </div>
+            <div class="transaction-amount recharge">+100</div>
+          </div>
+          
+          <div class="transaction-item">
+            <div class="transaction-icon income">
+              <ion-icon name="trophy"></ion-icon>
+            </div>
+            <div class="transaction-details">
+              <div class="transaction-title">挑战完成奖励</div>
+              <div class="transaction-time">昨天 18:20</div>
+            </div>
+            <div class="transaction-amount income">+50</div>
+          </div>
+          
+          <div class="transaction-item">
+            <div class="transaction-icon expense">
+              <ion-icon name="close-circle"></ion-icon>
+            </div>
+            <div class="transaction-details">
+              <div class="transaction-title">专注失败扣费</div>
+              <div class="transaction-time">前天 16:00</div>
+            </div>
+            <div class="transaction-amount expense">-20</div>
+          </div>
+          
+          <div class="transaction-item">
+            <div class="transaction-icon income">
+              <ion-icon name="gift"></ion-icon>
+            </div>
+            <div class="transaction-details">
+              <div class="transaction-title">新手赠送</div>
+              <div class="transaction-time">2024-01-01</div>
+            </div>
+            <div class="transaction-amount income">+100</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Listen for theme changes from parent window
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'theme-change') {
+        document.documentElement.setAttribute('data-theme', event.data.theme);
+      }
+    });
+    
+    // Initialize theme from parent or localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+</body>
+</html>

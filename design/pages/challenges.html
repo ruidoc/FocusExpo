@@ -1,131 +1,592 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>挑战 - FocusOne</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>挑战</title>
   <link rel="stylesheet" href="../styles/tokens.css">
-  <link rel="stylesheet" href="../styles/app.css">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: var(--bg-grouped);
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    
+    /* iOS Style Header */
+    .ios-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--separator);
+      position: relative;
+    }
+    
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+    }
+    
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--separator);
+      padding: 0 var(--space-4);
+    }
+    
+    .tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: var(--space-4) var(--space-2);
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    
+    /* Content */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 80px;
+    }
+    
+    .tab-content {
+      display: none;
+      padding: var(--space-4);
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Challenge Card */
+    .challenge-card {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--separator);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .challenge-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary) 0%, #5AC8FA 100%);
+    }
+    
+    .challenge-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 122, 255, 0.15);
+      border-color: var(--primary);
+    }
+    
+    .challenge-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-3);
+    }
+    
+    .challenge-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .challenge-difficulty {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+    }
+    
+    .challenge-difficulty.hard {
+      background: var(--error-light);
+      color: var(--error);
+    }
+    
+    .challenge-difficulty.medium {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+    
+    .challenge-description {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+      line-height: 1.5;
+    }
+    
+    .challenge-requirements {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+    
+    .requirement-title {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+    
+    .requirement-list {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+    
+    .challenge-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .challenge-reward {
+      font-size: var(--font-size-sm);
+      color: var(--success);
+      font-weight: 600;
+    }
+    
+    .challenge-cost {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    .join-btn {
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: var(--space-2) var(--space-4);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+    }
+    
+    .join-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+    }
+    
+    .join-btn:active {
+      transform: translateY(0);
+    }
+    
+    .join-btn.joined {
+      background: linear-gradient(135deg, var(--success) 0%, #40D774 100%);
+      box-shadow: 0 2px 8px rgba(52, 199, 89, 0.2);
+    }
+    
+    .join-btn.joined:hover {
+      box-shadow: 0 4px 16px rgba(52, 199, 89, 0.3);
+    }
+    
+    /* Progress Card */
+    .progress-card {
+      background: var(--success-light);
+      border: 1px solid var(--success);
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin: var(--space-3) 0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--success);
+      border-radius: var(--radius-full);
+      transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+      font-size: var(--font-size-sm);
+      color: var(--success);
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    /* History Card */
+    .history-card {
+      opacity: 0.8;
+    }
+    
+    .history-status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+    }
+    
+    .status-badge {
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+    }
+    
+    .status-badge.success {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    
+    .status-badge.failed {
+      background: var(--error-light);
+      color: var(--error);
+    }
+    
+    .history-date {
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+    }
+    
+    /* Stats */
+    .my-stats {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-card);
+    }
+    
+    .stats-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-3);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .stat-label {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    /* Bottom Tab Bar */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--glass);
+      backdrop-filter: var(--blur);
+      border-top: 1px solid var(--glass-border);
+      padding: var(--space-2) var(--space-4) var(--safe-bottom);
+      display: flex;
+      justify-content: space-around;
+    }
+    
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: var(--font-size-xs);
+      font-weight: 500;
+      padding: var(--space-2);
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+    }
+    
+    .tab-item.active {
+      color: var(--primary);
+    }
+    
+    .tab-icon {
+      font-size: 24px;
+      margin-bottom: var(--space-1);
+    }
+  </style>
 </head>
 <body>
-  <div class="app">
-    <div class="safe-area">
-      <div class="nav-header">
-        <div class="nav-title">挑战</div>
-        <button class="nav-button">历史</button>
+  <div class="container">
+    <div class="ios-header">
+      <div class="header-title">挑战</div>
+    </div>
+    
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('hall')">挑战大厅</button>
+      <button class="tab-btn" onclick="switchTab('mine')">我的挑战</button>
       </div>
 
       <div class="content">
-        <!-- 筛选栏 -->
-        <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-          <select style="flex: 1; padding: 8px 12px; border: 1px solid var(--separator); border-radius: 8px; background: var(--bg-primary);">
-            <option>全部类型</option>
-            <option>永久奖励</option>
-            <option>临时奖励</option>
-          </select>
-          <select style="flex: 1; padding: 8px 12px; border: 1px solid var(--separator); border-radius: 8px; background: var(--bg-primary);">
-            <option>全部难度</option>
-            <option>10 币</option>
-            <option>20 币</option>
-            <option>50 币</option>
-          </select>
-        </div>
-
-        <!-- 挑战卡片列表 -->
+      <!-- Challenge Hall Tab -->
+      <div id="hall" class="tab-content active">
         <div class="challenge-card">
           <div class="challenge-header">
             <div>
-              <div style="font-weight: 600; margin-bottom: 4px;">工作日专注挑战</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">连续3天完成≥30分钟专注</div>
+              <div class="challenge-title">专注马拉松</div>
+              <div class="challenge-cost">入场费用: 20 自律币</div>
             </div>
-            <div class="challenge-difficulty">20 币</div>
+            <div class="challenge-difficulty">困难</div>
           </div>
-          <div class="challenge-body">
-            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">必屏蔽应用：</div>
-            <div class="challenge-apps">
-              <div class="app-icon">📱</div>
-              <div class="app-icon">🎵</div>
-              <div class="app-icon">📺</div>
+          <div class="challenge-description">
+            连续7天，每天专注不少于2小时，挑战你的专注极限
+          </div>
+          <div class="challenge-requirements">
+            <div class="requirement-title">挑战要求</div>
+            <div class="requirement-list">
+              • 必须屏蔽: 微信、抖音、微博<br>
+              • 每日专注: ≥120分钟<br>
+              • 连续天数: 7天<br>
+              • 成功率: ≥90%
             </div>
-            <div class="challenge-reward">奖励：永久 +1 App 上限</div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 16px;">领取挑战</button>
+          </div>
+          <div class="challenge-footer">
+            <div class="challenge-reward">奖励: +2 App额度 (永久)</div>
+            <button class="join-btn">参与挑战</button>
           </div>
         </div>
 
         <div class="challenge-card">
           <div class="challenge-header">
             <div>
-              <div style="font-weight: 600; margin-bottom: 4px;">深度专注挑战</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">单次完成90分钟专注</div>
+              <div class="challenge-title">晨间专注</div>
+              <div class="challenge-cost">入场费用: 10 自律币</div>
             </div>
-            <div class="challenge-difficulty">50 币</div>
+            <div class="challenge-difficulty medium">中等</div>
           </div>
-          <div class="challenge-body">
-            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">必屏蔽应用：</div>
-            <div class="challenge-apps">
-              <div class="app-icon">📱</div>
-              <div class="app-icon">💬</div>
-              <div class="app-icon">🎮</div>
-              <div class="app-icon">📺</div>
-              <div class="app-icon">🛒</div>
+          <div class="challenge-description">
+            早起的鸟儿有虫吃，挑战连续5天的晨间专注
+          </div>
+          <div class="challenge-requirements">
+            <div class="requirement-title">挑战要求</div>
+            <div class="requirement-list">
+              • 时间段: 07:00-09:00<br>
+              • 每日专注: ≥60分钟<br>
+              • 连续天数: 5天<br>
+              • 必须屏蔽: 社交类应用
             </div>
-            <div class="challenge-reward">奖励：永久 +15 分钟上限</div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 16px;">领取挑战</button>
+          </div>
+          <div class="challenge-footer">
+            <div class="challenge-reward">奖励: +30分钟时长 (7天)</div>
+            <button class="join-btn">参与挑战</button>
           </div>
         </div>
 
         <div class="challenge-card">
           <div class="challenge-header">
             <div>
-              <div style="font-weight: 600; margin-bottom: 4px;">周末冲刺</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">进行中 - 1/2 完成</div>
+              <div class="challenge-title">深度工作</div>
+              <div class="challenge-cost">入场费用: 15 自律币</div>
             </div>
-            <div class="challenge-difficulty">10 币</div>
+            <div class="challenge-difficulty">简单</div>
           </div>
-          <div class="challenge-body">
-            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">必屏蔽应用：</div>
-            <div class="challenge-apps">
-              <div class="app-icon">📱</div>
-              <div class="app-icon">🎵</div>
+          <div class="challenge-description">
+            体验深度工作的魅力，单次专注90分钟不间断
+          </div>
+          <div class="challenge-requirements">
+            <div class="requirement-title">挑战要求</div>
+            <div class="requirement-list">
+              • 单次专注: ≥90分钟<br>
+              • 不允许暂停<br>
+              • 完成次数: 3次<br>
+              • 时间限制: 7天内
             </div>
-            <div style="margin: 12px 0;">
-              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
-                <span>进度 1/2</span>
-                <span>剩余 1 天</span>
+          </div>
+          <div class="challenge-footer">
+            <div class="challenge-reward">奖励: +15分钟时长 (永久)</div>
+            <button class="join-btn">参与挑战</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- My Challenges Tab -->
+      <div id="mine" class="tab-content">
+        <div class="my-stats">
+          <div class="stats-title">我的挑战统计</div>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value">5</div>
+              <div class="stat-label">参与次数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">80%</div>
+              <div class="stat-label">成功率</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">150</div>
+              <div class="stat-label">获得奖励</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">2</div>
+              <div class="stat-label">进行中</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- In Progress Challenges -->
+        <div class="challenge-card progress-card">
+          <div class="challenge-header">
+            <div>
+              <div class="challenge-title">晨间专注</div>
+              <div class="challenge-cost">剩余时间: 3天</div>
+            </div>
+            <div class="challenge-difficulty medium">进行中</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 60%;"></div>
+          </div>
+          <div class="progress-text">进度: 3/5 天 (60%)</div>
+          <div class="challenge-footer">
+            <div class="challenge-reward">今日还需专注: 45分钟</div>
+            <button class="join-btn joined">查看详情</button>
               </div>
-              <div class="progress">
-                <div class="progress-bar" style="width: 50%;"></div>
               </div>
+        
+        <div class="challenge-card progress-card">
+          <div class="challenge-header">
+            <div>
+              <div class="challenge-title">深度工作</div>
+              <div class="challenge-cost">剩余时间: 5天</div>
             </div>
-            <div class="challenge-reward">奖励：7天临时 +2 Apps</div>
-            <button class="btn btn-secondary" style="width: 100%; margin-top: 16px;">查看详情</button>
+            <div class="challenge-difficulty">进行中</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 33%;"></div>
+          </div>
+          <div class="progress-text">进度: 1/3 次 (33%)</div>
+          <div class="challenge-footer">
+            <div class="challenge-reward">下次专注建议: 90分钟</div>
+            <button class="join-btn joined">查看详情</button>
           </div>
         </div>
 
-        <!-- 空状态示例（隐藏） -->
-        <div class="empty-state" style="display: none;">
-          <div class="empty-icon">🎯</div>
-          <div class="empty-title">暂无可领取挑战</div>
-          <div class="empty-subtitle">新挑战将在每周一更新</div>
+        <!-- Historical Challenges -->
+        <div class="challenge-card history-card">
+          <div class="history-status">
+            <div class="status-badge success">已完成</div>
+            <div class="history-date">2024-01-15</div>
+          </div>
+          <div class="challenge-title">专注新手</div>
+          <div class="challenge-description">
+            完成首次30分钟专注挑战
+          </div>
+          <div class="challenge-footer">
+            <div class="challenge-reward">已获得: +1 App额度</div>
+          </div>
+        </div>
+
+        <div class="challenge-card history-card">
+          <div class="history-status">
+            <div class="status-badge failed">已失败</div>
+            <div class="history-date">2024-01-10</div>
+          </div>
+          <div class="challenge-title">周末专注</div>
+          <div class="challenge-description">
+            周末两天各专注3小时
+          </div>
+          <div class="challenge-footer">
+            <div class="challenge-reward">已扣除: 25 自律币</div>
+          </div>
+        </div>
         </div>
       </div>
 
-      <!-- 底部Tab栏 -->
       <div class="tab-bar">
-        <a href="home.html" class="tab-item">
-          <div class="tab-icon">🏠</div>
-          <div class="tab-label">首页</div>
+      <a href="#" class="tab-item">
+        <ion-icon name="home-outline" class="tab-icon"></ion-icon>
+        首页
         </a>
         <a href="#" class="tab-item active">
-          <div class="tab-icon">🎯</div>
-          <div class="tab-label">挑战</div>
-        </a>
-        <a href="user.html" class="tab-item">
-          <div class="tab-icon">👤</div>
-          <div class="tab-label">我的</div>
-        </a>
-      </div>
+        <ion-icon name="trophy" class="tab-icon"></ion-icon>
+        挑战
+      </a>
+      <a href="#" class="tab-item">
+        <ion-icon name="person-outline" class="tab-icon"></ion-icon>
+        我的
+      </a>
     </div>
   </div>
+  
+  <script>
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Show selected tab
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+    
+    // Listen for theme changes from parent window
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'theme-change') {
+        document.documentElement.setAttribute('data-theme', event.data.theme);
+      }
+    });
+    
+    // Initialize theme from parent or localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
 </body>
 </html>

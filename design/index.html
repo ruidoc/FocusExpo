@@ -6,172 +6,236 @@
   <title>FocusOne 高保真设计稿预览</title>
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/ios.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    }
+    
+    .section {
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 24px 0;
+    }
+    
+    .section:nth-child(even) {
+      background-color: #ffffff;
+    }
+    
+    .section h2 {
+      margin: 0 0 24px 0;
+      padding: 0 24px;
+      color: #1d1d1f;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    /* Dark mode styles */
+    [data-theme="dark"] body {
+      background-color: #000000;
+    }
+    
+    [data-theme="dark"] .section {
+      background-color: #1c1c1e;
+    }
+    
+    [data-theme="dark"] .section:nth-child(even) {
+      background-color: #000000;
+    }
+    
+    [data-theme="dark"] .section h2 {
+      color: #ffffff;
+    }
+    
+    [data-theme="dark"] .toolbar {
+      background: #1c1c1e;
+      border-bottom-color: #38383a;
+    }
+    
+    [data-theme="dark"] .toolbar h1 {
+      color: #ffffff;
+    }
+    
+    [data-theme="dark"] .thumb {
+      color: #98989d;
+    }
+    
+    [data-theme="dark"] .toolbar .theme {
+      background: #2c2c2e;
+      border-color: #38383a;
+      color: #ffffff;
+    }
+  </style>
 </head>
 <body>
   <div class="toolbar">
-    <h1>FocusOne 高保真设计稿（25页完整版）</h1>
+    <h1>FocusOne 高保真设计稿（完整版）</h1>
     <span class="thumb">iPhone 15 Pro 390×844</span>
     <div class="spacer"></div>
     <button class="theme" id="toggleTheme">切换主题</button>
   </div>
   
   <div class="section">
-    <h2>主要Tab（3页）</h2>
+    <h2>🏠 主要Tab页面（3页）</h2>
     <div class="grid">
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/home.html"></iframe></div>
-        <div class="label">首页 (/(tabs)/index)</div>
+        <div class="label">首页 - 专注控制中心</div>
       </div>
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/challenges.html"></iframe></div>
-        <div class="label">挑战页 (/(tabs)/challenges)</div>
+        <div class="label">挑战页 - 挑战大厅与我的挑战</div>
       </div>
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/user.html"></iframe></div>
-        <div class="label">我的页 (/(tabs)/user)</div>
+        <div class="label">我的页 - 段位系统与功能入口</div>
       </div>
     </div>
   </div>
 
   <div class="section">
-    <h2>专注功能（6页）</h2>
+    <h2>⚡ 专注功能页面（4页）</h2>
     <div class="grid">
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/quick-start.html"></iframe></div>
-        <div class="label">快速开始 (/quick-start/index)</div>
+        <div class="label">快速开始 - 模态选择页面</div>
       </div>
       <div class="device">
         <div class="notch"></div>
-        <div class="screen"><iframe src="pages/betting.html"></iframe></div>
-        <div class="label">下注选择 (/quick-start/betting)</div>
+        <div class="screen"><iframe src="pages/shield.html"></iframe></div>
+        <div class="label">拦截页面 - 屏蔽时的提示界面</div>
       </div>
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/plans-index.html"></iframe></div>
-        <div class="label">计划列表 (/plans/index)</div>
+        <div class="label">计划列表 - 周期计划管理</div>
       </div>
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/plans-add.html"></iframe></div>
-        <div class="label">新建计划 (/plans/add)</div>
-      </div>
-      <div class="device">
-        <div class="notch"></div>
-        <div class="screen"><iframe src="pages/apps-index.html"></iframe></div>
-        <div class="label">应用管理 (/apps/index)</div>
-      </div>
-      <div class="device">
-        <div class="notch"></div>
-        <div class="screen"><iframe src="pages/apps-add.html"></iframe></div>
-        <div class="label">添加应用 (/apps/add)</div>
+        <div class="label">新建计划 - 创建周期专注计划</div>
       </div>
     </div>
   </div>
 
   <div class="section">
-    <h2>挑战系统（3页）</h2>
+    <h2>💰 自律币与钱包（3页）</h2>
     <div class="grid">
       <div class="device">
         <div class="notch"></div>
-        <div class="screen"><iframe src="pages/challenge-detail.html"></iframe></div>
-        <div class="label">挑战详情 (/challenges/detail)</div>
-      </div>
-      <div class="device">
-        <div class="notch"></div>
-        <div class="screen"><iframe src="pages/challenge-history.html"></iframe></div>
-        <div class="label">挑战历史 (/challenges/history)</div>
-      </div>
-      <div class="device">
-        <div class="notch"></div>
-        <div class="screen"><iframe src="pages/challenge-progress.html"></iframe></div>
-        <div class="label">进行中挑战 (/challenges/progress)</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>钱包与段位（4页）</h2>
-    <div class="grid">
-      <div class="device">
-        <div class="notch"></div>
-        <div class="screen"><iframe src="pages/coins.html"></iframe></div>
-        <div class="label">钱包中心 (/user/coins)</div>
+        <div class="screen"><iframe src="pages/wallet.html"></iframe></div>
+        <div class="label">钱包中心 - 自律币管理</div>
       </div>
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/recharge.html"></iframe></div>
-        <div class="label">充值页面 (/user/coins/recharge)</div>
+        <div class="label">充值页面 - 内购充值</div>
       </div>
       <div class="device">
         <div class="notch"></div>
-        <div class="screen"><iframe src="pages/coins-history.html"></iframe></div>
-        <div class="label">交易明细 (/user/coins/history)</div>
+        <div class="screen"><iframe src="pages/coins.html"></iframe></div>
+        <div class="label">交易明细 - 收支记录</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🎯 挑战系统详情（3页）</h2>
+    <div class="grid">
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen"><iframe src="pages/challenge-detail.html"></iframe></div>
+        <div class="label">挑战详情 - 规则与奖励说明</div>
       </div>
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/rank.html"></iframe></div>
-        <div class="label">段位说明 (/user/rank)</div>
+        <div class="label">段位说明 - 星航段位系统</div>
+      </div>
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen"><iframe src="pages/challenge-history.html"></iframe></div>
+        <div class="label">挑战历史 - 完成记录</div>
       </div>
     </div>
   </div>
 
   <div class="section">
-    <h2>引导与登录（4页）</h2>
+    <h2>⚙️ 设置与管理（4页）</h2>
     <div class="grid">
       <div class="device">
         <div class="notch"></div>
-        <div class="screen"><iframe src="pages/guide.html"></iframe></div>
-        <div class="label">新手引导 (/(guides)/step1-5)</div>
-      </div>
-      <div class="device">
-        <div class="notch"></div>
-        <div class="screen"><iframe src="pages/login-start.html"></iframe></div>
-        <div class="label">登录起始 (/login/start)</div>
-      </div>
-      <div class="device">
-        <div class="notch"></div>
-        <div class="screen"><iframe src="pages/login-index.html"></iframe></div>
-        <div class="label">登录页 (/login/index)</div>
-      </div>
-      <div class="device">
-        <div class="notch"></div>
-        <div class="screen"><iframe src="pages/login-register.html"></iframe></div>
-        <div class="label">注册页 (/login/register)</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>设置与其他（5页）</h2>
-    <div class="grid">
-      <div class="device">
-        <div class="notch"></div>
-        <div class="screen"><iframe src="pages/setting-index.html"></iframe></div>
-        <div class="label">设置首页 (/setting/index)</div>
+        <div class="screen"><iframe src="pages/settings.html"></iframe></div>
+        <div class="label">设置首页 - 权限与应用设置</div>
       </div>
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/setting-permission.html"></iframe></div>
-        <div class="label">权限设置 (/setting/permission)</div>
+        <div class="label">权限设置 - 详细权限管理</div>
       </div>
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/setting-about.html"></iframe></div>
-        <div class="label">关于我们 (/setting/about)</div>
+        <div class="label">关于我们 - 应用信息</div>
       </div>
       <div class="device">
         <div class="notch"></div>
         <div class="screen"><iframe src="pages/user-edit.html"></iframe></div>
-        <div class="label">编辑资料 (/user/edit)</div>
+        <div class="label">编辑资料 - 个人信息管理</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🚀 登录注册（2页）</h2>
+    <div class="grid">
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen"><iframe src="pages/login.html"></iframe></div>
+        <div class="label">登录页 - 现代化高保真设计</div>
       </div>
       <div class="device">
         <div class="notch"></div>
+        <div class="screen"><iframe src="pages/register.html"></iframe></div>
+        <div class="label">注册页 - 现代化高保真设计</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📱 应用管理（2页）</h2>
+    <div class="grid">
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen"><iframe src="pages/apps-index.html"></iframe></div>
+        <div class="label">应用管理 - 选择屏蔽目标</div>
+      </div>
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen"><iframe src="pages/apps-add.html"></iframe></div>
+        <div class="label">添加应用 - 搜索与添加</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🔧 其他页面（2页）</h2>
+    <div class="grid">
+      <div class="device">
+        <div class="notch"></div>
         <div class="screen"><iframe src="pages/not-found.html"></iframe></div>
-        <div class="label">404页面 (+not-found)</div>
+        <div class="label">404页面 - 错误处理</div>
+      </div>
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen"><iframe src="pages/guide.html"></iframe></div>
+        <div class="label">新手引导 - 功能介绍</div>
       </div>
     </div>
   </div>
@@ -188,13 +252,102 @@
       padding-bottom: 8px;
       border-bottom: 1px solid var(--separator);
     }
+    
+    /* Add some visual improvements */
+    body {
+      background: var(--bg-grouped);
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+    }
+    
+    .toolbar {
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--separator);
+      color: var(--text-primary);
+    }
+    
+    .toolbar .theme {
+      background: var(--bg-primary);
+      border: 1px solid var(--separator);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+    
+    .toolbar .theme:hover {
+      background: var(--bg-secondary);
+    }
+    
+    .device .label {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    /* Dark mode support */
+    [data-theme="dark"] .toolbar {
+      background: var(--bg-secondary);
+    }
+    
+    [data-theme="dark"] .device .label {
+      color: var(--text-tertiary);
+    }
+    
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+        padding: 16px;
+      }
+      
+      .device {
+        width: 100%;
+        max-width: 360px;
+      }
+    }
   </style>
 
   <script>
     const btn = document.getElementById('toggleTheme');
+    
+    // Initialize theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateButtonText(savedTheme);
+    
+    function updateButtonText(theme) {
+      if (theme === 'dark') {
+        btn.innerHTML = '🌞 浅色模式';
+      } else {
+        btn.innerHTML = '🌙 深色模式';
+      }
+    }
+    
     btn.addEventListener('click', () => {
       const cur = document.documentElement.getAttribute('data-theme');
-      document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+      const newTheme = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateButtonText(newTheme);
+      
+      // Notify all iframes about theme change
+      const iframes = document.querySelectorAll('iframe');
+      iframes.forEach(iframe => {
+        try {
+          iframe.contentWindow.postMessage({
+            type: 'theme-change',
+            theme: newTheme
+          }, '*');
+        } catch (e) {
+          // Handle cross-origin restrictions
+          console.log('Cannot communicate with iframe:', e);
+        }
+      });
+    });
+    
+    // Add loading animation for iframes
+    document.querySelectorAll('iframe').forEach(iframe => {
+      iframe.addEventListener('load', () => {
+        iframe.style.opacity = '1';
+      });
     });
   </script>
 </body>

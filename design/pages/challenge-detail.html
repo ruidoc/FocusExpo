@@ -1,147 +1,584 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>挑战详情 - FocusOne</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>挑战详情</title>
   <link rel="stylesheet" href="../styles/tokens.css">
-  <link rel="stylesheet" href="../styles/app.css">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: var(--bg-grouped);
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    
+    /* iOS Style Header */
+    .ios-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--separator);
+      position: relative;
+    }
+    
+    .back-btn {
+      position: absolute;
+      left: 16px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: var(--primary);
+      cursor: pointer;
+    }
+    
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+    }
+    
+    /* Content Area */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-4);
+    }
+    
+    /* Hero Section */
+    .hero-section {
+      background: linear-gradient(135deg, var(--primary) 0%, #5AC8FA 100%);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      backdrop-filter: blur(20px);
+    }
+    
+    .challenge-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-full);
+      padding: var(--space-1) var(--space-3);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      margin-bottom: var(--space-4);
+    }
+    
+    .challenge-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+      line-height: 1.2;
+    }
+    
+    .challenge-subtitle {
+      font-size: var(--font-size-md);
+      opacity: 0.9;
+      margin-bottom: var(--space-4);
+    }
+    
+    .reward-info {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    
+    .reward-amount {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      padding: var(--space-2) var(--space-4);
+    }
+    
+    .reward-value {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+    }
+    
+    .countdown-timer {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-size-sm);
+      opacity: 0.9;
+    }
+    
+    /* Requirements Section */
+    .requirements-section {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-card);
+    }
+    
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+    }
+    
+    .section-icon {
+      width: 24px;
+      height: 24px;
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      font-size: 14px;
+    }
+    
+    .requirement-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-3);
+    }
+    
+    .requirement-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .requirement-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--success-light);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--success);
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    
+    .requirement-content {
+      flex: 1;
+    }
+    
+    .requirement-title {
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .requirement-desc {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    /* Blocked Apps Section */
+    .blocked-apps-section {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-card);
+    }
+    
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: var(--space-3);
+      margin-top: var(--space-4);
+    }
+    
+    .app-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-3);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      transition: all 0.2s ease;
+    }
+    
+    .app-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-elevated);
+    }
+    
+    .app-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .app-name {
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      text-align: center;
+    }
+    
+    /* Progress Section */
+    .progress-section {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-6);
+      box-shadow: var(--shadow-card);
+    }
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-4);
+    }
+    
+    .progress-value {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-bottom: var(--space-3);
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary) 0%, #5AC8FA 100%);
+      border-radius: var(--radius-full);
+      width: 33%;
+      transition: width 0.3s ease;
+    }
+    
+    .progress-days {
+      display: flex;
+      gap: var(--space-2);
+    }
+    
+    .day-indicator {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-full);
+      position: relative;
+    }
+    
+    .day-indicator.completed {
+      background: var(--success);
+    }
+    
+    .day-indicator.current {
+      background: var(--primary);
+    }
+    
+    .day-label {
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      text-align: center;
+      margin-top: var(--space-1);
+    }
+    
+    /* Action Button */
+    .action-button {
+      background: linear-gradient(135deg, var(--primary) 0%, #5AC8FA 100%);
+      border: none;
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      color: white;
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+    }
+    
+    .action-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
+    }
+    
+    .action-button:active {
+      transform: translateY(0);
+    }
+    
+    .action-button:disabled {
+      background: var(--text-tertiary);
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .hero-section,
+    .requirements-section,
+    .blocked-apps-section,
+    .progress-section {
+      animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .requirements-section {
+      animation-delay: 0.1s;
+    }
+    
+    .blocked-apps-section {
+      animation-delay: 0.2s;
+    }
+    
+    .progress-section {
+      animation-delay: 0.3s;
+    }
+  </style>
 </head>
 <body>
-  <div class="app">
-    <div class="safe-area">
-      <div class="nav-header">
-        <button class="nav-button">返回</button>
-        <div class="nav-title">挑战详情</div>
-        <div style="width: 48px;"></div>
+  <div class="container">
+    <div class="ios-header">
+      <button class="back-btn">
+        <ion-icon name="chevron-back-outline"></ion-icon>
+      </button>
+      <div class="header-title">挑战详情</div>
       </div>
 
       <div class="content">
-        <!-- 挑战信息 -->
-        <div class="card">
-          <div class="card-header">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <div>
-                <div class="card-title">工作日专注挑战</div>
-                <div class="card-subtitle">连续3天完成≥30分钟专注</div>
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="challenge-badge">
+          <ion-icon name="flash"></ion-icon>
+          热门挑战
               </div>
-              <div class="challenge-difficulty">20 币</div>
+        <div class="challenge-title">工作日专注挑战</div>
+        <div class="challenge-subtitle">连续3个工作日完成≥30分钟专注，养成良好习惯</div>
+        <div class="reward-info">
+          <div class="reward-amount">
+            <ion-icon name="diamond"></ion-icon>
+            <span class="reward-value">50 自律币</span>
             </div>
+          <div class="countdown-timer">
+            <ion-icon name="time-outline"></ion-icon>
+            剩余 2天 14小时
           </div>
-          <div class="card-body">
-            <!-- 有效期 -->
-            <div style="background: var(--warning-light); border-radius: 8px; padding: 12px; margin-bottom: 16px; text-align: center;">
-              <div style="font-size: 14px; color: var(--warning); font-weight: 600;">
-                ⏰ 剩余时间：2天 14小时 32分钟
               </div>
             </div>
 
-            <!-- 必屏蔽应用 -->
-            <div style="margin-bottom: 20px;">
-              <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">必须屏蔽的应用</div>
-              <div class="challenge-apps">
-                <div class="app-icon">📱</div>
-                <div class="app-icon">🎵</div>
-                <div class="app-icon">📺</div>
+      <!-- Requirements Section -->
+      <div class="requirements-section">
+        <div class="section-title">
+          <div class="section-icon">
+            <ion-icon name="checkmark-circle"></ion-icon>
               </div>
-              <div style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;">
-                微信、网易云音乐、哔哩哔哩
+          挑战要求
+            </div>
+
+        <div class="requirement-item">
+          <div class="requirement-icon">
+            <ion-icon name="time"></ion-icon>
+                </div>
+          <div class="requirement-content">
+            <div class="requirement-title">专注时长</div>
+            <div class="requirement-desc">每次专注不少于30分钟，连续3个工作日</div>
               </div>
             </div>
 
-            <!-- 详细规则 -->
-            <div style="margin-bottom: 20px;">
-              <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">挑战规则</div>
-              <div style="background: var(--bg-secondary); border-radius: 8px; padding: 16px;">
-                <div style="font-size: 14px; line-height: 1.6; color: var(--text-secondary);">
-                  <p style="margin-bottom: 8px;">• 在工作日（周一至周五）完成专注任务</p>
-                  <p style="margin-bottom: 8px;">• 每次专注时长不少于30分钟</p>
-                  <p style="margin-bottom: 8px;">• 必须屏蔽指定的3个应用</p>
-                  <p style="margin-bottom: 8px;">• 连续3天完成，中断需重新开始</p>
-                  <p style="margin: 0;">• 暂停时长超过3分钟视为失败</p>
+        <div class="requirement-item">
+          <div class="requirement-icon">
+            <ion-icon name="calendar"></ion-icon>
+              </div>
+          <div class="requirement-content">
+            <div class="requirement-title">时间范围</div>
+            <div class="requirement-desc">周一至周五任意时间，不限具体时段</div>
+              </div>
+            </div>
+
+        <div class="requirement-item">
+          <div class="requirement-icon">
+            <ion-icon name="shield-checkmark"></ion-icon>
+                </div>
+          <div class="requirement-content">
+            <div class="requirement-title">屏蔽要求</div>
+            <div class="requirement-desc">必须屏蔽指定的娱乐应用，不可更改</div>
                 </div>
               </div>
             </div>
-
-            <!-- 奖励说明 -->
-            <div style="margin-bottom: 20px;">
-              <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">奖励内容</div>
-              <div class="challenge-reward">
-                🏆 永久 +1 App 屏蔽上限
-              </div>
-              <div style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;">
-                完成后您的应用屏蔽上限将从5个增加到6个，永久生效
-              </div>
-            </div>
-
-            <!-- 成功率统计 -->
-            <div style="background: var(--bg-secondary); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">历史成功率</div>
-                  <div style="font-size: 20px; font-weight: 600; color: var(--success);">67%</div>
-                </div>
-                <div>
-                  <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">参与人数</div>
-                  <div style="font-size: 20px; font-weight: 600; color: var(--primary);">1,248</div>
-                </div>
-              </div>
-            </div>
+      
+      <!-- Blocked Apps Section -->
+      <div class="blocked-apps-section">
+        <div class="section-title">
+          <div class="section-icon">
+            <ion-icon name="ban"></ion-icon>
           </div>
+          必须屏蔽的应用
         </div>
 
-        <!-- 进度跟踪（已领取时显示） -->
-        <div class="card" style="display: none;" id="progressCard">
-          <div class="card-header">
-            <div class="card-title">挑战进度</div>
-            <div class="card-subtitle">当前进度 1/3</div>
+        <div class="apps-grid">
+          <div class="app-item">
+            <div class="app-icon">微</div>
+            <div class="app-name">微信</div>
           </div>
-          <div class="card-body">
-            <div style="margin-bottom: 16px;">
-              <div class="progress" style="height: 8px;">
-                <div class="progress-bar" style="width: 33%;"></div>
+          <div class="app-item">
+            <div class="app-icon">抖</div>
+            <div class="app-name">抖音</div>
               </div>
+          <div class="app-item">
+            <div class="app-icon">微</div>
+            <div class="app-name">微博</div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-              <div style="text-align: center; padding: 8px; background: var(--success-light); border-radius: 6px;">
-                <div style="font-size: 12px; color: var(--success); font-weight: 600;">第1天</div>
-                <div style="font-size: 10px; color: var(--success);">✅ 已完成</div>
-              </div>
-              <div style="text-align: center; padding: 8px; background: var(--primary-light); border-radius: 6px;">
-                <div style="font-size: 12px; color: var(--primary); font-weight: 600;">第2天</div>
-                <div style="font-size: 10px; color: var(--primary);">🔄 进行中</div>
-              </div>
-              <div style="text-align: center; padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
-                <div style="font-size: 12px; color: var(--text-tertiary); font-weight: 600;">第3天</div>
-                <div style="font-size: 10px; color: var(--text-tertiary);">⏳ 待完成</div>
-              </div>
-            </div>
+          <div class="app-item">
+            <div class="app-icon">网</div>
+            <div class="app-name">网易云</div>
           </div>
         </div>
       </div>
 
-      <!-- 底部操作区 -->
-      <div style="position: fixed; bottom: var(--safe-bottom); left: 0; right: 0; padding: 16px; background: var(--bg-primary); border-top: 1px solid var(--separator);">
-        <button class="btn btn-primary btn-large" id="acceptBtn">
-          领取挑战（消耗 20 自律币）
-        </button>
-        <div style="text-align: center; margin-top: 8px; font-size: 14px; color: var(--text-secondary);">
-          当前余额：85 自律币
+      <!-- Progress Section -->
+      <div class="progress-section">
+        <div class="section-title">
+          <div class="section-icon">
+            <ion-icon name="trending-up"></ion-icon>
+          </div>
+          挑战进度
+        </div>
+        
+        <div class="progress-header">
+          <span>第 1 / 3 天</span>
+          <span class="progress-value">33%</span>
+        </div>
+        
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        
+        <div class="progress-days">
+          <div>
+            <div class="day-indicator completed"></div>
+            <div class="day-label">周一</div>
+          </div>
+          <div>
+            <div class="day-indicator current"></div>
+            <div class="day-label">周二</div>
+          </div>
+          <div>
+            <div class="day-indicator"></div>
+            <div class="day-label">周三</div>
+          </div>
         </div>
       </div>
+      
+      <!-- Action Button -->
+      <button class="action-button">
+        <ion-icon name="play"></ion-icon>
+        立即开始专注
+      </button>
     </div>
   </div>
 
   <script>
-    document.getElementById('acceptBtn').addEventListener('click', () => {
-      if (confirm('确认领取此挑战？将消耗 20 自律币。')) {
-        // 模拟领取成功
-        document.getElementById('acceptBtn').textContent = '已领取 - 查看进度';
-        document.getElementById('acceptBtn').className = 'btn btn-secondary btn-large';
-        document.getElementById('progressCard').style.display = 'block';
-        alert('挑战领取成功！开始您的专注之旅吧！');
+    // Listen for theme changes from parent window
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'theme-change') {
+        document.documentElement.setAttribute('data-theme', event.data.theme);
       }
     });
+    
+    // Initialize theme from parent or localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Countdown timer
+    function updateCountdown() {
+      const timer = document.querySelector('.countdown-timer');
+      // This would be connected to real data in a production app
+      let hours = 38;
+      let minutes = 42;
+      
+      setInterval(() => {
+        minutes--;
+        if (minutes < 0) {
+          hours--;
+          minutes = 59;
+        }
+        
+        if (hours < 0) {
+          timer.textContent = '挑战已结束';
+          return;
+        }
+        
+        const days = Math.floor(hours / 24);
+        const remainingHours = hours % 24;
+        
+        timer.innerHTML = `
+          <ion-icon name="time-outline"></ion-icon>
+          剩余 ${days}天 ${remainingHours}小时 ${minutes}分钟
+        `;
+      }, 60000); // Update every minute
+    }
+    
+    updateCountdown();
   </script>
 </body>
 </html>

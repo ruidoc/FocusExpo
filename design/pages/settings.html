@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>设置</title>
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: var(--bg-grouped);
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    
+    /* iOS Style Header */
+    .ios-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--separator);
+      position: relative;
+    }
+    
+    .back-btn {
+      position: absolute;
+      left: 16px;
+      background: none;
+      border: none;
+      font-size: 17px;
+      color: var(--primary);
+      cursor: pointer;
+    }
+    
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+    }
+    
+    /* Content */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-4);
+    }
+    
+    /* Settings Groups */
+    .settings-group {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-4);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+    
+    .group-header {
+      padding: var(--space-4) var(--space-4) var(--space-2);
+      border-bottom: 1px solid var(--separator);
+    }
+    
+    .group-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .group-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    /* Settings Items */
+    .settings-item {
+      display: flex;
+      align-items: center;
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--separator);
+      transition: background-color 0.2s ease;
+    }
+    
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+    
+    .settings-item:active {
+      background: var(--bg-secondary);
+    }
+    
+    .item-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: var(--space-3);
+      font-size: var(--font-size-lg);
+    }
+    
+    .item-icon.permission {
+      background: linear-gradient(135deg, #FF3B30 0%, #E74C3C 100%);
+      color: white;
+    }
+    
+    .item-icon.notification {
+      background: linear-gradient(135deg, #007AFF 0%, #5AC8FA 100%);
+      color: white;
+    }
+    
+    .item-icon.theme {
+      background: linear-gradient(135deg, #8E8E93 0%, #636366 100%);
+      color: white;
+    }
+    
+    .item-icon.pause {
+      background: linear-gradient(135deg, #FF9500 0%, #FFB84D 100%);
+      color: white;
+    }
+    
+    .item-content {
+      flex: 1;
+    }
+    
+    .item-title {
+      font-size: var(--font-size-md);
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .item-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    .item-status {
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+    }
+    
+    .item-status.enabled {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    
+    .item-status.disabled {
+      background: var(--error-light);
+      color: var(--error);
+    }
+    
+    .item-status.partial {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+    
+    .item-arrow {
+      color: var(--text-tertiary);
+      font-size: var(--font-size-sm);
+      margin-left: var(--space-2);
+    }
+    
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 26px;
+      background: var(--separator);
+      border-radius: 13px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    
+    .toggle-switch.active {
+      background: var(--success);
+    }
+    
+    .toggle-switch::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .toggle-switch.active::before {
+      transform: translateX(18px);
+    }
+    
+    /* Permission Alert */
+    .permission-alert {
+      background: var(--error-light);
+      border: 1px solid var(--error);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+    
+    .alert-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--space-2);
+    }
+    
+    .alert-icon {
+      font-size: var(--font-size-xl);
+      margin-right: var(--space-2);
+    }
+    
+    .alert-title {
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      color: var(--error);
+    }
+    
+    .alert-message {
+      font-size: var(--font-size-sm);
+      color: var(--error);
+      line-height: 1.5;
+      margin-bottom: var(--space-3);
+    }
+    
+    .alert-button {
+      background: var(--error);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+    
+    /* Help Items */
+    .help-item {
+      display: flex;
+      align-items: center;
+      padding: var(--space-4);
+      text-decoration: none;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--separator);
+      transition: background-color 0.2s ease;
+    }
+    
+    .help-item:last-child {
+      border-bottom: none;
+    }
+    
+    .help-item:active {
+      background: var(--bg-secondary);
+    }
+    
+    .help-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: var(--space-3);
+      font-size: var(--font-size-lg);
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    
+    .help-content {
+      flex: 1;
+    }
+    
+    .help-title {
+      font-size: var(--font-size-md);
+      font-weight: 500;
+      margin-bottom: var(--space-1);
+    }
+    
+    .help-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    
+    /* Version Info */
+    .version-info {
+      text-align: center;
+      padding: var(--space-6);
+      color: var(--text-secondary);
+    }
+    
+    .app-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-lg);
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-2xl);
+      color: white;
+      font-weight: 700;
+      margin: 0 auto var(--space-3);
+    }
+    
+    .app-name {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .app-version {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="ios-header">
+      <button class="back-btn">
+        <ion-icon name="chevron-back-outline"></ion-icon>
+      </button>
+      <div class="header-title">设置</div>
+    </div>
+    
+    <div class="content">
+      <!-- Permission Alert -->
+      <div class="permission-alert">
+        <div class="alert-header">
+          <div class="alert-icon">
+            <ion-icon name="warning"></ion-icon>
+          </div>
+          <div class="alert-title">权限未完整开启</div>
+        </div>
+        <div class="alert-message">
+          屏幕使用时间权限是专注功能的必要权限，请前往系统设置开启以获得完整体验。
+        </div>
+        <button class="alert-button">立即设置</button>
+      </div>
+      
+      <!-- Permissions Group -->
+      <div class="settings-group">
+        <div class="group-header">
+          <div class="group-title">权限设置</div>
+          <div class="group-subtitle">管理应用所需的系统权限</div>
+        </div>
+        
+        <div class="settings-item">
+          <div class="item-icon permission">
+            <ion-icon name="shield-checkmark"></ion-icon>
+          </div>
+          <div class="item-content">
+            <div class="item-title">屏幕使用时间</div>
+            <div class="item-subtitle">用于屏蔽指定应用和网站</div>
+          </div>
+          <div class="item-status disabled">未开启</div>
+          <div class="item-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </div>
+        
+        <div class="settings-item">
+          <div class="item-icon notification">
+            <ion-icon name="notifications"></ion-icon>
+          </div>
+          <div class="item-content">
+            <div class="item-title">通知权限</div>
+            <div class="item-subtitle">接收专注开始和结束提醒</div>
+          </div>
+          <div class="item-status enabled">已开启</div>
+          <div class="item-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App Settings Group -->
+      <div class="settings-group">
+        <div class="group-header">
+          <div class="group-title">应用设置</div>
+          <div class="group-subtitle">个性化你的专注体验</div>
+        </div>
+        
+        <div class="settings-item">
+          <div class="item-icon theme">
+            <ion-icon name="moon"></ion-icon>
+          </div>
+          <div class="item-content">
+            <div class="item-title">深色模式</div>
+            <div class="item-subtitle">跟随系统或手动切换</div>
+          </div>
+          <div class="toggle-switch active"></div>
+        </div>
+        
+        <div class="settings-item">
+          <div class="item-icon notification">
+            <ion-icon name="notifications-outline"></ion-icon>
+          </div>
+          <div class="item-content">
+            <div class="item-title">专注提醒</div>
+            <div class="item-subtitle">开始和结束时发送通知</div>
+          </div>
+          <div class="toggle-switch active"></div>
+        </div>
+        
+        <div class="settings-item">
+          <div class="item-icon pause">
+            <ion-icon name="pause-circle-outline"></ion-icon>
+          </div>
+          <div class="item-content">
+            <div class="item-title">暂停设置</div>
+            <div class="item-subtitle">配置暂停时长和扣费规则</div>
+          </div>
+          <div class="item-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Help & Support Group -->
+      <div class="settings-group">
+        <div class="group-header">
+          <div class="group-title">帮助与支持</div>
+        </div>
+        
+        <a href="#" class="help-item">
+          <div class="help-icon">
+            <ion-icon name="book-outline"></ion-icon>
+          </div>
+          <div class="help-content">
+            <div class="help-title">使用指南</div>
+            <div class="help-subtitle">了解如何使用专注功能</div>
+          </div>
+          <div class="item-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </a>
+        
+        <a href="#" class="help-item">
+          <div class="help-icon">
+            <ion-icon name="help-circle-outline"></ion-icon>
+          </div>
+          <div class="help-content">
+            <div class="help-title">常见问题</div>
+            <div class="help-subtitle">快速解答常见疑问</div>
+          </div>
+          <div class="item-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </a>
+        
+        <a href="#" class="help-item">
+          <div class="help-icon">
+            <ion-icon name="chatbubble-outline"></ion-icon>
+          </div>
+          <div class="help-content">
+            <div class="help-title">意见反馈</div>
+            <div class="help-subtitle">告诉我们你的想法和建议</div>
+          </div>
+          <div class="item-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </a>
+        
+        <a href="#" class="help-item">
+          <div class="help-icon">
+            <ion-icon name="call-outline"></ion-icon>
+          </div>
+          <div class="help-content">
+            <div class="help-title">联系我们</div>
+            <div class="help-subtitle">获取技术支持和帮助</div>
+          </div>
+          <div class="item-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </a>
+      </div>
+      
+      <!-- About Group -->
+      <div class="settings-group">
+        <a href="#" class="help-item">
+          <div class="help-icon">
+            <ion-icon name="document-text-outline"></ion-icon>
+          </div>
+          <div class="help-content">
+            <div class="help-title">隐私政策</div>
+            <div class="help-subtitle">了解我们如何保护你的隐私</div>
+          </div>
+          <div class="item-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </a>
+        
+        <a href="#" class="help-item">
+          <div class="help-icon">
+            <ion-icon name="clipboard-outline"></ion-icon>
+          </div>
+          <div class="help-content">
+            <div class="help-title">用户协议</div>
+            <div class="help-subtitle">查看服务条款和使用协议</div>
+          </div>
+          <div class="item-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </a>
+        
+        <a href="#" class="help-item">
+          <div class="help-icon">
+            <ion-icon name="lock-open-outline"></ion-icon>
+          </div>
+          <div class="help-content">
+            <div class="help-title">开源许可</div>
+            <div class="help-subtitle">查看第三方库许可信息</div>
+          </div>
+          <div class="item-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </a>
+      </div>
+      
+      <!-- Version Info -->
+      <div class="version-info">
+        <div class="app-logo">F</div>
+        <div class="app-name">FocusOne</div>
+        <div class="app-version">版本 1.0.0 (Build 1)</div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Toggle switches
+    document.querySelectorAll('.toggle-switch').forEach(toggle => {
+      toggle.addEventListener('click', function() {
+        this.classList.toggle('active');
+      });
+    });
+    
+    // Listen for theme changes from parent window
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'theme-change') {
+        document.documentElement.setAttribute('data-theme', event.data.theme);
+      }
+    });
+    
+    // Initialize theme from parent or localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+</body>
+</html>

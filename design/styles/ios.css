@@ -2,15 +2,15 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: 24px;
   padding: 24px;
   box-sizing: border-box;
 }
 
 .device {
-  width: 420px; /* frame width including bezel */
-  height: 900px; /* frame height including bezel */
+  width: 400px; /* frame width including bezel - reduced by 20px */
+  height: 880px; /* frame height including bezel - reduced by 20px */
   margin: 0 auto;
   background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
   border-radius: 52px;
@@ -20,13 +20,13 @@
     0 8px 20px rgba(0,0,0,0.3),
     inset 0 1px 0 rgba(255,255,255,0.1);
   position: relative;
-  padding: 16px;
+  padding: 12px; /* reduced padding */
   box-sizing: border-box;
 }
 
 .device .screen {
-  width: 388px; /* iPhone 15 Pro points */
-  height: 840px;
+  width: 376px; /* iPhone 15 Pro points - adjusted for smaller frame */
+  height: 816px; /* adjusted for smaller frame */
   border-radius: 42px;
   overflow: hidden;
   background: var(--bg-grouped);

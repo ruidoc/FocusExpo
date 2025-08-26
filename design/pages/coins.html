@@ -6,12 +6,27 @@
   <title>钱包中心 - FocusOne</title>
   <link rel="stylesheet" href="../styles/tokens.css">
   <link rel="stylesheet" href="../styles/app.css">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: var(--bg-grouped);
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
+    }
+  </style>
 </head>
 <body>
   <div class="app">
     <div class="safe-area">
       <div class="nav-header">
-        <button class="nav-button">返回</button>
+        <button class="nav-button">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </button>
         <div class="nav-title">钱包中心</div>
         <button class="nav-button">明细</button>
       </div>
