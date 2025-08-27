@@ -4,6 +4,7 @@ import {
   Animated,
   Dimensions,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -23,6 +24,8 @@ interface ConfirmationModalProps {
 }
 
 const { height: screenHeight } = Dimensions.get('window');
+const ANIMATION_DURATION_IN = 260;
+const ANIMATION_DURATION_OUT = 220;
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   visible,
@@ -36,41 +39,82 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 }) => {
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const [mounted, setMounted] = React.useState<boolean>(visible);
+  const shouldAnimateInRef = React.useRef<boolean>(false);
+  const [isAnimatingOut, setIsAnimatingOut] = React.useState<boolean>(false);
 
+  const animateIn = React.useCallback(() => {
+    // 重置初始值，避免闪烁
+    fadeAnim.stopAnimation();
+    slideAnim.stopAnimation();
+    fadeAnim.setValue(0);
+    slideAnim.setValue(screenHeight);
+
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: ANIMATION_DURATION_IN,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        // 使用基于物理的 spring，确保丝滑
+        damping: 18,
+        stiffness: 140,
+        mass: 0.8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fadeAnim, slideAnim]);
+
+  const animateOut = React.useCallback((onEnd?: () => void) => {
+    setIsAnimatingOut(true);
+    fadeAnim.stopAnimation();
+    slideAnim.stopAnimation();
+
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: ANIMATION_DURATION_OUT,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: screenHeight,
+        duration: ANIMATION_DURATION_OUT + 60,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) {
+        setIsAnimatingOut(false);
+        onEnd && onEnd();
+      }
+    });
+  }, [fadeAnim, slideAnim]);
+
+  // 受控挂载：visible 变为 true 先挂载再入场动画；变为 false 先退场动画再卸载
   React.useEffect(() => {
     if (visible) {
-      // 重置动画值并同时执行淡入和滑入动画
-      fadeAnim.setValue(0);
-      slideAnim.setValue(screenHeight);
-      
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // 同时执行淡出和滑出动画
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: screenHeight,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      if (!mounted) {
+        shouldAnimateInRef.current = true;
+        setMounted(true);
+      } else {
+        animateIn();
+      }
+    } else if (mounted) {
+      animateOut(() => setMounted(false));
     }
-  }, [visible, fadeAnim, slideAnim]);
+  }, [visible, mounted, animateIn, animateOut]);
+
+  // 当刚挂载且需要入场动画时执行
+  React.useEffect(() => {
+    if (mounted && visible && shouldAnimateInRef.current) {
+      shouldAnimateInRef.current = false;
+      // 等待一帧以确保 Modal 完全可见，再开始动画
+      const id = requestAnimationFrame(animateIn);
+      return () => cancelAnimationFrame(id);
+    }
+    return undefined;
+  }, [mounted, visible, animateIn]);
 
   const handleConfirm = () => {
     onConfirm();
@@ -84,13 +128,17 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <Modal
-      visible={visible}
+      visible={mounted}
       transparent
-      animationType="fade"
+      animationType="none"
+      presentationStyle={Platform.select({ ios: 'overFullScreen', default: undefined })}
+      hardwareAccelerated
+      statusBarTranslucent
       onRequestClose={onClose}
     >
       <TouchableWithoutFeedback onPress={onClose}>
-        <Animated.View 
+        <Animated.View
+          pointerEvents={isAnimatingOut ? 'none' : 'auto'}
           style={[
             styles.overlay,
             {
@@ -107,16 +155,18 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 },
               ]}
             >
+              {/* 顶部手柄条，增强视觉 */}
+              <View style={styles.handle} />
               {/* 关闭按钮 */}
-              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                <Icon name="close" size={18} color="#B3B3BA" />
+              <TouchableOpacity style={styles.closeButton} onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Icon name="close" size={24} color="#B3B3BA" />
               </TouchableOpacity>
 
               {/* 内容区域 */}
               <View style={styles.content}>
                 {/* 图标 */}
                 <View style={styles.iconContainer}>
-                  <Icon name="warning" size={32} color="#16B364" />
+                  <Icon name="warning" size={24} color="#F7AF5D" />
                 </View>
 
                 {/* 标题 */}
@@ -126,7 +176,6 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               {/* 提示横幅 */}
               <View style={styles.banner}>
                 <Text style={styles.bannerText}>{message}</Text>
-                <View style={styles.bannerDecoration} />
               </View>
 
               {/* 按钮区域 */}
@@ -156,6 +205,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#14141C',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    margin: 8,
     paddingHorizontal: 16,
     paddingTop: 39,
     paddingBottom: 45,
@@ -168,12 +218,21 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 5,
   },
+  handle: {
+    position: 'absolute',
+    top: 6,
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
   closeButton: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 18,
-    height: 18,
+    top: 12,
+    right: 12,
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -185,7 +244,7 @@ const styles = StyleSheet.create({
     width: 53,
     height: 53,
     borderRadius: 26.5,
-    backgroundColor: 'rgba(22, 179, 100, 0.1)',
+    backgroundColor: 'rgba(247, 175, 93, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,

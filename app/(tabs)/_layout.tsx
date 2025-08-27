@@ -8,7 +8,7 @@ import { BottomTabOptions, buttonRipple } from '@/utils/config';
 import { Space } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@react-navigation/native';
-import { Pressable } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 // 左侧组件
 const LeftDom = ({
@@ -45,7 +45,7 @@ const RightDom = ({
 
 const TabLayout = () => {
   // const colorScheme = useColorScheme();
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
   const navigation = useNavigation();
 
   const toRoute = async (path: string) => {
@@ -56,8 +56,15 @@ const TabLayout = () => {
     navigation.navigate(path as never);
   };
 
+  const tabBarStyle = {
+    backgroundColor: dark ? '#14141C' : colors.card,
+    borderTopColor: dark ? '#1C1C26' : colors.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    elevation: 0,
+  } as const;
+
   return (
-    <Tabs screenOptions={BottomTabOptions}>
+    <Tabs screenOptions={{ ...BottomTabOptions, tabBarStyle }}>
       <Tabs.Screen
         name="index"
         options={{
@@ -65,8 +72,8 @@ const TabLayout = () => {
           headerShown: false,
           tabBarIcon: ({ focused }) => (
             <Icon
-              name={focused ? 'layers' : 'layers-outline'}
-              size={22}
+              name={focused ? 'bar-chart' : 'bar-chart-outline'}
+              size={20}
               color={focused ? colors.primary : colors.text}
             />
           ),
@@ -82,7 +89,7 @@ const TabLayout = () => {
           tabBarIcon: ({ focused }) => (
             <Icon
               name={focused ? 'person' : 'person-outline'}
-              size={21}
+              size={20}
               color={focused ? colors.primary : colors.text}
             />
           ),

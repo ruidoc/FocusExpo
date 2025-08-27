@@ -21,7 +21,7 @@ class HomeStore {
 
   vpn_state: VpnState = 'close'; // VPN 状态
   vpn_init = false; // VPN 是否初始化
-  ios_screen_time_permission = false; // iOS 屏幕时间权限状态
+  ios_screen_time_permission = true; // iOS 屏幕时间权限状态
 
   app_state: AppStateStatus = 'unknown'; // 应用的状态
 

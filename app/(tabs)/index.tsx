@@ -1,7 +1,7 @@
-import BackgroundDecoration from '@/components/home/background-decoration';
+import BackgroundDecoration from '@/components/home/bg-decoration';
 import FocusButton from '@/components/home/focus-button';
 import Header from '@/components/home/header';
-import PlayButton from '@/components/home/play-button';
+import ScreenTimePermissionPage from '@/components/home/screen-time';
 import {
   AppStore,
   HomeStore,
@@ -11,14 +11,12 @@ import {
   UserStore,
 } from '@/stores';
 import { toast } from '@/utils';
-import { getScreenTimePermission } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import {
-  Button,
   Card,
   Flex,
   NoticeBar,
-  Theme
+  Theme,
 } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
@@ -30,94 +28,14 @@ import {
   Platform,
   RefreshControl,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { NativeClass } = NativeModules;
-const statusBarHeight = StatusBar.currentHeight;
-
-// 屏幕时间权限获取页面组件
-const ScreenTimePermissionPage = ({
-  colors,
-  xcolor,
-}: {
-  colors: any;
-  xcolor: any;
-}) => {
-  const handleRequestPermission = async () => {
-    const granted = await getScreenTimePermission();
-    if (granted) {
-      // 成功获取权限，更新状态
-      HomeStore.setIOSScreenTimePermission(true);
-    } else {
-      HomeStore.setIOSScreenTimePermission(false);
-    }
-  };
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 40,
-      backgroundColor: colors.background,
-    },
-    icon: {
-      fontSize: 80,
-      color: xcolor.brand_6,
-      marginBottom: 30,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: colors.text,
-      marginBottom: 20,
-      textAlign: 'center',
-    },
-    description: {
-      fontSize: 16,
-      color: xcolor.gray_8,
-      textAlign: 'center',
-      lineHeight: 24,
-      marginBottom: 40,
-    },
-    button: {
-      backgroundColor: xcolor.brand_6,
-      paddingHorizontal: 40,
-      borderRadius: 25,
-    },
-    buttonText: {
-      color: 'white',
-      fontSize: 18,
-      fontWeight: '600',
-    },
-  });
-
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <Icon name="shield-checkmark" style={styles.icon} />
-        <Text style={styles.title}>需要屏幕时间权限</Text>
-        <Text style={styles.description}>
-          为了帮助您专注工作和学习，我们需要获取屏幕时间权限来管理应用使用。
-          {'\n\n'}
-          请在设置中授予权限，然后返回应用继续使用。
-        </Text>
-        <Button
-          style={styles.button}
-          onPress={handleRequestPermission}
-          textStyle={styles.buttonText}>
-          获取权限
-        </Button>
-      </View>
-    </SafeAreaView>
-  );
-};
 
 const App = observer(() => {
   const store = useLocalObservable(() => HomeStore);
@@ -323,17 +241,6 @@ const App = observer(() => {
     NativeClass.openAppByPackageName(pname);
   };
 
-  const toGuide = () => {
-    router.push('/plans');
-  };
-
-  const quickStart = () => {
-    if (!ustore.uInfo) {
-      return router.push('/login/wx');
-    }
-    router.push('/quick-start');
-  };
-
   const initapp = () => {
     pmstore.checkBattery();
     pmstore.checkNotify();
@@ -382,43 +289,37 @@ const App = observer(() => {
     }
   }, [store.app_state]);
 
-  // 如果需要显示权限页面，在这里返回
-  if (shouldShowPermissionPage) {
-    return <ScreenTimePermissionPage colors={colors} xcolor={xcolor} />;
-  }
-
   return (
-    <SafeAreaView style={styles.container}>
-      {/* 背景装饰 */}
-      <BackgroundDecoration />
-      
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }>
-        {/* 顶部Header */}
-        <Header />
-        
-        {/* 专注提醒通知 */}
-        {/* {ustore.uInfo && <FocusNotice />} */}
-        
-        {/* 管理入口（当没有计划时显示） */}
-        {/* {!pstore.cur_plan && <ManageEntry />} */}
-        
-        {/* 中央时间流动组件 */}
-        <View style={styles.timeFlowContainer}>
-          <FocusButton timeLong={timeLong} />
-        </View>
-        
-        {/* 播放按钮 */}
-        <View style={styles.playButtonContainer}>
-          <PlayButton />
-        </View>
-        
-        {/* 应用展示区域（如果有当前计划） */}
-        {/* {pstore.cur_plan && (
+    <>
+      {shouldShowPermissionPage && (
+        <ScreenTimePermissionPage colors={colors} xcolor={xcolor} />
+      )}
+      {!shouldShowPermissionPage && (
+        <SafeAreaView style={styles.container}>
+          {/* 背景装饰 */}
+          <BackgroundDecoration />
+          <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }>
+            {/* 顶部Header */}
+            <Header />
+
+            {/* 专注提醒通知 */}
+            {/* {ustore.uInfo && <FocusNotice />} */}
+
+            {/* 管理入口（当没有计划时显示） */}
+            {/* {!pstore.cur_plan && <ManageEntry />} */}
+
+            {/* 中央时间流动组件 */}
+            <View style={styles.timeFlowContainer}>
+              <FocusButton />
+            </View>
+
+            {/* 应用展示区域（如果有当前计划） */}
+            {/* {pstore.cur_plan && (
           <View style={styles.appsContainer}>
             <Text style={styles.appsDescription}>
               已屏蔽的应用
@@ -457,21 +358,21 @@ const App = observer(() => {
             </View>
           </View>
         )} */}
-
-      </ScrollView>
-      
-      {/* 通知权限提醒 */}
-      {!pmstore.pm_notify && (
-        <View style={styles.notificationContainer}>
-          <NoticeBar
-            message="请打开通知权限"
-            mode="link"
-            status="primary"
-            onPress={() => pmstore.openNotify(true)}
-          />
-        </View>
+          </ScrollView>
+          {/* 通知权限提醒 */}
+          {!pmstore.pm_notify && (
+            <View style={styles.notificationContainer}>
+              <NoticeBar
+                message="请打开通知权限"
+                mode="link"
+                status="primary"
+                onPress={() => pmstore.openNotify(true)}
+              />
+            </View>
+          )}
+        </SafeAreaView>
       )}
-    </SafeAreaView>
+    </>
   );
 });
 

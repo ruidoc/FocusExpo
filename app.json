@@ -4,7 +4,7 @@
     "slug": "FocusOne",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon.svg",
     "scheme": [
       "wxdc022c6a39cb32b7",
       "focusone"

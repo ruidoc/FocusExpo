@@ -1,6 +1,6 @@
 import {
-  DarkTheme,
-  DefaultTheme,
+  DarkTheme as NavigationDarkTheme,
+  DefaultTheme as NavigationDefaultTheme,
   ThemeProvider,
 } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -8,6 +8,7 @@ import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
+import { NavThemes, XiaoShuThemeOverrides } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import PlanStore from '@/stores/plan';
 import { buttonRipple, ScreenOptions } from '@/utils/config';
@@ -81,7 +82,7 @@ export default function RootLayout() {
       if (!isIOS) return;
       try {
         const s = await getIOSFocusStatus();
-        console.log('【同步iOS状态】', s);
+        console.log('【启动app状态】', s);
         if (s.active) {
           PlanStore.setCurPlanMinute(s.elapsedMinutes || 0);
           if (!PlanStore.cur_plan) {
@@ -119,19 +120,12 @@ export default function RootLayout() {
 
   let UITheme: any = {
     ...(isDark ? Theme.dark : Theme),
-    brand_6: '#0065FE',
+    ...(isDark ? XiaoShuThemeOverrides.dark : XiaoShuThemeOverrides.light),
     button_l_font_size: 17,
     button_active_opacity: 0.8,
     button_l_height: 48,
     button_border_radius: 9,
   };
-  if (isDark) {
-    UITheme.card_background_color = '#121212';
-    UITheme.action_sheet_cancel_padding_color = '#222';
-    UITheme.divider_color_light = '#232323';
-    UITheme.steps_background_color = 'transparent';
-    UITheme.notice_bar_background_color_lightness = 10;
-  }
 
   const BackIcon = () => (
     <Space direction="horizontal" align="center" gap={16}>
@@ -141,8 +135,15 @@ export default function RootLayout() {
     </Space>
   );
 
+  const navigationTheme = isDark
+    ? { ...(NavThemes.dark as any), fonts: (NavigationDarkTheme as any).fonts }
+    : {
+        ...(NavThemes.light as any),
+        fonts: (NavigationDefaultTheme as any).fonts,
+      };
+
   return (
-    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={navigationTheme}>
       <Provider theme={UITheme}>
         <Stack
           screenOptions={{

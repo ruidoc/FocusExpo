@@ -1,13 +1,13 @@
-import React, { useRef, useEffect } from 'react';
-import {
-  Animated,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  ViewStyle,
-  ActivityIndicator,
-} from 'react-native';
 import { useTheme } from '@react-navigation/native';
+import React, { useEffect, useRef } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ViewStyle,
+} from 'react-native';
 
 interface CusButtonProps {
   disabled?: boolean;
@@ -47,9 +47,6 @@ const CusButton = ({
           styles.nextButton,
           isDisabled && styles.nextButtonDisabled,
           style,
-          {
-            backgroundColor: dark ? '#007AFF' : '#3478F6',
-          },
         ]}
         onPress={onPress}
         disabled={isDisabled}>
@@ -75,8 +72,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 16,
-    borderRadius: 24,
+    paddingVertical: 18,
+    borderRadius: 20,
     marginBottom: 32,
     width: '88%',
     alignSelf: 'center',
@@ -85,13 +82,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 3,
+    backgroundColor: '#53389E',
   },
   nextButtonDisabled: {
     backgroundColor: '#E5E6EB',
   },
   nextButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0.5,
     backgroundColor: 'transparent',

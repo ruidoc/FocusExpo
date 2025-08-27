@@ -30,6 +30,7 @@ export const BottomTabOptions: BottomTabNavigationOptions = {
   tabBarAllowFontScaling: true,
   tabBarLabelStyle: {
     marginBottom: 6,
+    marginTop : 4,
   },
   tabBarIconStyle: {
     marginTop: 3,
@@ -44,7 +45,7 @@ export const buttonRipple: PressableAndroidRippleConfig = {
   foreground: true,
 };
 
-export const getRepeatName = (key: string) => {
+export const getRepeatName = (key: number) => {
   return repeats.find(r => r.value === key)?.label || '未知';
 };
 

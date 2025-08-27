@@ -1,12 +1,12 @@
 import { AppStore, HomeStore, PlanStore, UserStore } from '@/stores';
-import { getCurrentMinute, toast } from '@/utils';
+import { toast } from '@/utils';
 import { stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, Theme } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   NativeModules,
   Platform,
@@ -15,76 +15,32 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import ConfirmationModal from './confirm-modal';
 import TimeFlow from './time-flow';
 
-interface FocusButtonProps {
-  timeLong: (min: number) => React.ReactNode;
-}
-
-const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
+const FocusButton = observer(() => {
   const ustore = useLocalObservable(() => UserStore);
   const pstore = useLocalObservable(() => PlanStore);
   const store = useLocalObservable(() => HomeStore);
   const astore = useLocalObservable(() => AppStore);
   const { dark } = useTheme();
   const xcolor = Theme.useThemeTokens();
-  const [minute, setMinute] = useState(0);
 
-  const getColor = (state: string) => {
-    let grey = '#70809990';
-    if (pstore.cur_plan) {
-      return dark ? xcolor.yellow_4 : 'rgb(255, 180, 0)';
-    }
-    switch (state) {
-      case 'close':
-        return grey;
-      case 'start':
-        return dark ? xcolor.yellow_4 : '#F2C037';
-      case 'refuse':
-        return xcolor.brand_6;
-      default:
-        return grey;
-    }
-  };
+  // 弹窗状态
+  const [showPauseModal, setShowPauseModal] = useState(false);
+  const [showStopModal, setShowStopModal] = useState(false);
 
   const getStateName = () => {
     if (pstore.cur_plan) {
       return pstore.paused ? '已暂停' : '正在专注中';
     }
     switch (store.vpn_state) {
-      case 'refuse':
-        return '请授权';
       default:
         return '当前无任务';
     }
   };
 
-  const startVpn = () => {
-    if (!ustore.uInfo) {
-      return toast('请先登录');
-    }
-    if (store.vpn_state === 'start') {
-      return toast('正在专注');
-    }
-    if (astore.focus_apps.length === 0) {
-      return toast('请添加专注目标APP');
-    }
-    if (astore.shield_apps.length === 0) {
-      return toast('请添加屏蔽目标APP');
-    }
-    if (pstore.all_plans.length === 0) {
-      return toast('请添加专注任务');
-    }
-    store.startVpn();
-  };
-
   const styles = StyleSheet.create({
-    mainBtn: {
-      backgroundColor: getColor(store.vpn_state),
-      width: 150,
-      height: 150,
-      borderRadius: 100,
-    },
     btnFont: {
       fontSize: 18,
       color: 'white',
@@ -125,44 +81,11 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
   } else {
     descDom = (
       <Text style={styles.descFont}>
-        <Text>当前任务剩余 </Text>
-        {timeLong(minute - pstore.curplan_minute)}
+        <Text>当前任务已进行 </Text>
+        {pstore.curplan_minute} 分钟
       </Text>
     );
   }
-
-  useEffect(() => {
-    if (!pstore.cur_plan) return;
-    let now = getCurrentMinute();
-    let taskStart = Math.max(now, pstore.cur_plan.start_min);
-    let total = pstore.cur_plan.end_min - taskStart;
-    setMinute(total);
-  }, [pstore.cur_plan]);
-
-  // iOS: 在专注期间本地递增已用分钟，用于实时刷新剩余时间显示
-  useEffect(() => {
-    if (!pstore.cur_plan) return;
-    let timer: any;
-    if (Platform.OS === 'ios') {
-      timer = setInterval(() => {
-        pstore.setCurPlanMinute(pstore.curplan_minute + 1);
-      }, 60 * 1000);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [pstore, pstore.cur_plan, pstore.curplan_minute]);
-
-  // iOS: 到点自动结束后，前端同步重置计划与状态
-  useEffect(() => {
-    if (Platform.OS !== 'ios') return;
-    if (!pstore.cur_plan) return;
-    if (minute - pstore.curplan_minute <= 0) {
-      pstore.setCurPlanMinute(0);
-      pstore.resetPlan();
-      store.setVpnState('close');
-    }
-  }, [pstore, store, pstore.cur_plan, pstore.curplan_minute, minute]);
 
   const quickStart = () => {
     if (!ustore.uInfo) {
@@ -170,7 +93,7 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
     }
     router.push('/quick-start');
   };
-  
+
   const stopFocus = async () => {
     if (!pstore.cur_plan) return;
     try {
@@ -208,16 +131,13 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
     <>
       <Flex justify="center">
         <TimeFlow />
-        {/* <TouchableOpacity onPress={startVpn} activeOpacity={0.8}>
-          <Flex style={styles.mainBtn} justify="center">
-            <Text style={styles.btnFont}>{getStateName()}</Text>
-          </Flex>
-        </TouchableOpacity> */}
       </Flex>
       <Flex justify="center" style={{ marginTop: 30, marginBottom: 50 }}>
         <View>{descDom}</View>
       </Flex>
-      <Flex justify="center" style={{ marginTop: 0, marginBottom: 20, gap: 30 }}>
+      <Flex
+        justify="center"
+        style={{ marginTop: 0, marginBottom: 20, gap: 30 }}>
         {!pstore.cur_plan && (
           <TouchableOpacity
             onPress={quickStart}
@@ -228,7 +148,7 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
         )}
         {pstore.cur_plan && !pstore.cur_plan.is_pause && (
           <TouchableOpacity
-            onPress={pauseFocus}
+            onPress={() => setShowPauseModal(true)}
             activeOpacity={0.8}
             style={styles.circleButton}>
             <Icon name="pause" size={24} color="#B3B3BA" />
@@ -244,13 +164,36 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
         )}
         {pstore.cur_plan?.repeat === 'once' && (
           <TouchableOpacity
-          onPress={stopFocus}
-          activeOpacity={0.8}
-          style={styles.circleButton}>
-          <Icon name="stop" size={24} color="#B3B3BA" />
-        </TouchableOpacity>
+            onPress={() => setShowStopModal(true)}
+            activeOpacity={0.8}
+            style={styles.circleButton}>
+            <Icon name="stop" size={24} color="#B3B3BA" />
+          </TouchableOpacity>
         )}
       </Flex>
+      {/* 暂停确认弹窗 */}
+      <ConfirmationModal
+        visible={showPauseModal}
+        title="暂停专注任务？"
+        message="暂停可能会影响你的专注状态，确定要暂停吗？"
+        confirmText="确认暂停"
+        cancelText="继续专注"
+        onConfirm={pauseFocus}
+        onCancel={() => {}}
+        onClose={() => setShowPauseModal(false)}
+      />
+
+      {/* 停止确认弹窗 */}
+      <ConfirmationModal
+        visible={showStopModal}
+        title="结束专注任务？"
+        message="结束后将无法恢复当前任务，确定要结束吗？"
+        confirmText="确认结束"
+        cancelText="继续专注"
+        onConfirm={stopFocus}
+        onCancel={() => {}}
+        onClose={() => setShowStopModal(false)}
+      />
     </>
   );
 });
