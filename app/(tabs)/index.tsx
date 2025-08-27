@@ -1,7 +1,7 @@
+import BackgroundDecoration from '@/components/home/background-decoration';
 import FocusButton from '@/components/home/focus-button';
-import FocusNotice from '@/components/home/focus-notice';
-import ManageEntry from '@/components/home/manage-entry';
-import TokenLabel from '@/components/native/TokenLabel';
+import Header from '@/components/home/header';
+import PlayButton from '@/components/home/play-button';
 import {
   AppStore,
   HomeStore,
@@ -11,7 +11,6 @@ import {
   UserStore,
 } from '@/stores';
 import { toast } from '@/utils';
-import { buttonRipple } from '@/utils/config';
 import { getScreenTimePermission } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import {
@@ -19,8 +18,7 @@ import {
   Card,
   Flex,
   NoticeBar,
-  Space,
-  Theme,
+  Theme
 } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
@@ -28,19 +26,16 @@ import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import {
   AppState,
-  Image,
   NativeModules,
   Platform,
-  Pressable,
   RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { NativeClass } = NativeModules;
@@ -147,22 +142,6 @@ const App = observer(() => {
   const shouldShowPermissionPage =
     Platform.OS === 'ios' && !store.ios_screen_time_permission;
 
-  const getColor = (state: string) => {
-    let grey = '#70809990';
-    switch (state) {
-      case 'close':
-        return ustore.uInfo ? xcolor.brand_6 : grey;
-      case 'start':
-        return xcolor.yellow_4;
-      case 'refuse':
-        return xcolor.brand_6;
-      case 'notask':
-        return grey;
-      default:
-        return grey;
-    }
-  };
-
   const onRefresh = () => {
     setRefreshing(true);
     rstore.getStatis().finally(() => {
@@ -170,31 +149,98 @@ const App = observer(() => {
     });
   };
 
-  const descColor = dark ? '#aaa' : '#888';
-  const cardTileBg = dark ? '#303133' : '#EBEEF5';
-  const btnBoxBg = dark ? '#121212' : '#F5F5F5';
-
-  const cardBg = colors.card;
-
   const styles = StyleSheet.create({
-    // 通知栏样式
-    banner: {
-      backgroundColor: '#FA541C40',
-      borderTopColor: colors.border,
-      // borderTopWidth: 0.3,
-      paddingVertical: 7,
-      paddingHorizontal: 12,
-      borderRadius: 18,
-      marginTop: 5,
-      marginBottom: 13,
-      color: '#FA541C',
-    },
-    // 页面样式
-    pageStyle: {
+    container: {
       flex: 1,
-      paddingTop: statusBarHeight - 15,
-      paddingHorizontal: 20,
+      backgroundColor: '#0D0D12',
     },
+    scrollView: {
+      flex: 1,
+    },
+    timeFlowContainer: {
+      alignItems: 'center',
+      marginTop: 60,
+      marginBottom: 30,
+    },
+    playButtonContainer: {
+      alignItems: 'center',
+      marginBottom: 40,
+    },
+    appsContainer: {
+      marginTop: 30,
+      marginBottom: 20,
+      backgroundColor: 'transparent',
+    },
+    appsHeader: {
+      flexDirection: 'row',
+      marginBottom: 12,
+      gap: 12,
+    },
+    modeTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#303044',
+      borderRadius: 15,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      gap: 4,
+    },
+    modeText: {
+      fontSize: 13,
+      color: '#858699',
+      fontWeight: '500',
+    },
+    timeTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#303044',
+      borderRadius: 15,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      gap: 4,
+    },
+    timeText: {
+      fontSize: 13,
+      color: '#858699',
+      fontWeight: '500',
+    },
+    appsDescription: {
+      fontSize: 16,
+      color: '#858699',
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    appsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: 12,
+    },
+    appIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 8,
+    },
+    appIconWrapper: {
+      width: 40,
+      height: 40,
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+
+    bottomStatsContainer: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+    },
+    notificationContainer: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+    },
+    // 保留一些原有的样式以防出错
     titleFont: {
       fontSize: 16,
       color: colors.text,
@@ -209,69 +255,6 @@ const App = observer(() => {
     },
     lightFont: {
       fontWeight: '600',
-    },
-    btnFont: {
-      fontSize: 18,
-      color: 'white',
-    },
-    // 主要圆块按钮
-    mainBtn: {
-      backgroundColor: getColor(store.vpn_state),
-      width: 150,
-      height: 150,
-      borderRadius: 100,
-    },
-    // 底部权限按钮
-    bottomBox: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-    },
-    // 首页按钮
-    btnboxWrap: {
-      flex: 1,
-      height: 60,
-      borderRadius: 10,
-      marginBottom: 14,
-      backgroundColor: btnBoxBg,
-    },
-    // 快速开始按钮
-    startBtn: {
-      borderRadius: 30,
-      marginTop: 30,
-      marginHorizontal: 20,
-      borderWidth: 2,
-    },
-    titleStyle: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: '#222',
-      marginBottom: 0,
-      marginTop: 10,
-    },
-    appIconWrap: {
-      width: 36,
-      height: 36,
-      // borderRadius: 18,
-      overflow: 'hidden',
-      // backgroundColor: '#fff',
-      marginBottom: 10,
-      marginRight: 10,
-    },
-    cardHead: {
-      padding: 14,
-      paddingBottom: 0,
-      // borderBottomColor: '#232323',
-      // borderBottomWidth: 1,
-      // opacity: 0.8,
-    },
-    cardTile: {
-      backgroundColor: cardTileBg,
-      borderRadius: 30,
-      padding: 4,
-      paddingHorizontal: 12,
-      marginRight: 10,
     },
   });
 
@@ -405,157 +388,89 @@ const App = observer(() => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.container}>
+      {/* 背景装饰 */}
+      <BackgroundDecoration />
+      
       <ScrollView
-        style={styles.pageStyle}
-        bounces={false}
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
-        <Flex justify="between" align="center" style={{ marginBottom: 10 }}>
-          <Text style={{ fontSize: 21, color: colors.text, fontWeight: '600' }}>
-            专注一点
-          </Text>
-          <Flex align="center">
-            <Pressable android_ripple={buttonRipple} onPress={toGuide}>
-              <Icon name="time-outline" size={24} color={descColor} />
-            </Pressable>
-          </Flex>
-        </Flex>
-
-        {ustore.uInfo && <FocusNotice />}
-        {!pstore.cur_plan && <ManageEntry />}
-
-        <Space gapVertical={10}>
-          <Card bodyPadding={0} style={{ backgroundColor: cardBg }}>
-            {pstore.cur_plan && (
-              <Flex justify="start" align="center" style={styles.cardHead}>
-                <Flex align="center" style={styles.cardTile}>
-                  <Icon
-                    name={
-                      pstore.is_focus_mode ? 'checkmark-circle' : 'close-circle'
-                    }
-                    color={pstore.is_focus_mode ? '#34b545' : '#fa541c'}
-                    size={15}
-                  />
-                  <Text style={styles.tagFont}>
-                    &nbsp;
-                    {pstore.is_focus_mode ? '专注模式' : '屏蔽模式'}
-                  </Text>
-                </Flex>
-                <Flex align="center" style={styles.cardTile}>
-                  <Icon name="time-sharp" size={15} color={colors.text} />
-                  <Text style={styles.tagFont}>
-                    &nbsp;
-                    {pstore.cur_plan.start} ~ {pstore.cur_plan.end}
-                  </Text>
-                </Flex>
-              </Flex>
-            )}
-            <FocusButton timeLong={timeLong} />
-          </Card>
-          {/* <View style={{ marginTop: 18, marginBottom: 8 }}>
-            <Text
-              style={[styles.titleStyle, { color: dark ? '#fff' : '#222' }]}>
-              设置时长
+        {/* 顶部Header */}
+        <Header />
+        
+        {/* 专注提醒通知 */}
+        {/* {ustore.uInfo && <FocusNotice />} */}
+        
+        {/* 管理入口（当没有计划时显示） */}
+        {/* {!pstore.cur_plan && <ManageEntry />} */}
+        
+        {/* 中央时间流动组件 */}
+        <View style={styles.timeFlowContainer}>
+          <FocusButton timeLong={timeLong} />
+        </View>
+        
+        {/* 播放按钮 */}
+        <View style={styles.playButtonContainer}>
+          <PlayButton />
+        </View>
+        
+        {/* 应用展示区域（如果有当前计划） */}
+        {/* {pstore.cur_plan && (
+          <View style={styles.appsContainer}>
+            <Text style={styles.appsDescription}>
+              已屏蔽的应用
             </Text>
-          </View> */}
-          {pstore.cur_plan && (
-            <Card
-              style={{
-                backgroundColor: 'transparent',
-                borderWidth: 2,
-                borderColor: cardTileBg,
-                marginTop: 30,
-                borderRadius: 14,
-              }}>
-              <Flex align="center" justify="center" style={{ marginTop: 4 }}>
-                <Text style={{ color: descColor }}>
-                  {pstore.is_focus_mode
-                    ? `仅允许${apps.length}个APP使用`
-                    : `${apps.length}个APP已被屏蔽`}
-                </Text>
-                {/* <Tag color={btnBoxBg} textColor={descColor}>
-                  点击图标打开应用
-                </Tag> */}
-              </Flex>
-              <Flex
-                wrap="wrap"
-                justify="center"
-                style={{ marginTop: 6, marginBottom: 4 }}>
-                {Platform.OS === 'ios'
-                  ? astore.ios_selected_apps.map(item => (
-                      <TokenLabel
-                        key={item.id}
-                        tokenBase64={item.tokenData}
-                        tokenType={item.type}
-                        size={40}
-                        style={{ width: 40, height: 40 }}
-                      />
-                    ))
-                  : store.all_apps
-                      .filter(r => apps.includes(r.packageName))
-                      .map(app => (
-                        <Flex
-                          key={app.packageName}
-                          style={styles.appIconWrap}
-                          direction="column"
-                          onPress={() => toOpenApp(app.packageName)}
-                          align="center">
-                          <Image
-                            source={{
-                              uri: 'data:image/jpeg;base64,' + app.icon,
-                              width: 36,
-                              height: 36,
-                            }}
-                            style={{
-                              opacity: pstore.is_focus_mode ? 1 : 0.6,
-                            }}
-                          />
-                        </Flex>
-                      ))}
-              </Flex>
-            </Card>
-          )}
-        </Space>
-        {ustore.uInfo && !pstore.cur_plan && (
-          <Button
-            style={styles.startBtn}
-            type="ghost"
-            textStyle={{ fontWeight: '600' }}
-            onPress={quickStart}>
-            快速开始
-          </Button>
-        )}
-        {!ustore.uInfo && (
-          <Button
-            style={styles.startBtn}
-            type="ghost"
-            textStyle={{ fontWeight: '600' }}
-            onPress={quickStart}>
-            去登录
-          </Button>
-        )}
+            <View style={styles.appsGrid}>
+              {Platform.OS === 'ios'
+                ? astore.ios_selected_apps.map(item => (
+                    <TokenLabel
+                      key={item.id}
+                      tokenBase64={item.tokenData}
+                      tokenType={item.type}
+                      size={40}
+                      style={styles.appIcon}
+                    />
+                  ))
+                : store.all_apps
+                    .filter(r => apps.includes(r.packageName))
+                    .map(app => (
+                      <TouchableOpacity
+                        key={app.packageName}
+                        style={styles.appIconWrapper}
+                        onPress={() => toOpenApp(app.packageName)}>
+                        <Image
+                          source={{
+                            uri: 'data:image/jpeg;base64,' + app.icon,
+                            width: 36,
+                            height: 36,
+                          }}
+                          style={{
+                            opacity: pstore.is_focus_mode ? 1 : 0.6,
+                            borderRadius: 8,
+                          }}
+                        />
+                      </TouchableOpacity>
+                    ))}
+            </View>
+          </View>
+        )} */}
+
       </ScrollView>
-      {/* 底部通知区域 */}
-      <View style={styles.bottomBox}>
-        {!pmstore.pm_notify && (
+      
+      {/* 通知权限提醒 */}
+      {!pmstore.pm_notify && (
+        <View style={styles.notificationContainer}>
           <NoticeBar
             message="请打开通知权限"
             mode="link"
             status="primary"
             onPress={() => pmstore.openNotify(true)}
           />
-        )}
-        {/* {!pmstore.pm_battery && (
-          <NoticeBar
-            message="检查电池优化权限"
-            mode="link"
-            status="primary"
-            onPress={() => pmstore.checkBattery(true)}
-          />
-        )} */}
-      </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 });

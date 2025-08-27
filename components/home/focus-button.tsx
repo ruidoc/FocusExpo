@@ -1,8 +1,10 @@
 import { AppStore, HomeStore, PlanStore, UserStore } from '@/stores';
 import { getCurrentMinute, toast } from '@/utils';
 import { stopAppLimits } from '@/utils/permission';
+import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, Theme } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import {
@@ -13,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import TimeFlow from './time-flow';
 
 interface FocusButtonProps {
   timeLong: (min: number) => React.ReactNode;
@@ -93,6 +96,14 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
     lightFont: {
       fontWeight: '600',
     },
+    circleButton: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      backgroundColor: '#85869930',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
   });
 
   let descDom: React.ReactNode;
@@ -153,6 +164,13 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
     }
   }, [pstore, store, pstore.cur_plan, pstore.curplan_minute, minute]);
 
+  const quickStart = () => {
+    if (!ustore.uInfo) {
+      return router.push('/login/wx');
+    }
+    router.push('/quick-start');
+  };
+  
   const stopFocus = async () => {
     if (!pstore.cur_plan) return;
     try {
@@ -188,60 +206,51 @@ const FocusButton: React.FC<FocusButtonProps> = observer(({ timeLong }) => {
 
   return (
     <>
-      <Flex justify="center" style={{ marginTop: 46 }}>
-        <TouchableOpacity onPress={startVpn} activeOpacity={0.8}>
+      <Flex justify="center">
+        <TimeFlow />
+        {/* <TouchableOpacity onPress={startVpn} activeOpacity={0.8}>
           <Flex style={styles.mainBtn} justify="center">
             <Text style={styles.btnFont}>{getStateName()}</Text>
           </Flex>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </Flex>
       <Flex justify="center" style={{ marginTop: 30, marginBottom: 50 }}>
         <View>{descDom}</View>
       </Flex>
-      {pstore.cur_plan && (
-        <Flex justify="center" style={{ marginTop: -30, marginBottom: 20 }}>
-          {pstore.cur_plan.repeat === 'once' && (
-            <TouchableOpacity
-              onPress={stopFocus}
-              activeOpacity={0.8}
-              style={{
-                paddingHorizontal: 18,
-                paddingVertical: 8,
-                borderRadius: 18,
-                backgroundColor: '#f0484855',
-                marginRight: 8,
-              }}>
-              <Text style={{ color: '#fff', fontSize: 16 }}>停止屏蔽</Text>
-            </TouchableOpacity>
-          )}
-          {!pstore.cur_plan.is_pause && (
-            <TouchableOpacity
-              onPress={pauseFocus}
-              activeOpacity={0.8}
-              style={{
-                paddingHorizontal: 18,
-                paddingVertical: 8,
-                borderRadius: 18,
-                backgroundColor: '#f0484855',
-              }}>
-              <Text style={{ color: '#fff', fontSize: 16 }}>暂停任务</Text>
-            </TouchableOpacity>
-          )}
-          {pstore.cur_plan.is_pause && (
-            <TouchableOpacity
-              onPress={resumeFocus}
-              activeOpacity={0.8}
-              style={{
-                paddingHorizontal: 18,
-                paddingVertical: 8,
-                borderRadius: 18,
-                backgroundColor: '#f0484855',
-              }}>
-              <Text style={{ color: '#fff', fontSize: 16 }}>继续任务</Text>
-            </TouchableOpacity>
-          )}
-        </Flex>
-      )}
+      <Flex justify="center" style={{ marginTop: 0, marginBottom: 20, gap: 30 }}>
+        {!pstore.cur_plan && (
+          <TouchableOpacity
+            onPress={quickStart}
+            activeOpacity={0.8}
+            style={styles.circleButton}>
+            <Icon name="play" size={24} color="#B3B3BA" />
+          </TouchableOpacity>
+        )}
+        {pstore.cur_plan && !pstore.cur_plan.is_pause && (
+          <TouchableOpacity
+            onPress={pauseFocus}
+            activeOpacity={0.8}
+            style={styles.circleButton}>
+            <Icon name="pause" size={24} color="#B3B3BA" />
+          </TouchableOpacity>
+        )}
+        {pstore.cur_plan?.is_pause && (
+          <TouchableOpacity
+            onPress={resumeFocus}
+            activeOpacity={0.8}
+            style={styles.circleButton}>
+            <Icon name="play" size={24} color="#B3B3BA" />
+          </TouchableOpacity>
+        )}
+        {pstore.cur_plan?.repeat === 'once' && (
+          <TouchableOpacity
+          onPress={stopFocus}
+          activeOpacity={0.8}
+          style={styles.circleButton}>
+          <Icon name="stop" size={24} color="#B3B3BA" />
+        </TouchableOpacity>
+        )}
+      </Flex>
     </>
   );
 });
