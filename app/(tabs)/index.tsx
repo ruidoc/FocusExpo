@@ -289,37 +289,36 @@ const App = observer(() => {
     }
   }, [store.app_state]);
 
+  if (shouldShowPermissionPage) {
+    return <ScreenTimePermissionPage colors={colors} xcolor={xcolor} />;
+  }
+
   return (
-    <>
-      {shouldShowPermissionPage && (
-        <ScreenTimePermissionPage colors={colors} xcolor={xcolor} />
-      )}
-      {!shouldShowPermissionPage && (
-        <SafeAreaView style={styles.container}>
-          {/* 背景装饰 */}
-          <BackgroundDecoration />
-          <ScrollView
-            style={styles.scrollView}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }>
-            {/* 顶部Header */}
-            <Header />
+    <SafeAreaView style={styles.container}>
+      {/* 背景装饰 */}
+      <BackgroundDecoration />
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
+        {/* 顶部Header */}
+        <Header />
 
-            {/* 专注提醒通知 */}
-            {/* {ustore.uInfo && <FocusNotice />} */}
+        {/* 专注提醒通知 */}
+        {/* {ustore.uInfo && <FocusNotice />} */}
 
-            {/* 管理入口（当没有计划时显示） */}
-            {/* {!pstore.cur_plan && <ManageEntry />} */}
+        {/* 管理入口（当没有计划时显示） */}
+        {/* {!pstore.cur_plan && <ManageEntry />} */}
 
-            {/* 中央时间流动组件 */}
-            <View style={styles.timeFlowContainer}>
-              <FocusButton />
-            </View>
+        {/* 中央时间流动组件 */}
+        <View style={styles.timeFlowContainer}>
+          <FocusButton />
+        </View>
 
-            {/* 应用展示区域（如果有当前计划） */}
-            {/* {pstore.cur_plan && (
+        {/* 应用展示区域（如果有当前计划） */}
+        {/* {pstore.cur_plan && (
           <View style={styles.appsContainer}>
             <Text style={styles.appsDescription}>
               已屏蔽的应用
@@ -358,21 +357,19 @@ const App = observer(() => {
             </View>
           </View>
         )} */}
-          </ScrollView>
-          {/* 通知权限提醒 */}
-          {!pmstore.pm_notify && (
-            <View style={styles.notificationContainer}>
-              <NoticeBar
-                message="请打开通知权限"
-                mode="link"
-                status="primary"
-                onPress={() => pmstore.openNotify(true)}
-              />
-            </View>
-          )}
-        </SafeAreaView>
+      </ScrollView>
+      {/* 通知权限提醒 */}
+      {!pmstore.pm_notify && (
+        <View style={styles.notificationContainer}>
+          <NoticeBar
+            message="请打开通知权限"
+            mode="link"
+            status="primary"
+            onPress={() => pmstore.openNotify(true)}
+          />
+        </View>
       )}
-    </>
+    </SafeAreaView>
   );
 });
 

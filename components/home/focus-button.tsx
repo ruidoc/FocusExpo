@@ -46,8 +46,8 @@ const FocusButton = observer(() => {
       color: 'white',
     },
     descFont: {
-      fontSize: 15,
-      color: xcolor.gray_8,
+      fontSize: 16,
+      color: xcolor.gray_3,
     },
     lightFont: {
       fontWeight: '600',
@@ -81,8 +81,8 @@ const FocusButton = observer(() => {
   } else {
     descDom = (
       <Text style={styles.descFont}>
-        <Text>当前任务已进行 </Text>
-        {pstore.curplan_minute} 分钟
+        {pstore.cur_plan.repeat === 'once' ? '一次性任务' : '定时任务'}
+        {` · ${pstore.cur_plan.end} 结束`}
       </Text>
     );
   }

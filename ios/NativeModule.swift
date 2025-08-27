@@ -68,7 +68,7 @@ class NativeModule: RCTEventEmitter {
   // Event Emitter
   override static func requiresMainQueueSetup() -> Bool { true }
   override func supportedEvents() -> [String]! {
-    return ["focus-progress", "focus-ended", "focus-state"]
+    return ["focus-ended", "focus-state"]
   }
   override func startObserving() {
     hasListeners = true
@@ -114,31 +114,16 @@ class NativeModule: RCTEventEmitter {
     invalidateTimer()
   }
   private func restartTimer() {
+    // 已移除进度事件，不再启动定时器
     invalidateTimer()
-    guard totalMinutes > 0, endTimestamp > 0 else { return }
-    tickTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true, block: { [weak self] _ in
-      self?.emitProgress()
-    })
-    if let t = tickTimer {
-      RunLoop.main.add(t, forMode: .common)
-    }
   }
   private func invalidateTimer() {
     tickTimer?.invalidate()
     tickTimer = nil
   }
   private func emitProgress() {
-    if !hasListeners { return }
-    guard totalMinutes > 0, endTimestamp > 0 else { return }
-    let now = Date().timeIntervalSince1970
-    // 暂停期内不推进已用分钟数
-    if pausedUntil > now { return }
-    let elapsedSeconds = max(0, Int(endTimestamp - now) * -1)
-    let elapsedMinutes = max(0, min(totalMinutes, elapsedSeconds / 60))
-    sendEvent(withName: "focus-progress", body: [
-      "totalMinutes": totalMinutes,
-      "elapsedMinutes": elapsedMinutes,
-    ])
+    // 进度事件已移除（不再向 JS 发送 focus-progress）
+    return
   }
   private func emitEnded() {
     if !hasListeners { return }
@@ -497,8 +482,9 @@ class NativeModule: RCTEventEmitter {
     }
 
     let now = Date().timeIntervalSince1970
-    let elapsed = max(0, min(Double(total * 60), now - startAt))
-    let elapsedMin = Int(elapsed / 60.0)
+    // 按整分对齐：以“分钟桶”计算，确保在每个自然分钟边界（秒=0）才变更
+    let elapsedMinRaw = Int(floor(now / 60.0) - floor(startAt / 60.0))
+    let elapsedMin = max(0, min(total, elapsedMinRaw))
 
     // 是否处于我们定义的专注任务窗口内（一次性或周期）
     let inWindow = now < endAt

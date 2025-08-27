@@ -16,7 +16,7 @@ import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Provider, Space, Theme } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   AppState,
   NativeEventEmitter,
@@ -33,6 +33,7 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
   let isDark = colorScheme === 'dark';
+  const delay = useRef(null);
 
   const asyncData = async () => {
     const [once_plans, cus_plans] = await Promise.all([
@@ -46,19 +47,31 @@ export default function RootLayout() {
       PlanStore.setCusPlans(JSON.parse(cus_plans));
     }
   };
+
+  // 延时器+计时器更新时间（整分对齐，链式 setTimeout 防漂移）
+  const updateElapsedMinute = (elapsedMinutes: number) => {
+    if (delay.current) {
+      clearTimeout(delay.current as any);
+      delay.current = null as any;
+    }
+    const schedule = () => {
+      // 用获取分钟的方法，计算到下一个整分的秒数
+      const now = new Date();
+      const remain = 60 - now.getSeconds();
+      console.log('【剩余时间】', remain);
+      delay.current = setTimeout(() => {
+        elapsedMinutes += 1;
+        PlanStore.setCurPlanMinute(elapsedMinutes);
+        schedule();
+      }, remain * 1000);
+    };
+    schedule();
+  };
+
   // 提前在组件第一层定义副作用，避免条件调用 Hook 的告警
   useEffect(() => {
     const isIOS = Platform.OS === 'ios';
     const nativeListener = new NativeEventEmitter(NativeModule);
-
-    const focusProgress = nativeListener.addListener(
-      'focus-progress',
-      (payload: { totalMinutes: number; elapsedMinutes: number }) => {
-        console.log('【监听进度变化】', payload);
-        const used = payload?.elapsedMinutes || 0;
-        PlanStore.setCurPlanMinute(used);
-      },
-    );
     const focusState = nativeListener.addListener(
       'focus-state',
       (payload: {
@@ -85,6 +98,7 @@ export default function RootLayout() {
         console.log('【启动app状态】', s);
         if (s.active) {
           PlanStore.setCurPlanMinute(s.elapsedMinutes || 0);
+          updateElapsedMinute(s.elapsedMinutes || 0);
           if (!PlanStore.cur_plan) {
             PlanStore.resetPlan();
           }
@@ -107,9 +121,12 @@ export default function RootLayout() {
       }
     });
     return () => {
-      focusProgress?.remove?.();
       focusState?.remove?.();
       appState?.remove?.();
+      if (delay.current) {
+        clearTimeout(delay.current);
+        delay.current = null;
+      }
     };
   }, []);
 
