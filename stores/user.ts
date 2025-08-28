@@ -2,10 +2,7 @@ import http from '@/request';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
-
-import HomeStore from './home';
-import AppStore from './osapp';
-import PlanStore from './plan';
+import { AppStore, BenefitStore, HomeStore, PlanStore, RecordStore } from '.';
 
 class UserStore {
   constructor() {
@@ -34,11 +31,12 @@ class UserStore {
         // 如果有token和用户信息，尝试恢复状态
         const userInfo = JSON.parse(userInfoStr);
         this.setUinfo(userInfo);
-
         // 验证token是否仍然有效
         try {
           await this.getInfo();
           PlanStore.getPlans();
+          BenefitStore.getBenefit();
+          RecordStore.getStatis();
         } catch (error) {
           // 如果获取用户信息失败，说明token已过期，清除本地数据
           console.log('Token验证失败，重新登录', error);

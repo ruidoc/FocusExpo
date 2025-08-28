@@ -1,5 +1,5 @@
 import { CusButton } from '@/components';
-import { AppStore, HomeStore, PlanStore } from '@/stores';
+import { AppStore, HomeStore, PlanStore, RecordStore } from '@/stores';
 import { startAppLimits } from '@/utils/permission';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
@@ -18,7 +18,7 @@ const QuickStartPage = observer(() => {
   const navigation = useNavigation();
   const pstore = useLocalObservable(() => PlanStore);
   const store = useLocalObservable(() => HomeStore);
-  // const pmstore = useLocalObservable(() => PermisStore);
+  const rstore = useLocalObservable(() => RecordStore);
   const astore = useLocalObservable(() => AppStore);
 
   const { dark } = useTheme();
@@ -34,7 +34,7 @@ const QuickStartPage = observer(() => {
     let cur_minute = now.hour() * 60 + now.minute();
     let cur_secend = cur_minute * 60 + now.second();
     const newId = `once_${Math.floor(Math.random() * 99999999)}`;
-    pstore.addOncePlan({
+    let from_data: CusPlan = {
       id: newId,
       start: now.format('HH:mm'),
       start_min: cur_minute,
@@ -44,15 +44,23 @@ const QuickStartPage = observer(() => {
       end_sec: cur_secend + Number(minute) * 60,
       repeat: 'once',
       mode: mode,
-    });
+    };
+    pstore.addOncePlan(from_data);
+    let select_apps = pstore.is_focus_mode
+      ? astore.focus_apps
+      : astore.shield_apps;
+    if (Platform.OS === 'ios') {
+      select_apps = astore.ios_selected_apps.map(r => `${r.id}:${r.type}`);
+    }
+    rstore.addRecord(from_data, select_apps, 5);
     return newId;
   };
 
+  // 开始一次性任务
   const toSetting = async () => {
     if (pstore.cur_plan) {
       return Toast('当前有正在进行的任务');
     }
-
     if (Platform.OS === 'ios') {
       // iOS: 使用屏幕时间限制开始屏蔽
       let plan_id = setOncePlan();

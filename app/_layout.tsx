@@ -10,6 +10,7 @@ import 'react-native-reanimated';
 
 import { NavThemes, XiaoShuThemeOverrides } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { RecordStore } from '@/stores';
 import PlanStore from '@/stores/plan';
 import { buttonRipple, ScreenOptions } from '@/utils/config';
 import { getIOSFocusStatus } from '@/utils/permission';
@@ -49,16 +50,20 @@ export default function RootLayout() {
   };
 
   // 延时器+计时器更新时间（整分对齐，链式 setTimeout 防漂移）
-  const updateElapsedMinute = (elapsedMinutes: number) => {
+  const updateElapsedMinute = async (elapsedMinutes: number) => {
     if (delay.current) {
       clearTimeout(delay.current as any);
       delay.current = null as any;
     }
+    let record_id = await AsyncStorage.getItem('record_id');
     const schedule = () => {
       // 用获取分钟的方法，计算到下一个整分的秒数
       const now = new Date();
       const remain = 60 - now.getSeconds();
       console.log('【剩余时间】', remain);
+      if (elapsedMinutes > 0) {
+        RecordStore.updateActualMins(record_id, elapsedMinutes);
+      }
       delay.current = setTimeout(() => {
         elapsedMinutes += 1;
         PlanStore.setCurPlanMinute(elapsedMinutes);
@@ -84,9 +89,7 @@ export default function RootLayout() {
         } else if (payload?.state === 'resumed') {
           PlanStore.setCurrentPlanPause(false);
         } else if (payload?.state === 'ended') {
-          PlanStore.setCurrentPlanPause(false);
-          PlanStore.setCurPlanMinute(0);
-          PlanStore.resetPlan();
+          PlanStore.complatePlan();
         }
       },
     );

@@ -165,62 +165,6 @@ const App = observer(() => {
     }
   };
 
-  // 操作记录的逻辑
-  const execRecord = async (state: VpnState) => {
-    if (!ustore.uInfo) return;
-    let r_id = await AsyncStorage.getItem('record_id');
-    let curp = pstore.cur_plan;
-    let apps = pstore.is_focus_mode ? astore.focus_apps : astore.shield_apps;
-    if (state === 'start') {
-      console.log('开始专注');
-      rstore.addRecord(curp, astore.getAppInfo(apps));
-    }
-    if (state.includes('continue')) {
-      console.log('继续专注，需要更新g_id');
-      rstore.continueRecord(curp, astore.getAppInfo(apps));
-    }
-    if (state.includes('task_update')) {
-      let [, pid, minute] = state.split(',');
-      console.log('10s定时更新：', pid, minute);
-      // 更新当前任务时长
-      pstore.setCurPlanMinute(Number(minute));
-      // 更新今日任务总时长
-      if (Number(minute) > 0) {
-        rstore.setTotalReal(1);
-      }
-    }
-    if (state.includes('complete')) {
-      // 专注完成处理（可能有中途退出、或半路进入）
-      let [, minutes] = state.split(',');
-      console.log('专注完成：', minutes);
-      pstore.setCurPlanMinute(0);
-      if (r_id) {
-        rstore.completeRecord(r_id, minutes);
-        AsyncStorage.removeItem('record_id');
-      }
-    }
-    if (state.includes('focus_total')) {
-      let total = JSON.parse(state.slice(12) || '[]');
-      let total_min = total.reduce((acc: number, cur: any) => {
-        acc += Number(cur.split(':')[1]);
-        return acc;
-      }, 0);
-      // console.log('专注计划总数据：', total, total_min);
-      // 重置今日专注总时长
-      rstore.setTotalReal(total_min, true);
-    }
-    if (state.includes('exit_time')) {
-      // 获取退出时间(秒)
-      let [, exit_sec, plan_id] = state.split(',');
-      // 设置退出次数
-      rstore.setExitCount();
-      // 记录退出时长
-      rstore.exitRecord(plan_id, {
-        exit_sec: Number(exit_sec),
-      });
-    }
-  };
-
   useEffect(() => {
     initapp();
     let eventEmitter = new NativeEventEmitter(NativeClass);
@@ -283,7 +227,6 @@ const App = observer(() => {
     // 监听 VPN 状态变化
     let listener = eventEmitter.addListener('vpn-change', data => {
       execHandle(data.state); // 处理 VPN 状态变化
-      execRecord(data.state); // 记录专注数据
     });
     // 监听 App 前后台切换
     let appState = AppState.addEventListener('change', state => {

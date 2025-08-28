@@ -1,4 +1,4 @@
-import { PlanStore, RecordStore } from '@/stores';
+import { BenefitStore, PlanStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
@@ -17,7 +17,7 @@ interface TimeFlowProps {
 
 const TimeFlow = observer(() => {
   const pstore = useLocalObservable(() => PlanStore);
-  const rstore = useLocalObservable(() => RecordStore);
+  const bstore = useLocalObservable(() => BenefitStore);
 
   // 动画值
   const [rotateValue] = useState(new Animated.Value(0));
@@ -178,7 +178,7 @@ const TimeFlow = observer(() => {
           style={styles.streakContainer}
           onPress={() => setShowTooltip(true)}>
           <Icon name="flame" size={16} color="#EF6820" />
-          <Text style={styles.streakText}>{streakDays} days Streak</Text>
+          <Text style={styles.streakText}>{bstore.balance} coins</Text>
           <Icon name="chevron-forward" size={14} color="#B3B3BA" />
         </TouchableOpacity>
       </View>

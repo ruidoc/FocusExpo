@@ -4,6 +4,7 @@ import Header from '@/components/home/header';
 import ScreenTimePermissionPage from '@/components/home/screen-time';
 import {
   AppStore,
+  BenefitStore,
   HomeStore,
   PermisStore,
   PlanStore,
@@ -44,17 +45,11 @@ const App = observer(() => {
   const astore = useLocalObservable(() => AppStore);
   const rstore = useLocalObservable(() => RecordStore);
   const pmstore = useLocalObservable(() => PermisStore);
+  const bstore = useLocalObservable(() => BenefitStore);
   const { colors, dark } = useTheme();
   const xcolor = Theme.useThemeTokens();
 
   const [refreshing, setRefreshing] = useState(false);
-
-  const apps =
-    Platform.OS === 'ios'
-      ? astore.ios_selected_apps
-      : pstore.is_focus_mode
-      ? astore.focus_apps
-      : astore.shield_apps;
 
   // 如果没有屏幕时间权限，显示权限获取页面
   const shouldShowPermissionPage =
@@ -62,7 +57,7 @@ const App = observer(() => {
 
   const onRefresh = () => {
     setRefreshing(true);
-    rstore.getStatis().finally(() => {
+    Promise.all([rstore.getStatis(), bstore.getBenefit()]).finally(() => {
       setRefreshing(false);
     });
   };

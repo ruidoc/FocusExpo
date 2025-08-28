@@ -100,9 +100,9 @@ const FocusButton = observer(() => {
       if (Platform.OS === 'ios') {
         await stopAppLimits();
         // await Notifications.cancelAllScheduledNotificationsAsync();
-        PlanStore.rmOncePlan(pstore.cur_plan.id);
-        pstore.resetPlan();
-        toast('已停止屏蔽');
+        pstore.rmOncePlan(pstore.cur_plan.id);
+        pstore.exitPlan();
+        toast('专注任务失败！');
         return;
       } else {
         // Android 维持原有逻辑

@@ -1,14 +1,9 @@
-import { UserStore } from '@/stores';
+import { RecordStore, UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface HeaderProps {
   // 可以传入自定义的问候语或用户名
@@ -16,7 +11,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = observer(() => {
   const ustore = useLocalObservable(() => UserStore);
-  
+  const rstore = useLocalObservable(() => RecordStore);
+
   // 获取问候语
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -25,7 +21,7 @@ const Header: React.FC<HeaderProps> = observer(() => {
     if (hour < 18) return '下午好';
     return '晚上好';
   };
-  
+
   // 获取用户名，如果没有登录显示默认名称
   const getUserName = () => {
     if (ustore.uInfo?.username) {
@@ -33,7 +29,7 @@ const Header: React.FC<HeaderProps> = observer(() => {
     }
     return 'Focus User';
   };
-  
+
   // 点击计时器图标的处理
   const handleTimerPress = () => {
     router.push('/plans');
@@ -47,16 +43,15 @@ const Header: React.FC<HeaderProps> = observer(() => {
           {getGreeting()}，{getUserName()}！
         </Text>
         <Text style={styles.encouragementText}>
-          今日已专注120分钟，加油！
+          今日已专注 {rstore.actual_mins} 分钟 👍
         </Text>
       </View>
-      
+
       {/* 右侧计时器图标 */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.timerContainer}
         onPress={handleTimerPress}
-        activeOpacity={0.7}
-      >
+        activeOpacity={0.7}>
         <View style={styles.timerIconWrapper}>
           <Icon name="timer-outline" size={22} color="#FFFFFF" />
           <View style={styles.timerGlow} />

@@ -4,6 +4,7 @@ import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
 import { NativeModules } from 'react-native';
+import { BenefitStore, RecordStore } from '.';
 
 // const { NativeClass } = NativeModules;
 class PlanStore {
@@ -49,9 +50,39 @@ class PlanStore {
   };
 
   // 设置当前任务的暂停状态，并同步到列表中
-  setCurrentPlanPause = (paused: boolean) => {
+  setCurrentPlanPause = async (paused: boolean) => {
+    let record_id = await AsyncStorage.getItem('record_id');
+    if (paused && record_id) {
+      BenefitStore.subBalance();
+      await RecordStore.pauseRecord(record_id);
+    }
     this.cur_plan.is_pause = paused;
     this.setPaused(paused);
+  };
+
+  // 专注计划完成
+  complatePlan = async () => {
+    console.log('【专注计划完成】');
+    let record_id = await AsyncStorage.getItem('record_id');
+    if (record_id) {
+      await RecordStore.completeRecord(record_id);
+    }
+    AsyncStorage.removeItem('record_id');
+    this.setCurrentPlanPause(false);
+    this.setCurPlanMinute(0);
+    this.resetPlan();
+  };
+
+  // 专注计划终止
+  exitPlan = async () => {
+    let record_id = await AsyncStorage.getItem('record_id');
+    if (record_id) {
+      await RecordStore.exitRecord(record_id);
+    }
+    AsyncStorage.removeItem('record_id');
+    this.setCurrentPlanPause(false);
+    this.setCurPlanMinute(0);
+    this.resetPlan();
   };
 
   // 更新计划列表（Android原生占位，iOS不同步）
