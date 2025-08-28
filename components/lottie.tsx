@@ -1,17 +1,16 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import LottieView from 'lottie-react-native';
+import { StyleSheet, View, ViewStyle } from 'react-native';
+// import LottieView from 'lottie-react-native';
 
 const CatAnimationScreen = () => {
   return (
     <View style={styles.container}>
-      {/* 请将 cat.json 替换为你的小猫动画 Lottie 文件路径 */}
-      <LottieView
+      {/* <LottieView
         source={require('../assets/lottie/cat.json')}
         autoPlay
         loop
         style={styles.lottie}
-      />
+      /> */}
     </View>
   );
 };

@@ -6,7 +6,6 @@ import {
 import { useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 
 import { NavThemes, XiaoShuThemeOverrides } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
