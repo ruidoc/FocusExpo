@@ -61,76 +61,75 @@ class NativeModule: RCTEventEmitter {
   private let pauseResumeActivity = DeviceActivityName("FocusOne.PauseResume")
   private var hasListeners: Bool = false
   private var tickTimer: Timer?
-  private var stateTimer: Timer?
+  private var darwinObserverAdded: Bool = false
   private var endTimestamp: TimeInterval = 0
   private var totalMinutes: Int = 0
   private var pausedUntil: TimeInterval = 0
+  // C 回调：用于 Darwin 通知（不能捕获 self）
+  private static let darwinCallback: CFNotificationCallback = { _, observer, name, _, _ in
+    guard let observer = observer else { return }
+    let instance = Unmanaged<NativeModule>.fromOpaque(observer).takeUnretainedValue()
+    DispatchQueue.main.async {
+      if UIApplication.shared.applicationState == .active {
+        let n = name?.rawValue as String?
+        if n == "com.focusone.focus.ended" {
+          instance.emitState("ended")
+          instance.emitEnded()
+        } else if n == "com.focusone.focus.started" {
+          instance.emitState("started")
+        }
+      }
+    }
+  }
   // Event Emitter
   override static func requiresMainQueueSetup() -> Bool { true }
   override func supportedEvents() -> [String]! {
-    return ["focus-ended", "focus-state"]
+    return ["focus-state"]
   }
   override func startObserving() {
     hasListeners = true
     NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
-    NotificationCenter.default.addObserver(self, selector: #selector(handleStopProgress), name: NSNotification.Name("FocusOne.StopProgress"), object: nil)
-    // 轮询扩展写入的统一事件，确保前台也能及时收到
-    stateTimer?.invalidate()
-    stateTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true, block: { [weak self] _ in
-      guard let self = self else { return }
-      if let defaults = UserDefaults.groupUserDefaults() {
-        if let ev = defaults.string(forKey: "FocusOne.LastFocusEvent") {
-          defaults.removeObject(forKey: "FocusOne.LastFocusEvent")
-          self.emitState(ev)
-        }
-      }
-    })
-    if let t = stateTimer { RunLoop.main.add(t, forMode: .common) }
+    // 注册 Darwin 通知监听（跨进程），仅当前台时转发到 JS
+    addDarwinObserverIfNeeded()
+    // 不再使用前台 1s 轮询；一次性任务也不再设置单次定时器，统一靠系统事件 + Darwin 通知
   }
   override func stopObserving() {
     hasListeners = false
     NotificationCenter.default.removeObserver(self)
     invalidateTimer()
-    stateTimer?.invalidate()
-    stateTimer = nil
+    removeDarwinObserverIfNeeded()
   }
   @objc private func appWillEnterForeground() {
-    guard endTimestamp > 0 else { return }
-    if Date().timeIntervalSince1970 >= endTimestamp {
-      emitEnded()
-      invalidateTimer()
-    } else {
-      emitProgress()
-    }
-    if let defaults = UserDefaults.groupUserDefaults() {
-      if let ev = defaults.string(forKey: "FocusOne.LastFocusEvent") {
-        defaults.removeObject(forKey: "FocusOne.LastFocusEvent")
-        emitState(ev)
-      }
-    }
+    // 按用户需求：不在前台回放后台发生的事件，也不在此处结算
   }
-  @objc private func handleStopProgress() {
-    emitEnded()
-    invalidateTimer()
+  // Darwin 通知监听与转发
+  private func addDarwinObserverIfNeeded() {
+    guard !darwinObserverAdded else { return }
+    darwinObserverAdded = true
+    let center = CFNotificationCenterGetDarwinNotifyCenter()
+    let endedName = "com.focusone.focus.ended" as CFString
+    let startedName = "com.focusone.focus.started" as CFString
+    let observer = Unmanaged.passUnretained(self).toOpaque()
+    CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, endedName, nil, .deliverImmediately)
+    CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, startedName, nil, .deliverImmediately)
   }
-  private func restartTimer() {
-    // 已移除进度事件，不再启动定时器
-    invalidateTimer()
+  private func removeDarwinObserverIfNeeded() {
+    guard darwinObserverAdded else { return }
+    darwinObserverAdded = false
+    let center = CFNotificationCenterGetDarwinNotifyCenter()
+    CFNotificationCenterRemoveObserver(center, Unmanaged.passUnretained(self).toOpaque(), nil, nil)
   }
   private func invalidateTimer() {
     tickTimer?.invalidate()
     tickTimer = nil
+    
   }
   private func emitProgress() {
     // 进度事件已移除（不再向 JS 发送 focus-progress）
     return
   }
   private func emitEnded() {
-    if !hasListeners { return }
-    sendEvent(withName: "focus-ended", body: [
-      "totalMinutes": totalMinutes,
-      "elapsedMinutes": totalMinutes,
-    ])
+    // 仅内部归零，不再发独立结束事件
     totalMinutes = 0
     endTimestamp = 0
   }
@@ -425,9 +424,8 @@ class NativeModule: RCTEventEmitter {
           defaults.set(pid, forKey: "FocusOne.CurrentPlanId")
         }
       }
-      self.restartTimer()
+      // 不再直接向 JS 发送 started，由扩展发 Darwin 事件统一驱动
       self.emitProgress()
-      self.emitState("started", extra: ["type": "once"]) 
       // 发送开始通知（一次性）
       let content = UNMutableNotificationContent()
       content.title = "专注一点"

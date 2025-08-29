@@ -70,18 +70,10 @@ const App = observer(() => {
       subinfo.end = end_day.format('HH:mm');
       subinfo.start_min = start_day.hour() * 60 + start_day.minute();
       subinfo.end_min = end_day.hour() * 60 + end_day.minute();
-
       pstore.addPlan(subinfo, async res => {
         // console.log('添加任务结果：', res);
         if (res) {
-          subinfo.id = res.data.id;
-          const isok = await configureIOS(subinfo);
-          if (isok) {
-            Toast({ type: 'success', message: '添加任务成功' });
-            navigation.goBack();
-          } else {
-            Toast({ type: 'fail', message: '更新任务失败' });
-          }
+          Toast({ type: 'success', message: '添加任务成功' });
         } else {
           Toast({ type: 'fail', message: '添加任务失败' });
         }
@@ -89,36 +81,6 @@ const App = observer(() => {
     } catch (error) {
       Toast({ type: 'fail', message: '添加任务出错' });
       console.log('添加任务失败：', error);
-    }
-  };
-
-  // iOS 定时屏蔽配置：与保存计划并行执行
-  const configureIOS = async (subinfo: any) => {
-    try {
-      // 基于现有计划 + 当前即将新增的计划，组装下发的 iOS 周期任务
-      const existing = pstore.cus_plans
-        .filter((p: any) => Array.isArray(p.repeat))
-        .map((p: any) => ({
-          id: p.id,
-          start: p.start_min * 60,
-          end: p.end_min * 60,
-          repeatDays: p.repeat,
-          mode: p.mode,
-        }));
-      const current = {
-        id: subinfo.id,
-        start: subinfo.start_min * 60,
-        end: subinfo.end_min * 60,
-        repeatDays: subinfo.repeat,
-        mode: subinfo.mode,
-      };
-      const plans = [...existing, current];
-      const json = JSON.stringify(plans);
-      await NativeModule.configurePlannedLimits(json);
-      return true;
-    } catch (e) {
-      console.log('IOS添加时间段失败：', e);
-      return false;
     }
   };
 

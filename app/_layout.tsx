@@ -59,7 +59,7 @@ export default function RootLayout() {
       // 用获取分钟的方法，计算到下一个整分的秒数
       const now = new Date();
       const remain = 60 - now.getSeconds();
-      console.log('【剩余时间】', remain);
+      // console.log('【剩余时间】', remain);
       if (elapsedMinutes > 0) {
         RecordStore.updateActualMins(record_id, elapsedMinutes);
       }
@@ -83,7 +83,10 @@ export default function RootLayout() {
         type?: 'once' | 'periodic';
       }) => {
         console.log('【监听状态变化】', payload);
-        if (payload?.state === 'paused') {
+        if (payload?.state === 'started') {
+          PlanStore.setCurPlanMinute(0);
+          PlanStore.resetPlan();
+        } else if (payload?.state === 'paused') {
           PlanStore.setCurrentPlanPause(true);
         } else if (payload?.state === 'resumed') {
           PlanStore.setCurrentPlanPause(false);

@@ -11,23 +11,11 @@ import {
 } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
-interface TimeFlowProps {
-  // 传入专注状态相关数据
-}
-
 const TimeFlow = observer(() => {
   const pstore = useLocalObservable(() => PlanStore);
   const bstore = useLocalObservable(() => BenefitStore);
 
-  // 动画值
-  const [rotateValue] = useState(new Animated.Value(0));
   const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-
-  // 模拟连续天数数据 - 后续可以从store获取
-  const streakDays = 5;
-
-  // Tooltip 状态
-  const [showTooltip, setShowTooltip] = useState(false);
 
   // 进度：以计划整体区间为基准，反映从 start 到当前的消耗占比
   const getProgress = () => {
@@ -69,25 +57,13 @@ const TimeFlow = observer(() => {
     return '当前无任务';
   };
 
-  // 启动旋转动画
-  const startRotation = () => {
-    Animated.loop(
-      Animated.timing(rotateValue, {
-        toValue: 1,
-        duration: 3000,
-        useNativeDriver: true,
-      }),
-    ).start();
-  };
-
-  useEffect(() => {
-    if (pstore.cur_plan && !pstore.paused) {
-      startRotation();
-    }
-  }, [pstore.cur_plan, pstore.paused]);
+  // 旋转动画已移除（当前未使用）
 
   const progress = getProgress();
   const circumference = 2 * Math.PI * 136; // 半径136的圆周长
+  const hasPlan = !!pstore.cur_plan;
+  const minVisibleArcLength = 10; // 0% 时最小可见弧长（仅在有任务时显示）
+  const zeroProgressDashoffset = circumference - minVisibleArcLength;
   // 进度动画：首帧从0到当前值，之后每次变更平滑过渡
   const [progressAnim] = useState(new Animated.Value(0));
   const [didInitAnim, setDidInitAnim] = useState(false);
@@ -107,21 +83,20 @@ const TimeFlow = observer(() => {
         useNativeDriver: false,
       }).start();
     }
-  }, [progress, didInitAnim]);
+  }, [progress, didInitAnim, progressAnim]);
   // 当切换/重置计划时，重置首帧动画
   useEffect(() => {
     setDidInitAnim(false);
     progressAnim.setValue(0);
-  }, [pstore.cur_plan?.id]);
+  }, [pstore.cur_plan?.id, progressAnim]);
   const animatedDashoffset = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [circumference, 0],
   });
+  const strokeDashoffsetValue: any =
+    hasPlan && progress === 0 ? zeroProgressDashoffset : animatedDashoffset;
 
-  const spin = rotateValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
+  // spin 已移除（旋转动画未使用）
 
   return (
     <View style={styles.container}>
@@ -160,7 +135,7 @@ const TimeFlow = observer(() => {
           fill="none"
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={animatedDashoffset as unknown as number}
+          strokeDashoffset={strokeDashoffsetValue}
           transform="rotate(-90 150 150)"
         />
       </Svg>
@@ -174,9 +149,7 @@ const TimeFlow = observer(() => {
         <Text style={styles.timeText}>{getDisplayTime()}</Text>
 
         {/* 连续天数 */}
-        <TouchableOpacity
-          style={styles.streakContainer}
-          onPress={() => setShowTooltip(true)}>
+        <TouchableOpacity style={styles.streakContainer}>
           <Icon name="flame" size={16} color="#EF6820" />
           <Text style={styles.streakText}>{bstore.balance} coins</Text>
           <Icon name="chevron-forward" size={14} color="#B3B3BA" />

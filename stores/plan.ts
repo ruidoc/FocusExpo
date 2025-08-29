@@ -6,7 +6,7 @@ import { makeAutoObservable } from 'mobx';
 import { NativeModules } from 'react-native';
 import { BenefitStore, RecordStore } from '.';
 
-// const { NativeClass } = NativeModules;
+const { NativeModule } = NativeModules;
 class PlanStore {
   constructor() {
     makeAutoObservable(this);
@@ -109,6 +109,28 @@ class PlanStore {
     }
   };
 
+  // iOS 定时屏蔽配置：与保存计划并行执行
+  setScheduleIOS = async () => {
+    try {
+      // 基于现有计划 + 当前即将新增的计划，组装下发的 iOS 周期任务
+      const existing = this.cus_plans
+        .filter((p: any) => Array.isArray(p.repeat))
+        .map((p: any) => ({
+          id: p.id,
+          start: p.start_min * 60,
+          end: p.end_min * 60,
+          repeatDays: p.repeat,
+          mode: p.mode,
+        }));
+      const json = JSON.stringify(existing);
+      await NativeModule.configurePlannedLimits(json);
+      return true;
+    } catch (e) {
+      console.log('IOS添加时间段失败：', e);
+      return false;
+    }
+  };
+
   // 重新获取当前任务
   resetPlan = () => {
     // 获取当前时间的分钟数（当天从0点开始的总分钟数）
@@ -167,11 +189,13 @@ class PlanStore {
     try {
       let res: HttpRes = await http.get('/plan/lists');
       if (res.statusCode === 200) {
+        let plans_count = await AsyncStorage.getItem('cus_plans_count');
         this.setCusPlans(res.data);
-        // this.updatePlans();
-        // if (!this.cur_plan) {
-        //   this.resetPlan();
-        // }
+        // console.log('【周期计划数量】: ', plans_count, res.data.length);
+        if (!plans_count || plans_count !== `${res.data.length}`) {
+          this.setScheduleIOS();
+          AsyncStorage.setItem('cus_plans_count', `${res.data.length}`);
+        }
         if (fun) fun(res);
       }
     } catch (error) {

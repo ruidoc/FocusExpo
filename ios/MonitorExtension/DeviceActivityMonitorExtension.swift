@@ -68,34 +68,37 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             }
         }
         // 已移除“自动恢复”活动逻辑
-        // 若不存在周期性计划匹配（一次性任务场景），不覆盖由快速开始设定的时间
-        guard hasPlannedMatch else { return }
-        // 加载选择的应用并应用屏蔽
-        var selection: FamilyActivitySelection? = nil
-        if let data = defaults.data(forKey: "FocusOne.AppSelection"),
-           let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
-            selection = sel
+        // 若不存在周期性计划匹配（一次性任务场景），不覆盖一次性任务在主 App 设定的时间
+        if hasPlannedMatch {
+            // 加载选择的应用并应用屏蔽
+            var selection: FamilyActivitySelection? = nil
+            if let data = defaults.data(forKey: "FocusOne.AppSelection"),
+               let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+                selection = sel
+            }
+            let store = ManagedSettingsStore()
+            if let sel = selection {
+                store.shield.applications = sel.applicationTokens
+                store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
+                store.shield.webDomains = sel.webDomainTokens
+            }
+            // 使用计划中的开始/结束时间
+            defaults.set(startAtTs, forKey: "FocusOne.FocusStartAt")
+            defaults.set(endAtTs, forKey: "FocusOne.FocusEndAt")
+            let totalMin = max(1, Int((endAtTs - startAtTs) / 60))
+            defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
+            defaults.set("periodic", forKey: "FocusOne.FocusType")
+            // 发送开始通知（周期计划）
+            let content = UNMutableNotificationContent()
+            content.title = "专注一点"
+            content.body = "屏蔽已开启，保持专注"
+            let request = UNNotificationRequest(identifier: "FocusStartPeriodic", content: content, trigger: nil)
+            UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
         }
-        let store = ManagedSettingsStore()
-        if let sel = selection {
-            store.shield.applications = sel.applicationTokens
-            store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
-            store.shield.webDomains = sel.webDomainTokens
-        }
-        // 使用计划中的开始/结束时间
-        defaults.set(startAtTs, forKey: "FocusOne.FocusStartAt")
-        defaults.set(endAtTs, forKey: "FocusOne.FocusEndAt")
-        let totalMin = max(1, Int((endAtTs - startAtTs) / 60))
-        defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
-        defaults.set("periodic", forKey: "FocusOne.FocusType")
-        // 发送开始通知（周期计划）
-        let content = UNMutableNotificationContent()
-        content.title = "专注一点"
-        content.body = "屏蔽已开启，保持专注"
-        let request = UNNotificationRequest(identifier: "FocusStartPeriodic", content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
-        // 记录统一事件，供主 App 拉起后转发
-        defaults.set("started", forKey: "FocusOne.LastFocusEvent")
+        // 统一发送 Darwin 跨进程“开始”事件（一次性与周期均会调用到此处）
+        let dCenter = CFNotificationCenterGetDarwinNotifyCenter()
+        let dName = CFNotificationName("com.focusone.focus.started" as CFString)
+        CFNotificationCenterPostNotification(dCenter, dName, nil, nil, true)
     }
     
     /// 当 DeviceActivity 监控区间结束时触发
@@ -154,8 +157,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     /// 2. 发送系统本地通知，告知用户专注结束
     /// 3. 清理共享状态数据（开始时间、结束时间、总时长等）
     private func notifyEnd() {
-        // 本地发送一个应用内广播，供主 App 的 EventEmitter 转发为 JS 事件
-        NotificationCenter.default.post(name: NSNotification.Name("FocusOne.StopProgress"), object: nil, userInfo: nil)
+        // 发送 Darwin 跨进程通知，供主 App 转发为 JS 事件（仅当前台时转发）
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+        let name = CFNotificationName("com.focusone.focus.ended" as CFString)
+        CFNotificationCenterPostNotification(center, name, nil, nil, true)
         // 可选：直接发一条系统本地通知（需要扩展 Notification 权限）
         let content = UNMutableNotificationContent()
         content.title = "专注结束"

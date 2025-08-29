@@ -36,7 +36,7 @@ export class BenefitStore {
       if (res.statusCode === 200) {
         let { balance, rank, focus_duration, app_count, category_count } =
           res.data;
-        console.log('获取权益', res.data);
+        // console.log('获取权益', res.data);
         this.setBalance(balance);
         this.rank = rank;
         this.focus_duration = focus_duration;

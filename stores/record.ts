@@ -19,10 +19,6 @@ class RecordStore {
     this.records = records;
   };
 
-  addActualMins = () => {
-    this.actual_mins += 1;
-  };
-
   // 格式化专注时长
   get formatMinute() {
     let hour = Math.floor(this.actual_mins / 60);
@@ -70,7 +66,7 @@ class RecordStore {
     try {
       let res: HttpRes = await http.get('/record/statis');
       if (res.statusCode === 200) {
-        console.log('统计数据：', res.data);
+        // console.log('统计数据：', res.data);
         this.actual_mins = res.data.actual_mins;
         this.success_rate = res.data.success_rate;
         this.total_mins = res.data.total_mins;
@@ -83,12 +79,12 @@ class RecordStore {
   // 每分钟更新专注时长
   updateActualMins = async (id: string, actual_min: number) => {
     try {
-      this.addActualMins();
+      if (!id) return;
       let res: HttpRes = await http.post('/record/update/' + id, {
         actual_min,
       });
       if (res.statusCode === 200) {
-        // this.getRecords();
+        this.getRecords();
       }
     } catch (error) {
       console.log(error);
