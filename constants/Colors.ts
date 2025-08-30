@@ -7,33 +7,33 @@
 // 参考链接: https://www.figma.com/design/m5y9YkJCpEZn8ivxr1YCKS/Lumina-UI-Kit-1.1--Full-Version-?node-id=137-38936&m=dev
 // 注意：以下为示例色值，请按设计稿替换
 const LuminaLightPalette = {
-  primary: "#7A5AF8", // 主题主色（示例）
-  primaryForeground: "#FFFFFF",
-  background: "#FFFFFF",
-  surface: "#FFFFFF",
-  textPrimary: "#0F172A",
-  textSecondary: "#64748B",
-  border: "#E5E7EB",
-  muted: "#F5F7FB",
-  mutedForeground: "#94A3B8",
-  success: "#16A34A",
-  warning: "#F59E0B",
-  danger: "#EF4444",
+  primary: '#7A5AF8', // 主题主色（示例）
+  primaryForeground: '#FFFFFF',
+  background: '#FFFFFF',
+  surface: '#FFFFFF',
+  textPrimary: '#0F172A',
+  textSecondary: '#64748B',
+  border: '#E5E7EB',
+  muted: '#F5F7FB',
+  mutedForeground: '#94A3B8',
+  success: '#16A34A',
+  warning: '#F59E0B',
+  danger: '#EF4444',
 };
 
 const LuminaDarkPalette = {
-  primary: "#7A5AF8",
-  primaryForeground: "#FFFFFF",
-  background: "#14141C",
-  surface: "#181821",
-  textPrimary: "#E5E7EB",
-  textSecondary: "#9CA3AF",
-  border: "#1F2937",
-  muted: "#0F172A",
-  mutedForeground: "#94A3B8",
-  success: "#22C55E",
-  warning: "#F59E0B",
-  danger: "#F87171",
+  primary: '#7A5AF8',
+  primaryForeground: '#FFFFFF',
+  background: '#0D0D12',
+  surface: '#181821',
+  textPrimary: '#E5E7EB',
+  textSecondary: '#9CA3AF',
+  border: '#1F2937',
+  muted: '#0F172A',
+  mutedForeground: '#94A3B8',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#F87171',
 };
 
 const tintColorLight = LuminaLightPalette.primary;
@@ -42,9 +42,9 @@ const tintColorDark = LuminaDarkPalette.primaryForeground;
 // 统一色板
 const colors = {
   primary: LuminaLightPalette.primary, // 主色（按需替换）
-  primaryLight: "#EEF2FF", // 主色淡色（示例）
+  primaryLight: '#EEF2FF', // 主色淡色（示例）
   green: LuminaLightPalette.success,
-  gray: "#C0C4CC",
+  gray: '#C0C4CC',
   border: LuminaLightPalette.border,
   cardBg: LuminaLightPalette.surface,
   desc: LuminaLightPalette.mutedForeground,
@@ -117,7 +117,7 @@ export const XiaoShuThemeOverrides = {
     divider_color: LuminaDarkPalette.border,
     background_color: LuminaDarkPalette.background,
     card_background_color: LuminaDarkPalette.surface,
-    steps_background_color: "transparent",
+    steps_background_color: 'transparent',
     notice_bar_background_color_lightness: 10,
   },
 };

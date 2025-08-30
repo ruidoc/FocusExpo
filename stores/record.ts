@@ -29,7 +29,12 @@ class RecordStore {
     return `${mint}分钟`;
   }
 
-  addRecord = async (plan: CusPlan, apps: string[], bet_amount: number) => {
+  addRecord = async (
+    plan: CusPlan,
+    apps: string[],
+    bet_amount: number,
+    description?: string,
+  ) => {
     try {
       let res: HttpRes = await http.post('/record/add', {
         plan_id: plan.id,
@@ -42,6 +47,17 @@ class RecordStore {
       });
       if (res.statusCode === 200) {
         AsyncStorage.setItem('record_id', res.data.id);
+        // 记录描述仅本地存储，避免后端字段不兼容
+        if (description && typeof description === 'string') {
+          try {
+            await AsyncStorage.setItem(
+              `record_desc:${res.data.id}`,
+              description,
+            );
+          } catch {
+            // ignore
+          }
+        }
       } else {
         Toast(res.message);
       }

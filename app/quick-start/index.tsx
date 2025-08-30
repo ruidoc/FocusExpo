@@ -1,12 +1,26 @@
-import { CusButton } from '@/components';
-import { AppStore, HomeStore, PlanStore, RecordStore } from '@/stores';
-import { startAppLimits } from '@/utils/permission';
-import { Toast } from '@fruits-chain/react-native-xiaoshu';
+import { CusButton, DurationPickerModal } from '@/components';
+import {
+  AppStore,
+  BenefitStore,
+  HomeStore,
+  PlanStore,
+  RecordStore,
+} from '@/stores';
+import { selectAppsToLimit, startAppLimits } from '@/utils/permission';
+import Icon from '@expo/vector-icons/Ionicons';
+import { Flex, Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { observer, useLocalObservable } from 'mobx-react';
-import React, { useState } from 'react';
-import { Platform, ScrollView, Text, View } from 'react-native';
+import React, { ReactNode, useLayoutEffect, useMemo, useState } from 'react';
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import ModeSwitcher from './mode-switcher';
 import SelectApps from './select-apps';
 import styles from './styles';
@@ -15,19 +29,89 @@ import TimeSlider from './time-slider';
 const QuickStartPage = observer(() => {
   const [mode, setMode] = useState<'focus' | 'shield'>('shield');
   const [minute, setMinute] = useState(15);
+  const [bet, setBet] = useState<number>(5);
+  const [customBet, setCustomBet] = useState<string>('');
+  const [useCustom, setUseCustom] = useState<boolean>(false);
+  const [desc, setDesc] = useState<string>('');
+  const [pickerVisible, setPickerVisible] = useState<boolean>(false);
   const navigation = useNavigation();
   const pstore = useLocalObservable(() => PlanStore);
   const store = useLocalObservable(() => HomeStore);
   const rstore = useLocalObservable(() => RecordStore);
   const astore = useLocalObservable(() => AppStore);
+  const bstore = useLocalObservable(() => BenefitStore);
 
-  const { dark } = useTheme();
+  const { colors } = useTheme();
   const focusCount = astore.focus_apps.length;
   const shieldCount = astore.shield_apps.length;
   const modeDescMap = {
     focus: focusCount > 0 ? `仅允许${focusCount}个APP使用` : '无可用的APP',
     shield: shieldCount > 0 ? `${shieldCount}个APP将被屏蔽` : '无可屏蔽的APP',
   };
+
+  const ItemRow: React.FC<{
+    title: string;
+    children?: ReactNode;
+    tag?: string;
+  }> = ({ title, children, tag }) => {
+    return (
+      <View
+        style={{
+          backgroundColor: 'rgba(255,255,255, 0.1)',
+          marginBottom: 18,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderRadius: 12,
+        }}>
+        <Flex justify="between" align="center">
+          <Text style={styles.titleStyle}>{title}</Text>
+          {tag === 'apps' && (
+            <>
+              <Pressable onPress={selectApps}>
+                <Flex
+                  justify="between"
+                  align="center"
+                  style={{
+                    backgroundColor: 'rgba(0,0,0, 0.2)',
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 14,
+                  }}>
+                  <Icon name="add" size={17} color={colors.text} />
+                  <Text style={{ color: colors.text, fontSize: 12 }}>
+                    添加{' '}
+                  </Text>
+                </Flex>
+              </Pressable>
+            </>
+          )}
+        </Flex>
+        {children}
+      </View>
+    );
+  };
+
+  // 自定义头部：透明背景 + 关闭按钮
+  useLayoutEffect(() => {
+    navigation.setOptions?.({
+      headerTitle: '',
+      headerLeft: (): React.ReactNode => null,
+      headerTransparent: true,
+      headerRight: (): React.ReactNode => (
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+          <Icon name="close" size={22} color="#fff" />
+        </Pressable>
+      ),
+    });
+  }, [navigation]);
+
+  const presetBets = useMemo(() => [1, 5, 10, 20], []);
+  const maxBet = useMemo(
+    () => Math.max(0, bstore.balance || 0),
+    [bstore.balance],
+  );
 
   const setOncePlan = () => {
     let now = dayjs();
@@ -52,14 +136,38 @@ const QuickStartPage = observer(() => {
     if (Platform.OS === 'ios') {
       select_apps = astore.ios_selected_apps.map(r => `${r.id}:${r.type}`);
     }
-    rstore.addRecord(from_data, select_apps, 5);
+    const finalBet = useCustom
+      ? Math.max(0, Number.parseInt(customBet || '0', 10) || 0)
+      : bet;
+    rstore.addRecord(
+      from_data,
+      select_apps,
+      finalBet,
+      desc?.trim() || undefined,
+    );
     return newId;
+  };
+
+  const selectApps = () => {
+    selectAppsToLimit().then(data => {
+      astore.setIosSelectedApps(data.apps);
+    });
   };
 
   // 开始一次性任务
   const toSetting = async () => {
     if (pstore.cur_plan) {
       return Toast('当前有正在进行的任务');
+    }
+    // 校验下注（通用）
+    const finalBetCommon = useCustom
+      ? Math.max(0, Number.parseInt(customBet || '0', 10) || 0)
+      : bet;
+    if (!finalBetCommon || finalBetCommon <= 0) {
+      return Toast('请设置有效的下注数量');
+    }
+    if (finalBetCommon > maxBet) {
+      return Toast('超出自律币余额');
     }
     if (Platform.OS === 'ios') {
       // iOS: 使用屏幕时间限制开始屏蔽
@@ -90,34 +198,116 @@ const QuickStartPage = observer(() => {
 
   return (
     <>
-      <ScrollView style={{ flex: 1 }}>
-        <View style={{ marginTop: 10, marginBottom: 8 }}>
-          <Text style={[styles.titleStyle, { color: dark ? '#fff' : '#222' }]}>
-            {Platform.OS === 'ios' ? '选择APP' : '选择模式'}
+      <ScrollView style={{ flex: 1, paddingHorizontal: 20 }}>
+        <Flex justify="center" style={{ marginTop: 30, marginBottom: 25 }}>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#fff' }}>
+            快速开始
           </Text>
-        </View>
-        {Platform.OS === 'ios' && <SelectApps />}
-        {Platform.OS === 'android' && (
-          <ModeSwitcher
-            mode={mode}
-            setMode={setMode}
-            desc={modeDescMap[mode]}
-            focusApps={astore.focus_apps}
-            shieldApps={astore.shield_apps}
-            allApps={store.all_apps}
-          />
-        )}
-        <View style={{ marginTop: 18, marginBottom: 8 }}>
-          <Text style={[styles.titleStyle, { color: dark ? '#fff' : '#222' }]}>
-            设置时长
-          </Text>
-        </View>
-        <TimeSlider minute={minute} setMinute={setMinute} />
+        </Flex>
+        <ItemRow title="选择APP" tag="apps">
+          {Platform.OS === 'ios' ? (
+            <SelectApps />
+          ) : (
+            <ModeSwitcher
+              mode={mode}
+              setMode={setMode}
+              desc={modeDescMap[mode]}
+              focusApps={astore.focus_apps}
+              shieldApps={astore.shield_apps}
+              allApps={store.all_apps}
+            />
+          )}
+        </ItemRow>
+        <ItemRow title="设置时长">
+          {/* <Pressable onPress={() => setPickerVisible(true)}>
+            <Text
+              style={{
+                color: '#fff',
+                fontSize: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+              }}>
+              {Math.floor(minute / 60)}小时{minute % 60}分钟
+            </Text>
+          </Pressable> */}
+          <TimeSlider minute={minute} setMinute={setMinute} />
+        </ItemRow>
+        <ItemRow title="选择下注">
+          <Flex align="center" justify="center" style={styles.betRow}>
+            <Flex align="center">
+              <Pressable
+                onPress={() => {
+                  setUseCustom(true);
+                  let n = Math.max(
+                    1,
+                    (Number.parseInt(customBet || '0', 10) || bet) - 1,
+                  );
+                  n = Math.min(n, maxBet);
+                  setCustomBet(String(n));
+                }}
+                style={styles.stepperBtn}>
+                <Icon name="remove" size={16} color={colors.text} />
+              </Pressable>
+              <TextInput
+                keyboardType="number-pad"
+                value={String(useCustom ? customBet : bet)}
+                onChangeText={t => {
+                  setUseCustom(true);
+                  const n = Number.parseInt(t || '0', 10);
+                  if (Number.isNaN(n)) return setCustomBet('0');
+                  const clamped = Math.max(0, Math.min(maxBet, n));
+                  setCustomBet(String(clamped));
+                }}
+                style={styles.stepperInput}
+                maxLength={5}
+                placeholder="数量"
+              />
+              <Pressable
+                onPress={() => {
+                  setUseCustom(true);
+                  let n = (Number.parseInt(customBet || '0', 10) || bet) + 1;
+                  n = Math.max(1, Math.min(maxBet, n));
+                  setCustomBet(String(n));
+                }}
+                style={styles.stepperBtn}>
+                <Icon name="add" size={16} color={colors.text} />
+              </Pressable>
+            </Flex>
+          </Flex>
+          <Flex
+            justify="between"
+            align="center"
+            style={{ paddingHorizontal: 16, marginTop: 8 }}>
+            <Text style={styles.tipText}>可用自律币：{bstore.balance}</Text>
+            <Text style={styles.tipText}>
+              本次将消耗：{useCustom ? customBet : bet}
+            </Text>
+          </Flex>
+        </ItemRow>
+        {/* <ItemRow title="一句话加油">
+          <View style={{ paddingHorizontal: 16 }}>
+            <TextInput
+              value={desc}
+              onChangeText={setDesc}
+              placeholder="例如：写完报告/番茄2轮"
+              style={[styles.input]}
+              maxLength={20}
+            />
+            <Text style={styles.counterText}>{(desc || '').length}/20</Text>
+          </View>
+        </ItemRow> */}
       </ScrollView>
       <View style={styles.bottomBar}>
         <CusButton
           onPress={toSetting}
           text={mode === 'focus' ? '开始专注' : '开始屏蔽'}
+        />
+        <DurationPickerModal
+          visible={pickerVisible}
+          defaultMinutes={minute}
+          onConfirm={m => setMinute(m)}
+          onCancel={() => {}}
+          onClose={() => setPickerVisible(false)}
         />
       </View>
     </>

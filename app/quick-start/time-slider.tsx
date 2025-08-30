@@ -25,21 +25,13 @@ const TimeSlider: React.FC<Props> = ({ minute, setMinute }) => {
   }, [minute]);
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: dark ? '#222' : '#fff',
-          shadowColor: dark ? 'transparent' : '#000',
-        },
-      ]}>
+    <View style={[styles.container]}>
       <Text style={[styles.label, { color: dark ? '#fff' : '#222' }]}>
         <Text
           style={[styles.time, { color: dark ? colors.primary : '#0065FE' }]}>
           {formatTime(localMinute)}
         </Text>
       </Text>
-      {/* @ts-ignore */}
       <Slider
         minimumValue={5}
         maximumValue={180}
@@ -66,15 +58,12 @@ const TimeSlider: React.FC<Props> = ({ minute, setMinute }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 20,
-    borderRadius: 16,
-    paddingHorizontal: 5,
-    paddingVertical: 20,
+    marginBottom: 8,
   },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 0,
     textAlign: 'center',
   },
   time: {
@@ -82,8 +71,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   rangeLabelRow: {
-    marginTop: 4,
-    paddingHorizontal: 14,
+    paddingHorizontal: 2,
   },
   rangeLabel: {
     fontSize: 13,
