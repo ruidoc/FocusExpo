@@ -34,7 +34,12 @@ export class VipStore {
 
   async getProducts() {
     try {
-      const res: HttpRes = await http.get('/product/list');
+      const res: HttpRes = await http.get('/product/list', {
+        params: {
+          platform: 'iOS',
+          is_subscription: 0,
+        },
+      });
       if (res.statusCode === 200) {
         this.products = res.data;
       }

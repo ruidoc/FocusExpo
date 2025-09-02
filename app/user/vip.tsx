@@ -3,7 +3,7 @@ import { vipStore } from '@/stores/vip';
 import { fenToYuan } from '@/utils';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
-import { useIAP } from 'expo-iap';
+import { ProductPurchase, useIAP, validateReceipt } from 'expo-iap';
 import { LinearGradient } from 'expo-linear-gradient';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useState } from 'react';
@@ -32,13 +32,39 @@ const VipPage = observer(() => {
     requestPurchase,
     currentPurchase,
     finishTransaction,
-  } = useIAP();
+  } = useIAP({
+    onPurchaseSuccess: (purchase) => {
+      console.log('Purchase successful:', purchase);
+      // Handle successful purchase
+      validatePurchase(purchase);
+    },
+    onPurchaseError: (error) => {
+      console.error('Purchase failed:', error);
+      // Handle purchase error
+    },
+    onSyncError: (error) => {
+      console.log('Sync error:', error);
+      // Handle transaction finished
+    },
+  });
 
   const productIds = [
     'com.focusone.coins_10',
     'com.focusone.coins_30',
     'com.focusone.coins_50',
   ];
+
+  const validatePurchase = async (purchase: ProductPurchase) => {
+    try {
+      const result = await validateReceipt(purchase.transactionId);
+      if (result.isValid) {
+        // Grant user the purchased content
+        console.log('Receipt is valid');
+      }
+    } catch (error) {
+      console.error('Validation failed:', error);
+    }
+  };
 
   useEffect(() => {
     // 加载产品列表
@@ -47,6 +73,7 @@ const VipPage = observer(() => {
 
   useEffect(() => {
     if (connected) {
+      console.log('【已连接IAP】');
       // Fetch your products
       requestProducts({ skus: productIds, type: 'inapp' });
     }
@@ -295,12 +322,16 @@ const VipPage = observer(() => {
 
   const getIosProducts = () => {
     requestProducts({ skus: productIds, type: 'inapp' })
-      .then(res => {
-        console.log('获取商品列表结果：', res);
+      .then(() => {
+        console.log('获取商品列表结果：', products);
       })
       .catch(err => {
         console.log('获取商品列表失败：', err);
       });
+  };
+
+  const toCharge = (id: string) => {
+    requestPurchase({ request: { ios: { sku: id } } })
   };
 
   // 处理价格显示，移除小数点后的0
@@ -332,18 +363,6 @@ const VipPage = observer(() => {
           {store.products.map(product => {
             const isSelected = store.selectedProduct?.id === product.id;
             // 为不同套餐添加适当的标签
-            let label = null;
-            if (
-              product.name?.includes('月') &&
-              !product.name?.includes('3个月')
-            ) {
-              label = '仅0.26元/天';
-            } else if (product.name?.includes('年') || product.price > 5000) {
-              label = product.name?.includes('年')
-                ? '单月最低'
-                : '支持微信支付';
-            }
-
             return (
               <TouchableOpacity
                 key={product.id}
@@ -361,11 +380,9 @@ const VipPage = observer(() => {
                   />
                 )}
                 {/* 标签 */}
-                {label && (
-                  <View style={styles.planLabel}>
-                    <Text style={styles.planLabelText}>{label}</Text>
-                  </View>
-                )}
+                <View style={styles.planLabel}>
+                  <Text style={styles.planLabelText}>购买币</Text>
+                </View>
                 {/* 内容 */}
                 <View style={styles.planContent}>
                   <Text style={styles.planName}>
@@ -389,7 +406,7 @@ const VipPage = observer(() => {
         </View>
 
         {/* 续费说明 */}
-        <Text style={styles.renewalText}>{JSON.stringify(products)}</Text>
+        <Text style={styles.renewalText}></Text>
       </View>
 
       {/* 3. 会员特权区域 */}
@@ -441,7 +458,7 @@ const VipPage = observer(() => {
         <TouchableOpacity
           style={[styles.payButton, !isAgreed && { opacity: 0.7 }]}
           disabled={!isAgreed || !store.selectedProduct}
-          onPress={() => store.recharge()}>
+          onPress={() => toCharge(store.selectedProduct?.product_id)}>
           <Text style={styles.payText}>立即续费</Text>
         </TouchableOpacity>
       </View>
