@@ -20,6 +20,7 @@ extension UserDefaults {
 struct CustomFamilyActivityPicker: View {
   @Binding var selection: FamilyActivitySelection
   var onDismiss: (Bool) -> Void
+  var maxCount: Int = 0 // 0 表示不限制；>0 时限制选择数量并禁止分组
   
   @Environment(\.dismiss) private var dismiss
   @State private var selectedApps = FamilyActivitySelection()
@@ -38,6 +39,34 @@ struct CustomFamilyActivityPicker: View {
           }
           ToolbarItem(placement: .confirmationAction) {
             Button("完成") {
+              // 校验：当 maxCount > 0 时，限制应用数量且禁止分组选择
+              if maxCount > 0 {
+                let appCount = selectedApps.applicationTokens.count
+                let hasGroups = !selectedApps.categoryTokens.isEmpty
+                if hasGroups {
+                  // 不允许选择分组
+                  let alert = UIAlertController(title: "不支持选择分组", message: "请仅选择具体的 App。", preferredStyle: .alert)
+                  alert.addAction(UIAlertAction(title: "我知道了", style: .default, handler: nil))
+                  if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                     let rootViewController = windowScene.windows.first?.rootViewController {
+                    var top = rootViewController
+                    while let presented = top.presentedViewController { top = presented }
+                    top.present(alert, animated: true, completion: nil)
+                  }
+                  return
+                }
+                if appCount > maxCount {
+                  let alert = UIAlertController(title: "最多可选择 \(maxCount) 个 App", message: "请减少选择的 App 数量后再试。", preferredStyle: .alert)
+                  alert.addAction(UIAlertAction(title: "好的", style: .default, handler: nil))
+                  if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                     let rootViewController = windowScene.windows.first?.rootViewController {
+                    var top = rootViewController
+                    while let presented = top.presentedViewController { top = presented }
+                    top.present(alert, animated: true, completion: nil)
+                  }
+                  return
+                }
+              }
               // 将选择的应用传递给外部绑定
               selection = selectedApps
               onDismiss(true)
@@ -254,8 +283,9 @@ class NativeModule: RCTEventEmitter {
   }
   
   // 选择要限制的应用
+  // maxCount: 0 表示不限制；>0 表示限制选择数量并禁止分组
   @objc
-  func selectAppsToLimit(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  func selectAppsToLimit(_ maxCount: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     Task {
       do {
         // 确保已获取权限
@@ -298,7 +328,8 @@ class NativeModule: RCTEventEmitter {
                   // 用户取消选择
                   resolve(["success": false])
                 }
-              }
+              },
+              maxCount: Int(truncating: maxCount)
             )
           )
           

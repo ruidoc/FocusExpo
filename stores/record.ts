@@ -42,7 +42,7 @@ class RecordStore {
         total_min: plan.end_min - plan.start_min,
         apps: apps,
         mode: plan.mode,
-        base_amount: 1,
+        base_amount: 0,
         bet_amount,
       });
       if (res.statusCode === 200) {

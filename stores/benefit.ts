@@ -16,7 +16,7 @@ export class BenefitStore {
   focus_duration: number = 0;
 
   // 可限制的应用数量
-  app_count: number = 0;
+  app_count: number = 1;
 
   // 可限制的分类数量（IOS）
   category_count: number;

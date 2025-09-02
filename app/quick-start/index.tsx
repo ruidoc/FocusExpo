@@ -11,6 +11,7 @@ import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { ReactNode, useLayoutEffect, useMemo, useState } from 'react';
 import {
@@ -29,9 +30,8 @@ import TimeSlider from './time-slider';
 const QuickStartPage = observer(() => {
   const [mode, setMode] = useState<'focus' | 'shield'>('shield');
   const [minute, setMinute] = useState(15);
-  const [bet, setBet] = useState<number>(5);
-  const [customBet, setCustomBet] = useState<string>('');
-  const [useCustom, setUseCustom] = useState<boolean>(false);
+  const [bet, setBet] = useState<number>(5); // 底注
+  const [customBet, setCustomBet] = useState(0); // 自定义下注
   const [desc, setDesc] = useState<string>('');
   const [pickerVisible, setPickerVisible] = useState<boolean>(false);
   const navigation = useNavigation();
@@ -113,6 +113,18 @@ const QuickStartPage = observer(() => {
     [bstore.balance],
   );
 
+  // 计算基于时长的最小下注值：每30分钟+1
+  const minBet = useMemo(() => {
+    return Math.floor((minute - 1) / 30) + 1;
+  }, [minute]);
+
+  // 当时长变化时，确保下注不低于最小值
+  React.useEffect(() => {
+    if (customBet < minBet) {
+      setCustomBet(minBet);
+    }
+  }, [minBet, customBet]);
+
   const setOncePlan = () => {
     let now = dayjs();
     let cur_minute = now.hour() * 60 + now.minute();
@@ -136,20 +148,18 @@ const QuickStartPage = observer(() => {
     if (Platform.OS === 'ios') {
       select_apps = astore.ios_selected_apps.map(r => `${r.id}:${r.type}`);
     }
-    const finalBet = useCustom
-      ? Math.max(0, Number.parseInt(customBet || '0', 10) || 0)
-      : bet;
     rstore.addRecord(
       from_data,
       select_apps,
-      finalBet,
+      customBet,
       desc?.trim() || undefined,
     );
     return newId;
   };
 
   const selectApps = () => {
-    selectAppsToLimit().then(data => {
+    const maxCount = Number(bstore.app_count || 0);
+    selectAppsToLimit(maxCount).then(data => {
       astore.setIosSelectedApps(data.apps);
     });
   };
@@ -160,14 +170,14 @@ const QuickStartPage = observer(() => {
       return Toast('当前有正在进行的任务');
     }
     // 校验下注（通用）
-    const finalBetCommon = useCustom
-      ? Math.max(0, Number.parseInt(customBet || '0', 10) || 0)
-      : bet;
-    if (!finalBetCommon || finalBetCommon <= 0) {
+    if (!customBet || customBet <= 0) {
       return Toast('请设置有效的下注数量');
     }
-    if (finalBetCommon > maxBet) {
-      return Toast('超出自律币余额');
+    if (customBet < minBet) {
+      return Toast(`当前时长最小下注为${minBet}个自律币`);
+    }
+    if (customBet > maxBet) {
+      return Toast('超出自律币余额，请先充值');
     }
     if (Platform.OS === 'ios') {
       // iOS: 使用屏幕时间限制开始屏蔽
@@ -237,26 +247,21 @@ const QuickStartPage = observer(() => {
             <Flex align="center">
               <Pressable
                 onPress={() => {
-                  setUseCustom(true);
-                  let n = Math.max(
-                    1,
-                    (Number.parseInt(customBet || '0', 10) || bet) - 1,
-                  );
+                  let n = Math.max(minBet, (customBet || 0) - 1);
                   n = Math.min(n, maxBet);
-                  setCustomBet(String(n));
+                  setCustomBet(n);
                 }}
                 style={styles.stepperBtn}>
                 <Icon name="remove" size={16} color={colors.text} />
               </Pressable>
               <TextInput
                 keyboardType="number-pad"
-                value={String(useCustom ? customBet : bet)}
+                value={String(customBet)}
                 onChangeText={t => {
-                  setUseCustom(true);
-                  const n = Number.parseInt(t || '0', 10);
-                  if (Number.isNaN(n)) return setCustomBet('0');
-                  const clamped = Math.max(0, Math.min(maxBet, n));
-                  setCustomBet(String(clamped));
+                  const n = Number(t || '0');
+                  if (Number.isNaN(n)) return setCustomBet(minBet);
+                  const clamped = Math.max(minBet, Math.min(maxBet, n));
+                  setCustomBet(clamped);
                 }}
                 style={styles.stepperInput}
                 maxLength={5}
@@ -264,10 +269,9 @@ const QuickStartPage = observer(() => {
               />
               <Pressable
                 onPress={() => {
-                  setUseCustom(true);
-                  let n = (Number.parseInt(customBet || '0', 10) || bet) + 1;
-                  n = Math.max(1, Math.min(maxBet, n));
-                  setCustomBet(String(n));
+                  let n = (customBet || 0) + 1;
+                  n = Math.max(minBet, Math.min(maxBet, n));
+                  setCustomBet(n);
                 }}
                 style={styles.stepperBtn}>
                 <Icon name="add" size={16} color={colors.text} />
@@ -278,11 +282,38 @@ const QuickStartPage = observer(() => {
             justify="between"
             align="center"
             style={{ paddingHorizontal: 16, marginTop: 8 }}>
-            <Text style={styles.tipText}>可用自律币：{bstore.balance}</Text>
-            <Text style={styles.tipText}>
-              本次将消耗：{useCustom ? customBet : bet}
-            </Text>
+            <Flex align="center">
+              <Text style={styles.tipText}>可用自律币：{bstore.balance}</Text>
+              {(bstore.balance || 0) < customBet && (
+                <Pressable
+                  onPress={() => router.push('/user/coins')}
+                  style={{
+                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 12,
+                    marginLeft: 8,
+                  }}>
+                  <Text style={{ color: '#fff', fontSize: 12 }}>去充值</Text>
+                </Pressable>
+              )}
+            </Flex>
+            <Text style={styles.tipText}>本次将消耗：{customBet}</Text>
           </Flex>
+          <View style={{ paddingHorizontal: 16, marginTop: 4 }}>
+            <Text style={[styles.tipText, { fontSize: 12, opacity: 0.8 }]}>
+              当前时长最小下注：{minBet}个自律币
+            </Text>
+            {(bstore.balance || 0) < customBet && (
+              <Text
+                style={[
+                  styles.tipText,
+                  { fontSize: 12, color: '#ff6b6b', marginTop: 4 },
+                ]}>
+                余额不足，请充值后开始专注
+              </Text>
+            )}
+          </View>
         </ItemRow>
         {/* <ItemRow title="一句话加油">
           <View style={{ paddingHorizontal: 16 }}>
