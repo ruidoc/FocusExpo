@@ -1,4 +1,11 @@
-import { AppStore, HomeStore, PlanStore, UserStore } from '@/stores';
+import {
+  AppStore,
+  BenefitStore,
+  HomeStore,
+  PlanStore,
+  RecordStore,
+  UserStore,
+} from '@/stores';
 import { toast } from '@/utils';
 import { stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -23,12 +30,14 @@ const FocusButton = observer(() => {
   const pstore = useLocalObservable(() => PlanStore);
   const store = useLocalObservable(() => HomeStore);
   const astore = useLocalObservable(() => AppStore);
+  const rstore = useLocalObservable(() => RecordStore);
   const { dark } = useTheme();
   const xcolor = Theme.useThemeTokens();
 
   // 弹窗状态
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [showStopModal, setShowStopModal] = useState(false);
+  const [stopCost, setStopCost] = useState<number>(0);
 
   const getStateName = () => {
     if (pstore.cur_plan) {
@@ -164,7 +173,26 @@ const FocusButton = observer(() => {
         )}
         {pstore.cur_plan?.repeat === 'once' && (
           <TouchableOpacity
-            onPress={() => setShowStopModal(true)}
+            onPress={async () => {
+              try {
+                const id = rstore.record_id;
+                let bet = 0;
+                if (id) {
+                  let rec: any = rstore.records.find((x: any) => x.id === id);
+                  if (!rec) {
+                    await rstore.getRecords();
+                    rec = rstore.records.find((x: any) => x.id === id);
+                  }
+                  if (rec && typeof rec.bet_amount === 'number') {
+                    bet = rec.bet_amount;
+                  }
+                }
+                setStopCost(bet);
+              } catch {
+                setStopCost(0);
+              }
+              setShowStopModal(true);
+            }}
             activeOpacity={0.8}
             style={styles.circleButton}>
             <Icon name="stop" size={24} color="#B3B3BA" />
@@ -178,6 +206,8 @@ const FocusButton = observer(() => {
         message="暂停可能会影响你的专注状态，确定要暂停吗？"
         confirmText="确认暂停"
         cancelText="继续专注"
+        coinCost={1}
+        coinBalance={BenefitStore.balance}
         onConfirm={pauseFocus}
         onCancel={() => {}}
         onClose={() => setShowPauseModal(false)}
@@ -190,6 +220,8 @@ const FocusButton = observer(() => {
         message="结束后将无法恢复当前任务，确定要结束吗？"
         confirmText="确认结束"
         cancelText="继续专注"
+        coinCost={stopCost}
+        coinBalance={BenefitStore.balance}
         onConfirm={stopFocus}
         onCancel={() => {}}
         onClose={() => setShowStopModal(false)}

@@ -54,7 +54,7 @@ export default function RootLayout() {
       clearTimeout(delay.current as any);
       delay.current = null as any;
     }
-    let record_id = await AsyncStorage.getItem('record_id');
+    let record_id = RecordStore.record_id;
     const schedule = () => {
       // 用获取分钟的方法，计算到下一个整分的秒数
       const now = new Date();

@@ -11,12 +11,26 @@ class RecordStore {
 
   records: RecordInfo[] = []; // 任务列表
 
+  record_id: string = ''; // 当前记录Id
+
   total_mins: number = 0; // 计划专注时长（分钟数）
   actual_mins: number = 0; // 实际专注时长（分钟数）
   success_rate: string = '0%'; // 专注成功率
 
+  get cur_record() {
+    return this.records.find(x => x.id === this.record_id);
+  }
+
   setRecords = (records: any[]) => {
     this.records = records;
+  };
+  setRecordId = (id: string) => {
+    this.record_id = id;
+    AsyncStorage.setItem('record_id', id);
+  };
+  removeRecordId = () => {
+    this.record_id = '';
+    AsyncStorage.removeItem('record_id');
   };
 
   // 格式化专注时长
@@ -46,7 +60,7 @@ class RecordStore {
         bet_amount,
       });
       if (res.statusCode === 200) {
-        AsyncStorage.setItem('record_id', res.data.id);
+        this.setRecordId(res.data.id);
         // 记录描述仅本地存储，避免后端字段不兼容
         if (description && typeof description === 'string') {
           try {

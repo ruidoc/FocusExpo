@@ -3,6 +3,7 @@ import { vipStore } from '@/stores/vip';
 import { fenToYuan } from '@/utils';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
+import { useIAP } from 'expo-iap';
 import { LinearGradient } from 'expo-linear-gradient';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useState } from 'react';
@@ -24,11 +25,32 @@ const VipPage = observer(() => {
   const store = useLocalObservable(() => vipStore);
   const { colors, dark } = useTheme();
   const [isAgreed, setIsAgreed] = useState(false);
+  const {
+    connected,
+    products,
+    requestProducts,
+    requestPurchase,
+    currentPurchase,
+    finishTransaction,
+  } = useIAP();
+
+  const productIds = [
+    'com.focusone.coins_10',
+    'com.focusone.coins_30',
+    'com.focusone.coins_50',
+  ];
 
   useEffect(() => {
     // 加载产品列表
     store.getProducts();
   }, []);
+
+  useEffect(() => {
+    if (connected) {
+      // Fetch your products
+      requestProducts({ skus: productIds, type: 'inapp' });
+    }
+  }, [connected]);
 
   // 设计常量
   const THEME_COLOR = '#3DD073'; // 绿色主题色
@@ -271,6 +293,16 @@ const VipPage = observer(() => {
     },
   });
 
+  const getIosProducts = () => {
+    requestProducts({ skus: productIds, type: 'inapp' })
+      .then(res => {
+        console.log('获取商品列表结果：', res);
+      })
+      .catch(err => {
+        console.log('获取商品列表失败：', err);
+      });
+  };
+
   // 处理价格显示，移除小数点后的0
   const formatPrice = (price: string): string => {
     return price.replace('.00', '');
@@ -284,7 +316,7 @@ const VipPage = observer(() => {
         <Text style={styles.validUntil}>
           有效期至2025/06/11(未开启自动续费)
         </Text>
-        <Flex align="center">
+        <Flex align="center" onPress={getIosProducts}>
           <Text style={styles.downloadLimit}>本期歌曲下载剩余数额300/300</Text>
           <View style={styles.infoIcon}>
             <Text style={{ color: TEXT_LIGHT, fontSize: 12 }}>i</Text>
@@ -357,7 +389,7 @@ const VipPage = observer(() => {
         </View>
 
         {/* 续费说明 */}
-        <Text style={styles.renewalText}>到期续费8元/月</Text>
+        <Text style={styles.renewalText}>{JSON.stringify(products)}</Text>
       </View>
 
       {/* 3. 会员特权区域 */}

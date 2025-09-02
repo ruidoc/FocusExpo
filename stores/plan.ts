@@ -51,7 +51,7 @@ class PlanStore {
 
   // 设置当前任务的暂停状态，并同步到列表中
   setCurrentPlanPause = async (paused: boolean) => {
-    let record_id = await AsyncStorage.getItem('record_id');
+    let record_id = RecordStore.record_id;
     if (paused && record_id) {
       BenefitStore.subBalance();
       await RecordStore.pauseRecord(record_id);
@@ -63,11 +63,11 @@ class PlanStore {
   // 专注计划完成
   complatePlan = async () => {
     console.log('【专注计划完成】');
-    let record_id = await AsyncStorage.getItem('record_id');
+    let record_id = RecordStore.record_id;
     if (record_id) {
       await RecordStore.completeRecord(record_id);
     }
-    AsyncStorage.removeItem('record_id');
+    RecordStore.removeRecordId();
     this.setCurrentPlanPause(false);
     this.setCurPlanMinute(0);
     this.resetPlan();
@@ -75,11 +75,11 @@ class PlanStore {
 
   // 专注计划终止
   exitPlan = async () => {
-    let record_id = await AsyncStorage.getItem('record_id');
+    let record_id = RecordStore.record_id;
     if (record_id) {
       await RecordStore.exitRecord(record_id);
     }
-    AsyncStorage.removeItem('record_id');
+    RecordStore.removeRecordId();
     this.setCurrentPlanPause(false);
     this.setCurPlanMinute(0);
     this.resetPlan();

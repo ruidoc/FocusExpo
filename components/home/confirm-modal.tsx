@@ -18,6 +18,9 @@ interface ConfirmationModalProps {
   message: string;
   confirmText: string;
   cancelText: string;
+  // 可选：展示经济信息（本次消耗与剩余）
+  coinCost?: number;
+  coinBalance?: number;
   onConfirm: () => void;
   onCancel: () => void;
   onClose: () => void;
@@ -33,6 +36,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   message,
   confirmText,
   cancelText,
+  coinCost,
+  coinBalance,
   onConfirm,
   onCancel,
   onClose,
@@ -67,29 +72,32 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  const animateOut = React.useCallback((onEnd?: () => void) => {
-    setIsAnimatingOut(true);
-    fadeAnim.stopAnimation();
-    slideAnim.stopAnimation();
+  const animateOut = React.useCallback(
+    (onEnd?: () => void) => {
+      setIsAnimatingOut(true);
+      fadeAnim.stopAnimation();
+      slideAnim.stopAnimation();
 
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: ANIMATION_DURATION_OUT,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: screenHeight,
-        duration: ANIMATION_DURATION_OUT + 60,
-        useNativeDriver: true,
-      }),
-    ]).start(({ finished }) => {
-      if (finished) {
-        setIsAnimatingOut(false);
-        onEnd && onEnd();
-      }
-    });
-  }, [fadeAnim, slideAnim]);
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: ANIMATION_DURATION_OUT,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: screenHeight,
+          duration: ANIMATION_DURATION_OUT + 60,
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
+        if (finished) {
+          setIsAnimatingOut(false);
+          onEnd && onEnd();
+        }
+      });
+    },
+    [fadeAnim, slideAnim],
+  );
 
   // 受控挂载：visible 变为 true 先挂载再入场动画；变为 false 先退场动画再卸载
   React.useEffect(() => {
@@ -131,11 +139,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       visible={mounted}
       transparent
       animationType="none"
-      presentationStyle={Platform.select({ ios: 'overFullScreen', default: undefined })}
+      presentationStyle={Platform.select({
+        ios: 'overFullScreen',
+        default: undefined,
+      })}
       hardwareAccelerated
       statusBarTranslucent
-      onRequestClose={onClose}
-    >
+      onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View
           pointerEvents={isAnimatingOut ? 'none' : 'auto'}
@@ -144,8 +154,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             {
               opacity: fadeAnim,
             },
-          ]}
-        >
+          ]}>
           <TouchableWithoutFeedback>
             <Animated.View
               style={[
@@ -153,12 +162,14 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 {
                   transform: [{ translateY: slideAnim }],
                 },
-              ]}
-            >
+              ]}>
               {/* 顶部手柄条，增强视觉 */}
               <View style={styles.handle} />
               {/* 关闭按钮 */}
-              <TouchableOpacity style={styles.closeButton} onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={onClose}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Icon name="close" size={24} color="#B3B3BA" />
               </TouchableOpacity>
 
@@ -175,15 +186,28 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
               {/* 提示横幅 */}
               <View style={styles.banner}>
-                <Text style={styles.bannerText}>{message}</Text>
+                <Text style={styles.bannerText}>
+                  {message}
+                  {typeof coinCost === 'number' &&
+                  typeof coinBalance === 'number'
+                    ? `\n本次将消耗：${coinCost} 自律币；预计剩余：${Math.max(
+                        0,
+                        coinBalance - coinCost,
+                      )} 自律币`
+                    : ''}
+                </Text>
               </View>
 
               {/* 按钮区域 */}
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={handleCancel}>
                   <Text style={styles.cancelButtonText}>{cancelText}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={handleConfirm}>
                   <Text style={styles.confirmButtonText}>{confirmText}</Text>
                 </TouchableOpacity>
               </View>

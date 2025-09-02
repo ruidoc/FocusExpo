@@ -44,8 +44,8 @@ const Index = observer(() => {
     );
   }
 
-  const initialRoute = store.uInfo ? '/(tabs)' : '/(guides)/step1';
-  // const initialRoute = '/(tabs)';
+  // const initialRoute = store.uInfo ? '/(tabs)' : '/(guides)/step1';
+  const initialRoute = '/user/vip';
 
   return <Redirect href={initialRoute} />;
 });
