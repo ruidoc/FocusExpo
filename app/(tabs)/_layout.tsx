@@ -72,13 +72,28 @@ const TabLayout = () => {
           headerShown: false,
           tabBarIcon: ({ focused }) => (
             <Icon
+              name={focused ? 'timer' : 'timer-outline'}
+              size={22}
+              color={focused ? colors.primary : colors.text}
+            />
+          ),
+          headerRight: () => <RightDom colors={colors} toRoute={toRoute} />,
+          headerLeft: () => <LeftDom colors={colors} toRoute={toRoute} />,
+        }}
+      />
+      <Tabs.Screen
+        name="record"
+        options={{
+          title: '统计',
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <Icon
               name={focused ? 'bar-chart' : 'bar-chart-outline'}
               size={20}
               color={focused ? colors.primary : colors.text}
             />
           ),
           headerRight: () => <RightDom colors={colors} toRoute={toRoute} />,
-          headerLeft: () => <LeftDom colors={colors} toRoute={toRoute} />,
         }}
       />
       <Tabs.Screen

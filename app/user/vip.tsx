@@ -1,65 +1,66 @@
 import { CusPage } from '@/components';
 import { vipStore } from '@/stores/vip';
 import { fenToYuan } from '@/utils';
-import { Flex } from '@fruits-chain/react-native-xiaoshu';
+import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
-import { ProductPurchase, useIAP, validateReceipt } from 'expo-iap';
+import { Purchase, useIAP, validateReceipt } from 'expo-iap';
 import { LinearGradient } from 'expo-linear-gradient';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Linking,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 // 产品类型定义
-interface Product {
-  id: string;
-  name?: string;
-  price: number;
-  original_price: number;
-  period?: number;
-  product_id?: string;
-  price_id?: string;
-  is_subscription?: number;
-}
-
 const VipPage = observer(() => {
   const store = useLocalObservable(() => vipStore);
   const { colors, dark } = useTheme();
   const [isAgreed, setIsAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
   const {
     connected,
-    products,
+    purchaseHistories,
     requestProducts,
     requestPurchase,
-    currentPurchase,
     finishTransaction,
+    getPurchaseHistories,
   } = useIAP({
-    onPurchaseSuccess: (purchase) => {
+    onPurchaseSuccess: purchase => {
       console.log('Purchase successful:', purchase);
       // Handle successful purchase
       validatePurchase(purchase);
     },
-    onPurchaseError: (error) => {
+    onPurchaseError: error => {
       console.error('Purchase failed:', error);
       // Handle purchase error
     },
-    onSyncError: (error) => {
+    onSyncError: error => {
       console.log('Sync error:', error);
       // Handle transaction finished
     },
   });
 
-  const productIds = [
+  const consumableSkus = [
     'com.focusone.coins_10',
     'com.focusone.coins_30',
     'com.focusone.coins_50',
   ];
-
-  const validatePurchase = async (purchase: ProductPurchase) => {
+  const validatePurchase = async (purchase: Purchase) => {
     try {
       const result = await validateReceipt(purchase.transactionId);
       if (result.isValid) {
         // Grant user the purchased content
         console.log('Receipt is valid');
+        try {
+          await finishTransaction({ purchase, isConsumable: true });
+        } catch (e) {
+          console.warn('finishTransaction error:', e);
+        }
       }
     } catch (error) {
       console.error('Validation failed:', error);
@@ -67,67 +68,32 @@ const VipPage = observer(() => {
   };
 
   useEffect(() => {
-    // 加载产品列表
-    store.getProducts();
-  }, []);
-
-  useEffect(() => {
-    if (connected) {
-      console.log('【已连接IAP】');
-      // Fetch your products
-      requestProducts({ skus: productIds, type: 'inapp' });
-    }
+    if (!connected) return;
+    setLoading(true);
+    // 必须获取商品列表，才能唤起购买弹窗
+    requestProducts({ skus: consumableSkus, type: 'inapp' })
+      .then(() => {
+        console.log('商品获取成功');
+      })
+      .catch(() => {
+        Toast({ message: '商品获取失败，请检查产品配置与网络' });
+      })
+      .finally(() => setLoading(false));
   }, [connected]);
 
+  useEffect(() => {
+    // 加载产品列表
+    store.getProducts();
+  }, [store]);
+
   // 设计常量
-  const THEME_COLOR = '#3DD073'; // 绿色主题色
-  const DARK_BG = dark ? '#121212' : '#FAFAFA';
+  const THEME_COLOR = colors.primary; // 使用应用主题色
+  // const DARK_BG = dark ? '#121212' : '#FAFAFA';
   const TEXT_LIGHT = '#FFFFFF';
   const TEXT_SECONDARY = '#999999';
   const CARD_BG = dark ? '#222222' : '#FFFFFF';
 
   const styles = StyleSheet.create({
-    // 会员状态区域
-    memberStatusCard: {
-      backgroundColor: dark ? '#1A1A1A' : '#222222',
-      borderRadius: 16,
-      padding: 20,
-      marginHorizontal: 15,
-      marginTop: 15,
-      marginBottom: 30,
-      position: 'relative',
-      overflow: 'hidden',
-    },
-    statusText: {
-      color: THEME_COLOR,
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: 10,
-    },
-    validUntil: {
-      color: '#AAAAAA',
-      fontSize: 15,
-      marginBottom: 6,
-    },
-    downloadLimit: {
-      color: '#AAAAAA',
-      fontSize: 15,
-    },
-    infoIcon: {
-      width: 18,
-      height: 18,
-      borderRadius: 9,
-      backgroundColor: 'rgba(255,255,255,0.2)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginLeft: 5,
-    },
-    musicIcons: {
-      position: 'absolute',
-      right: 20,
-      bottom: 20,
-    },
-
     // 套餐选择区域
     sectionContainer: {
       paddingHorizontal: 15,
@@ -218,42 +184,6 @@ const VipPage = observer(() => {
     },
 
     // 会员特权区域
-    privilegesTitle: {
-      fontSize: 22,
-      color: colors.text,
-      marginBottom: 20,
-      fontWeight: 'bold',
-    },
-    privilegesContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 30,
-    },
-    privilegeItem: {
-      alignItems: 'center',
-      width: '31%',
-    },
-    privilegeIcon: {
-      width: 60,
-      height: 60,
-      borderRadius: 15,
-      backgroundColor: dark ? '#333' : '#444',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 10,
-    },
-    privilegeName: {
-      fontSize: 16,
-      color: colors.text,
-      fontWeight: 'bold',
-      marginBottom: 6,
-    },
-    privilegeDesc: {
-      fontSize: 13,
-      color: TEXT_SECONDARY,
-      textAlign: 'center',
-    },
-
     // 底部支付区域
     bottomContainer: {
       padding: 15,
@@ -318,20 +248,77 @@ const VipPage = observer(() => {
       fontSize: 18,
       fontWeight: 'bold',
     },
+    // 合规入口区域
+    complianceRow: {
+      marginTop: 14,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    smallButton: {
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border || '#E5E7EB',
+      backgroundColor: CARD_BG,
+    },
+    smallButtonText: {
+      color: colors.text,
+      fontSize: 14,
+    },
+    linksRow: {
+      marginTop: 12,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+    },
+    linkText: {
+      color: THEME_COLOR,
+      fontSize: 13,
+      marginRight: 14,
+    },
   });
 
-  const getIosProducts = () => {
-    requestProducts({ skus: productIds, type: 'inapp' })
-      .then(() => {
-        console.log('获取商品列表结果：', products);
-      })
-      .catch(err => {
-        console.log('获取商品列表失败：', err);
-      });
+  const toCharge = (id?: string) => {
+    if (!id) return;
+    const { close } = Toast.loading({
+      message: '等待支付...',
+      duration: 0,
+      forbidPress: true,
+    });
+    requestPurchase({ request: { ios: { sku: id } } }).finally(() => {
+      close();
+    });
   };
 
-  const toCharge = (id: string) => {
-    requestPurchase({ request: { ios: { sku: id } } })
+  // iOS 合规：恢复购买
+  const onRestorePurchases = async () => {
+    if (Platform.OS !== 'ios') return;
+    getPurchaseHistories(consumableSkus).then(() => {
+      console.log('恢复购买记录：', purchaseHistories.length || 0);
+    });
+  };
+
+  // iOS 合规：管理订阅
+  const onManageSubscriptions = async () => {
+    try {
+      if (Platform.OS === 'ios') {
+        await Linking.openURL(
+          'itms-apps://apps.apple.com/account/subscriptions',
+        );
+      }
+    } catch (e) {
+      console.warn('打开订阅管理失败：', e);
+    }
+  };
+
+  const openAgreement = () => {
+    Linking.openURL('https://focusone.ruidoc.cn/agreement');
+  };
+
+  const openPrivacy = () => {
+    Linking.openURL('https://focusone.ruidoc.cn/privacy');
   };
 
   // 处理价格显示，移除小数点后的0
@@ -341,22 +328,7 @@ const VipPage = observer(() => {
 
   return (
     <CusPage>
-      {/* 1. 会员状态区域 */}
-      <View style={styles.memberStatusCard}>
-        <Text style={styles.statusText}>会员生效中</Text>
-        <Text style={styles.validUntil}>
-          有效期至2025/06/11(未开启自动续费)
-        </Text>
-        <Flex align="center" onPress={getIosProducts}>
-          <Text style={styles.downloadLimit}>本期歌曲下载剩余数额300/300</Text>
-          <View style={styles.infoIcon}>
-            <Text style={{ color: TEXT_LIGHT, fontSize: 12 }}>i</Text>
-          </View>
-        </Flex>
-        <View style={styles.musicIcons}>{/* 这里可以放置音符图标 */}</View>
-      </View>
-
-      {/* 2. 套餐选择区域 */}
+      {/* 套餐选择 */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>选择套餐</Text>
         <View style={styles.plansContainer}>
@@ -405,35 +377,10 @@ const VipPage = observer(() => {
           })}
         </View>
 
-        {/* 续费说明 */}
         <Text style={styles.renewalText}></Text>
       </View>
 
-      {/* 3. 会员特权区域 */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.privilegesTitle}>会员特权</Text>
-        <View style={styles.privilegesContainer}>
-          <View style={styles.privilegeItem}>
-            <View style={styles.privilegeIcon}>{/* 音乐图标占位 */}</View>
-            <Text style={styles.privilegeName}>会员曲库</Text>
-            <Text style={styles.privilegeDesc}>丰富会员曲库</Text>
-          </View>
-
-          <View style={styles.privilegeItem}>
-            <View style={styles.privilegeIcon}>{/* 下载图标占位 */}</View>
-            <Text style={styles.privilegeName}>下载特权</Text>
-            <Text style={styles.privilegeDesc}>300首/月免费</Text>
-          </View>
-
-          <View style={styles.privilegeItem}>
-            <View style={styles.privilegeIcon}>{/* 设备图标占位 */}</View>
-            <Text style={styles.privilegeName}>多端通用</Text>
-            <Text style={styles.privilegeDesc}>手机/电脑</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 4. 底部支付区域 */}
+      {/* 底部支付与合规入口 */}
       <View style={styles.bottomContainer}>
         <TouchableOpacity
           style={styles.agreementRow}
@@ -450,9 +397,6 @@ const VipPage = observer(() => {
             <Text style={styles.agreementLink}>《会员自动续费服务协议》</Text>
             ，不支持退款
           </Text>
-          <View style={styles.helpIcon}>
-            <Text style={styles.helpText}>?</Text>
-          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -461,6 +405,30 @@ const VipPage = observer(() => {
           onPress={() => toCharge(store.selectedProduct?.product_id)}>
           <Text style={styles.payText}>立即续费</Text>
         </TouchableOpacity>
+
+        {/* 合规入口：恢复购买、管理订阅 */}
+        <View style={styles.complianceRow}>
+          <TouchableOpacity
+            style={styles.smallButton}
+            onPress={onRestorePurchases}>
+            <Text style={styles.smallButtonText}>恢复购买</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.smallButton}
+            onPress={onManageSubscriptions}>
+            <Text style={styles.smallButtonText}>管理订阅</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 协议与隐私链接 */}
+        <View style={styles.linksRow}>
+          <TouchableOpacity onPress={openAgreement}>
+            <Text style={styles.linkText}>用户协议</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={openPrivacy}>
+            <Text style={styles.linkText}>隐私政策</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </CusPage>
   );

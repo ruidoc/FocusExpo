@@ -14,12 +14,12 @@ export async function getScreenTimePermission(): Promise<boolean> {
 }
 
 // 检查屏幕时间权限
-export async function checkScreenTimePermission(): Promise<string> {
+export async function checkScreenTimePermission(init = 1): Promise<string> {
   if (Platform.OS !== 'ios') return 'notSupported';
   try {
     let status = await NativeModules.NativeModule.checkScreenTimePermission();
-    if (status === 'notDetermined') {
-      status = await checkScreenTimePermission();
+    if (init < 2 && status === 'notDetermined') {
+      status = await checkScreenTimePermission(init + 1);
     }
     console.log('屏幕时间权限：', status);
     return status;
