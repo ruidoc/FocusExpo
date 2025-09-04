@@ -79,7 +79,7 @@ const VipPage = observer(() => {
         Toast({ message: '商品获取失败，请检查产品配置与网络' });
       })
       .finally(() => setLoading(false));
-  }, [connected]);
+  }, [connected, requestProducts]);
 
   useEffect(() => {
     // 加载产品列表

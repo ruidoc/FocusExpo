@@ -40,6 +40,9 @@ export default function UserCoinsPage() {
       if (error?.code === ErrorCode.E_USER_CANCELLED) return;
       Alert.alert('购买失败', error?.message ?? '未知错误');
     },
+    onSyncError: error => {
+      console.warn('应用商店同步错误:', error.message);
+    },
   });
 
   React.useEffect(() => {
@@ -66,7 +69,7 @@ export default function UserCoinsPage() {
     <CusPage>
       {!connected && (
         <View style={{ alignItems: 'center', marginTop: 24 }}>
-          <Text>正在连接 App Store…</Text>
+          <Text style={{ color: '#fff' }}>正在连接 App Store…</Text>
         </View>
       )}
       {connected && (
@@ -79,7 +82,7 @@ export default function UserCoinsPage() {
                 marginBottom: 12,
               }}>
               <ActivityIndicator />
-              <Text style={{ marginLeft: 8 }}>加载中…</Text>
+              <Text style={{ marginLeft: 8, color: '#fff' }}>加载中…</Text>
             </View>
           )}
           {products.map(p => (
@@ -119,7 +122,9 @@ export default function UserCoinsPage() {
           ))}
           {!loading && products.length === 0 && (
             <View style={{ alignItems: 'center', marginTop: 24 }}>
-              <Text>未获取到商品，请检查产品 ID 与配置</Text>
+              <Text style={{ color: '#fff' }}>
+                未获取到商品，请检查产品 ID 与配置
+              </Text>
             </View>
           )}
         </ScrollView>

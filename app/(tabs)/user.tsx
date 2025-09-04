@@ -126,7 +126,7 @@ const App = observer(() => {
         </Flex>
         {store.uInfo && (
           <TouchableOpacity
-            onPress={() => toNavigate('user/vip')}
+            onPress={() => toNavigate('user/coins')}
             activeOpacity={0.7}>
             <Flex
               align="center"
