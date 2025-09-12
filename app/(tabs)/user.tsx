@@ -59,7 +59,7 @@ const App = observer(() => {
     </TouchableOpacity>
   );
 
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 
   const styles = StyleSheet.create({
     userBox: {
@@ -126,7 +126,7 @@ const App = observer(() => {
         </Flex>
         {store.uInfo && (
           <TouchableOpacity
-            onPress={() => toNavigate('user/coins')}
+            onPress={() => toNavigate('user/vip')}
             activeOpacity={0.7}>
             <Flex
               align="center"

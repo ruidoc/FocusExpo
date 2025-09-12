@@ -533,7 +533,14 @@ class NativeModule: RCTEventEmitter {
 
     let ftype = defaults.string(forKey: "FocusOne.FocusType")
     let pu = defaults.double(forKey: "FocusOne.PausedUntil")
-
+    let blockedAppsDict = defaults.dictionary(forKey: "FocusOne.BlockedApps") as? [String: String] ?? [:]
+    print("blockedAppsDict: \(blockedAppsDict)")
+    // 简单序列化：key=value 以逗号连接（按 key 排序，便于稳定）
+    // let blockedAppsSerialized = blockedAppsDict
+    //   .map { "\($0.key)=\($0.value)" }
+    //   .sorted()
+    //   .joined(separator: ",")
+    // print("blockedAppsSerialized: \(blockedAppsSerialized)")
     // 计算当前命中的周期计划的 plan_id
     var planId: String? = nil
     if ftype == "periodic", let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"), let cfgData = cfgStr.data(using: .utf8) {
@@ -582,6 +589,7 @@ class NativeModule: RCTEventEmitter {
       "totalMinutes": total,
       "elapsedMinutes": elapsedMin,
       "focusType": ftype ?? NSNull(),
+      "blockedApps": blockedAppsDict,
       "pausedUntil": pu > 0 ? pu : NSNull()
     ])
   }
@@ -790,5 +798,4 @@ class NativeModule: RCTEventEmitter {
     return selection
   }
   
-
 }

@@ -14,22 +14,22 @@ import UIKit
 // Make sure that your class name matches the NSExtensionPrincipalClass in your Info.plist.
 class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     override func configuration(shielding application: Application) -> ShieldConfiguration {
-        return buildShieldConfiguration(appName: application.localizedDisplayName)
+        return buildShieldConfiguration(app: application)
     }
     
     override func configuration(shielding application: Application, in category: ActivityCategory) -> ShieldConfiguration {
-        return buildShieldConfiguration(appName: application.localizedDisplayName)
+        return buildShieldConfiguration(app: application)
     }
     
     override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
-        return buildShieldConfiguration(appName: nil)
+        return buildShieldConfiguration(app: nil)
     }
     
     override func configuration(shielding webDomain: WebDomain, in category: ActivityCategory) -> ShieldConfiguration {
-        return buildShieldConfiguration(appName: nil)
+        return buildShieldConfiguration(app: nil)
     }
 
-    private func buildShieldConfiguration(appName: String?) -> ShieldConfiguration {
+    private func buildShieldConfiguration(app: Application?) -> ShieldConfiguration {
         // 颜色统一使用白色
         var titleLabel = ShieldConfiguration.Label(text: "已被屏蔽", color: .label)
         var subtitleLabel = ShieldConfiguration.Label(text: "该应用已被屏蔽", color: .secondaryLabel)
@@ -50,7 +50,17 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
                     color: .secondaryLabel
                 )
             }
+            if let app = app, let appName = app.localizedDisplayName, !appName.isEmpty {
+                // 记录被屏蔽应用信息
+                let storageKey = "FocusOne.BlockedApps"
+                var blockedApps = defaults.dictionary(forKey: storageKey) as? [String: String] ?? [:]
+                let appKey = String(app.hashValue)
+                // subtitleLabel = ShieldConfiguration.Label(text: "数据已存储：\(appKey)" + appName, color: .secondaryLabel)
+                blockedApps[appKey] = appName
+                defaults.set(blockedApps, forKey: storageKey)
+            }
         }
+
         let config = ShieldConfiguration(
             title: titleLabel,
             subtitle: subtitleLabel,

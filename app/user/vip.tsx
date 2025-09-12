@@ -25,7 +25,7 @@ const VipPage = observer(() => {
   const {
     connected,
     purchaseHistories,
-    requestProducts,
+    fetchProducts,
     requestPurchase,
     finishTransaction,
     getPurchaseHistories,
@@ -68,10 +68,10 @@ const VipPage = observer(() => {
   };
 
   useEffect(() => {
-    if (!connected) return;
+    // if (!connected) return;
     setLoading(true);
     // 必须获取商品列表，才能唤起购买弹窗
-    requestProducts({ skus: consumableSkus, type: 'inapp' })
+    fetchProducts({ skus: consumableSkus, type: 'inapp' })
       .then(() => {
         console.log('商品获取成功');
       })
@@ -79,7 +79,7 @@ const VipPage = observer(() => {
         Toast({ message: '商品获取失败，请检查产品配置与网络' });
       })
       .finally(() => setLoading(false));
-  }, [connected, requestProducts]);
+  }, [connected, fetchProducts]);
 
   useEffect(() => {
     // 加载产品列表

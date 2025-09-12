@@ -1,7 +1,7 @@
 import { CusPage } from '@/components';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { ErrorCode, useIAP } from 'expo-iap';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -12,14 +12,14 @@ import {
 } from 'react-native';
 
 // 请将以下 SKU 替换为你在 App Store Connect 配置的实际消耗型产品 ID
-const consumableSkus = ['com.focusone.coins_10', 'com.focusone.coins_30'];
+const consumableSkus = ['com.focusone.coins_10', 'com.focusone.coins_30', 'com.focusone.coins_50'];
 
 export default function UserCoinsPage() {
   const [loading, setLoading] = React.useState<boolean>(false);
   const {
     connected,
     products,
-    requestProducts,
+    fetchProducts,
     requestPurchase,
     validateReceipt,
   } = useIAP({
@@ -45,15 +45,15 @@ export default function UserCoinsPage() {
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!connected) return;
     setLoading(true);
-    requestProducts({ skus: consumableSkus, type: 'inapp' })
+    fetchProducts({ skus: consumableSkus, type: 'inapp' })
       .catch(() => {
         Toast({ message: '商品获取失败，请检查产品配置与网络' });
       })
       .finally(() => setLoading(false));
-  }, [connected, requestProducts]);
+  }, [connected, fetchProducts]);
 
   const onBuy = async (sku: string) => {
     try {
@@ -70,6 +70,7 @@ export default function UserCoinsPage() {
       {!connected && (
         <View style={{ alignItems: 'center', marginTop: 24 }}>
           <Text style={{ color: '#fff' }}>正在连接 App Store…</Text>
+          <Text style={{ color: '#fff' }}>产品数量：{products.length}</Text>
         </View>
       )}
       {connected && (
