@@ -12,10 +12,16 @@ class AppStore {
   focus_apps: string[] = []; // 专注APP包名
   shield_apps: string[] = []; // 屏蔽APP包名
 
-  ios_selected_apps: any[] = []; // 已选择的应用（iOS）
+  // iOS选中的应用stableId列表
+  ios_selected_sids: any[] = [];
+  // iOS所有应用列表
+  ios_all_apps: any[] = []; // 所有应用（iOS）
 
   get ios_stableids() {
-    return this.ios_selected_apps.map(r => r.stableId);
+    return this.ios_all_apps.map(r => r.stableId);
+  }
+  get ios_selected_apps() {
+    return this.ios_all_apps.filter(r => this.ios_selected_sids.includes(r.stableId));
   }
 
   setFocusApps = (apps: string[]) => {
@@ -31,15 +37,21 @@ class AppStore {
   };
 
   // 设置iOS选择的应用
-  setIosSelectedApps = (apps: any[]) => {
-    this.ios_selected_apps = apps;
+  setIosSelectedSids = (apps: any[]) => {
+    this.ios_selected_sids = apps;
+    console.log('选中的：', apps)
+  };
+
+  // 设置iOS选择的应用
+  setIosAllApps = (apps: any[]) => {
+    this.ios_all_apps = apps;
   };
 
   addApps = async (form: Record<string, any>) => {
     try {
       let res: HttpRes = await http.post('/osapp/add', form);
-      if (res.statusCode !== 200) {
-        Toast(res.message);
+      if (res.statusCode == 200) {
+
       }
     } catch (error) {
       console.log(error);
@@ -52,11 +64,15 @@ class AppStore {
       let final_apps = apps.filter(
         r => !this.ios_stableids.includes(r.stableId),
       );
+      this.setIosSelectedSids(apps.map(r => r.stableId))
       if (final_apps.length === 0) return;
       let res: HttpRes = await http.post('/iosapp/add', final_apps);
-      if (res.statusCode !== 200) {
+      if (res.statusCode == 200) {
+        this.setIosAllApps([...this.ios_all_apps, ...res.data]);
+      } else {
         Toast(res.message);
       }
+      console.log('添加结果：', res)
     } catch (error) {
       console.log(error);
     }
@@ -67,7 +83,7 @@ class AppStore {
     try {
       let res: HttpRes = await http.get('/iosapp/list');
       if (res.statusCode === 200) {
-        this.setIosSelectedApps(res.data);
+        this.setIosAllApps(res.data);
       }
       console.log('获取iOS应用：', res.data);
     } catch (error) {

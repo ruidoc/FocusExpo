@@ -9,7 +9,7 @@ const TimeSlider = () => {
   const store = useLocalObservable(() => HomeStore);
   const astore = useLocalObservable(() => AppStore);
 
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 
   return (
     <View>
@@ -20,7 +20,7 @@ const TimeSlider = () => {
         <Flex direction="row" align="center" style={{ gap: 0 }}>
           {astore.ios_selected_apps.map(item => (
             <TokenLabel
-              key={item.id}
+              key={item.stableId}
               tokenBase64={item.tokenData}
               tokenType={item.type}
               style={{ width: 40, height: 40 }}

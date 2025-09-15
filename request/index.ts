@@ -4,8 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { AxiosInstance } from 'axios';
 
 const instance: AxiosInstance = axios.create({
-  baseURL: 'https://focusone.ruidoc.cn/dev-api',
-  // baseURL: 'http://192.168.31.37:8849',
+  // baseURL: 'https://focusone.ruidoc.cn/dev-api',
+  baseURL: 'http://192.168.0.6:8849',
   // baseURL: 'http://192.168.0.5:8849',
   timeout: 6000,
   headers: {

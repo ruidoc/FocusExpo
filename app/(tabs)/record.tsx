@@ -1,3 +1,4 @@
+import { CusPage } from '@/components';
 import TokenLabel from '@/components/native/TokenLabel';
 import { AppStore, StatisticStore } from '@/stores';
 import type { Period } from '@/stores/statistic';
@@ -186,12 +187,12 @@ const App = observer(() => {
 
   const getAppIcon = (app: string) => {
     let app_id = app.split(':')[0];
-    let cur_app = astore.ios_selected_apps.find(a => a.id === app_id);
+    let cur_app = astore.ios_all_apps.find(a => a.id === app_id);
     console.log(
       '选择的app：',
       cur_app,
       app_id,
-      astore.ios_selected_apps.map(a => a.id),
+      astore.ios_all_apps.map(a => a.id),
     );
     return cur_app ? (
       <TokenLabel
@@ -226,107 +227,109 @@ const App = observer(() => {
   const total = sstore.app_statis;
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }>
-      <View style={styles.header}>
-        <Text style={styles.title}>专注统计</Text>
-      </View>
+    <CusPage safe>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
+        <View style={styles.header}>
+          <Text style={styles.title}>专注统计</Text>
+        </View>
 
-      {/* 周期切换 */}
-      <View style={styles.segment}>
-        {periods.map(p => {
-          const active = p.key === period;
-          return (
-            <TouchableOpacity
-              key={p.key}
-              activeOpacity={0.7}
-              style={[styles.segBtn, active && styles.segBtnActive]}
-              onPress={() => setPeriod(p.key)}>
-              <Text style={[styles.segText, active && styles.segTextActive]}>
-                {p.label}
+        {/* 周期切换 */}
+        <View style={styles.segment}>
+          {periods.map(p => {
+            const active = p.key === period;
+            return (
+              <TouchableOpacity
+                key={p.key}
+                activeOpacity={0.7}
+                style={[styles.segBtn, active && styles.segBtnActive]}
+                onPress={() => setPeriod(p.key)}>
+                <Text style={[styles.segText, active && styles.segTextActive]}>
+                  {p.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* 汇总卡片 */}
+        <View style={styles.summaryCard}>
+          <Text style={{ color: '#8A8A98', fontSize: 12 }}>时间范围</Text>
+          <Text style={{ color: colors.text, marginTop: 4 }}>
+            {total?.start_at?.slice(0, 10)} ~ {total?.end_at?.slice(0, 10)}
+          </Text>
+          <View style={styles.sumRow}>
+            <View style={styles.sumBlock}>
+              <Text style={styles.sumLabel}>实际专注</Text>
+              <Text style={styles.sumValue}>
+                {formatMins(total?.total_actual_mins || 0)}
               </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+            </View>
+            <View style={styles.sumBlock}>
+              <Text style={styles.sumLabel}>屏蔽时长</Text>
+              <Text style={styles.sumValue}>
+                {formatMins(total?.total_blocked_mins || 0)}
+              </Text>
+            </View>
+            <View style={styles.sumBlock}>
+              <Text style={styles.sumLabel}>成功率</Text>
+              <Text style={styles.sumValue}>
+                {toIntPercent(total?.total_success_rate)}%
+              </Text>
+            </View>
+          </View>
+        </View>
 
-      {/* 汇总卡片 */}
-      <View style={styles.summaryCard}>
-        <Text style={{ color: '#8A8A98', fontSize: 12 }}>时间范围</Text>
-        <Text style={{ color: colors.text, marginTop: 4 }}>
-          {total?.start_at?.slice(0, 10)} ~ {total?.end_at?.slice(0, 10)}
-        </Text>
-        <View style={styles.sumRow}>
-          <View style={styles.sumBlock}>
-            <Text style={styles.sumLabel}>实际专注</Text>
-            <Text style={styles.sumValue}>
-              {formatMins(total?.total_actual_mins || 0)}
-            </Text>
+        {loading ? (
+          <Text style={styles.loadingText}>加载中...</Text>
+        ) : items.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>暂无数据</Text>
           </View>
-          <View style={styles.sumBlock}>
-            <Text style={styles.sumLabel}>屏蔽时长</Text>
-            <Text style={styles.sumValue}>
-              {formatMins(total?.total_blocked_mins || 0)}
-            </Text>
+        ) : (
+          <View style={styles.list}>
+            {items
+              .slice()
+              .sort((a, b) => b.blocked_mins - a.blocked_mins)
+              .map(item => {
+                const rate = normalizeRate(item.success_rate);
+                return (
+                  <View key={item.app} style={styles.item}>
+                    <View style={styles.itemHeader}>
+                      <Flex>{getAppIcon(item.app)}</Flex>
+                      <Text style={styles.rateText}>
+                        成功率 {toIntPercent(item.success_rate)}%
+                      </Text>
+                    </View>
+                    <View style={styles.bar}>
+                      <View
+                        style={[
+                          styles.barFill,
+                          { width: `${Math.round(rate * 100)}%` },
+                        ]}
+                      />
+                    </View>
+                    <View style={styles.itemMeta}>
+                      <Text style={styles.metaText}>
+                        专注 {formatMins(item.actual_mins)}
+                      </Text>
+                      <Text style={styles.metaText}>
+                        屏蔽 {formatMins(item.blocked_mins)}
+                      </Text>
+                      <Text style={styles.metaText}>
+                        任务 {item.success_count}/{item.task_count}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
           </View>
-          <View style={styles.sumBlock}>
-            <Text style={styles.sumLabel}>成功率</Text>
-            <Text style={styles.sumValue}>
-              {toIntPercent(total?.total_success_rate)}%
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {loading ? (
-        <Text style={styles.loadingText}>加载中...</Text>
-      ) : items.length === 0 ? (
-        <View style={styles.emptyBox}>
-          <Text style={styles.emptyText}>暂无数据</Text>
-        </View>
-      ) : (
-        <View style={styles.list}>
-          {items
-            .slice()
-            .sort((a, b) => b.blocked_mins - a.blocked_mins)
-            .map(item => {
-              const rate = normalizeRate(item.success_rate);
-              return (
-                <View key={item.app} style={styles.item}>
-                  <View style={styles.itemHeader}>
-                    <Flex>{getAppIcon(item.app)}</Flex>
-                    <Text style={styles.rateText}>
-                      成功率 {toIntPercent(item.success_rate)}%
-                    </Text>
-                  </View>
-                  <View style={styles.bar}>
-                    <View
-                      style={[
-                        styles.barFill,
-                        { width: `${Math.round(rate * 100)}%` },
-                      ]}
-                    />
-                  </View>
-                  <View style={styles.itemMeta}>
-                    <Text style={styles.metaText}>
-                      专注 {formatMins(item.actual_mins)}
-                    </Text>
-                    <Text style={styles.metaText}>
-                      屏蔽 {formatMins(item.blocked_mins)}
-                    </Text>
-                    <Text style={styles.metaText}>
-                      任务 {item.success_count}/{item.task_count}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })}
-        </View>
-      )}
-    </ScrollView>
+        )}
+      </ScrollView>
+    </CusPage>
   );
 });
 
