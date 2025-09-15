@@ -108,7 +108,7 @@ const GuideStep2 = observer(() => {
     if (Platform.OS === 'ios') {
       selectAppsToLimit().then(data => {
         // console.log('获取数据：', data);
-        astore.setIosSelectedApps(data.apps);
+        astore.addIosApps(data.apps);
       });
     } else {
       router.push({

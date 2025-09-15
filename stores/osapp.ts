@@ -14,6 +14,10 @@ class AppStore {
 
   ios_selected_apps: any[] = []; // 已选择的应用（iOS）
 
+  get ios_stableids() {
+    return this.ios_selected_apps.map(r => r.stableId);
+  }
+
   setFocusApps = (apps: string[]) => {
     this.focus_apps = apps;
     // NativeClass.updateFocusApps(JSON.stringify(apps));
@@ -37,6 +41,35 @@ class AppStore {
       if (res.statusCode !== 200) {
         Toast(res.message);
       }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // 添加iOS应用
+  addIosApps = async (apps: Record<string, any>[]) => {
+    try {
+      let final_apps = apps.filter(
+        r => !this.ios_stableids.includes(r.stableId),
+      );
+      if (final_apps.length === 0) return;
+      let res: HttpRes = await http.post('/iosapp/add', final_apps);
+      if (res.statusCode !== 200) {
+        Toast(res.message);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // 获取iOS应用
+  getIosApps = async () => {
+    try {
+      let res: HttpRes = await http.get('/iosapp/list');
+      if (res.statusCode === 200) {
+        this.setIosSelectedApps(res.data);
+      }
+      console.log('获取iOS应用：', res.data);
     } catch (error) {
       console.log(error);
     }

@@ -160,7 +160,7 @@ const QuickStartPage = observer(() => {
   const selectApps = () => {
     const maxCount = Number(bstore.app_count || 0);
     selectAppsToLimit(maxCount).then(data => {
-      astore.setIosSelectedApps(data.apps);
+      astore.addIosApps(data.apps);
     });
   };
 

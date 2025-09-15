@@ -76,7 +76,7 @@ const App = observer(() => {
   const toAddApp = (mode: string) => {
     if (Platform.OS === 'ios') {
       selectAppsToLimit().then(data => {
-        astore.setIosSelectedApps(data.apps);
+        astore.addIosApps(data.apps);
       });
     } else {
       router.push({

@@ -1,8 +1,5 @@
 import { AppStore, HomeStore, PermisStore, UserStore } from '@/stores';
-import {
-  checkScreenTimePermission,
-  getSelectIosApps,
-} from '@/utils/permission';
+import { checkScreenTimePermission } from '@/utils/permission';
 import { Redirect } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import { useEffect, useState } from 'react';
@@ -18,8 +15,7 @@ const Index = observer(() => {
     const initAction = async () => {
       if (Platform.OS === 'ios') {
         try {
-          const selectedApps = await getSelectIosApps();
-          astore.setIosSelectedApps(selectedApps);
+          await astore.getIosApps();
           const screenTimeStatus = await checkScreenTimePermission();
           const isApproved = screenTimeStatus === 'approved';
           hstore.setIOSScreenTimePermission(isApproved);

@@ -6,6 +6,7 @@ import UIKit
 import ManagedSettings
 import SwiftUI
 import UserNotifications
+import CryptoKit
 
 // 用于共享数据的UserDefaults扩展
 extension UserDefaults {
@@ -726,11 +727,12 @@ class NativeModule: RCTEventEmitter {
         do {
           // 将token编码为base64以便传递给RN
           let tokenData = try JSONEncoder().encode(token)
+          let digest = SHA256.hash(data: tokenData)
+          let stableId = digest.compactMap { String(format: "%02x", $0) }.joined()
           let tokenBase64 = tokenData.base64EncodedString()
           
           let appIcon: [String: Any] = [
-            "id": "\(token.hashValue)",
-            "name": "应用",
+            "stableId": stableId,
             "tokenData": tokenBase64,
             "type": "application"
           ]
@@ -745,10 +747,11 @@ class NativeModule: RCTEventEmitter {
       // 处理网站令牌
       for token in selection.webDomainTokens {
         if let tokenData = try? JSONEncoder().encode(token) {
+          let digest = SHA256.hash(data: tokenData)
+          let stableId = digest.compactMap { String(format: "%02x", $0) }.joined()
           let tokenBase64 = tokenData.base64EncodedString()
           let webIcon: [String: Any] = [
-            "id": "\(token.hashValue)",
-            "name": "网站",
+            "stableId": stableId,
             "type": "webDomain",
             "tokenData": tokenBase64
           ]
@@ -761,11 +764,12 @@ class NativeModule: RCTEventEmitter {
         do {
           // 将token编码为base64以便传递给RN
           let tokenData = try JSONEncoder().encode(token)
+          let digest = SHA256.hash(data: tokenData)
+          let stableId = digest.compactMap { String(format: "%02x", $0) }.joined()
           let tokenBase64 = tokenData.base64EncodedString()
           
           let categoryIcon: [String: Any] = [
-            "id": "\(token.hashValue)",
-            "name": "应用类别",
+            "stableId": stableId,
             "tokenData": tokenBase64,
             "type": "category",
           ]
