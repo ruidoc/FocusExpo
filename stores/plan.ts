@@ -1,7 +1,6 @@
 import http from '@/request';
-import { getCurrentMinute, parseRepeat } from '@/utils';
+import { getCurrentMinute, parseRepeat, storage } from '@/utils';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
 import { NativeModules } from 'react-native';
 import { BenefitStore, RecordStore } from '.';
@@ -34,12 +33,12 @@ class PlanStore {
       repeat: parseRepeat(r.repeat),
     }));
     this.cus_plans = final_plans;
-    AsyncStorage.setItem('cus_plans', JSON.stringify(plans));
+    storage.set('cus_plans', JSON.stringify(plans));
   };
 
   setOncePlans = (plans: any[]) => {
     this.once_plans = plans;
-    AsyncStorage.setItem('once_plans', JSON.stringify(plans));
+    storage.set('once_plans', JSON.stringify(plans));
   };
 
   setCurPlanMinute = (minute: number) => {
@@ -63,10 +62,10 @@ class PlanStore {
   // 专注计划完成
   complatePlan = async () => {
     console.log('【专注计划完成】');
-    let record_id = RecordStore.record_id;
-    if (record_id) {
-      await RecordStore.completeRecord(record_id);
-    }
+    // let record_id = RecordStore.record_id;
+    // if (record_id) {
+    //   await RecordStore.completeRecord(record_id);
+    // }
     RecordStore.removeRecordId();
     this.setCurrentPlanPause(false);
     this.setCurPlanMinute(0);
@@ -189,12 +188,12 @@ class PlanStore {
     try {
       let res: HttpRes = await http.get('/plan/lists');
       if (res.statusCode === 200) {
-        let plans_count = await AsyncStorage.getItem('cus_plans_count');
+        let plans_count = await storage.getString('cus_plans_count');
         this.setCusPlans(res.data);
         // console.log('【周期计划数量】: ', plans_count, res.data.length);
         if (!plans_count || plans_count !== `${res.data.length}`) {
           this.setScheduleIOS();
-          AsyncStorage.setItem('cus_plans_count', `${res.data.length}`);
+          storage.set('cus_plans_count', `${res.data.length}`);
         }
         if (fun) fun(res);
       }
@@ -240,7 +239,7 @@ class PlanStore {
   addOncePlan = (form: CusPlan) => {
     this.once_plans.push(form);
     console.log('【添加一次性任务】', form);
-    AsyncStorage.setItem('once_plans', JSON.stringify(this.once_plans));
+    storage.set('once_plans', JSON.stringify(this.once_plans));
     this.updatePlans();
   };
   rmOncePlan = (id: string) => {
@@ -248,7 +247,7 @@ class PlanStore {
     if (index > -1) {
       this.once_plans.splice(index, 1);
     }
-    AsyncStorage.setItem('once_plans', JSON.stringify(this.once_plans));
+    storage.set('once_plans', JSON.stringify(this.once_plans));
     this.updatePlans();
   };
 }

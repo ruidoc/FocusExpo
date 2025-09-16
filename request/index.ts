@@ -1,6 +1,6 @@
 import { UserStore } from '@/stores';
+import { storage } from '@/utils';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { AxiosInstance } from 'axios';
 
 const instance: AxiosInstance = axios.create({
@@ -10,7 +10,7 @@ const instance: AxiosInstance = axios.create({
   timeout: 6000,
   headers: {
     'Content-Type': 'application/json',
-    os: 'android',
+    os: 'ios',
   },
 });
 
@@ -20,9 +20,8 @@ instance.interceptors.request.use(async request => {
     request.headers['Content-Type'] = 'multipart/form-data';
   }
   console.log('【网络请求】', request.method, request.url);
-  request.headers.Authorization = `Bearer ${
-    (await AsyncStorage.getItem('access_token')) || ''
-  }`;
+  request.headers.Authorization = `Bearer ${(storage.getString('access_token')) || ''
+    }`;
   return request;
 });
 
@@ -38,8 +37,8 @@ instance.interceptors.response.use(
       console.log('【请求错误】', response.status, response.data);
       if (response.status === 401) {
         Toast({ position: 'bottom', message: '登录已过期，请重新登录' });
-        AsyncStorage.removeItem('access_token');
-        AsyncStorage.removeItem('user_info');
+        storage.delete('access_token');
+        storage.delete('user_info');
         UserStore.setUinfo(null);
       } else {
         // console.log('错误信息：', response.data);

@@ -1,6 +1,6 @@
 import http from '@/request';
+import { storage } from '@/utils';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
 import { AppStore, BenefitStore, HomeStore, PlanStore, RecordStore } from '.';
 
@@ -24,8 +24,8 @@ class UserStore {
   // 初始化方法：从AsyncStorage恢复登录状态
   init = async () => {
     try {
-      const token = await AsyncStorage.getItem('access_token');
-      const userInfoStr = await AsyncStorage.getItem('user_info');
+      const token = storage.getString('access_token');
+      const userInfoStr = storage.getString('user_info');
 
       if (token && userInfoStr) {
         // 如果有token和用户信息，尝试恢复状态
@@ -60,7 +60,7 @@ class UserStore {
         res = await http.post('/user/login', form);
       }
       if (res.statusCode === 200) {
-        await AsyncStorage.setItem('access_token', res.token);
+        await storage.set('access_token', res.token);
         HomeStore.loadApps();
         AppStore.getCurapp();
         PlanStore.getPlans();
@@ -105,7 +105,7 @@ class UserStore {
       let res: HttpRes = await http.get('/user/info/self');
       if (res.statusCode === 200) {
         this.setUinfo(res.data as UserInfo);
-        AsyncStorage.setItem('user_info', JSON.stringify(res.data));
+        storage.set('user_info', JSON.stringify(res.data));
       }
     } catch (error) {
       console.log(error);
@@ -113,8 +113,8 @@ class UserStore {
   };
 
   logout = () => {
-    AsyncStorage.removeItem('user_info');
-    AsyncStorage.removeItem('access_token');
+    storage.delete('user_info');
+    storage.delete('access_token');
     AppStore.setFocusApps([]);
     AppStore.setShieldApps([]);
     PlanStore.clearPlans();

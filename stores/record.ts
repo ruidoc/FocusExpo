@@ -1,6 +1,6 @@
 import http from '@/request';
+import { storage } from '@/utils';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
 import { BenefitStore } from '.';
 
@@ -26,11 +26,11 @@ class RecordStore {
   };
   setRecordId = (id: string) => {
     this.record_id = id;
-    AsyncStorage.setItem('record_id', id);
+    storage.set('record_id', id);
   };
   removeRecordId = () => {
     this.record_id = '';
-    AsyncStorage.removeItem('record_id');
+    storage.delete('record_id');
   };
 
   // 格式化专注时长
@@ -61,17 +61,7 @@ class RecordStore {
       });
       if (res.statusCode === 200) {
         this.setRecordId(res.data.id);
-        // 记录描述仅本地存储，避免后端字段不兼容
-        if (description && typeof description === 'string') {
-          try {
-            await AsyncStorage.setItem(
-              `record_desc:${res.data.id}`,
-              description,
-            );
-          } catch {
-            // ignore
-          }
-        }
+
       } else {
         Toast(res.message);
       }
