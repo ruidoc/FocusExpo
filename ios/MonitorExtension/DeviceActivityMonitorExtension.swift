@@ -9,6 +9,7 @@ import DeviceActivity
 import ManagedSettings
 import UserNotifications
 import FamilyControls
+import Foundation
 
 // Optionally override any of the functions below.
 // Make sure that your class name matches the NSExtensionPrincipalClass in your Info.plist.
@@ -94,6 +95,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             content.body = "屏蔽已开启，保持专注"
             let request = UNNotificationRequest(identifier: "FocusStartPeriodic", content: content, trigger: nil)
             UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+            
+            // 创建专注记录（仅周期性任务）
+            createRecord()
         }
         // 统一发送 Darwin 跨进程“开始”事件（一次性与周期均会调用到此处）
         let dCenter = CFNotificationCenterGetDarwinNotifyCenter()
@@ -112,6 +116,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // 到点自动清理屏蔽
         let store = ManagedSettingsStore()
         store.clearAllSettings()
+        
+        // 完成专注记录
+        completeRecord()
+        
         notifyEnd()
         // 记录统一事件，供主 App 拉起后转发
         if let defaults = UserDefaults(suiteName: "group.com.focusone") {
@@ -148,6 +156,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // 在警告阶段（区间结束前 warningTime 分钟）提前清理，支持 <15 分钟的"有效时长"
         let store = ManagedSettingsStore()
         store.clearAllSettings()
+        
+        // 完成专注记录
+        completeRecord()
+        
         notifyEnd()
     }
 
@@ -183,5 +195,99 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         super.eventWillReachThresholdWarning(event, activity: activity)
         
         // Handle the warning before the event reaches its threshold.
+    }
+    
+    // MARK: - 网络请求方法
+    
+    /// 创建专注记录
+    /// 仅在周期性任务开始时调用，向服务器记录专注开始
+    private func createRecord() {
+        guard let defaults = UserDefaults(suiteName: "group.com.focusone") else {
+            print("【网络请求错误】无法获取 UserDefaults")
+            return
+        }
+        
+        // 获取当前时间的分钟数
+        let now = Date()
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: now)
+        let minute = calendar.component(.minute, from: now)
+        let currentMinute = hour * 60 + minute
+        
+        // 获取总时长（分钟）
+        let totalMinutes = defaults.integer(forKey: "FocusOne.TotalMinutes")
+        
+        // 构造请求参数
+        let requestBody: [String: Any] = [
+            "plan_id": "period_plan_id",
+            "start_min": currentMinute,
+            "total_min": totalMinutes,
+            "apps": [],
+            "mode": "shield",
+            "base_amount": 0,
+            "bet_amount": 0
+        ]
+        
+        print("【网络请求】创建专注记录: \(requestBody)")
+        
+        // 发送网络请求
+        NetworkManager.shared.post(path: "/record/add", body: requestBody) { result in
+            switch result {
+            case .success(let response):
+                if let json = response.json(),
+                   let data = json["data"] as? [String: Any],
+                   let recordId = data["id"] as? String {
+                    // 保存记录ID，用于后续完成调用
+                    defaults.set(recordId, forKey: "record_id")
+                    print("【网络请求成功】专注记录已创建，ID: \(recordId)")
+                } else {
+                    print("【网络请求警告】创建记录成功，但无法解析记录ID")
+                }
+            case .failure(let error):
+                print("【网络请求失败】创建专注记录失败: \(error.localizedDescription)")
+                // 记录失败信息，供主App重试
+                defaults.set("create_failed", forKey: "FocusOne.LastNetworkError")
+            }
+        }
+    }
+    
+    /// 完成专注记录
+    /// 在专注结束时调用，向服务器标记专注完成
+    private func completeRecord() {
+        guard let defaults = UserDefaults(suiteName: "group.com.focusone") else {
+            print("【网络请求错误】无法获取 UserDefaults")
+            return
+        }
+        
+        // 获取记录ID
+        guard let recordId = defaults.string(forKey: "record_id"), !recordId.isEmpty else {
+            print("【网络请求错误】无法获取记录ID，跳过完成请求")
+            return
+        }
+        
+        // 防重复调用：检查是否已经完成
+        let completedKey = "FocusOne.RecordCompleted_\(recordId)"
+        if defaults.bool(forKey: completedKey) {
+            print("【网络请求跳过】记录 \(recordId) 已经完成过")
+            return
+        }
+        
+        print("【网络请求】完成专注记录: \(recordId)")
+        
+        // 发送网络请求
+        NetworkManager.shared.post(path: "/record/complete/\(recordId)") { result in
+            switch result {
+            case .success(_):
+                print("【网络请求成功】专注记录已完成: \(recordId)")
+                // 标记为已完成，防止重复调用
+                defaults.set(true, forKey: completedKey)
+                // 清理记录ID
+                defaults.removeObject(forKey: "record_id")
+            case .failure(let error):
+                print("【网络请求失败】完成专注记录失败: \(error.localizedDescription)")
+                // 记录失败信息，供主App重试
+                defaults.set("complete_failed_\(recordId)", forKey: "FocusOne.LastNetworkError")
+            }
+        }
     }
 }

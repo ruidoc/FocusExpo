@@ -27,10 +27,12 @@ class RecordStore {
   setRecordId = (id: string) => {
     this.record_id = id;
     storage.set('record_id', id);
+    storage.setGroup('record_id', id);
   };
   removeRecordId = () => {
     this.record_id = '';
     storage.delete('record_id');
+    storage.setGroup('record_id', '');
   };
 
   // 格式化专注时长
@@ -61,7 +63,6 @@ class RecordStore {
       });
       if (res.statusCode === 200) {
         this.setRecordId(res.data.id);
-
       } else {
         Toast(res.message);
       }

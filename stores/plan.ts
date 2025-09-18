@@ -188,7 +188,7 @@ class PlanStore {
     try {
       let res: HttpRes = await http.get('/plan/lists');
       if (res.statusCode === 200) {
-        let plans_count = await storage.getString('cus_plans_count');
+        let plans_count = storage.getString('cus_plans_count');
         this.setCusPlans(res.data);
         // console.log('【周期计划数量】: ', plans_count, res.data.length);
         if (!plans_count || plans_count !== `${res.data.length}`) {
