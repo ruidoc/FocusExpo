@@ -215,10 +215,7 @@ class NetworkManager {
   
   // MARK: - 辅助方法
   private func getBaseURL() -> String {
-    // 优先从 Storage 读取，兼容性回退到 App Group
-    if let storage = Storage.shared.getItem(forKey: baseURLKey) {
-      return storage
-    }
+    // 从 App Group 读取
     if let appGroup = UserDefaults(suiteName: groupSuite)?.string(forKey: baseURLKey) {
       return appGroup
     }
@@ -226,10 +223,7 @@ class NetworkManager {
   }
   
   private func getAccessToken() -> String? {
-    // 优先从 Storage 读取，兼容性回退到 App Group
-    if let storage = Storage.shared.getItem(forKey: tokenKey) {
-      return storage
-    }
+    // 从 App Group 读取
     return UserDefaults(suiteName: groupSuite)?.string(forKey: tokenKey)
   }
 }
