@@ -4,20 +4,25 @@ import {
   Button,
   Card,
   Flex,
-  Progress,
-  Segmented,
   Space,
   Tag,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
+import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text } from 'react-native';
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 const MyChallengesScreen = observer(() => {
-  const navigation = useNavigation();
   const store = useLocalObservable(() => ChallengeStore);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
@@ -36,7 +41,7 @@ const MyChallengesScreen = observer(() => {
     try {
       const status = activeTab === 'all' ? undefined : activeTab;
       await store.fetchUserChallenges(status);
-    } catch (error) {
+    } catch {
       Toast({
         type: 'fail',
         message: '获取我的挑战失败',
@@ -49,7 +54,7 @@ const MyChallengesScreen = observer(() => {
   useFocusEffect(
     useCallback(() => {
       fetchData();
-    }, [activeTab]),
+    }, [activeTab, fetchData]),
   );
 
   const onRefresh = () => {
@@ -124,20 +129,18 @@ const MyChallengesScreen = observer(() => {
     const progress = parseFloat(userChallenge.progress_percent);
 
     return (
-      <Card key={userChallenge.id} style={{ marginBottom: 12 }}>
+      <Card key={userChallenge.id} style={styles.challengeCard}>
         <Pressable
           onPress={() =>
-            navigation.navigate(
-              'challenges/my-challenge-detail' as never,
-              {
-                id: userChallenge.id,
-              } as never,
-            )
+            router.push({
+              pathname: '/challenges/my-challenge-detail',
+              params: { id: userChallenge.id },
+            } as any)
           }>
-          <Flex direction="column" gap={12}>
+          <Flex direction="column">
             {/* 标题和状态 */}
-            <Flex justify="space-between" align="center">
-              <Text size={16} weight="500" style={{ flex: 1, marginRight: 8 }}>
+            <Flex justify="between" align="center">
+              <Text style={styles.challengeTitle}>
                 {userChallenge.challenge?.title || '挑战标题'}
               </Text>
               <Tag color={getStatusColor(userChallenge.status)}>
@@ -146,57 +149,59 @@ const MyChallengesScreen = observer(() => {
             </Flex>
 
             {/* 进度条 */}
-            <Flex direction="column" gap={4}>
-              <Flex justify="space-between" align="center">
-                <Text size={12} color="#666">
-                  进度
-                </Text>
-                <Text size={12} color="#666">
-                  {progress.toFixed(1)}%
-                </Text>
+            <Flex direction="column">
+              <Flex justify="between" align="center">
+                <Text style={styles.progressLabel}>进度</Text>
+                <Text style={styles.progressText}>{progress.toFixed(1)}%</Text>
               </Flex>
-              <Progress
-                percent={progress}
-                strokeColor={
-                  userChallenge.status === 'succeeded'
-                    ? '#52C41A'
-                    : userChallenge.status === 'failed'
-                    ? '#FF4D4F'
-                    : userChallenge.status === 'in_progress'
-                    ? '#1890FF'
-                    : '#8C8C8C'
-                }
-                showInfo={false}
-                strokeWidth={6}
-              />
+
+              {/* 简单的进度条 */}
+              <View style={styles.progressBarContainer}>
+                <View
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: `${progress}%`,
+                      backgroundColor:
+                        userChallenge.status === 'succeeded'
+                          ? '#52C41A'
+                          : userChallenge.status === 'failed'
+                          ? '#FF4D4F'
+                          : userChallenge.status === 'in_progress'
+                          ? '#1890FF'
+                          : '#8C8C8C',
+                    },
+                  ]}
+                />
+              </View>
             </Flex>
 
             {/* 截止时间 */}
-            <Flex justify="space-between" align="center">
+            <Flex justify="between" align="center">
               <Text
-                size={12}
-                color={getDeadlineColor(userChallenge.deadline_at)}>
+                style={[
+                  styles.deadlineText,
+                  { color: getDeadlineColor(userChallenge.deadline_at) },
+                ]}>
                 {formatDeadline(userChallenge.deadline_at)}
               </Text>
-              <Text size={12} color="#666">
+              <Text style={styles.coinsText}>
                 入场币：{userChallenge.entry_coins}
               </Text>
             </Flex>
 
             {/* 结果原因 */}
             {userChallenge.result_reason && (
-              <Text size={12} color="#999" numberOfLines={1}>
+              <Text style={styles.reasonText} numberOfLines={1}>
                 {userChallenge.result_reason}
               </Text>
             )}
 
             {/* 关联计划 */}
             {userChallenge.plan_ids.length > 0 && (
-              <Flex justify="flex-start" align="center" gap={4}>
-                <Text size={12} color="#666">
-                  关联计划：
-                </Text>
-                <Text size={12} color="#1890FF">
+              <Flex align="center" style={{ gap: 4 }}>
+                <Text style={styles.planLabel}>关联计划：</Text>
+                <Text style={styles.planCount}>
                   {userChallenge.plan_ids.length} 个
                 </Text>
               </Flex>
@@ -210,29 +215,45 @@ const MyChallengesScreen = observer(() => {
   const filteredChallenges = store.my_challenges;
 
   return (
-    <CusPage title="我的挑战" safeAreaColor="#FAFAFA">
+    <CusPage bgcolor="#FAFAFA">
       <Flex direction="column" style={{ flex: 1, backgroundColor: '#FAFAFA' }}>
         {/* 状态筛选 */}
-        <Card style={{ margin: 16, marginBottom: 8 }}>
-          <Segmented
-            value={activeTab}
-            onChange={setActiveTab}
-            options={statusOptions}
-            style={{ width: '100%' }}
-          />
+        <Card style={styles.filterCard}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterContainer}>
+            {statusOptions.map(option => (
+              <Pressable
+                key={option.value}
+                style={[
+                  styles.filterButton,
+                  activeTab === option.value && styles.filterButtonActive,
+                ]}
+                onPress={() => setActiveTab(option.value)}>
+                <Text
+                  style={[
+                    styles.filterText,
+                    activeTab === option.value && styles.filterTextActive,
+                  ]}>
+                  {option.label}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
         </Card>
 
         {/* 挑战列表 */}
         <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 16, paddingTop: 8 }}
+          style={styles.listContainer}
+          contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           showsVerticalScrollIndicator={false}>
           {filteredChallenges.length === 0 ? (
             <Flex justify="center" align="center" style={{ paddingTop: 60 }}>
-              <Text size={16} color="#999">
+              <Text style={styles.emptyText}>
                 {activeTab === 'all'
                   ? '暂无挑战记录'
                   : `暂无${
@@ -243,11 +264,9 @@ const MyChallengesScreen = observer(() => {
               {activeTab === 'all' && (
                 <Button
                   type="primary"
-                  size="small"
-                  style={{ marginTop: 16 }}
-                  onPress={() =>
-                    navigation.navigate('challenges/index' as never)
-                  }>
+                  size="s"
+                  style={styles.goButton}
+                  onPress={() => router.push('/challenges/index' as any)}>
                   去领取挑战
                 </Button>
               )}
@@ -256,11 +275,135 @@ const MyChallengesScreen = observer(() => {
             filteredChallenges.map(renderChallengeItem)
           )}
 
-          <Space size={20} />
+          <Space />
         </ScrollView>
       </Flex>
     </CusPage>
   );
+});
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  filterCard: {
+    margin: 16,
+    marginBottom: 8,
+  },
+  filterContainer: {
+    paddingHorizontal: 4,
+    gap: 8,
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  filterButtonActive: {
+    backgroundColor: '#1890FF',
+  },
+  filterText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  filterTextActive: {
+    color: '#FFF',
+    fontWeight: '500',
+  },
+  listContainer: {
+    flex: 1,
+  },
+  listContent: {
+    padding: 16,
+    paddingTop: 8,
+  },
+  challengeCard: {
+    marginBottom: 12,
+  },
+  challengeContent: {
+    gap: 12,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  challengeTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    flex: 1,
+    marginRight: 8,
+  },
+  progressSection: {
+    gap: 4,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  progressText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  progressBarContainer: {
+    height: 6,
+    backgroundColor: '#E5E5E5',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  deadlineText: {
+    fontSize: 12,
+  },
+  coinsText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  reasonText: {
+    fontSize: 12,
+    color: '#999',
+  },
+  planInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  planLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  planCount: {
+    fontSize: 12,
+    color: '#1890FF',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingTop: 60,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  goButton: {
+    marginTop: 16,
+  },
 });
 
 export default MyChallengesScreen;

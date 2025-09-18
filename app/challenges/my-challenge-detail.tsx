@@ -4,24 +4,26 @@ import {
   Button,
   Card,
   Flex,
-  Modal,
-  Progress,
-  Slider,
   Space,
   Tag,
-  Text,
-  TextArea,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
-import {
-  useFocusEffect,
-  useLocalSearchParams,
-  useNavigation,
-} from '@react-navigation/native';
+import Slider from '@react-native-community/slider';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
+import { useLocalSearchParams } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 const MyChallengeDetailScreen = observer(() => {
   const navigation = useNavigation();
@@ -67,7 +69,7 @@ const MyChallengeDetailScreen = observer(() => {
         setUserChallenge(foundAfterFetch);
         setProgressValue(parseFloat(foundAfterFetch.progress_percent));
       }
-    } catch (error) {
+    } catch {
       Toast({
         type: 'fail',
         message: '获取挑战详情失败',
@@ -80,7 +82,7 @@ const MyChallengeDetailScreen = observer(() => {
   useFocusEffect(
     useCallback(() => {
       fetchUserChallengeDetail();
-    }, [id]),
+    }, [id, fetchUserChallengeDetail]),
   );
 
   const getStatusColor = (status: UserChallenge['status']) => {
@@ -142,7 +144,7 @@ const MyChallengeDetailScreen = observer(() => {
           message: '进度更新成功',
         });
       }
-    } catch (error) {
+    } catch {
       Toast({
         type: 'fail',
         message: '进度更新失败',
@@ -193,7 +195,7 @@ const MyChallengeDetailScreen = observer(() => {
           });
         }
       }
-    } catch (error) {
+    } catch {
       Toast({
         type: 'fail',
         message: '操作失败',
@@ -205,7 +207,7 @@ const MyChallengeDetailScreen = observer(() => {
 
   if (loading) {
     return (
-      <CusPage title="挑战详情" safeAreaColor="#FAFAFA">
+      <CusPage bgcolor="#FAFAFA">
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <ActivityIndicator size="large" />
         </Flex>
@@ -215,11 +217,9 @@ const MyChallengeDetailScreen = observer(() => {
 
   if (!userChallenge) {
     return (
-      <CusPage title="挑战详情" safeAreaColor="#FAFAFA">
+      <CusPage bgcolor="#FAFAFA">
         <Flex justify="center" align="center" style={{ flex: 1 }}>
-          <Text size={16} color="#999">
-            挑战不存在
-          </Text>
+          <Text style={styles.errorText}>挑战不存在</Text>
         </Flex>
       </CusPage>
     );
@@ -227,21 +227,18 @@ const MyChallengeDetailScreen = observer(() => {
 
   const progress = parseFloat(userChallenge.progress_percent);
   const isInProgress = userChallenge.status === 'in_progress';
-  const isFinished = ['succeeded', 'failed', 'cancelled', 'expired'].includes(
-    userChallenge.status,
-  );
 
   return (
-    <CusPage title="我的挑战" safeAreaColor="#FAFAFA">
+    <CusPage bgcolor="#FAFAFA">
       <ScrollView
-        style={{ flex: 1, backgroundColor: '#FAFAFA' }}
-        contentContainerStyle={{ padding: 16 }}
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}>
         {/* 挑战基本信息 */}
-        <Card style={{ marginBottom: 16 }}>
-          <Flex direction="column" gap={16}>
-            <Flex justify="space-between" align="flex-start">
-              <Text size={18} weight="600" style={{ flex: 1, marginRight: 12 }}>
+        <Card style={styles.card}>
+          <Flex direction="column">
+            <Flex justify="between" align="start">
+              <Text style={styles.title}>
                 {userChallenge.challenge?.title || '挑战标题'}
               </Text>
               <Tag color={getStatusColor(userChallenge.status)}>
@@ -250,7 +247,7 @@ const MyChallengeDetailScreen = observer(() => {
             </Flex>
 
             {userChallenge.challenge?.description && (
-              <Text size={14} color="#666" style={{ lineHeight: 20 }}>
+              <Text style={styles.description}>
                 {userChallenge.challenge.description}
               </Text>
             )}
@@ -258,153 +255,136 @@ const MyChallengeDetailScreen = observer(() => {
         </Card>
 
         {/* 进度信息 */}
-        <Card style={{ marginBottom: 16 }}>
-          <Text size={16} weight="500" style={{ marginBottom: 12 }}>
-            挑战进度
-          </Text>
-          <Flex direction="column" gap={12}>
-            <Flex justify="space-between" align="center">
-              <Text size={14} color="#666">
-                完成度
-              </Text>
+        <Card style={styles.card}>
+          <Text style={styles.sectionTitle}>挑战进度</Text>
+          <Flex direction="column">
+            <Flex justify="between" align="center">
+              <Text style={styles.infoLabel}>完成度</Text>
               <Text
-                size={16}
-                weight="500"
-                color={getStatusColor(userChallenge.status)}>
+                style={[
+                  styles.progressText,
+                  { color: getStatusColor(userChallenge.status) },
+                ]}>
                 {progress.toFixed(1)}%
               </Text>
             </Flex>
-            <Progress
-              percent={progress}
-              strokeColor={getStatusColor(userChallenge.status)}
-              showInfo={false}
-              strokeWidth={8}
-            />
+
+            {/* 简单的进度条 */}
+            <View style={styles.progressBarContainer}>
+              <View
+                style={[
+                  styles.progressBar,
+                  {
+                    width: `${progress}%`,
+                    backgroundColor: getStatusColor(userChallenge.status),
+                  },
+                ]}
+              />
+            </View>
 
             {isInProgress && (
-              <Button
-                type="primary"
-                size="small"
-                onPress={() => setShowProgressModal(true)}
-                style={{ alignSelf: 'flex-end', marginTop: 8 }}>
-                更新进度
-              </Button>
+              <Flex justify="end" style={{ marginTop: 8 }}>
+                <Button
+                  type="primary"
+                  size="s"
+                  onPress={() => setShowProgressModal(true)}>
+                  更新进度
+                </Button>
+              </Flex>
             )}
           </Flex>
         </Card>
 
         {/* 时间信息 */}
-        <Card style={{ marginBottom: 16 }}>
-          <Text size={16} weight="500" style={{ marginBottom: 12 }}>
-            时间信息
-          </Text>
-          <Flex direction="column" gap={8}>
+        <Card style={styles.card}>
+          <Text style={styles.sectionTitle}>时间信息</Text>
+          <View style={styles.timeInfo}>
             {userChallenge.started_at && (
-              <Flex justify="space-between">
-                <Text size={14} color="#666">
-                  开始时间
-                </Text>
-                <Text size={14}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>开始时间</Text>
+                <Text style={styles.infoValue}>
                   {formatDateTime(userChallenge.started_at)}
                 </Text>
-              </Flex>
+              </View>
             )}
-            <Flex justify="space-between">
-              <Text size={14} color="#666">
-                截止时间
-              </Text>
-              <Text size={14} color="#FF4D4F">
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>截止时间</Text>
+              <Text style={[styles.infoValue, { color: '#FF4D4F' }]}>
                 {formatDateTime(userChallenge.deadline_at)}
               </Text>
-            </Flex>
+            </View>
             {userChallenge.finished_at && (
-              <Flex justify="space-between">
-                <Text size={14} color="#666">
-                  完成时间
-                </Text>
-                <Text size={14}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>完成时间</Text>
+                <Text style={styles.infoValue}>
                   {formatDateTime(userChallenge.finished_at)}
                 </Text>
-              </Flex>
+              </View>
             )}
-          </Flex>
+          </View>
         </Card>
 
         {/* 挑战目标 */}
         {userChallenge.challenge && (
-          <Card style={{ marginBottom: 16 }}>
-            <Text size={16} weight="500" style={{ marginBottom: 12 }}>
-              挑战目标
-            </Text>
-            <Flex direction="column" gap={8}>
-              <Flex justify="space-between">
-                <Text size={14} color="#666">
-                  总专注时长
-                </Text>
-                <Text size={14}>
+          <Card style={styles.card}>
+            <Text style={styles.sectionTitle}>挑战目标</Text>
+            <View style={styles.targetInfo}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>总专注时长</Text>
+                <Text style={styles.infoValue}>
                   {userChallenge.challenge.goal_total_mins} 分钟
                 </Text>
-              </Flex>
-              <Flex justify="space-between">
-                <Text size={14} color="#666">
-                  单次最少时长
-                </Text>
-                <Text size={14}>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>单次最少时长</Text>
+                <Text style={styles.infoValue}>
                   {userChallenge.challenge.goal_once_mins} 分钟
                 </Text>
-              </Flex>
-              <Flex justify="space-between">
-                <Text size={14} color="#666">
-                  重复次数
-                </Text>
-                <Text size={14}>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>重复次数</Text>
+                <Text style={styles.infoValue}>
                   {userChallenge.challenge.goal_repeat_times} 次
                 </Text>
-              </Flex>
-            </Flex>
+              </View>
+            </View>
           </Card>
         )}
 
         {/* 其他信息 */}
-        <Card style={{ marginBottom: 16 }}>
-          <Text size={16} weight="500" style={{ marginBottom: 12 }}>
-            其他信息
-          </Text>
-          <Flex direction="column" gap={8}>
-            <Flex justify="space-between">
-              <Text size={14} color="#666">
-                入场费用
-              </Text>
-              <Text size={14} color="#FF6B35">
+        <Card style={styles.card}>
+          <Text style={styles.sectionTitle}>其他信息</Text>
+          <View style={styles.otherInfo}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>入场费用</Text>
+              <Text style={styles.priceText}>
                 {userChallenge.entry_coins} 金币
               </Text>
-            </Flex>
-            <Flex justify="space-between">
-              <Text size={14} color="#666">
-                关联计划
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>关联计划</Text>
+              <Text style={styles.infoValue}>
+                {userChallenge.plan_ids.length} 个
               </Text>
-              <Text size={14}>{userChallenge.plan_ids.length} 个</Text>
-            </Flex>
+            </View>
             {userChallenge.result_reason && (
-              <Flex direction="column" gap={4}>
-                <Text size={14} color="#666">
-                  结果说明
-                </Text>
-                <Text size={14} style={{ lineHeight: 20 }}>
+              <View style={styles.reasonContainer}>
+                <Text style={styles.infoLabel}>结果说明</Text>
+                <Text style={styles.reasonText}>
                   {userChallenge.result_reason}
                 </Text>
-              </Flex>
+              </View>
             )}
-          </Flex>
+          </View>
         </Card>
 
-        <Space size={20} />
+        <Space />
 
         {/* 操作按钮 */}
         {isInProgress && (
-          <Flex gap={12}>
+          <Flex style={{ gap: 12 }}>
             <Button
-              style={{ flex: 1 }}
+              style={styles.actionButton}
               onPress={() => {
                 setFinishStatus('cancelled');
                 setShowFinishModal(true);
@@ -413,7 +393,7 @@ const MyChallengeDetailScreen = observer(() => {
             </Button>
             <Button
               type="primary"
-              style={{ flex: 1 }}
+              style={styles.actionButton}
               onPress={() => {
                 setFinishStatus('succeeded');
                 setShowFinishModal(true);
@@ -423,115 +403,297 @@ const MyChallengeDetailScreen = observer(() => {
           </Flex>
         )}
 
-        <Space size={40} />
+        <Space />
       </ScrollView>
 
       {/* 进度更新弹框 */}
       <Modal
         visible={showProgressModal}
-        onClose={() => setShowProgressModal(false)}
-        title="更新进度"
-        showCloseIcon>
-        <Flex direction="column" gap={20} style={{ minHeight: 200 }}>
-          <Text size={14} color="#666">
-            当前进度：{progress.toFixed(1)}%
-          </Text>
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowProgressModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>更新进度</Text>
 
-          <Flex direction="column" gap={12}>
-            <Text size={14} weight="500">
-              设置新进度：
+            <Text style={styles.currentProgress}>
+              当前进度：{progress.toFixed(1)}%
             </Text>
-            <Slider
-              value={progressValue}
-              min={0}
-              max={100}
-              step={1}
-              onChange={setProgressValue}
-              style={{ width: '100%' }}
-            />
-            <Text size={14} color="#1890FF" style={{ textAlign: 'center' }}>
-              {progressValue.toFixed(1)}%
-            </Text>
-          </Flex>
 
-          <Flex gap={12} style={{ marginTop: 20 }}>
-            <Button
-              style={{ flex: 1 }}
-              onPress={() => setShowProgressModal(false)}>
-              取消
-            </Button>
-            <Button
-              type="primary"
-              style={{ flex: 1 }}
-              loading={updating}
-              onPress={handleUpdateProgress}>
-              确认更新
-            </Button>
-          </Flex>
-        </Flex>
+            <View style={styles.sliderContainer}>
+              <Text style={styles.sliderLabel}>设置新进度：</Text>
+              <Slider
+                style={styles.slider}
+                value={progressValue}
+                minimumValue={0}
+                maximumValue={100}
+                step={1}
+                onValueChange={setProgressValue}
+                minimumTrackTintColor="#1890FF"
+                maximumTrackTintColor="#E5E5E5"
+                thumbTintColor="#1890FF"
+              />
+              <Text style={styles.sliderValue}>
+                {progressValue.toFixed(1)}%
+              </Text>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <Button
+                style={styles.modalButton}
+                onPress={() => setShowProgressModal(false)}>
+                取消
+              </Button>
+              <Button
+                type="primary"
+                style={styles.modalButton}
+                loading={updating}
+                onPress={handleUpdateProgress}>
+                确认更新
+              </Button>
+            </View>
+          </View>
+        </View>
       </Modal>
 
       {/* 完成挑战弹框 */}
       <Modal
         visible={showFinishModal}
-        onClose={() => setShowFinishModal(false)}
-        title={finishStatus === 'succeeded' ? '完成挑战' : '放弃挑战'}
-        showCloseIcon>
-        <Flex direction="column" gap={16} style={{ minHeight: 200 }}>
-          <Text size={14} color="#666">
-            {finishStatus === 'succeeded'
-              ? '确认已完成挑战目标？完成后将获得相应奖励。'
-              : '确认要放弃这个挑战吗？放弃后将无法恢复。'}
-          </Text>
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowFinishModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {finishStatus === 'succeeded' ? '完成挑战' : '放弃挑战'}
+            </Text>
 
-          {finishStatus === 'failed' && (
-            <Flex direction="column" gap={8}>
-              <Text size={14} weight="500">
-                失败原因（可选）：
-              </Text>
-              <TextArea
-                value={finishReason}
-                onChange={setFinishReason}
-                placeholder="请简要说明失败原因..."
-                maxLength={200}
-                showCount
-              />
-            </Flex>
-          )}
+            <Text style={styles.modalSubtitle}>
+              {finishStatus === 'succeeded'
+                ? '确认已完成挑战目标？完成后将获得相应奖励。'
+                : '确认要放弃这个挑战吗？放弃后将无法恢复。'}
+            </Text>
 
-          {finishStatus === 'cancelled' && (
-            <Flex direction="column" gap={8}>
-              <Text size={14} weight="500">
-                放弃原因（可选）：
-              </Text>
-              <TextArea
-                value={finishReason}
-                onChange={setFinishReason}
-                placeholder="请简要说明放弃原因..."
-                maxLength={200}
-                showCount
-              />
-            </Flex>
-          )}
+            {(finishStatus === 'failed' || finishStatus === 'cancelled') && (
+              <View style={styles.reasonInput}>
+                <Text style={styles.reasonLabel}>
+                  {finishStatus === 'failed'
+                    ? '失败原因（可选）：'
+                    : '放弃原因（可选）：'}
+                </Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={finishReason}
+                  onChangeText={setFinishReason}
+                  placeholder={`请简要说明${
+                    finishStatus === 'failed' ? '失败' : '放弃'
+                  }原因...`}
+                  maxLength={200}
+                  multiline
+                />
+              </View>
+            )}
 
-          <Flex gap={12} style={{ marginTop: 16 }}>
-            <Button
-              style={{ flex: 1 }}
-              onPress={() => setShowFinishModal(false)}>
-              取消
-            </Button>
-            <Button
-              type="primary"
-              style={{ flex: 1 }}
-              loading={finishing}
-              onPress={handleFinishChallenge}>
-              {finishStatus === 'succeeded' ? '确认完成' : '确认放弃'}
-            </Button>
-          </Flex>
-        </Flex>
+            <View style={styles.modalButtons}>
+              <Button
+                style={styles.modalButton}
+                onPress={() => setShowFinishModal(false)}>
+                取消
+              </Button>
+              <Button
+                type="primary"
+                style={styles.modalButton}
+                loading={finishing}
+                onPress={handleFinishChallenge}>
+                {finishStatus === 'succeeded' ? '确认完成' : '确认放弃'}
+              </Button>
+            </View>
+          </View>
+        </View>
       </Modal>
     </CusPage>
   );
+});
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  contentContainer: {
+    padding: 16,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  card: {
+    marginBottom: 16,
+  },
+  cardContent: {
+    gap: 16,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    flex: 1,
+    marginRight: 12,
+  },
+  description: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 12,
+  },
+  progressInfo: {
+    gap: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  progressText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: '#E5E5E5',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  updateButtonContainer: {
+    alignItems: 'flex-end',
+    marginTop: 8,
+  },
+  timeInfo: {
+    gap: 8,
+  },
+  targetInfo: {
+    gap: 8,
+  },
+  otherInfo: {
+    gap: 8,
+  },
+  priceText: {
+    fontSize: 14,
+    color: '#FF6B35',
+    fontWeight: '500',
+  },
+  reasonContainer: {
+    gap: 4,
+  },
+  reasonText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    width: '100%',
+    minHeight: 200,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  currentProgress: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+  },
+  sliderContainer: {
+    marginBottom: 20,
+  },
+  sliderLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 12,
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  sliderValue: {
+    fontSize: 14,
+    color: '#1890FF',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  reasonInput: {
+    marginBottom: 16,
+  },
+  reasonLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+  },
 });
 
 export default MyChallengeDetailScreen;
