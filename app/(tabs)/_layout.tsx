@@ -97,6 +97,20 @@ const TabLayout = () => {
         }}
       />
       <Tabs.Screen
+        name="challenges"
+        options={{
+          title: '挑战',
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <Icon
+              name={focused ? 'trophy' : 'trophy-outline'}
+              size={20}
+              color={focused ? colors.primary : colors.text}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="user"
         options={{
           title: '我的',
