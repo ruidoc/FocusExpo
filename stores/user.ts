@@ -60,7 +60,8 @@ class UserStore {
         res = await http.post('/user/login', form);
       }
       if (res.statusCode === 200) {
-        await storage.set('access_token', res.token);
+        storage.set('access_token', res.token);
+        storage.setGroup('access_token', res.token);
         HomeStore.loadApps();
         AppStore.getCurapp();
         PlanStore.getPlans();

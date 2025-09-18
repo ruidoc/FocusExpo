@@ -40,7 +40,8 @@ const Index = observer(() => {
     );
   }
 
-  const initialRoute = store.uInfo ? '/(tabs)' : '/(guides)/step1';
+  // const initialRoute = store.uInfo ? '/(tabs)' : '/(guides)/step1';
+  const initialRoute = '/(tabs)';
 
   return <Redirect href={initialRoute} />;
 });

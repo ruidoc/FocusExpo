@@ -1,6 +1,5 @@
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import dayjs from 'dayjs';
-import { MMKV } from 'react-native-mmkv';
 
 export const toast = (message: string) => {
   Toast({ message, position: 'bottom' });
@@ -64,4 +63,5 @@ export const getCurrentMinute = (more = false): number => {
   return now;
 };
 
-export const storage = new MMKV()
+// 重新导出存储实例和相关工具
+export { storage } from './storage';

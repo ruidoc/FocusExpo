@@ -4,8 +4,8 @@ import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import axios, { AxiosInstance } from 'axios';
 
 const instance: AxiosInstance = axios.create({
-  // baseURL: 'https://focusone.ruidoc.cn/dev-api',
-  baseURL: 'http://192.168.0.6:8849',
+  baseURL: 'https://focusone.ruidoc.cn/dev-api',
+  // baseURL: 'http://192.168.31.37:8849',
   // baseURL: 'http://192.168.0.5:8849',
   timeout: 6000,
   headers: {
@@ -20,8 +20,9 @@ instance.interceptors.request.use(async request => {
     request.headers['Content-Type'] = 'multipart/form-data';
   }
   console.log('【网络请求】', request.method, request.url);
-  request.headers.Authorization = `Bearer ${(storage.getString('access_token')) || ''
-    }`;
+  request.headers.Authorization = `Bearer ${
+    storage.getString('access_token') || ''
+  }`;
   return request;
 });
 

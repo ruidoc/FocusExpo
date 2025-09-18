@@ -534,8 +534,8 @@ class NativeModule: RCTEventEmitter {
 
     let ftype = defaults.string(forKey: "FocusOne.FocusType")
     let pu = defaults.double(forKey: "FocusOne.PausedUntil")
-    let blockedAppsDict = defaults.dictionary(forKey: "FocusOne.BlockedApps") as? [String: String] ?? [:]
-    print("blockedAppsDict: \(blockedAppsDict)")
+    let accessToken = defaults.string(forKey: "access_token")
+    print("accessToken: \(accessToken)")
     // 简单序列化：key=value 以逗号连接（按 key 排序，便于稳定）
     // let blockedAppsSerialized = blockedAppsDict
     //   .map { "\($0.key)=\($0.value)" }
@@ -590,7 +590,6 @@ class NativeModule: RCTEventEmitter {
       "totalMinutes": total,
       "elapsedMinutes": elapsedMin,
       "focusType": ftype ?? NSNull(),
-      "blockedApps": blockedAppsDict,
       "pausedUntil": pu > 0 ? pu : NSNull()
     ])
   }
