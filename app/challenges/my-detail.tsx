@@ -9,7 +9,7 @@ import {
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
 import Slider from '@react-native-community/slider';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { useLocalSearchParams } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -29,6 +29,7 @@ const MyChallengeDetailScreen = observer(() => {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const store = useLocalObservable(() => ChallengeStore);
+  const { colors, dark } = useTheme();
 
   const [userChallenge, setUserChallenge] = useState<UserChallenge | null>(
     null,
@@ -207,7 +208,7 @@ const MyChallengeDetailScreen = observer(() => {
 
   if (loading) {
     return (
-      <CusPage bgcolor="#FAFAFA">
+      <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <ActivityIndicator size="large" />
         </Flex>
@@ -217,7 +218,7 @@ const MyChallengeDetailScreen = observer(() => {
 
   if (!userChallenge) {
     return (
-      <CusPage bgcolor="#FAFAFA">
+      <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <Text style={styles.errorText}>挑战不存在</Text>
         </Flex>
@@ -229,7 +230,7 @@ const MyChallengeDetailScreen = observer(() => {
   const isInProgress = userChallenge.status === 'in_progress';
 
   return (
-    <CusPage bgcolor="#FAFAFA">
+    <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -485,9 +486,8 @@ const MyChallengeDetailScreen = observer(() => {
                   style={styles.textInput}
                   value={finishReason}
                   onChangeText={setFinishReason}
-                  placeholder={`请简要说明${
-                    finishStatus === 'failed' ? '失败' : '放弃'
-                  }原因...`}
+                  placeholder={`请简要说明${finishStatus === 'failed' ? '失败' : '放弃'
+                    }原因...`}
                   maxLength={200}
                   multiline
                 />

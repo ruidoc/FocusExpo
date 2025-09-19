@@ -114,7 +114,7 @@ export default function RootLayout() {
           PlanStore.setCurPlanMinute(0);
           PlanStore.resetPlan();
         }
-      } catch {}
+      } catch { }
     };
     // 首次同步（仅 iOS 执行）
     if (isIOS) {
@@ -160,9 +160,9 @@ export default function RootLayout() {
   const navigationTheme = isDark
     ? { ...(NavThemes.dark as any), fonts: (NavigationDarkTheme as any).fonts }
     : {
-        ...(NavThemes.light as any),
-        fonts: (NavigationDefaultTheme as any).fonts,
-      };
+      ...(NavThemes.light as any),
+      fonts: (NavigationDefaultTheme as any).fonts,
+    };
 
   return (
     <ThemeProvider value={navigationTheme}>
@@ -222,6 +222,10 @@ export default function RootLayout() {
           <Stack.Screen name="apps/index" options={{ title: 'APP管理' }} />
           <Stack.Screen name="apps/add" options={{ title: '选择APP' }} />
           <Stack.Screen name="others/webview" options={{ title: '隐私政策' }} />
+          <Stack.Screen name="challenges/index" options={{ title: '挑战活动' }} />
+          <Stack.Screen name="challenges/detail" options={{ title: '挑战活动详情' }} />
+          <Stack.Screen name="challenges/my-list" options={{ title: '我的挑战' }} />
+          <Stack.Screen name="challenges/my-detail" options={{ title: '挑战详情' }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style={isDark ? 'light' : 'dark'} />

@@ -8,7 +8,7 @@ import {
   Tag,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -17,12 +17,14 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 const ChallengeListScreen = observer(() => {
   const store = useLocalObservable(() => ChallengeStore);
+  const { colors, dark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [filters, setFilters] = useState({
     is_active: true,
@@ -92,8 +94,78 @@ const ChallengeListScreen = observer(() => {
     return `${start.format('MM/DD')} - ${end.format('MM/DD')}`;
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: dark ? '#0D0D12' : '#F8F9FA',
+    },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 18,
+      paddingBottom: 10,
+    },
+    headerTitle: {
+      fontSize: 22,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    filterCard: {
+      margin: 16,
+      marginBottom: 8,
+      backgroundColor: colors.card,
+    },
+    challengeCard: {
+      marginBottom: 12,
+      backgroundColor: colors.card,
+    },
+    challengeTitle: {
+      fontSize: 16,
+      fontWeight: '500',
+      flex: 1,
+      marginRight: 8,
+      color: colors.text,
+    },
+    challengeDescription: {
+      fontSize: 14,
+      color: dark ? '#8A8A98' : '#666',
+    },
+    timeText: {
+      fontSize: 12,
+      color: dark ? '#8A8A98' : '#999',
+    },
+    entryCoinsText: {
+      fontSize: 14,
+      color: '#FF6B35',
+    },
+    goalText: {
+      fontSize: 12,
+      color: dark ? '#8A8A98' : '#666',
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      paddingTop: 60,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: dark ? '#8A8A98' : '#999',
+    },
+    myChallengeBtnCard: {
+      marginTop: 20,
+      backgroundColor: dark ? '#1A1A2E' : '#F0F9FF',
+    },
+    myChallengeBtnText: {
+      fontSize: 16,
+      color: '#1890FF',
+      fontWeight: '500',
+    },
+    filterText: {
+      fontSize: 14,
+      color: colors.text,
+    },
+  });
+
   const renderChallengeItem = (challenge: Challenge) => (
-    <Card key={challenge.id} style={{ marginBottom: 12 }}>
+    <Card key={challenge.id} style={styles.challengeCard}>
       <Pressable
         onPress={() =>
           router.push({
@@ -104,13 +176,7 @@ const ChallengeListScreen = observer(() => {
         <View style={{ gap: 12 }}>
           {/* 标题和难度 */}
           <Flex justify="between" align="center">
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: '500',
-                flex: 1,
-                marginRight: 8,
-              }}>
+            <Text style={styles.challengeTitle}>
               {challenge.title}
             </Text>
             <Tag color={getDifficultyColor(challenge.difficulty)}>
@@ -120,20 +186,20 @@ const ChallengeListScreen = observer(() => {
 
           {/* 描述 */}
           {challenge.description && (
-            <Text style={{ fontSize: 14, color: '#666' }} numberOfLines={2}>
+            <Text style={styles.challengeDescription} numberOfLines={2}>
               {challenge.description}
             </Text>
           )}
 
           {/* 时间范围 */}
-          <Text style={{ fontSize: 12, color: '#999' }}>
+          <Text style={styles.timeText}>
             活动时间：{formatTimeRange(challenge.starts_at, challenge.ends_at)}
           </Text>
 
           {/* 入场币和奖励 */}
           <Flex justify="between" align="center">
             <View style={{ flexDirection: 'row', gap: 16 }}>
-              <Text style={{ fontSize: 14, color: '#FF6B35' }}>
+              <Text style={styles.entryCoinsText}>
                 入场币：{challenge.entry_coins}
               </Text>
             </View>
@@ -149,10 +215,10 @@ const ChallengeListScreen = observer(() => {
 
           {/* 目标信息 */}
           <Flex justify="between" align="center">
-            <Text style={{ fontSize: 12, color: '#666' }}>
+            <Text style={styles.goalText}>
               目标：{challenge.goal_total_mins}分钟总时长
             </Text>
-            <Text style={{ fontSize: 12, color: '#666' }}>
+            <Text style={styles.goalText}>
               {challenge.goal_repeat_times}次 × {challenge.goal_repeat_days}天
             </Text>
           </Flex>
@@ -162,14 +228,19 @@ const ChallengeListScreen = observer(() => {
   );
 
   return (
-    <CusPage bgcolor="#FAFAFA">
-      <View style={{ flex: 1, backgroundColor: '#FAFAFA' }}>
+    <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+      <View style={styles.container}>
+        {/* 页面标题 */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>挑战活动</Text>
+        </View>
+
         {/* 筛选器 */}
-        <Card style={{ margin: 16, marginBottom: 8 }}>
+        <Card style={styles.filterCard}>
           <Flex justify="between" align="center">
             <View
               style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontSize: 14 }}>仅显示上架</Text>
+              <Text style={styles.filterText}>仅显示上架</Text>
               <Switch
                 value={filters.is_active}
                 onChange={value =>
@@ -179,7 +250,7 @@ const ChallengeListScreen = observer(() => {
             </View>
             <View
               style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontSize: 14 }}>进行中</Text>
+              <Text style={styles.filterText}>进行中</Text>
               <Switch
                 value={filters.ongoing}
                 onChange={value =>
@@ -199,20 +270,19 @@ const ChallengeListScreen = observer(() => {
           }
           showsVerticalScrollIndicator={false}>
           {store.challenges.length === 0 ? (
-            <View style={{ alignItems: 'center', paddingTop: 60 }}>
-              <Text style={{ fontSize: 16, color: '#999' }}>暂无挑战活动</Text>
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>暂无挑战活动</Text>
             </View>
           ) : (
             store.challenges.map(renderChallengeItem)
           )}
 
           {/* 我的挑战入口 */}
-          <Card style={{ marginTop: 20, backgroundColor: '#F0F9FF' }}>
+          <Card style={styles.myChallengeBtnCard}>
             <Pressable
-              onPress={() => router.push('/challenges/my-challenges' as any)}>
+              onPress={() => router.push('/challenges/my-list' as any)}>
               <View style={{ alignItems: 'center', padding: 12 }}>
-                <Text
-                  style={{ fontSize: 16, color: '#1890FF', fontWeight: '500' }}>
+                <Text style={styles.myChallengeBtnText}>
                   查看我的挑战
                 </Text>
               </View>

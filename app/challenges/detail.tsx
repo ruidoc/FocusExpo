@@ -10,7 +10,7 @@ import {
   Tag,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -29,6 +29,7 @@ const ChallengeDetailScreen = observer(() => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const challengeStore = useLocalObservable(() => ChallengeStore);
   const planStore = useLocalObservable(() => PlanStore);
+  const { colors, dark } = useTheme();
 
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,9 +64,34 @@ const ChallengeDetailScreen = observer(() => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchChallengeDetail();
-      fetchPlans();
-    }, [id, fetchChallengeDetail, fetchPlans]),
+      const loadData = async () => {
+        if (!id) return;
+
+        setLoading(true);
+        try {
+          const result = await challengeStore.fetchChallengeById(id);
+          setChallenge(result);
+        } catch {
+          Toast({
+            type: 'fail',
+            message: '获取挑战详情失败',
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const loadPlans = async () => {
+        try {
+          await planStore.getPlans();
+        } catch (error) {
+          console.log('获取计划列表失败:', error);
+        }
+      };
+
+      loadData();
+      loadPlans();
+    }, [id, challengeStore, planStore]),
   );
 
   const getDifficultyColor = (difficulty: Challenge['difficulty']) => {
@@ -129,7 +155,7 @@ const ChallengeDetailScreen = observer(() => {
         setShowPlanModal(false);
         // 跳转到我的挑战详情
         router.push({
-          pathname: '/challenges/my-challenge-detail',
+          pathname: '/challenges/my-detail',
           params: { id: result.id },
         } as any);
       }
@@ -151,11 +177,178 @@ const ChallengeDetailScreen = observer(() => {
     );
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: dark ? '#0D0D12' : '#F8F9FA',
+    },
+    contentContainer: {
+      padding: 16,
+      paddingTop: 0,
+    },
+    header: {
+      paddingHorizontal: 4,
+      paddingTop: 18,
+      paddingBottom: 10,
+    },
+    headerTitle: {
+      fontSize: 22,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    errorText: {
+      fontSize: 16,
+      color: dark ? '#8A8A98' : '#999',
+    },
+    card: {
+      marginBottom: 16,
+      backgroundColor: colors.card,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: '600',
+      flex: 1,
+      marginRight: 12,
+      color: colors.text,
+    },
+    description: {
+      fontSize: 14,
+      color: dark ? '#8A8A98' : '#666',
+      lineHeight: 20,
+    },
+    infoLabel: {
+      fontSize: 14,
+      color: dark ? '#8A8A98' : '#666',
+    },
+    infoValue: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: colors.text,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    goalRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: dark ? '#2A2A3A' : '#F0F0F0',
+    },
+    goalRowLast: {
+      borderBottomWidth: 0,
+    },
+    goalLabel: {
+      fontSize: 14,
+      color: dark ? '#8A8A98' : '#666',
+    },
+    goalValue: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: colors.text,
+    },
+    rewardContainer: {
+      flexDirection: 'row',
+      gap: 8,
+      flexWrap: 'wrap',
+    },
+    claimButton: {
+      marginTop: 20,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: colors.card,
+      margin: 20,
+      borderRadius: 12,
+      padding: 20,
+      maxHeight: '80%',
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 16,
+    },
+    planItem: {
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: dark ? '#2A2A3A' : '#F0F0F0',
+    },
+    planItemLast: {
+      borderBottomWidth: 0,
+    },
+    planName: {
+      fontSize: 16,
+      color: colors.text,
+      marginBottom: 4,
+    },
+    planMeta: {
+      fontSize: 12,
+      color: dark ? '#8A8A98' : '#999',
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 20,
+    },
+    modalButton: {
+      flex: 1,
+    },
+    priceText: {
+      fontSize: 16,
+      color: '#FF6B35',
+      fontWeight: '500',
+    },
+    rewardLabel: {
+      fontSize: 14,
+      color: dark ? '#8A8A98' : '#666',
+      marginTop: 8,
+      marginBottom: 8,
+    },
+    modalSubtitle: {
+      fontSize: 14,
+      color: dark ? '#8A8A98' : '#666',
+      marginBottom: 16,
+    },
+    planList: {
+      maxHeight: 300,
+      marginBottom: 16,
+    },
+    planItemSelected: {
+      backgroundColor: dark ? '#1A1A2E' : '#F0F9FF',
+    },
+    planTime: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: colors.text,
+    },
+    planDetail: {
+      fontSize: 12,
+      color: dark ? '#8A8A98' : '#666',
+      marginTop: 2,
+    },
+  });
+
   if (loading) {
     return (
-      <CusPage bgcolor="#FAFAFA">
+      <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <ActivityIndicator size="large" />
+          <Text style={styles.errorText}>加载中...</Text>
         </Flex>
       </CusPage>
     );
@@ -163,7 +356,7 @@ const ChallengeDetailScreen = observer(() => {
 
   if (!challenge) {
     return (
-      <CusPage bgcolor="#FAFAFA">
+      <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <Text style={styles.errorText}>挑战不存在</Text>
         </Flex>
@@ -172,11 +365,17 @@ const ChallengeDetailScreen = observer(() => {
   }
 
   return (
-    <CusPage bgcolor="#FAFAFA">
+    <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}>
+
+        {/* 页面标题 */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>挑战详情</Text>
+        </View>
+
         {/* 基本信息 */}
         <Card style={styles.card}>
           <Flex direction="column">
@@ -309,7 +508,7 @@ const ChallengeDetailScreen = observer(() => {
                   style={[
                     styles.planItem,
                     selectedPlanIds.includes(plan.id!) &&
-                      styles.planItemSelected,
+                    styles.planItemSelected,
                   ]}
                   onPress={() => togglePlanSelection(plan.id!)}>
                   <Flex align="center" style={{ gap: 12 }}>
@@ -355,155 +554,5 @@ const ChallengeDetailScreen = observer(() => {
   );
 });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAFA',
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#999',
-  },
-  card: {
-    marginBottom: 16,
-  },
-  cardContent: {
-    gap: 16,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    flex: 1,
-    marginRight: 12,
-  },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  infoValue: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 12,
-  },
-  targetInfo: {
-    gap: 8,
-  },
-  appTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  appTag: {
-    marginBottom: 4,
-  },
-  rewardInfo: {
-    gap: 12,
-  },
-  priceText: {
-    fontSize: 16,
-    color: '#FF6B35',
-    fontWeight: '500',
-  },
-  rewardLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 8,
-  },
-  rewardTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  rewardTag: {
-    marginBottom: 4,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-    width: '100%',
-    maxHeight: '80%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
-  },
-  planList: {
-    maxHeight: 300,
-    marginBottom: 16,
-  },
-  planItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    marginBottom: 8,
-    gap: 12,
-  },
-  planItemSelected: {
-    backgroundColor: '#F0F9FF',
-  },
-  planInfo: {
-    flex: 1,
-  },
-  planTime: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  planDetail: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-  },
-});
 
 export default ChallengeDetailScreen;
