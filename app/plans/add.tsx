@@ -3,30 +3,57 @@ import { PlanStore } from '@/stores';
 // iOS 原生定时屏蔽，前端不做权限与应用选择校验，交由用户事先完成
 import { repeats } from '@/utils/static.json';
 import { Field, Toast } from '@fruits-chain/react-native-xiaoshu';
-import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useState } from 'react';
-import { NativeModules, Platform, ScrollView, View } from 'react-native';
-
-const { NativeModule } = NativeModules;
+import { Platform, ScrollView, Text, View } from 'react-native';
 
 const App = observer(() => {
   const pstore = useLocalObservable(() => PlanStore);
-  const navigation = useNavigation();
+
+  // 计算重复次数的函数
+  const calculateRepeatCount = (
+    startDate: Date,
+    endDate: Date,
+    repeatDays: number[],
+  ) => {
+    if (!startDate || !endDate || !repeatDays.length) return 0;
+
+    let count = 0;
+    let current = dayjs(startDate);
+    const end = dayjs(endDate);
+
+    while (current.isSame(end, 'day') || current.isBefore(end, 'day')) {
+      const dayOfWeek = current.day() === 0 ? 7 : current.day(); // 转换为1-7格式
+      if (repeatDays.includes(dayOfWeek)) {
+        count++;
+      }
+      current = current.add(1, 'day');
+    }
+
+    return count;
+  };
   //
   type FormState = {
+    name: string;
     start: Date;
     end: Date;
+    start_date: Date;
+    end_date: Date;
     repeat: number[];
     mode: 'focus' | 'shield';
   };
   const [form, setForm] = useState<FormState>(() => {
     const start = new Date();
     const end = dayjs(start).add(20, 'minute').toDate();
+    const today = new Date();
+    const nextWeek = dayjs(today).add(7, 'day').toDate();
     return {
+      name: '',
       start,
       end,
+      start_date: today,
+      end_date: nextWeek,
       repeat: [1, 2, 3, 4, 5],
       mode: 'shield',
     };
@@ -34,7 +61,23 @@ const App = observer(() => {
 
   const submit = async () => {
     try {
-      let { start, end, repeat } = form;
+      let { name, start, end, start_date, end_date, repeat } = form;
+
+      // 验证计划名称
+      if (!name.trim()) {
+        return Toast({
+          type: 'fail',
+          message: '请输入计划名称',
+        });
+      }
+
+      // 验证日期范围
+      if (!dayjs(end_date).isAfter(dayjs(start_date), 'day')) {
+        return Toast({
+          type: 'fail',
+          message: '结束日期必须大于开始日期',
+        });
+      }
       let start_day = dayjs(start);
       let end_day = dayjs(end);
       if (!end_day.isAfter(start_day)) {
@@ -65,11 +108,18 @@ const App = observer(() => {
           message: '任务时间不能重叠',
         });
       }
+      // 计算重复次数
+      const repeatCount = calculateRepeatCount(start_date, end_date, repeat);
+
       let subinfo: any = { ...form };
+      subinfo.name = name.trim();
       subinfo.start = start_day.format('HH:mm');
       subinfo.end = end_day.format('HH:mm');
       subinfo.start_min = start_day.hour() * 60 + start_day.minute();
       subinfo.end_min = end_day.hour() * 60 + end_day.minute();
+      subinfo.start_date = dayjs(start_date).format('YYYY-MM-DD');
+      subinfo.end_date = dayjs(end_date).format('YYYY-MM-DD');
+      subinfo.repeat_count = repeatCount;
       pstore.addPlan(subinfo, async res => {
         // console.log('添加任务结果：', res);
         if (res) {
@@ -107,6 +157,29 @@ const App = observer(() => {
         ...form,
         end: val,
       });
+    } else if (key === 'start_date') {
+      const newForm = {
+        ...form,
+        start_date: val,
+      };
+      // 如果开始日期晚于结束日期，自动调整结束日期
+      if (dayjs(val).isAfter(dayjs(form.end_date), 'day')) {
+        newForm.end_date = dayjs(val).add(7, 'day').toDate();
+      }
+      setForm(newForm);
+    } else if (key === 'end_date') {
+      // 确保结束日期不早于开始日期
+      if (dayjs(val).isBefore(dayjs(form.start_date), 'day')) {
+        Toast({
+          type: 'fail',
+          message: '结束日期不能早于开始日期',
+        });
+        return;
+      }
+      setForm({
+        ...form,
+        end_date: val,
+      });
     } else {
       setForm({
         ...form,
@@ -118,6 +191,31 @@ const App = observer(() => {
   return (
     <CusPage>
       <ScrollView style={{ padding: 15 }}>
+        <Field.TextInput
+          title="计划名称"
+          placeholder="请输入计划名称"
+          value={form.name}
+          onChange={(v: string) => setInfo(v, 'name')}
+          required
+        />
+
+        <Field.Date
+          title="开始日期"
+          placeholder="请选择开始日期"
+          mode="Y-M"
+          value={form.start_date}
+          onChange={v => setInfo(v, 'start_date')}
+        />
+
+        <Field.Date
+          title="结束日期"
+          placeholder="请选择结束日期"
+          mode="Y-M"
+          value={form.end_date}
+          onChange={v => setInfo(v, 'end_date')}
+          required
+        />
+
         {Platform.OS !== 'ios' && (
           <Field.Checkbox
             title="模式"
@@ -129,6 +227,7 @@ const App = observer(() => {
             onChange={v => setInfo(v, 'mode')}
           />
         )}
+
         <Field.Date
           title="开始时间"
           placeholder="请选择"
@@ -136,6 +235,7 @@ const App = observer(() => {
           value={form.start}
           onChange={v => setInfo(v, 'start')}
         />
+
         <Field.Date
           title="结束时间"
           placeholder="请选择"
@@ -143,6 +243,7 @@ const App = observer(() => {
           value={form.end}
           onChange={v => setInfo(v, 'end')}
         />
+
         <Field.Selector
           title="重复规则"
           multiple
@@ -150,6 +251,21 @@ const App = observer(() => {
           value={form.repeat}
           onChange={v => setInfo(v, 'repeat')}
         />
+
+        {/* 显示计算出的重复次数 */}
+        {form.repeat.length > 0 && (
+          <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+            <Text style={{ fontSize: 14, color: '#666' }}>
+              预计重复次数：
+              {calculateRepeatCount(
+                form.start_date,
+                form.end_date,
+                form.repeat,
+              )}{' '}
+              次
+            </Text>
+          </View>
+        )}
       </ScrollView>
       <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
         <CusButton onPress={submit} text="确认" />

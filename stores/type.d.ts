@@ -10,12 +10,16 @@ interface UserInfo {
 
 interface CusPlan {
   id?: string;
+  name?: string; // 计划名称
   start: string;
   start_min: number;
   start_sec?: number;
   end: string;
   end_min: number;
   end_sec?: number;
+  start_date?: string; // 开始日期 YYYY-MM-DD
+  end_date?: string; // 结束日期 YYYY-MM-DD
+  repeat_count?: number; // 计算出的重复次数
   // 定时任务：使用多选周几（1..7，周一..周日），一次性任务仍使用 'once'
   repeat: 'once' | number[];
   mode: 'focus' | 'shield';
