@@ -5,7 +5,7 @@
       "name": "focusexpo",
       "dependencies": {
         "@expo/vector-icons": "^14.1.0",
-        "@fruits-chain/react-native-xiaoshu": "^0.4.5",
+        "@fruits-chain/react-native-xiaoshu": "^0.4.8",
         "@react-native-async-storage/async-storage": "2.1.2",
         "@react-native-community/slider": "4.5.6",
         "@react-navigation/bottom-tabs": "^7.3.10",
@@ -319,7 +319,7 @@
 
     "@fruits-chain/icons-react-native": ["@fruits-chain/icons-react-native@0.1.14", "https://registry.npmmirror.com/@fruits-chain/icons-react-native/-/icons-react-native-0.1.14.tgz", { "dependencies": { "@babel/runtime": "*", "lodash": "*" }, "peerDependencies": { "react": "*", "react-native": "*", "react-native-svg": ">=12.4.1" } }, "sha512-aqfd+MR8dotXFeRQk5rfZpjYQnKVEZF9+nLav0wsZVU2IpDlbh7kWoxaiWPwnCdoLSy6SAA0m8gJ2LUvXR+bhQ=="],
 
-    "@fruits-chain/react-native-xiaoshu": ["@fruits-chain/react-native-xiaoshu@0.4.5", "https://registry.npmmirror.com/@fruits-chain/react-native-xiaoshu/-/react-native-xiaoshu-0.4.5.tgz", { "dependencies": { "@fruits-chain/design-tokens-bailu": "^0.1.0", "@fruits-chain/icons-react-native": "^0.1.14", "color": "^3.2.1", "fast-deep-equal": "^3.1.3", "lodash": "^4.17.21", "react-is": "^18.3.1", "react-native-popover-view": "^6.1.0", "rn-placeholder": "^3.0.3" }, "peerDependencies": { "rc-field-form": "*", "react-native-safe-area-context": "*", "react-native-svg": "*" } }, "sha512-KhaLYgCpHO7ioeita/PB4XGTWJIwMkJnM/bG9yn/p2kXS21qwJ/XvLJJpH564ytSHpCZVRI5xJQKKhG7GiB45w=="],
+    "@fruits-chain/react-native-xiaoshu": ["@fruits-chain/react-native-xiaoshu@0.4.8", "https://registry.npmmirror.com/@fruits-chain/react-native-xiaoshu/-/react-native-xiaoshu-0.4.8.tgz", { "dependencies": { "@fruits-chain/design-tokens-bailu": "^0.1.0", "@fruits-chain/icons-react-native": "^0.1.14", "color": "^3.2.1", "fast-deep-equal": "^3.1.3", "lodash": "^4.17.21", "react-is": "^18.3.1", "react-native-popover-view": "^6.1.0", "rn-placeholder": "^3.0.3" }, "peerDependencies": { "rc-field-form": "*", "react-native-safe-area-context": "*", "react-native-svg": "*" } }, "sha512-kulH7m0GrNKYbMYDNH1yuWPv9BpZC7RcFz5A33d7XcZ/fQC0xTrmQQlZmqxRowgN5VVEHpW7mJ7IK2Js/egEQA=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "https://registry.npmmirror.com/@humanfs/core/-/core-0.19.1.tgz", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 

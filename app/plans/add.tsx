@@ -1,15 +1,21 @@
 import { CusButton, CusPage } from '@/components';
-import { PlanStore } from '@/stores';
+import TokenLabel from '@/components/native/TokenLabel';
+import { AppStore, PlanStore } from '@/stores';
 // iOS 原生定时屏蔽，前端不做权限与应用选择校验，交由用户事先完成
+import { selectAppsToLimit } from '@/utils/permission';
 import { repeats } from '@/utils/static.json';
-import { Field, Toast } from '@fruits-chain/react-native-xiaoshu';
+import Icon from '@expo/vector-icons/Ionicons';
+import { Field, Flex, Toast } from '@fruits-chain/react-native-xiaoshu';
+import { useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useState } from 'react';
-import { Platform, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 const App = observer(() => {
   const pstore = useLocalObservable(() => PlanStore);
+  const astore = useLocalObservable(() => AppStore);
+  const { colors } = useTheme();
 
   // 计算重复次数的函数
   const calculateRepeatCount = (
@@ -43,17 +49,20 @@ const App = observer(() => {
     repeat: number[];
     mode: 'focus' | 'shield';
   };
+
+  // 单独管理选择的应用状态
+  const [selectedApps, setSelectedApps] = useState<any[]>([]);
   const [form, setForm] = useState<FormState>(() => {
     const start = new Date();
     const end = dayjs(start).add(20, 'minute').toDate();
     const today = new Date();
-    const nextWeek = dayjs(today).add(7, 'day').toDate();
+    const tomorrow = dayjs(today).add(1, 'day').toDate();
     return {
       name: '',
       start,
       end,
       start_date: today,
-      end_date: nextWeek,
+      end_date: tomorrow,
       repeat: [1, 2, 3, 4, 5],
       mode: 'shield',
     };
@@ -76,6 +85,14 @@ const App = observer(() => {
         return Toast({
           type: 'fail',
           message: '结束日期必须大于开始日期',
+        });
+      }
+
+      // 验证应用选择（仅iOS）
+      if (Platform.OS === 'ios' && selectedApps.length === 0) {
+        return Toast({
+          type: 'fail',
+          message: '请先选择要限制的应用',
         });
       }
       let start_day = dayjs(start);
@@ -120,6 +137,11 @@ const App = observer(() => {
       subinfo.start_date = dayjs(start_date).format('YYYY-MM-DD');
       subinfo.end_date = dayjs(end_date).format('YYYY-MM-DD');
       subinfo.repeat_count = repeatCount;
+
+      // 添加选择的应用到提交数据
+      if (Platform.OS === 'ios') {
+        subinfo.apps = selectedApps.map(r => `${r.id}:${r.type}`);
+      }
       pstore.addPlan(subinfo, async res => {
         // console.log('添加任务结果：', res);
         if (res) {
@@ -164,7 +186,7 @@ const App = observer(() => {
       };
       // 如果开始日期晚于结束日期，自动调整结束日期
       if (dayjs(val).isAfter(dayjs(form.end_date), 'day')) {
-        newForm.end_date = dayjs(val).add(7, 'day').toDate();
+        newForm.end_date = dayjs(val).add(1, 'day').toDate();
       }
       setForm(newForm);
     } else if (key === 'end_date') {
@@ -188,6 +210,66 @@ const App = observer(() => {
     }
   };
 
+  // 选择应用函数
+  const selectApps = () => {
+    selectAppsToLimit()
+      .then(data => {
+        if (data.success && data.apps) {
+          // 同时存储到AppStore和当前组件状态
+          astore.addIosApps(data.apps);
+          setSelectedApps(data.apps);
+        }
+      })
+      .catch(() => {
+        Toast({
+          type: 'fail',
+          message: '选择应用失败，请重试',
+        });
+      });
+  };
+
+  // 渲染已选择的应用
+  const renderSelectedApps = () => {
+    if (Platform.OS !== 'ios' || selectedApps.length === 0) {
+      return (
+        <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+          <Text style={{ color: '#666', fontSize: 14 }}>未选择应用</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 2 }}>
+          <Flex direction="row" align="center" style={{ gap: 8 }}>
+            {selectedApps.map((app, index) => (
+              <TokenLabel
+                key={`${app.id}-${index}`}
+                tokenBase64={app.tokenData}
+                tokenType={app.type}
+                style={{ width: 40, height: 40 }}
+              />
+            ))}
+          </Flex>
+        </ScrollView>
+        {selectedApps.length > 0 && (
+          <Text
+            style={{
+              fontSize: 12,
+              color: '#666',
+              marginTop: 8,
+              textAlign: 'center',
+            }}>
+            已选择 {selectedApps.length} 个应用
+          </Text>
+        )}
+      </View>
+    );
+  };
+
   return (
     <CusPage>
       <ScrollView style={{ padding: 15 }}>
@@ -202,7 +284,7 @@ const App = observer(() => {
         <Field.Date
           title="开始日期"
           placeholder="请选择开始日期"
-          mode="Y-M"
+          mode="M-D"
           value={form.start_date}
           onChange={v => setInfo(v, 'start_date')}
         />
@@ -210,11 +292,51 @@ const App = observer(() => {
         <Field.Date
           title="结束日期"
           placeholder="请选择结束日期"
-          mode="Y-M"
+          mode="M-D"
           value={form.end_date}
           onChange={v => setInfo(v, 'end_date')}
           required
         />
+
+        {Platform.OS === 'ios' && (
+          <View style={{ marginBottom: 16 }}>
+            <View
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                borderRadius: 12,
+                padding: 16,
+              }}>
+              <Flex
+                justify="between"
+                align="center"
+                style={{ marginBottom: 12 }}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: colors.text,
+                  }}>
+                  选择应用
+                </Text>
+                <Pressable
+                  onPress={selectApps}
+                  style={{
+                    backgroundColor: colors.primary,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}>
+                  <Icon name="add" size={16} color="#fff" />
+                  <Text style={{ color: '#fff', fontSize: 12 }}>选择</Text>
+                </Pressable>
+              </Flex>
+              {renderSelectedApps()}
+            </View>
+          </View>
+        )}
 
         {Platform.OS !== 'ios' && (
           <Field.Checkbox
@@ -244,9 +366,8 @@ const App = observer(() => {
           onChange={v => setInfo(v, 'end')}
         />
 
-        <Field.Selector
+        <Field.Checkbox
           title="重复规则"
-          multiple
           options={repeats}
           value={form.repeat}
           onChange={v => setInfo(v, 'repeat')}
