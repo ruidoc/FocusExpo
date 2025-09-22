@@ -1,11 +1,11 @@
+import { useCustomTheme } from '@/config/theme';
 import { Flex, Space } from '@fruits-chain/react-native-xiaoshu';
-import { useTheme } from '@react-navigation/native';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Image, StyleSheet, Text } from 'react-native';
 
 const App = () => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const [agree, setAgree] = useState(false);
 
   const changeStage = (val: boolean) => {
@@ -14,8 +14,8 @@ const App = () => {
   return (
     <Flex justify="center" style={styles.root}>
       <Space align="center" style={styles.logobox}>
-        <Image source={require('@/assets/logo2.png')} style={styles.avator} />
-        <Text style={{ fontSize: 20, color: colors.text }}>Version 1.0</Text>
+        <Image source={require('@/assets/images/splash.png')} style={styles.avator} />
+        {/* <Text style={{ fontSize: 20, color: colors.text }}>Version 1.0</Text> */}
       </Space>
       <Space justify="center" align="center" gap={3} style={styles.footer}>
         <Link
@@ -29,7 +29,7 @@ const App = () => {
         <Link href="/others/webview" style={{ color: colors.primary }}>
           《隐私政策》
         </Link>
-        <Text style={{ fontSize: 12, marginTop: 8, color: colors.text }}>
+        <Text style={{ fontSize: 12, marginTop: 8, color: colors.text3 }}>
           北京自由岸科技 ©️版权所有
         </Text>
       </Space>
@@ -46,13 +46,13 @@ const styles = StyleSheet.create({
     marginTop: 80,
   },
   avator: {
-    width: 70,
-    height: 70,
+    width: 130,
+    height: 180,
     borderRadius: 0,
   },
   footer: {
     position: 'absolute',
-    bottom: 5,
+    bottom: 50,
     left: 0,
     right: 0,
     paddingHorizontal: 30,

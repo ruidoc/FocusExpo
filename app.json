@@ -4,7 +4,7 @@
     "slug": "FocusOne",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.svg",
+    "icon": "./assets/images/logo.png",
     "scheme": [
       "wxdc022c6a39cb32b7",
       "focusone"
@@ -28,7 +28,7 @@
     "android": {
       "package": "com.focusone",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
@@ -36,23 +36,23 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/logo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/logo2.png",
+          "image": "./assets/images/splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#151718"
+          "backgroundColor": "#0D0D12"
         }
       ],
       [
         "expo-notifications",
         {
-          "icon": "./assets/logo.png",
+          "icon": "./assets/images/logo.png",
           "color": "#ffffff",
           "defaultChannel": "default",
           "sounds": [],
