@@ -1,21 +1,55 @@
 import { CusButton, CusPage } from '@/components';
 import TokenLabel from '@/components/native/TokenLabel';
+import staticData from '@/config/static.json';
+import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
-// iOS 原生定时屏蔽，前端不做权限与应用选择校验，交由用户事先完成
-import { repeats } from '@/config/static.json';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Field, Flex, Toast } from '@fruits-chain/react-native-xiaoshu';
-import { useTheme } from '@react-navigation/native';
+import { DatePicker, Field, Flex, TextInput, Toast } from '@fruits-chain/react-native-xiaoshu';
 import dayjs from 'dayjs';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View, } from 'react-native';
+
+type FormState = {
+  name: string;
+  start: Date;
+  end: Date;
+  start_date: Date;
+  end_date: Date;
+  repeat: number[];
+  mode: 'focus' | 'shield';
+};
 
 const App = observer(() => {
   const pstore = useLocalObservable(() => PlanStore);
   const astore = useLocalObservable(() => AppStore);
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
+  const [title, setTitle] = useState('');
+
+  const styles = StyleSheet.create({
+    item: {
+      marginBottom: 16,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      gap: 18,
+    },
+    week: {
+      width: 38,
+      height: 38,
+      borderRadius: 20,
+    },
+    selectApps: {
+      backgroundColor: colors.background,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+  });
 
   // 计算重复次数的函数
   const calculateRepeatCount = (
@@ -38,16 +72,6 @@ const App = observer(() => {
     }
 
     return count;
-  };
-  //
-  type FormState = {
-    name: string;
-    start: Date;
-    end: Date;
-    start_date: Date;
-    end_date: Date;
-    repeat: number[];
-    mode: 'focus' | 'shield';
   };
 
   // 单独管理选择的应用状态
@@ -157,6 +181,7 @@ const App = observer(() => {
   };
 
   const setInfo = (val: any, key: string) => {
+    console.log('setInfo：', val, key);
     if (key === 'start') {
       const start = dayjs(val);
       const end = start.add(20, 'minute').toDate();
@@ -228,18 +253,27 @@ const App = observer(() => {
       });
   };
 
+  const FeildItem = (props: any) => <Flex direction={props.column ? 'column' : 'row'} justify='between' align={props.column ? 'stretch' : 'center'} style={{ ...styles.item, marginBottom: props.group ? 16 : 9 }}>
+    <Flex align='center' justify='between' style={{ gap: 8 }}>
+      {/* {props.required && <Text style={{ color: 'red', fontSize: 12 }}>*</Text>} */}
+      <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>{props.title}</Text>
+      {props.action || null}
+    </Flex>
+    {props.children}
+  </Flex>
+
   // 渲染已选择的应用
   const renderSelectedApps = () => {
     if (Platform.OS !== 'ios' || selectedApps.length === 0) {
       return (
-        <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+        <View style={{ paddingVertical: 12 }}>
           <Text style={{ color: '#666', fontSize: 14 }}>未选择应用</Text>
         </View>
       );
     }
 
     return (
-      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+      <View style={{ paddingVertical: 4 }}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -273,69 +307,57 @@ const App = observer(() => {
   return (
     <CusPage>
       <ScrollView style={{ padding: 15 }}>
-        <Field.TextInput
-          title="计划名称"
-          placeholder="请输入计划名称"
-          value={form.name}
-          onChange={(v: string) => setInfo(v, 'name')}
-          required
-        />
+        <FeildItem title="🏆" group>
+          <TextInput
+            placeholder="给任务起个名字"
+            value={title}
+            placeholderTextColor={colors.text2}
+            onChange={setTitle}
+          />
+        </FeildItem>
 
-        <Field.Date
-          title="开始日期"
-          placeholder="请选择开始日期"
-          mode="M-D"
-          value={form.start_date}
-          onChange={v => setInfo(v, 'start_date')}
-        />
+        <FeildItem title="哪天开始">
+          <Flex justify='end' style={{ flex: 1 }} onPress={() => {
+            DatePicker({
+              defaultValue: form.start_date,
+              title: '开始日期',
+              mode: 'M-D',
+            }).then(({ action, value }) => {
+              if (action === 'confirm') {
+                setInfo(value, 'start_date')
+              }
+            })
+          }}>
+            <Text style={{ color: colors.text, fontSize: 16, }}>{dayjs(form.start_date).format('M-D')}</Text>
+            <Icon name="chevron-forward" size={20} color={colors.text} />
+          </Flex>
+        </FeildItem>
 
-        <Field.Date
-          title="结束日期"
-          placeholder="请选择结束日期"
-          mode="M-D"
-          value={form.end_date}
-          onChange={v => setInfo(v, 'end_date')}
-          required
-        />
-
+        <FeildItem title="哪天结束" group>
+          <Flex justify='end' style={{ flex: 1 }} onPress={() => {
+            DatePicker({
+              defaultValue: form.end_date,
+              title: '结束日期',
+              mode: 'M-D',
+            }).then(({ action, value }) => {
+              if (action === 'confirm') {
+                setInfo(value, 'end_date')
+              }
+            })
+          }}>
+            <Text style={{ color: colors.text, fontSize: 16, }}>{dayjs(form.end_date).format('M-D')}</Text>
+            <Icon name="chevron-forward" size={20} color={colors.text} />
+          </Flex>
+        </FeildItem>
         {Platform.OS === 'ios' && (
-          <View style={{ marginBottom: 16 }}>
-            <View
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                borderRadius: 12,
-                padding: 16,
-              }}>
-              <Flex
-                justify="between"
-                align="center"
-                style={{ marginBottom: 12 }}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: '600',
-                    color: colors.text,
-                  }}>
-                  选择应用
-                </Text>
-                <Pressable
-                  onPress={selectApps}
-                  style={{
-                    backgroundColor: colors.primary,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 16,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 4,
-                  }}>
-                  <Icon name="add" size={16} color="#fff" />
-                  <Text style={{ color: '#fff', fontSize: 12 }}>选择</Text>
-                </Pressable>
-              </Flex>
-              {renderSelectedApps()}
-            </View>
-          </View>
+          <FeildItem title="要屏蔽的应用" column group action={<Pressable
+            onPress={selectApps}
+            style={styles.selectApps}>
+            <Icon name="add" size={16} color="#B3B3BA" />
+            <Text style={{ color: '#858699', fontSize: 13 }}>选择</Text>
+          </Pressable>}>
+            {renderSelectedApps()}
+          </FeildItem>
         )}
 
         {Platform.OS !== 'ios' && (
@@ -350,32 +372,71 @@ const App = observer(() => {
           />
         )}
 
-        <Field.Date
-          title="开始时间"
-          placeholder="请选择"
-          mode="h-m"
-          value={form.start}
-          onChange={v => setInfo(v, 'start')}
-        />
+        <FeildItem title="几点开始">
+          <Flex justify='end' style={{ flex: 1 }} onPress={() => {
+            DatePicker({
+              defaultValue: form.start,
+              title: '开始时间',
+              mode: 'h-m',
+            }).then(({ action, value }) => {
+              if (action === 'confirm') {
+                setInfo(value, 'start')
+              }
+            })
+          }}>
+            <Text style={{ color: colors.text, fontSize: 16, }}>{dayjs(form.start).format('HH:mm')}</Text>
+            <Icon name="chevron-forward" size={20} color={colors.text} />
+          </Flex>
+        </FeildItem>
 
-        <Field.Date
-          title="结束时间"
-          placeholder="请选择"
-          mode="h-m"
-          value={form.end}
-          onChange={v => setInfo(v, 'end')}
-        />
+        <FeildItem title="几点结束" group>
+          <Flex justify='end' style={{ flex: 1 }} onPress={() => {
+            DatePicker({
+              defaultValue: form.end,
+              title: '结束时间',
+              mode: 'h-m',
+            }).then(({ action, value }) => {
+              if (action === 'confirm') {
+                setInfo(value, 'end')
+              }
+            })
+          }}>
+            <Text style={{ color: colors.text, fontSize: 16, }}>{dayjs(form.end).format('HH:mm')}</Text>
+            <Icon name="chevron-forward" size={20} color={colors.text} />
+          </Flex>
+        </FeildItem>
 
-        <Field.Checkbox
-          title="重复规则"
-          options={repeats}
-          value={form.repeat}
-          onChange={v => setInfo(v, 'repeat')}
-        />
+        <FeildItem title="每周几生效" action={<Text style={{ color: colors.text3, fontSize: 14 }}>已选{form.repeat.length}天</Text>} column>
+          <Flex style={{ flex: 1, gap: 12, paddingBottom: 6, paddingTop: 2 }}>
+            {staticData.repeats.map((item) => {
+              const isSelected = form.repeat.includes(item.value);
+              return (
+                <Flex align='center' justify='center'
+                  key={item.value}
+                  onPress={() => {
+                    const newRepeat = isSelected
+                      ? form.repeat.filter(day => day !== item.value)
+                      : [...form.repeat, item.value];
+                    setInfo(newRepeat, 'repeat');
+                  }}
+                  style={{
+                    ...styles.week,
+                    backgroundColor: isSelected ? colors.primary : colors.border,
+                  }}>
+                  <Text style={{
+                    color: colors.primaryForeground,
+                    fontSize: 15,
+                  }}>
+                    {item.label}
+                  </Text>
+                </Flex>
+              );
+            })}
+          </Flex>
+        </FeildItem>
 
-        {/* 显示计算出的重复次数 */}
         {form.repeat.length > 0 && (
-          <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+          <View style={{ paddingHorizontal: 6, paddingVertical: 4 }}>
             <Text style={{ fontSize: 14, color: '#666' }}>
               预计重复次数：
               {calculateRepeatCount(
@@ -388,7 +449,7 @@ const App = observer(() => {
           </View>
         )}
       </ScrollView>
-      <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
+      <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
         <CusButton onPress={submit} text="确认" />
       </View>
     </CusPage>

@@ -1,4 +1,5 @@
 import { CusPage } from '@/components';
+import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { Challenge } from '@/stores/challenge';
 import {
   Card,
@@ -8,7 +9,7 @@ import {
   Tag,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
-import { useFocusEffect, useTheme } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -24,7 +25,7 @@ import {
 
 const ChallengeListScreen = observer(() => {
   const store = useLocalObservable(() => ChallengeStore);
-  const { colors, dark } = useTheme();
+  const { colors } = useCustomTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [filters, setFilters] = useState({
     is_active: true,
@@ -97,7 +98,7 @@ const ChallengeListScreen = observer(() => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: dark ? '#0D0D12' : '#F8F9FA',
+      backgroundColor: colors.background,
     },
     header: {
       paddingHorizontal: 20,
@@ -127,11 +128,11 @@ const ChallengeListScreen = observer(() => {
     },
     challengeDescription: {
       fontSize: 14,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
     },
     timeText: {
       fontSize: 12,
-      color: dark ? '#8A8A98' : '#999',
+      color: colors.text2,
     },
     entryCoinsText: {
       fontSize: 14,
@@ -139,7 +140,7 @@ const ChallengeListScreen = observer(() => {
     },
     goalText: {
       fontSize: 12,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
     },
     emptyContainer: {
       alignItems: 'center',
@@ -147,15 +148,15 @@ const ChallengeListScreen = observer(() => {
     },
     emptyText: {
       fontSize: 16,
-      color: dark ? '#8A8A98' : '#999',
+      color: colors.text2,
     },
     myChallengeBtnCard: {
       marginTop: 20,
-      backgroundColor: dark ? '#1A1A2E' : '#F0F9FF',
+      backgroundColor: colors.background,
     },
     myChallengeBtnText: {
       fontSize: 16,
-      color: '#1890FF',
+      color: colors.primary,
       fontWeight: '500',
     },
     filterText: {
@@ -228,7 +229,7 @@ const ChallengeListScreen = observer(() => {
   );
 
   return (
-    <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+    <CusPage safe bgcolor={colors.background}>
       <View style={styles.container}>
         {/* 页面标题 */}
         <View style={styles.header}>

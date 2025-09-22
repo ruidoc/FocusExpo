@@ -1,4 +1,5 @@
 import { CusPage } from '@/components';
+import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { Challenge } from '@/stores/challenge';
 import PlanStore from '@/stores/plan';
 import {
@@ -10,7 +11,7 @@ import {
   Tag,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
-import { useFocusEffect, useTheme } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -29,7 +30,7 @@ const ChallengeDetailScreen = observer(() => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const challengeStore = useLocalObservable(() => ChallengeStore);
   const planStore = useLocalObservable(() => PlanStore);
-  const { colors, dark } = useTheme();
+  const { colors } = useCustomTheme();
 
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [loading, setLoading] = useState(true);
@@ -180,7 +181,7 @@ const ChallengeDetailScreen = observer(() => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: dark ? '#0D0D12' : '#F8F9FA',
+      backgroundColor: colors.background,
     },
     contentContainer: {
       padding: 16,
@@ -203,7 +204,7 @@ const ChallengeDetailScreen = observer(() => {
     },
     errorText: {
       fontSize: 16,
-      color: dark ? '#8A8A98' : '#999',
+      color: colors.text2,
     },
     card: {
       marginBottom: 16,
@@ -218,12 +219,12 @@ const ChallengeDetailScreen = observer(() => {
     },
     description: {
       fontSize: 14,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
       lineHeight: 20,
     },
     infoLabel: {
       fontSize: 14,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
     },
     infoValue: {
       fontSize: 14,
@@ -242,14 +243,14 @@ const ChallengeDetailScreen = observer(() => {
       alignItems: 'center',
       paddingVertical: 8,
       borderBottomWidth: 1,
-      borderBottomColor: dark ? '#2A2A3A' : '#F0F0F0',
+      borderBottomColor: colors.border,
     },
     goalRowLast: {
       borderBottomWidth: 0,
     },
     goalLabel: {
       fontSize: 14,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
     },
     goalValue: {
       fontSize: 14,
@@ -286,7 +287,7 @@ const ChallengeDetailScreen = observer(() => {
     planItem: {
       paddingVertical: 12,
       borderBottomWidth: 1,
-      borderBottomColor: dark ? '#2A2A3A' : '#F0F0F0',
+      borderBottomColor: colors.border,
     },
     planItemLast: {
       borderBottomWidth: 0,
@@ -298,7 +299,7 @@ const ChallengeDetailScreen = observer(() => {
     },
     planMeta: {
       fontSize: 12,
-      color: dark ? '#8A8A98' : '#999',
+      color: colors.text2,
     },
     modalButtons: {
       flexDirection: 'row',
@@ -315,13 +316,13 @@ const ChallengeDetailScreen = observer(() => {
     },
     rewardLabel: {
       fontSize: 14,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
       marginTop: 8,
       marginBottom: 8,
     },
     modalSubtitle: {
       fontSize: 14,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
       marginBottom: 16,
     },
     planList: {
@@ -329,7 +330,7 @@ const ChallengeDetailScreen = observer(() => {
       marginBottom: 16,
     },
     planItemSelected: {
-      backgroundColor: dark ? '#1A1A2E' : '#F0F9FF',
+      backgroundColor: colors.background,
     },
     planTime: {
       fontSize: 14,
@@ -338,14 +339,14 @@ const ChallengeDetailScreen = observer(() => {
     },
     planDetail: {
       fontSize: 12,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
       marginTop: 2,
     },
   });
 
   if (loading) {
     return (
-      <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+      <CusPage safe bgcolor={colors.background}>
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <ActivityIndicator size="large" />
           <Text style={styles.errorText}>加载中...</Text>
@@ -356,7 +357,7 @@ const ChallengeDetailScreen = observer(() => {
 
   if (!challenge) {
     return (
-      <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+      <CusPage safe bgcolor={colors.background}>
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <Text style={styles.errorText}>挑战不存在</Text>
         </Flex>
@@ -365,7 +366,7 @@ const ChallengeDetailScreen = observer(() => {
   }
 
   return (
-    <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+    <CusPage safe bgcolor={colors.background}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}

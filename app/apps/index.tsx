@@ -1,10 +1,10 @@
 import { CusCard, CusPage } from '@/components';
 import TokenLabel from '@/components/native/TokenLabel';
+import { useCustomTheme } from '@/config/theme';
 import { AppStore, HomeStore } from '@/stores';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, NoticeBar, Space } from '@fruits-chain/react-native-xiaoshu';
-import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
@@ -24,7 +24,7 @@ const App = observer(() => {
   const store = useLocalObservable(() => HomeStore);
   const astore = useLocalObservable(() => AppStore);
   const [refreshing, setRefreshing] = useState(false);
-  const { colors, dark } = useTheme();
+  const { colors } = useCustomTheme();
 
   const styles = StyleSheet.create({
     cardTitle: {
@@ -53,7 +53,7 @@ const App = observer(() => {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderWidth: 0.5,
-      borderColor: dark ? '#333' : '#E0E3E8',
+      borderColor: colors.border,
     },
     addIcon: {
       color: colors.primary,

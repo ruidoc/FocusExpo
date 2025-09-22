@@ -1,4 +1,5 @@
 import { CusPage } from '@/components';
+import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { UserChallenge } from '@/stores/challenge';
 import {
   Card,
@@ -6,7 +7,7 @@ import {
   Tag,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
-import { useFocusEffect, useTheme } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -21,7 +22,7 @@ import {
 
 const MyChallengesScreen = observer(() => {
   const store = useLocalObservable(() => ChallengeStore);
-  const { colors, dark } = useTheme();
+  const { colors } = useCustomTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
 
@@ -245,7 +246,7 @@ const MyChallengesScreen = observer(() => {
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderRadius: 20,
-      backgroundColor: dark ? '#2A2A3A' : '#F5F5F5',
+      backgroundColor: colors.background,
       minWidth: 60,
       alignItems: 'center',
     },
@@ -254,7 +255,7 @@ const MyChallengesScreen = observer(() => {
     },
     filterText: {
       fontSize: 14,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
     },
     filterTextActive: {
       color: '#FFF',
@@ -280,15 +281,15 @@ const MyChallengesScreen = observer(() => {
     },
     progressLabel: {
       fontSize: 12,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
     },
     progressText: {
       fontSize: 12,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
     },
     progressBarContainer: {
       height: 6,
-      backgroundColor: dark ? '#2A2A3A' : '#E5E5E5',
+      backgroundColor: colors.border,
       borderRadius: 3,
       overflow: 'hidden',
     },
@@ -301,23 +302,23 @@ const MyChallengesScreen = observer(() => {
     },
     coinsText: {
       fontSize: 12,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
     },
     reasonText: {
       fontSize: 12,
-      color: dark ? '#8A8A98' : '#999',
+      color: colors.text2,
     },
     planLabel: {
       fontSize: 12,
-      color: dark ? '#8A8A98' : '#666',
+      color: colors.text2,
     },
     planCount: {
       fontSize: 12,
-      color: '#1890FF',
+      color: colors.primary,
     },
     emptyText: {
       fontSize: 16,
-      color: dark ? '#8A8A98' : '#999',
+      color: colors.text2,
     },
     goButton: {
       marginTop: 16,

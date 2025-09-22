@@ -4,7 +4,6 @@ import Typewriter from '@/components/type-writer';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, GuideStore, HomeStore } from '@/stores';
 import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
-import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useState } from 'react';
@@ -31,7 +30,7 @@ const GuideStep2 = observer(() => {
   // 选中图标存储已迁移至 HomeStore.selected_app_icons
   const buttonOpacity = React.useRef(new Animated.Value(0)).current;
 
-  const { colors: palette } = useCustomTheme();
+  const { colors } = useCustomTheme();
 
   // iOS下检查屏幕时间权限，Android下检查VPN权限
   const step1Completed =
@@ -40,8 +39,6 @@ const GuideStep2 = observer(() => {
     Platform.OS === 'ios'
       ? astore.ios_selected_apps.length > 0
       : gstore.selected_apps.length > 0;
-
-  const { colors, dark } = useTheme();
 
   // 打字机完成后再显示步骤卡片
   useEffect(() => {
@@ -162,16 +159,16 @@ const GuideStep2 = observer(() => {
   };
 
   // 设计色彩，适配暗色模式
-  const mainColor = palette.primary;
-  const mainColorLight = dark ? '#232323' : palette.primaryLight;
-  const green = palette.green;
-  const gray = dark ? '#444' : palette.gray;
+  const mainColor = colors.primary;
+  const mainColorLight = colors.primary;
+  const green = colors.success;
+  const gray = colors.text2;
   const cardColor = colors.card;
-  const descTextColor = palette.desc;
-  const borderColor = colors.border || palette.border;
-  const stepTextColor = dark ? '#fff' : '#222';
-  const stepIconUndoneBg = dark ? '#232323' : gray;
-  const stepIconUndoneBorder = dark ? '#232323' : gray;
+  const descTextColor = colors.text2;
+  const borderColor = colors.border || colors.border;
+  const stepTextColor = colors.text;
+  const stepIconUndoneBg = colors.text2;
+  const stepIconUndoneBorder = colors.text2;
 
   const styles = StyleSheet.create({
     container: {
@@ -214,7 +211,7 @@ const GuideStep2 = observer(() => {
     },
     stepCompleted: {
       backgroundColor: mainColorLight,
-      borderColor: dark ? colors.primary : mainColor,
+      borderColor: colors.primary,
     },
     stepIcon: {
       width: 24,
