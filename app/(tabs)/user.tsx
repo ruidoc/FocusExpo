@@ -110,7 +110,7 @@ const App = observer(() => {
           )}
           {!store.uInfo?.avatar && (
             <Image
-              source={require('@/assets/logo2.png')}
+              source={require('@/assets/images/logo.png')}
               style={styles.avator}
             />
           )}

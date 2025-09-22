@@ -78,7 +78,7 @@ const App = observer(() => {
           justify="center"
           align="center"
           style={styles.logoBox}>
-          <Image source={require('@/assets/logo.png')} style={styles.avator} />
+          <Image source={require('@/assets/images/logo.png')} style={styles.avator} />
           <Text
             style={{
               fontSize: 24,
