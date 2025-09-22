@@ -1,8 +1,3 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 // 需要与 Lumina UI Kit 保持一致的主题主色（占位，待按 Figma 替换）
 // 参考链接: https://www.figma.com/design/m5y9YkJCpEZn8ivxr1YCKS/Lumina-UI-Kit-1.1--Full-Version-?node-id=137-38936&m=dev
 // 注意：以下为示例色值，请按设计稿替换
@@ -69,8 +64,6 @@ export const Colors = {
   },
 };
 
-export default colors;
-
 // 导出导航主题（供 React Navigation 使用），与 Lumina 色板对齐
 export const NavThemes = {
   light: {
@@ -121,3 +114,5 @@ export const XiaoShuThemeOverrides = {
     notice_bar_background_color_lightness: 10,
   },
 };
+
+export default colors;

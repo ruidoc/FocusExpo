@@ -2,8 +2,8 @@ import { CusButton, CusPage } from '@/components';
 import TokenLabel from '@/components/native/TokenLabel';
 import { AppStore, PlanStore } from '@/stores';
 // iOS 原生定时屏蔽，前端不做权限与应用选择校验，交由用户事先完成
+import { repeats } from '@/config/static.json';
 import { selectAppsToLimit } from '@/utils/permission';
-import { repeats } from '@/utils/static.json';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Field, Flex, Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';

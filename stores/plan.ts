@@ -1,5 +1,5 @@
-import http from '@/request';
 import { getCurrentMinute, parseRepeat, storage } from '@/utils';
+import http from '@/utils/request';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { makeAutoObservable } from 'mobx';
 import { NativeModules } from 'react-native';

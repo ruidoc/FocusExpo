@@ -1,6 +1,6 @@
 import { CusPage } from '@/components';
+import { buttonRipple } from '@/config/navigation';
 import { PlanStore } from '@/stores';
-import { buttonRipple } from '@/utils/config';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Dialog, Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';

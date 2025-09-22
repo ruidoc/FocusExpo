@@ -1,4 +1,4 @@
-import http from '@/request';
+import http from '@/utils/request';
 import { registerApp, requestPayment } from 'expo-native-wechat';
 import { makeAutoObservable } from 'mobx';
 

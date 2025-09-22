@@ -1,4 +1,4 @@
-import { modes, repeats } from '@/utils/static.json';
+import { modes, repeats } from '@/config/static.json';
 import { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { PressableAndroidRippleConfig } from 'react-native';
@@ -30,7 +30,7 @@ export const BottomTabOptions: BottomTabNavigationOptions = {
   tabBarAllowFontScaling: true,
   tabBarLabelStyle: {
     marginBottom: 6,
-    marginTop : 4,
+    marginTop: 4,
   },
   tabBarIconStyle: {
     marginTop: 3,

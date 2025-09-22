@@ -1,6 +1,6 @@
-import { makeAutoObservable } from 'mobx';
+import http from '@/utils/request';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import http from '@/request';
+import { makeAutoObservable } from 'mobx';
 
 interface OnboardingState {
   // 用户选择的问题类型

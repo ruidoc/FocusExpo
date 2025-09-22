@@ -1,20 +1,15 @@
-import {
-  DarkTheme as NavigationDarkTheme,
-  DefaultTheme as NavigationDefaultTheme,
-  ThemeProvider,
-} from '@react-navigation/native';
+import { ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
-import { NavThemes, XiaoShuThemeOverrides } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { buttonRipple, ScreenOptions } from '@/config/navigation';
+import { useCustomTheme } from '@/config/theme';
 import { RecordStore } from '@/stores';
 import PlanStore from '@/stores/plan';
-import { buttonRipple, ScreenOptions } from '@/utils/config';
 import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Provider, Space, Theme } from '@fruits-chain/react-native-xiaoshu';
+import { Provider, Space } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useRef } from 'react';
 import {
@@ -28,11 +23,10 @@ import {
 const { NativeModule } = NativeModules;
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
-  let isDark = colorScheme === 'dark';
+  const theme = useCustomTheme();
   const delay = useRef(null);
 
   const asyncData = async () => {
@@ -114,7 +108,7 @@ export default function RootLayout() {
           PlanStore.setCurPlanMinute(0);
           PlanStore.resetPlan();
         }
-      } catch { }
+      } catch {}
     };
     // 首次同步（仅 iOS 执行）
     if (isIOS) {
@@ -140,15 +134,6 @@ export default function RootLayout() {
     return null;
   }
 
-  let UITheme: any = {
-    ...(isDark ? Theme.dark : Theme),
-    ...(isDark ? XiaoShuThemeOverrides.dark : XiaoShuThemeOverrides.light),
-    button_l_font_size: 17,
-    button_active_opacity: 0.8,
-    button_l_height: 48,
-    button_border_radius: 9,
-  };
-
   const BackIcon = () => (
     <Space direction="horizontal" align="center" gap={16}>
       <Pressable android_ripple={buttonRipple} onPress={() => router.back()}>
@@ -157,16 +142,9 @@ export default function RootLayout() {
     </Space>
   );
 
-  const navigationTheme = isDark
-    ? { ...(NavThemes.dark as any), fonts: (NavigationDarkTheme as any).fonts }
-    : {
-      ...(NavThemes.light as any),
-      fonts: (NavigationDefaultTheme as any).fonts,
-    };
-
   return (
-    <ThemeProvider value={navigationTheme}>
-      <Provider theme={UITheme}>
+    <ThemeProvider value={theme.navigation}>
+      <Provider theme={theme.xiaoshu}>
         <Stack
           screenOptions={{
             ...ScreenOptions,
@@ -222,13 +200,25 @@ export default function RootLayout() {
           <Stack.Screen name="apps/index" options={{ title: 'APP管理' }} />
           <Stack.Screen name="apps/add" options={{ title: '选择APP' }} />
           <Stack.Screen name="others/webview" options={{ title: '隐私政策' }} />
-          <Stack.Screen name="challenges/index" options={{ title: '挑战活动' }} />
-          <Stack.Screen name="challenges/detail" options={{ title: '挑战活动详情' }} />
-          <Stack.Screen name="challenges/my-list" options={{ title: '我的挑战' }} />
-          <Stack.Screen name="challenges/my-detail" options={{ title: '挑战详情' }} />
+          <Stack.Screen
+            name="challenges/index"
+            options={{ title: '挑战活动' }}
+          />
+          <Stack.Screen
+            name="challenges/detail"
+            options={{ title: '挑战活动详情' }}
+          />
+          <Stack.Screen
+            name="challenges/my-list"
+            options={{ title: '我的挑战' }}
+          />
+          <Stack.Screen
+            name="challenges/my-detail"
+            options={{ title: '挑战详情' }}
+          />
           <Stack.Screen name="+not-found" />
         </Stack>
-        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <StatusBar style={theme.isDark ? 'light' : 'dark'} />
       </Provider>
     </ThemeProvider>
   );

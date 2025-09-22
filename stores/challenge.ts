@@ -1,4 +1,4 @@
-import http from '@/request';
+import http from '@/utils/request';
 import { makeAutoObservable } from 'mobx';
 
 export type Challenge = {

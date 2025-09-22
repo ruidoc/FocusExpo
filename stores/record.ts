@@ -1,5 +1,5 @@
-import http from '@/request';
 import { storage } from '@/utils';
+import http from '@/utils/request';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { makeAutoObservable } from 'mobx';
 import { BenefitStore } from '.';

@@ -1,6 +1,6 @@
-import colors from '@/constants/Colors';
-import http from '@/request';
+import colors from '@/config/colors';
 import { toast } from '@/utils';
+import http from '@/utils/request';
 import { Button } from '@fruits-chain/react-native-xiaoshu';
 import { registerApp, sendAuthRequest } from 'expo-native-wechat';
 import { useEffect, useState } from 'react';

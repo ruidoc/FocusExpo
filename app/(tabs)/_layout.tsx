@@ -3,8 +3,8 @@ import { Tabs, useNavigation } from 'expo-router';
 import React from 'react';
 
 // import { useColorScheme } from '@/hooks/useColorScheme';
+import { BottomTabOptions, buttonRipple } from '@/config/navigation';
 import { toast } from '@/utils';
-import { BottomTabOptions, buttonRipple } from '@/utils/config';
 import { Space } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@react-navigation/native';

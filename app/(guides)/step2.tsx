@@ -1,7 +1,7 @@
 import AnimatedCascade from '@/components/cascade';
 import CusButton from '@/components/cus-button';
 import Typewriter from '@/components/type-writer';
-import palette from '@/constants/Colors';
+import palette from '@/config/colors';
 import { AppStore, GuideStore, HomeStore } from '@/stores';
 import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
 import { useTheme } from '@react-navigation/native';

@@ -1,4 +1,4 @@
-import http from '@/request';
+import http from '@/utils/request';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
@@ -21,7 +21,9 @@ class AppStore {
     return this.ios_all_apps.map(r => r.stableId);
   }
   get ios_selected_apps() {
-    return this.ios_all_apps.filter(r => this.ios_selected_sids.includes(r.stableId));
+    return this.ios_all_apps.filter(r =>
+      this.ios_selected_sids.includes(r.stableId),
+    );
   }
 
   setFocusApps = (apps: string[]) => {
@@ -39,7 +41,7 @@ class AppStore {
   // 设置iOS选择的应用
   setIosSelectedSids = (apps: any[]) => {
     this.ios_selected_sids = apps;
-    console.log('选中的：', apps)
+    console.log('选中的：', apps);
   };
 
   // 设置iOS选择的应用
@@ -51,7 +53,6 @@ class AppStore {
     try {
       let res: HttpRes = await http.post('/osapp/add', form);
       if (res.statusCode == 200) {
-
       }
     } catch (error) {
       console.log(error);
@@ -64,7 +65,7 @@ class AppStore {
       let final_apps = apps.filter(
         r => !this.ios_stableids.includes(r.stableId),
       );
-      this.setIosSelectedSids(apps.map(r => r.stableId))
+      this.setIosSelectedSids(apps.map(r => r.stableId));
       if (final_apps.length === 0) return;
       let res: HttpRes = await http.post('/iosapp/add', final_apps);
       if (res.statusCode == 200) {
@@ -72,7 +73,7 @@ class AppStore {
       } else {
         Toast(res.message);
       }
-      console.log('添加结果：', res)
+      console.log('添加结果：', res);
     } catch (error) {
       console.log(error);
     }
