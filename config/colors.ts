@@ -34,17 +34,6 @@ const LuminaDarkPalette = {
 const tintColorLight = LuminaLightPalette.primary;
 const tintColorDark = LuminaDarkPalette.primaryForeground;
 
-// 统一色板
-const colors = {
-  primary: LuminaLightPalette.primary, // 主色（按需替换）
-  primaryLight: '#EEF2FF', // 主色淡色（示例）
-  green: LuminaLightPalette.success,
-  gray: '#C0C4CC',
-  border: LuminaLightPalette.border,
-  cardBg: LuminaLightPalette.surface,
-  desc: LuminaLightPalette.mutedForeground,
-};
-
 export const Colors = {
   light: {
     text: LuminaLightPalette.textPrimary,
@@ -113,6 +102,21 @@ export const XiaoShuThemeOverrides = {
     steps_background_color: 'transparent',
     notice_bar_background_color_lightness: 10,
   },
+};
+
+// 统一色板
+export const colors = {
+  primary: LuminaLightPalette.primary, // 主色（按需替换）
+  primaryLight: '#EEF2FF', // 主色淡色（示例）
+  green: LuminaLightPalette.success,
+  gray: '#C0C4CC',
+  border: LuminaLightPalette.border,
+  cardBg: LuminaLightPalette.surface,
+  desc: LuminaLightPalette.mutedForeground,
+  // background: string;
+  // card: string;
+  // text: string;
+  // notification: string;
 };
 
 export default colors;

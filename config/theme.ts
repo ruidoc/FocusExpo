@@ -1,7 +1,7 @@
 import { Theme } from '@fruits-chain/react-native-xiaoshu';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { useColorScheme } from 'react-native';
-import { NavThemes, XiaoShuThemeOverrides } from './colors';
+import { Colors, NavThemes, XiaoShuThemeOverrides } from './colors';
 
 export const xiaoshuTheme = {
   button_l_font_size: 17,
@@ -24,5 +24,6 @@ export const useCustomTheme = () => {
       ...(isDark ? NavThemes.dark : NavThemes.light),
     },
     isDark,
+    colors: isDark ? Colors.dark : Colors.light,
   };
 };

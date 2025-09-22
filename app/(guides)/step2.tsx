@@ -1,7 +1,7 @@
 import AnimatedCascade from '@/components/cascade';
 import CusButton from '@/components/cus-button';
 import Typewriter from '@/components/type-writer';
-import palette from '@/config/colors';
+import { useCustomTheme } from '@/config/theme';
 import { AppStore, GuideStore, HomeStore } from '@/stores';
 import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
 import { useTheme } from '@react-navigation/native';
@@ -30,6 +30,8 @@ const GuideStep2 = observer(() => {
   const [buttonVisible, setButtonVisible] = useState(false);
   // 选中图标存储已迁移至 HomeStore.selected_app_icons
   const buttonOpacity = React.useRef(new Animated.Value(0)).current;
+
+  const { colors: palette } = useCustomTheme();
 
   // iOS下检查屏幕时间权限，Android下检查VPN权限
   const step1Completed =

@@ -1,4 +1,4 @@
-import colors from '@/config/colors';
+import { useCustomTheme } from '@/config/theme';
 import { toast } from '@/utils';
 import http from '@/utils/request';
 import { Button } from '@fruits-chain/react-native-xiaoshu';
@@ -17,6 +17,7 @@ interface Props {
 
 const App = (props: Props) => {
   const [loading, setLoading] = useState(false);
+  const { colors } = useCustomTheme();
   const onButtonClicked = async () => {
     if (props.disabled) {
       return toast('请阅读并勾选下方隐私政策');
