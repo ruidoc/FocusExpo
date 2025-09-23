@@ -1,8 +1,16 @@
-// 需要与 Lumina UI Kit 保持一致的主题主色（占位，待按 Figma 替换）
 // 参考链接: https://www.figma.com/design/m5y9YkJCpEZn8ivxr1YCKS/Lumina-UI-Kit-1.1--Full-Version-?node-id=137-38936&m=dev
-// 注意：以下为示例色值，请按设计稿替换
+const baseCommon = {
+  primary: '#7A5AF8', // 主题色
+  primary2: '#F44771', // 副主题色
+  green: '#16B364', // 绿色
+  orange: '#EF6820', // 橙色
+  blue: '#2E90FA', // 蓝色
+  blue2: '#3538CD', // 蓝色2
+  fuchsia: '#D444F1', // 紫红色
+};
+
 const baseLight = {
-  primary: '#7A5AF8', // 主题主色（示例）
+  ...baseCommon,
   primaryForeground: '#FFFFFF',
   background: '#FFFFFF',
   surface: '#FFFFFF',
@@ -10,7 +18,7 @@ const baseLight = {
   text: '#0F172A',
   text2: '#64748B',
   text3: '#94A3B8', // 弱化文字
-  text4: '#CBD5E1',   // 禁用文字
+  text4: '#CBD5E1', // 禁用文字
   border: '#E5E7EB',
   muted: '#F5F7FB',
   mutedForeground: '#94A3B8',
@@ -20,7 +28,7 @@ const baseLight = {
 };
 
 const baseDark = {
-  primary: '#7A5AF8',
+  ...baseCommon,
   primaryForeground: '#FFFFFF',
   background: '#14141C',
   surface: '#181821',
@@ -28,7 +36,7 @@ const baseDark = {
   text: '#E5E7EB', // 主文字
   text2: '#9CA3AF', // 次文字
   text3: '#6B7280', // 弱化文字
-  text4: '#9CA3AF',   // 禁用文字
+  text4: '#9CA3AF', // 禁用文字
   border: '#1F2937',
   muted: '#0F172A',
   mutedForeground: '#94A3B8',

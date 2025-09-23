@@ -184,9 +184,9 @@ class PlanStore {
     }
   };
 
-  getPlans = async (fun?: (data?: HttpRes) => void) => {
+  getPlans = async (params = {}, fun?: (data?: HttpRes) => void) => {
     try {
-      let res: HttpRes = await http.get('/plan/lists');
+      let res: HttpRes = await http.get('/plan/lists', { params });
       if (res.statusCode === 200) {
         let plans_count = storage.getString('cus_plans_count');
         this.setCusPlans(res.data);

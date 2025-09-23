@@ -1,3 +1,4 @@
+import staticData from '@/config/static.json';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import dayjs from 'dayjs';
 
@@ -61,6 +62,27 @@ export const getCurrentMinute = (more = false): number => {
     now += 1;
   }
   return now;
+};
+
+// 获取本周日期数据
+export const getWeekDates = () => {
+  const today = new Date();
+  const currentDay = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
+
+  const weekDates = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    weekDates.push({
+      date: date,
+      dayName: staticData.repeats.map(w => '周' + w.label)[i],
+      dayNumber: date.getDate(),
+      isToday: date.toDateString() === today.toDateString(),
+    });
+  }
+  return weekDates;
 };
 
 // 重新导出存储实例和相关工具

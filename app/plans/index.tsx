@@ -1,36 +1,28 @@
 import { CusPage } from '@/components';
 import { buttonRipple } from '@/config/navigation';
+import { useCustomTheme } from '@/config/theme';
 import { PlanStore } from '@/stores';
+import { getWeekDates } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Dialog, Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { observer, useLocalObservable } from 'mobx-react';
-import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-
-// 获取本周日期数据
-const getWeekDates = () => {
-  const today = new Date();
-  const currentDay = today.getDay();
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
-
-  const weekDates = [];
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(monday);
-    date.setDate(monday.getDate() + i);
-    weekDates.push({
-      date: date,
-      dayName: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][i],
-      dayNumber: date.getDate(),
-      isToday: date.toDateString() === today.toDateString()
-    });
-  }
-  return weekDates;
-};
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 
 // 获取时间段内的任务
-const getTasksInTimeRange = (plans: any[], startHour: number, endHour: number) => {
+const getTasksInTimeRange = (
+  plans: any[],
+  startHour: number,
+  endHour: number,
+) => {
   return plans.filter(plan => {
     const startTime = parseInt(plan.start.split(':')[0]);
     const endTime = parseInt(plan.end.split(':')[0]);
@@ -40,19 +32,24 @@ const getTasksInTimeRange = (plans: any[], startHour: number, endHour: number) =
 
 const App = observer(() => {
   const store = useLocalObservable(() => PlanStore);
-  const { colors, dark } = useTheme();
+  const { dark } = useTheme();
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const weekDates = getWeekDates();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const { colors } = useCustomTheme();
 
-  const initapp = async () => {
+  const initapp = useCallback(async () => {
     store.getPlans();
-  };
+  }, [store]);
 
-  const toRoute = (path: string) => {
-    (navigation as any).navigate(path);
-  };
+  const toRoute = useCallback(
+    (path: string) => {
+      (navigation as any).navigate(path);
+    },
+    [navigation],
+  );
 
   const toRemove = (id: string) => {
     Dialog.confirm({
@@ -72,14 +69,44 @@ const App = observer(() => {
 
   const onRefresh = () => {
     setRefreshing(true);
-    store.getPlans().finally(() => {
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    store.getPlans({ date: dateStr }).finally(() => {
       setRefreshing(false);
     });
   };
 
+  // 处理日期选择
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+
+    // 调用接口获取该日期的计划
+    const dateStr = date.toISOString().split('T')[0];
+    store.getPlans({ date: dateStr });
+
+    // 计算滚动位置，让选中的日期尽量居中
+    const selectedIndex = weekDates.findIndex(
+      day => day.date.toDateString() === date.toDateString(),
+    );
+
+    if (selectedIndex !== -1 && scrollViewRef.current) {
+      // 计算每个日期项的宽度（包括间距）
+      const itemWidth = 60 + 12; // minWidth + gap
+      const containerWidth = 300; // 假设容器宽度
+      const targetX = Math.max(
+        0,
+        selectedIndex * itemWidth - containerWidth / 2 + itemWidth / 2,
+      );
+
+      scrollViewRef.current.scrollTo({
+        x: targetX,
+        animated: true,
+      });
+    }
+  };
+
   useEffect(() => {
     initapp();
-  }, []);
+  }, [initapp]);
 
   useEffect(() => {
     navigation.setOptions({
@@ -91,54 +118,66 @@ const App = observer(() => {
         </Pressable>
       ),
     });
-  }, [dark]);
+  }, [colors.text, navigation, toRoute]);
 
   return (
     <CusPage>
       {/* 日期选择区域 */}
-      <View style={{
-        backgroundColor: dark ? '#1a1a1a' : '#f8f9fa',
-        paddingVertical: 16,
-        paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: dark ? '#333' : '#e5e7eb'
-      }}>
+      <View
+        style={{
+          backgroundColor: colors.background,
+          paddingVertical: 16,
+          paddingHorizontal: 20,
+          borderBottomWidth: 1,
+          borderBottomColor: dark ? '#333' : '#e5e7eb',
+        }}>
         <ScrollView
+          ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 10 }}
-        >
+          contentContainerStyle={{ paddingHorizontal: 10 }}>
           <Flex direction="row" style={{ gap: 12 }}>
-            {weekDates.map((day, index) => (
-              <Pressable
-                key={index}
-                onPress={() => setSelectedDate(day.date)}
-                style={{
-                  backgroundColor: day.isToday ? '#E91E63' : 'transparent',
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  minWidth: 60,
-                  alignItems: 'center'
-                }}
-              >
-                <Text style={{
-                  color: day.isToday ? '#fff' : (dark ? '#999' : '#666'),
-                  fontSize: 12,
-                  fontWeight: '500',
-                  marginBottom: 2
-                }}>
-                  {day.dayName}
-                </Text>
-                <Text style={{
-                  color: day.isToday ? '#fff' : (dark ? '#ccc' : '#333'),
-                  fontSize: 16,
-                  fontWeight: 'bold'
-                }}>
-                  {day.dayNumber}
-                </Text>
-              </Pressable>
-            ))}
+            {weekDates.map((day, index) => {
+              const isSelected =
+                selectedDate.toDateString() === day.date.toDateString();
+              const isToday = day.isToday;
+
+              return (
+                <Pressable
+                  key={index}
+                  onPress={() => handleDateSelect(day.date)}
+                  style={{
+                    backgroundColor: isSelected
+                      ? colors.blue2
+                      : isToday
+                      ? `${colors.blue2}30`
+                      : 'transparent',
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    borderRadius: 12,
+                    minWidth: 60,
+                    alignItems: 'center',
+                  }}>
+                  <Text
+                    style={{
+                      color: isSelected ? '#fff' : '#999',
+                      fontSize: 12,
+                      fontWeight: '500',
+                      marginBottom: 2,
+                    }}>
+                    {day.dayName}
+                  </Text>
+                  <Text
+                    style={{
+                      color: isSelected ? '#fff' : '#ccc',
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                    }}>
+                    {day.dayNumber}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </Flex>
         </ScrollView>
       </View>
@@ -150,7 +189,11 @@ const App = observer(() => {
 
         {/* 任务区域 */}
         <View style={{ flex: 1 }}>
-          <ScrollView style={{ flex: 1 }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }>
             <TaskArea plans={store.cus_plans} toRemove={toRemove} />
           </ScrollView>
         </View>
@@ -166,20 +209,23 @@ const TimeAxis = () => {
     { label: '0-6点', start: 0, end: 6 },
     { label: '6-12点', start: 6, end: 12 },
     { label: '12-18点', start: 12, end: 18 },
-    { label: '18-24点', start: 18, end: 24 }
+    { label: '18-24点', start: 18, end: 24 },
   ];
 
   return (
     <View style={{ width: 60, backgroundColor: dark ? '#1a1a1a' : '#f8f9fa' }}>
       {timeRanges.map((range, index) => (
-        <View key={index} style={{ flex: 1, paddingVertical: 20, paddingHorizontal: 8 }}>
-          <Text style={{
-            color: dark ? '#999' : '#666',
-            fontSize: 12,
-            fontWeight: '500',
-            textAlign: 'center',
-            transform: [{ rotate: '-90deg' }]
-          }}>
+        <View
+          key={index}
+          style={{ flex: 1, paddingVertical: 20, paddingHorizontal: 8 }}>
+          <Text
+            style={{
+              color: dark ? '#999' : '#666',
+              fontSize: 12,
+              fontWeight: '500',
+              textAlign: 'center',
+              transform: [{ rotate: '-90deg' }],
+            }}>
             {range.label}
           </Text>
         </View>
@@ -189,13 +235,19 @@ const TimeAxis = () => {
 };
 
 // 任务区域组件
-const TaskArea = ({ plans, toRemove }: { plans: any[], toRemove: (id: string) => void }) => {
-  const { dark } = useTheme();
+const TaskArea = ({
+  plans,
+  toRemove,
+}: {
+  plans: any[];
+  toRemove: (id: string) => void;
+}) => {
+  const { colors } = useCustomTheme();
   const timeRanges = [
     { start: 0, end: 6, label: '0-6点' },
     { start: 6, end: 12, label: '6-12点' },
     { start: 12, end: 18, label: '12-18点' },
-    { start: 18, end: 24, label: '18-24点' }
+    { start: 18, end: 24, label: '18-24点' },
   ];
 
   return (
@@ -208,83 +260,72 @@ const TaskArea = ({ plans, toRemove }: { plans: any[], toRemove: (id: string) =>
         return (
           <View key={rangeIndex} style={{ marginBottom: 24 }}>
             {/* 时间段标题 */}
-            <Text style={{
-              color: dark ? '#ccc' : '#333',
-              fontSize: 14,
-              fontWeight: '600',
-              marginBottom: 12,
-              paddingLeft: 8
-            }}>
+            <Text
+              style={{
+                color: colors.text2,
+                fontSize: 14,
+                fontWeight: '600',
+                marginBottom: 12,
+                paddingLeft: 8,
+              }}>
               {range.label}
             </Text>
 
             {/* 任务列表 */}
             <View style={{ gap: 8 }}>
-              {tasksInRange.map((task) => (
-                <Pressable
+              {tasksInRange.map(task => (
+                <LinearGradient
                   key={task.id}
-                  onLongPress={() => toRemove(task.id)}
-                  style={{
-                    backgroundColor: '#E91E63',
-                    height: 80,
-                    borderRadius: 12,
-                    padding: 16,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    shadowColor: '#E91E63',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 2
-                  }}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={{
-                      color: '#fff',
-                      fontSize: 16,
-                      fontWeight: 'bold',
-                      marginBottom: 4
+                  colors={['#5C24FC', '#9D7AFF']}
+                  start={{ x: -0.0042, y: 0.5 }}
+                  end={{ x: 1.0751, y: 0.5 }}
+                  style={{ borderRadius: 12 }}>
+                  <Flex
+                    align="center"
+                    key={task.id}
+                    onLongPress={() => toRemove(task.id)}
+                    style={{
+                      height: 80,
+                      padding: 16,
+                      elevation: 2,
                     }}>
-                      {task.name || '未命名任务'}
-                    </Text>
-                    <Text style={{
-                      color: '#fff',
-                      fontSize: 12,
-                      opacity: 0.8
-                    }}>
-                      {task.start} - {task.end}
-                    </Text>
-                  </View>
-
-                  <View style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <Icon
-                      name="checkmark-circle-outline"
-                      size={20}
-                      color="#fff"
-                    />
-                  </View>
-                </Pressable>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          color: '#fff',
+                          fontSize: 16,
+                          fontWeight: 'bold',
+                          marginBottom: 4,
+                        }}>
+                        {task.name || '未命名任务'}
+                      </Text>
+                      <Text
+                        style={{
+                          color: '#fff',
+                          fontSize: 12,
+                          opacity: 0.8,
+                        }}>
+                        {task.start} - {task.end}
+                      </Text>
+                    </View>
+                  </Flex>
+                </LinearGradient>
               ))}
             </View>
 
             {/* 分割线 */}
             {rangeIndex < timeRanges.length - 1 && (
-              <View style={{
-                height: 1,
-                backgroundColor: dark ? '#333' : '#e5e7eb',
-                marginTop: 16,
-                marginHorizontal: 8,
-                borderStyle: 'dashed',
-                borderWidth: 1,
-                borderColor: 'transparent'
-              }} />
+              <View
+                style={{
+                  height: 0,
+                  backgroundColor: colors.border,
+                  marginTop: 16,
+                  marginHorizontal: 8,
+                  borderStyle: 'dashed',
+                  borderWidth: 0.5,
+                  borderColor: 'transparent',
+                }}
+              />
             )}
           </View>
         );
