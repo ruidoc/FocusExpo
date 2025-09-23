@@ -8,11 +8,43 @@ import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+// 获取本周日期数据
+const getWeekDates = () => {
+  const today = new Date();
+  const currentDay = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
+
+  const weekDates = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    weekDates.push({
+      date: date,
+      dayName: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][i],
+      dayNumber: date.getDate(),
+      isToday: date.toDateString() === today.toDateString()
+    });
+  }
+  return weekDates;
+};
+
+// 获取时间段内的任务
+const getTasksInTimeRange = (plans: any[], startHour: number, endHour: number) => {
+  return plans.filter(plan => {
+    const startTime = parseInt(plan.start.split(':')[0]);
+    const endTime = parseInt(plan.end.split(':')[0]);
+    return startTime < endHour && endTime > startHour;
+  });
+};
+
 const App = observer(() => {
   const store = useLocalObservable(() => PlanStore);
   const { colors, dark } = useTheme();
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const weekDates = getWeekDates();
 
   const initapp = async () => {
     store.getPlans();
@@ -63,269 +95,201 @@ const App = observer(() => {
 
   return (
     <CusPage>
-      {/* 顶部说明区域 */}
-      <Flex justify="between" align="center" style={{ padding: 10 }}>
-        <Text style={{ color: '#888', fontSize: 13, fontWeight: 'bold' }}>
-          共 {store.cus_plans.length} 个任务
-        </Text>
-        <Flex align="center">
-          <Flex align="center" style={{ marginRight: 18 }}>
-            <View
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: '#52C41A',
-                marginRight: 6,
-              }}
-            />
-            <Text style={{ color: dark ? '#999' : '#333', fontSize: 13 }}>
-              专注模式
-            </Text>
+      {/* 日期选择区域 */}
+      <View style={{
+        backgroundColor: dark ? '#1a1a1a' : '#f8f9fa',
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: dark ? '#333' : '#e5e7eb'
+      }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 10 }}
+        >
+          <Flex direction="row" style={{ gap: 12 }}>
+            {weekDates.map((day, index) => (
+              <Pressable
+                key={index}
+                onPress={() => setSelectedDate(day.date)}
+                style={{
+                  backgroundColor: day.isToday ? '#E91E63' : 'transparent',
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  minWidth: 60,
+                  alignItems: 'center'
+                }}
+              >
+                <Text style={{
+                  color: day.isToday ? '#fff' : (dark ? '#999' : '#666'),
+                  fontSize: 12,
+                  fontWeight: '500',
+                  marginBottom: 2
+                }}>
+                  {day.dayName}
+                </Text>
+                <Text style={{
+                  color: day.isToday ? '#fff' : (dark ? '#ccc' : '#333'),
+                  fontSize: 16,
+                  fontWeight: 'bold'
+                }}>
+                  {day.dayNumber}
+                </Text>
+              </Pressable>
+            ))}
           </Flex>
-          <Flex align="center">
-            <View
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: '#FF4D4F',
-                marginRight: 6,
-              }}
-            />
-            <Text style={{ color: dark ? '#999' : '#333', fontSize: 13 }}>
-              屏蔽模式
-            </Text>
-          </Flex>
-        </Flex>
+        </ScrollView>
+      </View>
+
+      {/* 时间轴和任务区域 */}
+      <Flex direction="row" style={{ flex: 1 }}>
+        {/* 时间轴 */}
+        <TimeAxis />
+
+        {/* 任务区域 */}
+        <View style={{ flex: 1 }}>
+          <ScrollView style={{ flex: 1 }}>
+            <TaskArea plans={store.cus_plans} toRemove={toRemove} />
+          </ScrollView>
+        </View>
       </Flex>
-      <TimeLineView plans={store.cus_plans} toRemove={toRemove} />
     </CusPage>
   );
 });
 
-// 时间线组件
-const hours = Array.from({ length: 25 }, (_, i) => i); // 0~24
-
-function timeToMinutes(timeStr: string) {
-  // 假设 timeStr 格式为 "HH:mm"
-  const [h, m] = timeStr.split(':').map(Number);
-  return h * 60 + m;
-}
-
-const HOUR_HEIGHT = 50; // 每小时高度
-const TOTAL_HEIGHT = 24 * HOUR_HEIGHT; // 总高度
-const HOUR_OFFSET = 8; // 每小时偏移量
-
-// 获取任务顶部位置
-function getTop(start: string, totalHeight: number) {
-  return (timeToMinutes(start) / (24 * 60)) * totalHeight + HOUR_OFFSET;
-}
-
-// 获取任务高度
-function getHeight(start: string, end: string, totalHeight: number) {
-  return (
-    ((timeToMinutes(end) - timeToMinutes(start)) / (24 * 60)) * totalHeight
-  );
-}
-
-// 时间线视图组件
-const TimeLineView = ({
-  plans,
-  toRemove,
-}: {
-  plans: any[];
-  toRemove: (id: string) => void;
-}) => {
-  const { colors, dark } = useTheme();
-
-  // 处理相邻任务色块间距
-  const plansWithMargin = plans.map((plan, idx, arr) => {
-    if (idx === 0) return { ...plan, _marginTop: 0 };
-    return {
-      ...plan,
-      _marginTop: plan.start === arr[idx - 1].end ? 2 : 0,
-    };
-  });
-
-  // 获取当前时间字符串，格式为HH:mm
-  const now = new Date();
-  const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now
-    .getMinutes()
-    .toString()
-    .padStart(2, '0')}`;
-  const currentHour = now.getHours();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+// 时间轴组件
+const TimeAxis = () => {
+  const { dark } = useTheme();
+  const timeRanges = [
+    { label: '0-6点', start: 0, end: 6 },
+    { label: '6-12点', start: 6, end: 12 },
+    { label: '12-18点', start: 12, end: 18 },
+    { label: '18-24点', start: 18, end: 24 }
+  ];
 
   return (
-    <ScrollView style={{ flex: 1, width: '100%' }}>
-      <Flex
-        direction="row"
-        style={{
-          paddingVertical: 2,
-          paddingHorizontal: 5,
-          height: TOTAL_HEIGHT,
-        }}>
-        {/* 时间刻度 */}
-        <Flex
-          style={{
-            width: 40,
-            justifyContent: 'space-between',
-            height: TOTAL_HEIGHT,
-            position: 'relative',
-          }}
-          direction="column">
-          {hours.map(hour => {
-            const hourMinutes = hour * 60;
-            const isNearCurrent = Math.abs(currentMinutes - hourMinutes) < 15;
-            return (
-              <Text
-                key={hour}
-                style={{
-                  color: dark ? '#888' : '#bbb',
-                  fontSize: 12,
-                  height: HOUR_HEIGHT,
-                  textAlignVertical: 'top',
-                  opacity: isNearCurrent ? 0 : 1,
-                }}>
-                {hour.toString().padStart(2, '0')}:00
-              </Text>
-            );
-          })}
-          {/* 当前时间标记 */}
-          <Text
-            style={{
-              position: 'absolute',
-              left: 5,
-              width: 40,
-              top: getTop(currentTimeStr, TOTAL_HEIGHT) - 8,
-              color: '#1890ff',
-              fontSize: 12,
-              fontWeight: 600,
-              backgroundColor: 'transparent',
-              zIndex: 10,
-            }}>
-            {currentTimeStr}
-          </Text>
-        </Flex>
-        {/* 时间线与任务横条 */}
-        <View
-          style={{
-            flex: 1,
-            position: 'relative',
-            backgroundColor: colors.card,
-            borderRadius: 8,
-            height: TOTAL_HEIGHT,
+    <View style={{ width: 60, backgroundColor: dark ? '#1a1a1a' : '#f8f9fa' }}>
+      {timeRanges.map((range, index) => (
+        <View key={index} style={{ flex: 1, paddingVertical: 20, paddingHorizontal: 8 }}>
+          <Text style={{
+            color: dark ? '#999' : '#666',
+            fontSize: 12,
+            fontWeight: '500',
+            textAlign: 'center',
+            transform: [{ rotate: '-90deg' }]
           }}>
-          {/* 整点虚线 */}
-          {hours.map(hour => (
-            <View
-              key={hour}
-              style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                top: hour * HOUR_HEIGHT + HOUR_OFFSET,
-                height: 0,
-                borderTopWidth: 1,
-                borderColor: colors.border,
-                borderStyle: 'dashed',
-                zIndex: 0,
-              }}
-              pointerEvents="none"
-            />
-          ))}
-          {/* 当前时间线 */}
-          <View
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              height: 1.5,
-              backgroundColor: '#1890ff',
-              top: getTop(currentTimeStr, TOTAL_HEIGHT) - 1,
-              zIndex: 2,
-            }}
-            pointerEvents="none"
-          />
-          {/* 任务横条 */}
-          {plansWithMargin.map(plan => (
-            <Flex
-              key={plan.id}
-              align="center"
-              style={{
-                position: 'absolute',
-                left: 10,
-                right: 10,
-                top: getTop(plan.start, TOTAL_HEIGHT) + plan._marginTop,
-                height:
-                  getHeight(plan.start, plan.end, TOTAL_HEIGHT) -
-                  plan._marginTop,
-                zIndex: 1,
-              }}>
-              <Pressable
-                onLongPress={() => toRemove(plan.id)}
-                style={{
-                  flex: 1,
-                  height: '100%',
-                  backgroundColor:
-                    plan.mode === 'focus'
-                      ? dark
-                        ? '#389e3b'
-                        : '#52C41A'
-                      : dark
-                      ? '#b34040'
-                      : '#FF4D4F',
-                  borderRadius: 4,
-                  opacity: 0.85,
-                  paddingHorizontal: 8,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}>
-                <Text
-                  style={{
-                    color: '#fff',
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                    marginRight: 8,
-                  }}>
-                  {plan.start}~{plan.end}
-                </Text>
-                <Text style={{ color: '#fff', fontSize: 12, opacity: 0.8 }}>
-                  {plan.repeat === 'evary'
-                    ? '每天'
-                    : plan.repeat === 'workday'
-                    ? '工作日'
-                    : plan.repeat === 'weekend'
-                    ? '周末'
-                    : '一次'}
-                </Text>
-              </Pressable>
-              <Flex
-                style={{
-                  width: 32,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                <Icon
-                  name="checkmark-circle-outline"
-                  size={17}
-                  color={
-                    plan.mode === 'focus'
-                      ? dark
-                        ? '#389e3b'
-                        : '#52C41A'
-                      : dark
-                      ? '#b34040'
-                      : '#FF4D4F'
-                  }
-                />
-              </Flex>
-            </Flex>
-          ))}
+            {range.label}
+          </Text>
         </View>
-      </Flex>
-    </ScrollView>
+      ))}
+    </View>
+  );
+};
+
+// 任务区域组件
+const TaskArea = ({ plans, toRemove }: { plans: any[], toRemove: (id: string) => void }) => {
+  const { dark } = useTheme();
+  const timeRanges = [
+    { start: 0, end: 6, label: '0-6点' },
+    { start: 6, end: 12, label: '6-12点' },
+    { start: 12, end: 18, label: '12-18点' },
+    { start: 18, end: 24, label: '18-24点' }
+  ];
+
+  return (
+    <View style={{ flex: 1, padding: 16 }}>
+      {timeRanges.map((range, rangeIndex) => {
+        const tasksInRange = getTasksInTimeRange(plans, range.start, range.end);
+
+        if (tasksInRange.length === 0) return null;
+
+        return (
+          <View key={rangeIndex} style={{ marginBottom: 24 }}>
+            {/* 时间段标题 */}
+            <Text style={{
+              color: dark ? '#ccc' : '#333',
+              fontSize: 14,
+              fontWeight: '600',
+              marginBottom: 12,
+              paddingLeft: 8
+            }}>
+              {range.label}
+            </Text>
+
+            {/* 任务列表 */}
+            <View style={{ gap: 8 }}>
+              {tasksInRange.map((task) => (
+                <Pressable
+                  key={task.id}
+                  onLongPress={() => toRemove(task.id)}
+                  style={{
+                    backgroundColor: '#E91E63',
+                    height: 80,
+                    borderRadius: 12,
+                    padding: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    shadowColor: '#E91E63',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    elevation: 2
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={{
+                      color: '#fff',
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      marginBottom: 4
+                    }}>
+                      {task.name || '未命名任务'}
+                    </Text>
+                    <Text style={{
+                      color: '#fff',
+                      fontSize: 12,
+                      opacity: 0.8
+                    }}>
+                      {task.start} - {task.end}
+                    </Text>
+                  </View>
+
+                  <View style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Icon
+                      name="checkmark-circle-outline"
+                      size={20}
+                      color="#fff"
+                    />
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+
+            {/* 分割线 */}
+            {rangeIndex < timeRanges.length - 1 && (
+              <View style={{
+                height: 1,
+                backgroundColor: dark ? '#333' : '#e5e7eb',
+                marginTop: 16,
+                marginHorizontal: 8,
+                borderStyle: 'dashed',
+                borderWidth: 1,
+                borderColor: 'transparent'
+              }} />
+            )}
+          </View>
+        );
+      })}
+    </View>
   );
 };
 
