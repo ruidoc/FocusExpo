@@ -1,6 +1,6 @@
+import { AppToken } from '@/components';
 import AnimatedCascade from '@/components/cascade';
 import CusButton from '@/components/cus-button';
-import TokenLabel from '@/components/native/TokenLabel';
 import Typewriter from '@/components/type-writer';
 import { AppStore, GuideStore, HomeStore, PlanStore } from '@/stores';
 import { startAppLimits } from '@/utils/permission';
@@ -181,13 +181,7 @@ const GuideStep3 = observer(() => {
             onFinish={() => setAppsAllShown(true)}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
               {astore.ios_selected_apps.map(item => (
-                <TokenLabel
-                  key={item.id}
-                  tokenBase64={item.tokenData}
-                  tokenType={item.type}
-                  size={40}
-                  style={{ width: 40, height: 40 }}
-                />
+                <AppToken key={item.id} app={item} size={30} />
               ))}
             </View>
             {store.all_apps
@@ -214,10 +208,9 @@ const GuideStep3 = observer(() => {
         {typewriter2Visible && (
           <Typewriter
             lines={[
-              `接下来，${
-                gstore.mode === 'shield'
-                  ? '屏蔽该APP的网络'
-                  : '只允许该APP访问网络'
+              `接下来，${gstore.mode === 'shield'
+                ? '屏蔽该APP的网络'
+                : '只允许该APP访问网络'
               }`,
               `您将彻底隔绝任何打扰，专注学习`,
               '时长：5分钟，现在开始吧～',

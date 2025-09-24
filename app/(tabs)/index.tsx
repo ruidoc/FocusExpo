@@ -321,13 +321,7 @@ const App = observer(() => {
             <View style={styles.appsGrid}>
               {Platform.OS === 'ios'
                 ? astore.ios_selected_apps.map(item => (
-                    <TokenLabel
-                      key={item.id}
-                      tokenBase64={item.tokenData}
-                      tokenType={item.type}
-                      size={40}
-                      style={styles.appIcon}
-                    />
+                    <AppToken key={item.id} app={item} size={40} />
                   ))
                 : store.all_apps
                     .filter(r => apps.includes(r.packageName))

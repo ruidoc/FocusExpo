@@ -1,5 +1,4 @@
-import { CusButton, CusPage } from '@/components';
-import TokenLabel from '@/components/native/TokenLabel';
+import { AppToken, CusButton, CusPage } from '@/components';
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
@@ -312,11 +311,11 @@ const App = observer(() => {
           contentContainerStyle={{ paddingHorizontal: 2 }}>
           <Flex direction="row" align="center" style={{ gap: 8 }}>
             {selectedApps.map((app, index) => (
-              <TokenLabel
+              <AppToken
                 key={`${app.id}-${index}`}
-                tokenBase64={app.tokenData}
-                tokenType={app.type}
-                style={{ width: 40, height: 40 }}
+                app={app}
+                size={25}
+                gap={13}
               />
             ))}
           </Flex>

@@ -1,5 +1,4 @@
-import { CusPage } from '@/components';
-import TokenLabel from '@/components/native/TokenLabel';
+import { AppToken, CusPage } from '@/components';
 import { AppStore, StatisticStore } from '@/stores';
 import type { Period } from '@/stores/statistic';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
@@ -194,14 +193,7 @@ const App = observer(() => {
       app_id,
       astore.ios_all_apps.map(a => a.id),
     );
-    return cur_app ? (
-      <TokenLabel
-        key={cur_app.id}
-        tokenBase64={cur_app.tokenData}
-        tokenType={cur_app.type}
-        style={{ width: 50, height: 50 }}
-      />
-    ) : null;
+    return cur_app ? <AppToken key={cur_app.id} app={cur_app} size={25} /> : null;
   };
 
   const formatMins = (m: number) => {

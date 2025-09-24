@@ -5,11 +5,50 @@ import FamilyControls
 import ManagedSettings
 import DeviceActivity
 
+private enum TokenLabelConstants {
+    static let baseIconSize: CGFloat = 20
+}
+
+@available(iOS 16.0, *)
+private struct TokenLabelStyle: LabelStyle {
+    let targetDimension: CGFloat
+    let displayMode: String
+
+    private var safeDimension: CGFloat { max(targetDimension, 1) }
+    private var baseIconSize: CGFloat { TokenLabelConstants.baseIconSize }
+
+    func makeBody(configuration: Configuration) -> some View {
+        let scale = safeDimension / baseIconSize
+
+        let iconOnlyContent = HStack(spacing: 0) {
+            configuration.icon
+                .scaleEffect(scale, anchor: .center)
+                .frame(width: safeDimension, height: safeDimension)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxHeight: .infinity, alignment: .center)
+
+        switch displayMode {
+        case "title":
+            return AnyView(
+                VStack(spacing: 4) {
+                    iconOnlyContent
+                    configuration.title
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+            )
+        default:
+            return AnyView(iconOnlyContent)
+        }
+    }
+}
+
 @available(iOS 16.0, *)
 @objc class TokenLabelView: UIView {
     @objc var tokenBase64: NSString? { didSet { updateContentIfPossible() } }
-    @objc var tokenHash: NSString? { didSet { updateContentIfPossible() } }
-    @objc var size: NSNumber = 40 { didSet { updateContentIfPossible() } }
+    @objc var size: NSNumber? { didSet { updateContentIfPossible() } }
     // application | category | webDomain
     @objc var tokenType: NSString? { didSet { updateContentIfPossible() } }
     // icon | title
@@ -36,56 +75,35 @@ import DeviceActivity
         // Determine kind and display mode
         let kind = (tokenType as String?) ?? "application"
         let displayMode = (display as String?) ?? "icon"
+        let dimension = size.map { CGFloat(truncating: $0) } ?? TokenLabelConstants.baseIconSize
 
-        // Try to get token either from base64 or by hash from saved selection
+        let decoder = JSONDecoder()
         var anyView: AnyView?
 
-        let dimension = CGFloat(truncating: size)
-
-        func applyStyle<V: View>(_ view: V) -> AnyView {
-            switch displayMode {
-            case "title":
-                return AnyView(view.labelStyle(.titleOnly).frame(width: dimension, height: dimension))
-            default:
-                return AnyView(view.labelStyle(.iconOnly).frame(width: dimension, height: dimension))
-            }
-        }
-
-        // Prefer tokenBase64 if provided
         if let base64 = tokenBase64 as String?, let data = Data(base64Encoded: base64) {
-            let decoder = JSONDecoder()
             switch kind {
             case "category":
                 if let token = try? decoder.decode(ActivityCategoryToken.self, from: data) {
-                    anyView = applyStyle(Label(token))
+                    anyView = AnyView(Label(token).labelStyle(TokenLabelStyle(targetDimension: dimension, displayMode: displayMode)))
                 }
             case "webDomain":
                 if let token = try? decoder.decode(WebDomainToken.self, from: data) {
-                    anyView = applyStyle(Label(token))
+                    anyView = AnyView(Label(token).labelStyle(TokenLabelStyle(targetDimension: dimension, displayMode: displayMode)))
                 }
             default:
                 if let token = try? decoder.decode(ApplicationToken.self, from: data) {
-                    anyView = applyStyle(Label(token))
-                }
-            }
-        } else if let tokenHashStr = tokenHash as String?, let selection = loadSelection() {
-            switch kind {
-            case "category":
-                if let token = selection.categoryTokens.first(where: { "\($0.hashValue)" == tokenHashStr }) {
-                    anyView = applyStyle(Label(token))
-                }
-            case "webDomain":
-                if let token = selection.webDomainTokens.first(where: { "\($0.hashValue)" == tokenHashStr }) {
-                    anyView = applyStyle(Label(token))
-                }
-            default:
-                if let token = selection.applicationTokens.first(where: { "\($0.hashValue)" == tokenHashStr }) {
-                    anyView = applyStyle(Label(token))
+                    anyView = AnyView(Label(token).labelStyle(TokenLabelStyle(targetDimension: dimension, displayMode: displayMode)))
                 }
             }
         }
 
-        guard let swiftUIView = anyView else { return }
+        guard let swiftUIView = anyView else {
+            hostingController?.view.removeFromSuperview()
+            hostingController = nil
+            return
+        }
+
+        invalidateIntrinsicContentSize()
 
         let controller = UIHostingController(rootView: swiftUIView)
         controller.view.backgroundColor = UIColor.clear
@@ -100,14 +118,11 @@ import DeviceActivity
         layoutIfNeeded()
     }
 
-    private func loadSelection() -> FamilyActivitySelection? {
-        guard let defaults = UserDefaults(suiteName: "group.com.focusone"),
-              let data = defaults.data(forKey: "FocusOne.AppSelection"),
-              let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else {
-            return nil
-        }
-        return selection
+    override var intrinsicContentSize: CGSize {
+        let dimension = size.map { CGFloat(truncating: $0) } ?? TokenLabelConstants.baseIconSize
+        return CGSize(width: dimension, height: dimension)
     }
 }
+
 
 

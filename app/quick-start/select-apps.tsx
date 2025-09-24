@@ -1,4 +1,4 @@
-import TokenLabel from '@/components/native/TokenLabel';
+import { AppToken } from '@/components';
 import { AppStore, HomeStore } from '@/stores';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { observer, useLocalObservable } from 'mobx-react-lite';
@@ -19,12 +19,7 @@ const TimeSlider = () => {
         contentContainerStyle={{ paddingHorizontal: 2 }}>
         <Flex direction="row" align="center" style={{ gap: 0 }}>
           {astore.ios_selected_apps.map(item => (
-            <TokenLabel
-              key={item.stableId}
-              tokenBase64={item.tokenData}
-              tokenType={item.type}
-              style={{ width: 40, height: 40 }}
-            />
+            <AppToken key={item.stableId} app={item} size={23} />
           ))}
         </Flex>
       </ScrollView>

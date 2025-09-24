@@ -2,7 +2,6 @@ import { requireNativeComponent, ViewProps } from 'react-native';
 
 export type TokenLabelProps = ViewProps & {
   tokenBase64?: string;
-  tokenHash?: string;
   size?: number; // 默认 40
   tokenType?: 'application' | 'category' | 'webDomain';
   display?: 'icon' | 'title';

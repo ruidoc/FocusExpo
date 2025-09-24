@@ -1,5 +1,4 @@
-import { CusCard, CusPage } from '@/components';
-import TokenLabel from '@/components/native/TokenLabel';
+import { AppToken, CusCard, CusPage } from '@/components';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, HomeStore } from '@/stores';
 import { selectAppsToLimit } from '@/utils/permission';
@@ -199,13 +198,7 @@ const App = observer(() => {
                 ) : (
                   <Flex wrap="wrap" justify="start">
                     {astore.ios_selected_apps.map(item => (
-                      <TokenLabel
-                        key={item.id}
-                        tokenBase64={item.tokenData}
-                        tokenType={item.type}
-                        size={40}
-                        style={{ width: 40, height: 40 }}
-                      />
+                      <AppToken key={item.id} app={item} size={20} />
                     ))}
                   </Flex>
                 )}
