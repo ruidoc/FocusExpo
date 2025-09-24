@@ -37,7 +37,7 @@ const baseDark = {
   text2: '#9CA3AF', // 次文字
   text3: '#6B7280', // 弱化文字
   text4: '#9CA3AF', // 禁用文字
-  border: '#1F2937',
+  border: '#1C1C26',
   muted: '#0F172A',
   mutedForeground: '#94A3B8',
   success: '#22C55E',

@@ -1,9 +1,9 @@
 import staticData from '@/config/static.json';
-import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import dayjs from 'dayjs';
+import Toast from 'react-native-toast-message';
 
 export const toast = (message: string) => {
-  Toast({ message, position: 'bottom' });
+  Toast.show({ text1: message });
 };
 
 export const checkCodePushUpdate = async () => {
