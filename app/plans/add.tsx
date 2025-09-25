@@ -315,7 +315,7 @@ const App = observer(() => {
                 key={`${app.id}-${index}`}
                 app={app}
                 size={25}
-                gap={13}
+                gap={16}
               />
             ))}
           </Flex>

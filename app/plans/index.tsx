@@ -1,7 +1,7 @@
-import { CusPage } from '@/components';
+import { AppToken, CusPage } from '@/components';
 import { buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
-import { PlanStore } from '@/stores';
+import { AppStore, PlanStore } from '@/stores';
 import { getWeekDates } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Dialog, Flex } from '@fruits-chain/react-native-xiaoshu';
@@ -32,6 +32,7 @@ const getTasksInTimeRange = (
 
 const App = observer(() => {
   const store = useLocalObservable(() => PlanStore);
+  const astore = useLocalObservable(() => AppStore);
   const { dark } = useTheme();
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
@@ -150,8 +151,8 @@ const App = observer(() => {
                     backgroundColor: isSelected
                       ? colors.blue2
                       : isToday
-                      ? `${colors.blue2}30`
-                      : 'transparent',
+                        ? `${colors.blue2}30`
+                        : 'transparent',
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     borderRadius: 12,
@@ -194,7 +195,7 @@ const App = observer(() => {
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }>
-            <TaskArea plans={store.cus_plans} toRemove={toRemove} />
+            <TaskArea plans={store.cus_plans} toRemove={toRemove} astore={astore} />
           </ScrollView>
         </View>
       </Flex>
@@ -238,9 +239,11 @@ const TimeAxis = () => {
 const TaskArea = ({
   plans,
   toRemove,
+  astore,
 }: {
   plans: any[];
   toRemove: (id: string) => void;
+  astore: typeof AppStore;
 }) => {
   const { colors } = useCustomTheme();
   const timeRanges = [
@@ -279,35 +282,40 @@ const TaskArea = ({
                   colors={['#5C24FC', '#9D7AFF']}
                   start={{ x: -0.0042, y: 0.5 }}
                   end={{ x: 1.0751, y: 0.5 }}
-                  style={{ borderRadius: 12 }}>
+                  style={{ borderRadius: 15 }}>
                   <Flex
-                    align="center"
+                    direction='column'
+                    align='stretch'
                     key={task.id}
                     onLongPress={() => toRemove(task.id)}
                     style={{
-                      height: 80,
-                      padding: 16,
+                      padding: 12,
+                      gap: 4,
                       elevation: 2,
                     }}>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          color: '#fff',
-                          fontSize: 16,
-                          fontWeight: 'bold',
-                          marginBottom: 4,
-                        }}>
-                        {task.name || '未命名任务'}
-                      </Text>
-                      <Text
-                        style={{
-                          color: '#fff',
-                          fontSize: 12,
-                          opacity: 0.8,
-                        }}>
-                        {task.start} - {task.end}
-                      </Text>
-                    </View>
+                    <Text
+                      style={{
+                        color: '#fff',
+                        fontSize: 17,
+                        fontWeight: 'bold',
+                        marginBottom: 4,
+                      }}>
+                      {task.name || '未命名任务'}
+                    </Text>
+                    <Flex style={{ gap: 6 }}>
+                      {astore.ios_all_apps.filter(app => task.apps.includes(`${app.id}:${app.type}`)).map(app => (
+                        <AppToken key={app.id} app={app} size={23} />
+                      ))}
+                    </Flex>
+                    <Text
+                      style={{
+                        color: '#fff',
+                        fontSize: 14,
+                        opacity: 0.8,
+                        textAlign: 'right',
+                      }}>
+                      {task.start} ~ {task.end}
+                    </Text>
                   </Flex>
                 </LinearGradient>
               ))}
