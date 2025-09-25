@@ -2,6 +2,7 @@ import { AppToken, CusButton, CusPage } from '@/components';
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
+import { parseRepeat } from '@/utils';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import {
@@ -11,10 +12,11 @@ import {
   TextInput,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Platform,
   Pressable,
@@ -30,7 +32,7 @@ type FormState = {
   end: Date;
   start_date: Date;
   end_date: Date;
-  repeat: number[];
+  repeat: number[] | 'once';
   mode: 'focus' | 'shield';
 };
 
@@ -38,7 +40,48 @@ const App = observer(() => {
   const pstore = useLocalObservable(() => PlanStore);
   const astore = useLocalObservable(() => AppStore);
   const { colors } = useCustomTheme();
-  const [title, setTitle] = useState('');
+  const navigation = useNavigation();
+  const [title, setTitle] = useState(() => {
+    // 编辑模式下初始化标题
+    return pstore.editing_plan?.name || '';
+  });
+
+  // 判断是否为编辑模式
+  const isEditing = !!pstore.editing_plan;
+
+  // 动态设置页面标题
+  useEffect(() => {
+    navigation.setOptions({
+      title: isEditing ? '编辑任务' : '添加任务',
+    });
+  }, [isEditing, navigation]);
+
+  // 页面失去焦点时清理编辑状态
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        // 页面退出时清理编辑状态
+        pstore.clearEditingPlan();
+      };
+    }, [pstore]),
+  );
+
+  // 编辑模式下初始化选中的应用
+  useEffect(() => {
+    if (isEditing && Platform.OS === 'ios' && pstore.editing_plan) {
+      const plan = pstore.editing_plan;
+      if (
+        plan.apps &&
+        Array.isArray(plan.apps) &&
+        astore.ios_all_apps.length > 0
+      ) {
+        const apps = astore.ios_all_apps.filter(app =>
+          plan.apps.includes(`${app.id}:${app.type}`),
+        );
+        setSelectedApps(apps);
+      }
+    }
+  }, [isEditing, pstore.editing_plan, astore.ios_all_apps]);
 
   const styles = StyleSheet.create({
     item: {
@@ -90,6 +133,34 @@ const App = observer(() => {
   // 单独管理选择的应用状态
   const [selectedApps, setSelectedApps] = useState<any[]>([]);
   const [form, setForm] = useState<FormState>(() => {
+    // 编辑模式：使用编辑任务的数据初始化
+    if (pstore.editing_plan) {
+      const plan = pstore.editing_plan;
+      const start = dayjs()
+        .hour(plan.start_min / 60)
+        .minute(plan.start_min % 60)
+        .toDate();
+      const end = dayjs()
+        .hour(plan.end_min / 60)
+        .minute(plan.end_min % 60)
+        .toDate();
+      const start_date = dayjs(plan.start_date).toDate();
+      const end_date = dayjs(plan.end_date).toDate();
+
+      return {
+        name: plan.name,
+        start,
+        end,
+        start_date,
+        end_date,
+        repeat: Array.isArray(plan.repeat)
+          ? plan.repeat
+          : (parseRepeat(plan.repeat) as number[]),
+        mode: plan.mode || 'shield',
+      };
+    }
+
+    // 添加模式：使用默认数据
     const start = new Date();
     const end = dayjs(start).add(20, 'minute').toDate();
     const today = new Date();
@@ -150,8 +221,17 @@ const App = observer(() => {
       const newEnd = end_day.hour() * 60 + end_day.minute();
       const overlap = pstore.all_plans
         .filter(r => Array.isArray(r.repeat))
+        .filter(plan => {
+          // 编辑模式下排除当前编辑的任务
+          if (isEditing && plan.id === pstore.editing_plan.id) {
+            return false;
+          }
+          return true;
+        })
         .some(plan => {
-          const share = (plan.repeat as number[]).some(d => repeat.includes(d));
+          const share = (plan.repeat as number[]).some(d =>
+            (repeat as number[]).includes(d),
+          );
           if (!share) return false;
           return newStart < plan.end_min && newEnd > plan.start_min;
         });
@@ -163,7 +243,11 @@ const App = observer(() => {
         });
       }
       // 计算重复次数
-      const repeatCount = calculateRepeatCount(start_date, end_date, repeat);
+      const repeatCount = calculateRepeatCount(
+        start_date,
+        end_date,
+        repeat as number[],
+      );
 
       let subinfo: any = { ...form };
       subinfo.name = name.trim();
@@ -179,15 +263,27 @@ const App = observer(() => {
       if (Platform.OS === 'ios') {
         subinfo.apps = selectedApps.map(r => `${r.id}:${r.type}`);
       }
-      pstore.addPlan(subinfo, async res => {
-        // console.log('添加任务结果：', res);
-        if (res) {
-          Toast({ type: 'success', message: '添加任务成功' });
-          router.back();
-        } else {
-          Toast({ type: 'fail', message: '添加任务失败' });
-        }
-      });
+
+      // 根据模式调用不同的接口
+      if (isEditing) {
+        pstore.editPlan(pstore.editing_plan.id, subinfo, async res => {
+          if (res) {
+            Toast({ type: 'success', message: '编辑任务成功' });
+            router.back();
+          } else {
+            Toast({ type: 'fail', message: '编辑任务失败' });
+          }
+        });
+      } else {
+        pstore.addPlan(subinfo, async res => {
+          if (res) {
+            Toast({ type: 'success', message: '添加任务成功' });
+            router.back();
+          } else {
+            Toast({ type: 'fail', message: '添加任务失败' });
+          }
+        });
+      }
     } catch (error) {
       Toast({ type: 'fail', message: '添加任务出错' });
       console.log('添加任务失败：', error);
@@ -339,9 +435,9 @@ const App = observer(() => {
     <CusPage>
       <ScrollView style={{ padding: 15 }}>
         <Flex align="center" style={{ ...styles.item, gap: 8 }}>
-          <Text>🏆</Text>
+          <Text>{isEditing ? '✏️' : '🏆'}</Text>
           <TextInput
-            placeholder="给任务起个名字"
+            placeholder={isEditing ? '修改任务名称' : '给任务起个名字'}
             value={title}
             placeholderTextColor={colors.text2}
             onChange={setTitle}
@@ -466,23 +562,26 @@ const App = observer(() => {
           title="每周几生效"
           action={
             <Text style={{ color: colors.text3, fontSize: 14 }}>
-              已选{form.repeat.length}天
+              已选{Array.isArray(form.repeat) ? form.repeat.length : 0}天
             </Text>
           }
           column>
           <Flex style={{ flex: 1, gap: 12, paddingBottom: 6, paddingTop: 2 }}>
             {staticData.repeats.map(item => {
-              const isSelected = form.repeat.includes(item.value);
+              const isSelected =
+                Array.isArray(form.repeat) && form.repeat.includes(item.value);
               return (
                 <Flex
                   align="center"
                   justify="center"
                   key={item.value}
                   onPress={() => {
-                    const newRepeat = isSelected
-                      ? form.repeat.filter(day => day !== item.value)
-                      : [...form.repeat, item.value];
-                    setInfo(newRepeat, 'repeat');
+                    if (Array.isArray(form.repeat)) {
+                      const newRepeat = isSelected
+                        ? form.repeat.filter(day => day !== item.value)
+                        : [...form.repeat, item.value];
+                      setInfo(newRepeat, 'repeat');
+                    }
                   }}
                   style={{
                     ...styles.week,
@@ -503,22 +602,24 @@ const App = observer(() => {
           </Flex>
         </FeildItem>
 
-        {form.repeat.length > 0 && (
+        {Array.isArray(form.repeat) && form.repeat.length > 0 && (
           <View style={{ paddingHorizontal: 6, paddingVertical: 4 }}>
             <Text style={{ fontSize: 14, color: '#666' }}>
               预计重复次数：
-              {calculateRepeatCount(
-                form.start_date,
-                form.end_date,
-                form.repeat,
-              )}{' '}
+              {Array.isArray(form.repeat)
+                ? calculateRepeatCount(
+                    form.start_date,
+                    form.end_date,
+                    form.repeat,
+                  )
+                : 0}{' '}
               次
             </Text>
           </View>
         )}
       </ScrollView>
       <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
-        <CusButton onPress={submit} text="确认" />
+        <CusButton onPress={submit} text={isEditing ? '保存修改' : '确认'} />
       </View>
     </CusPage>
   );

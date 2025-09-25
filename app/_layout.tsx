@@ -196,7 +196,7 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen name="plans/index" options={{ title: '任务面板' }} />
-          <Stack.Screen name="plans/add" options={{ title: '添加任务' }} />
+          <Stack.Screen name="plans/add" />
           <Stack.Screen name="apps/index" options={{ title: 'APP管理' }} />
           <Stack.Screen name="apps/add" options={{ title: '选择APP' }} />
           <Stack.Screen name="others/webview" options={{ title: '隐私政策' }} />

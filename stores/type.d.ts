@@ -24,6 +24,7 @@ interface CusPlan {
   repeat: 'once' | number[];
   mode: 'focus' | 'shield';
   is_pause?: boolean; // 是否暂停
+  apps?: string[]; // 选择的应用列表，格式为 "id:type"
 }
 
 interface RecordInfo {

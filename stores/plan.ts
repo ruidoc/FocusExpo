@@ -16,6 +16,7 @@ class PlanStore {
   cur_plan: CusPlan = null; // 当前任务
   next_plan: CusPlan = null; // 下一个
   paused: boolean = false; // 是否处于暂停中（iOS）
+  editing_plan: CusPlan | null = null; // 当前编辑的任务
 
   // 当前任务已运行时长，退出重进后重新计时
   curplan_minute: number = 0;
@@ -46,6 +47,15 @@ class PlanStore {
   };
   setPaused = (v: boolean) => {
     this.paused = v;
+  };
+
+  // 编辑任务相关方法
+  setEditingPlan = (plan: CusPlan | null) => {
+    this.editing_plan = plan;
+  };
+
+  clearEditingPlan = () => {
+    this.editing_plan = null;
   };
 
   // 设置当前任务的暂停状态，并同步到列表中
@@ -174,6 +184,30 @@ class PlanStore {
       if (res.statusCode === 200) {
         fun(res);
         this.getPlans();
+      } else {
+        Toast(res.message);
+        fun();
+      }
+    } catch (error) {
+      console.log(error);
+      fun();
+    }
+  };
+
+  editPlan = async (
+    id: string,
+    form: Record<string, any>,
+    fun: (data?: HttpRes) => void,
+  ) => {
+    try {
+      console.log('编辑计划参数：', form);
+      let form_data = JSON.parse(JSON.stringify(form));
+      form_data.repeat = form_data.repeat.join(',');
+      let res: HttpRes = await http.put(`/plan/edit/${id}`, form_data);
+      if (res.statusCode === 200) {
+        fun(res);
+        this.getPlans();
+        this.clearEditingPlan(); // 编辑成功后清除编辑状态
       } else {
         Toast(res.message);
         fun();

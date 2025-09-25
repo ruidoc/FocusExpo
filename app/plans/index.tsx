@@ -68,6 +68,12 @@ const App = observer(() => {
     });
   };
 
+  const toEdit = (task: any) => {
+    // 设置编辑任务并跳转到编辑页面
+    store.setEditingPlan(task);
+    toRoute('plans/add');
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
     const dateStr = selectedDate.toISOString().split('T')[0];
@@ -151,8 +157,8 @@ const App = observer(() => {
                     backgroundColor: isSelected
                       ? colors.blue2
                       : isToday
-                        ? `${colors.blue2}30`
-                        : 'transparent',
+                      ? `${colors.blue2}30`
+                      : 'transparent',
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     borderRadius: 12,
@@ -195,7 +201,12 @@ const App = observer(() => {
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }>
-            <TaskArea plans={store.cus_plans} toRemove={toRemove} astore={astore} />
+            <TaskArea
+              plans={store.cus_plans}
+              toRemove={toRemove}
+              toEdit={toEdit}
+              astore={astore}
+            />
           </ScrollView>
         </View>
       </Flex>
@@ -239,10 +250,12 @@ const TimeAxis = () => {
 const TaskArea = ({
   plans,
   toRemove,
+  toEdit,
   astore,
 }: {
   plans: any[];
   toRemove: (id: string) => void;
+  toEdit: (task: any) => void;
   astore: typeof AppStore;
 }) => {
   const { colors } = useCustomTheme();
@@ -284,9 +297,10 @@ const TaskArea = ({
                   end={{ x: 1.0751, y: 0.5 }}
                   style={{ borderRadius: 15 }}>
                   <Flex
-                    direction='column'
-                    align='stretch'
+                    direction="column"
+                    align="stretch"
                     key={task.id}
+                    onPress={() => toEdit(task)}
                     onLongPress={() => toRemove(task.id)}
                     style={{
                       padding: 12,
@@ -303,9 +317,13 @@ const TaskArea = ({
                       {task.name || '未命名任务'}
                     </Text>
                     <Flex style={{ gap: 6 }}>
-                      {astore.ios_all_apps.filter(app => task.apps.includes(`${app.id}:${app.type}`)).map(app => (
-                        <AppToken key={app.id} app={app} size={23} />
-                      ))}
+                      {astore.ios_all_apps
+                        .filter(app =>
+                          task.apps.includes(`${app.id}:${app.type}`),
+                        )
+                        .map(app => (
+                          <AppToken key={app.id} app={app} size={23} />
+                        ))}
                     </Flex>
                     <Text
                       style={{

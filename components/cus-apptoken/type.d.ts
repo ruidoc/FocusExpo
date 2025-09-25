@@ -1,4 +1,3 @@
-
 interface AppToken {
   app: TokenLabelProps;
   size: number;

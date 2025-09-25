@@ -18,7 +18,9 @@
           "weixin",
           "weixinULAPI",
           "weixinURLParamsAPI"
-        ]
+        ],
+        "NSPhotoLibraryUsageDescription": "此应用需要访问相册来保存截图",
+        "NSPhotoLibraryAddUsageDescription": "此应用需要访问相册来保存截图"
       },
       "associatedDomains": [
         "applinks:(focusone.ruidoc.cn)"
@@ -31,7 +33,11 @@
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
