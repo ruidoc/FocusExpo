@@ -726,9 +726,8 @@ class NativeModule: RCTEventEmitter {
         do {
           // 将token编码为base64以便传递给RN
           let tokenData = try JSONEncoder().encode(token)
-          let digest = SHA256.hash(data: tokenData)
-          let stableId = digest.compactMap { String(format: "%02x", $0) }.joined()
           let tokenBase64 = tokenData.base64EncodedString()
+          let stableId = generateMongoId(from: tokenBase64)
           
           let appIcon: [String: Any] = [
             "stableId": stableId,
@@ -746,9 +745,8 @@ class NativeModule: RCTEventEmitter {
       // 处理网站令牌
       for token in selection.webDomainTokens {
         if let tokenData = try? JSONEncoder().encode(token) {
-          let digest = SHA256.hash(data: tokenData)
-          let stableId = digest.compactMap { String(format: "%02x", $0) }.joined()
           let tokenBase64 = tokenData.base64EncodedString()
+          let stableId = generateMongoId(from: tokenBase64)
           let webIcon: [String: Any] = [
             "stableId": stableId,
             "type": "webDomain",
@@ -763,9 +761,8 @@ class NativeModule: RCTEventEmitter {
         do {
           // 将token编码为base64以便传递给RN
           let tokenData = try JSONEncoder().encode(token)
-          let digest = SHA256.hash(data: tokenData)
-          let stableId = digest.compactMap { String(format: "%02x", $0) }.joined()
           let tokenBase64 = tokenData.base64EncodedString()
+          let stableId = generateMongoId(from: tokenBase64)
           
           let categoryIcon: [String: Any] = [
             "stableId": stableId,
@@ -799,6 +796,21 @@ class NativeModule: RCTEventEmitter {
       return nil
     }
     return selection
+  }
+
+  private func generateMongoId(from originalString: String) -> String {
+      // 4字节时间戳（8位十六进制）
+      let timestamp = String(format: "%08x", Int(Date().timeIntervalSince1970))
+      
+      // 5字节基于原字符串的哈希（10位十六进制）
+      let hashData = SHA256.hash(data: originalString.data(using: .utf8) ?? Data())
+      let hashHex = hashData.compactMap { String(format: "%02x", $0) }.joined()
+      let hashSubstring = String(hashHex.prefix(10))
+      
+      // 3字节随机数（6位十六进制）
+      let randomBytes = String(format: "%06x", Int.random(in: 0...0xffffff))
+
+      return timestamp + hashSubstring + randomBytes
   }
   
 }

@@ -2,7 +2,7 @@ import { AppToken, CusButton, CusPage } from '@/components';
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
-import { parseRepeat } from '@/utils';
+import { parseRepeat, toast } from '@/utils';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import {
@@ -10,7 +10,6 @@ import {
   Field,
   Flex,
   TextInput,
-  Toast,
 } from '@fruits-chain/react-native-xiaoshu';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
@@ -68,7 +67,7 @@ const App = observer(() => {
 
   // 编辑模式下初始化选中的应用
   useEffect(() => {
-    if (isEditing && Platform.OS === 'ios' && pstore.editing_plan) {
+    if (Platform.OS === 'ios' && pstore.editing_plan) {
       const plan = pstore.editing_plan;
       if (
         plan.apps &&
@@ -76,12 +75,12 @@ const App = observer(() => {
         astore.ios_all_apps.length > 0
       ) {
         const apps = astore.ios_all_apps.filter(app =>
-          plan.apps.includes(`${app.id}:${app.type}`),
+          plan.apps.includes(`${app.stableId}:${app.type}`),
         );
         setSelectedApps(apps);
       }
     }
-  }, [isEditing, pstore.editing_plan, astore.ios_all_apps]);
+  }, []);
 
   const styles = StyleSheet.create({
     item: {
@@ -182,40 +181,25 @@ const App = observer(() => {
       name = title;
       // 验证计划名称
       if (!name.trim()) {
-        return Toast({
-          type: 'fail',
-          message: '请输入计划名称',
-        });
+        return toast('请输入计划名称', 'error');
       }
 
       // 验证日期范围
       if (!dayjs(end_date).isAfter(dayjs(start_date), 'day')) {
-        return Toast({
-          type: 'fail',
-          message: '结束日期必须大于开始日期',
-        });
+        return toast('结束日期必须大于开始日期', 'error');
       }
 
       // 验证应用选择（仅iOS）
       if (Platform.OS === 'ios' && selectedApps.length === 0) {
-        return Toast({
-          type: 'fail',
-          message: '请先选择要限制的应用',
-        });
+        return toast('请先选择要限制的应用', 'error');
       }
       let start_day = dayjs(start);
       let end_day = dayjs(end);
       if (!end_day.isAfter(start_day)) {
-        return Toast({
-          type: 'fail',
-          message: '结束时间必须大于开始时间',
-        });
+        return toast('结束时间必须大于开始时间', 'error');
       }
       if (end_day.diff(start_day, 'minute') < 20) {
-        return Toast({
-          type: 'fail',
-          message: '时间间隔最少20分钟',
-        });
+        return toast('时间间隔最少20分钟', 'error');
       }
       const newStart = start_day.hour() * 60 + start_day.minute();
       const newEnd = end_day.hour() * 60 + end_day.minute();
@@ -237,17 +221,8 @@ const App = observer(() => {
         });
       console.log('overlap：', pstore.all_plans);
       if (overlap) {
-        return Toast({
-          type: 'fail',
-          message: '任务时间不能重叠',
-        });
+        return toast('任务时间不能重叠', 'error');
       }
-      // 计算重复次数
-      const repeatCount = calculateRepeatCount(
-        start_date,
-        end_date,
-        repeat as number[],
-      );
 
       let subinfo: any = { ...form };
       subinfo.name = name.trim();
@@ -257,35 +232,34 @@ const App = observer(() => {
       subinfo.end_min = end_day.hour() * 60 + end_day.minute();
       subinfo.start_date = dayjs(start_date).format('YYYY-MM-DD');
       subinfo.end_date = dayjs(end_date).format('YYYY-MM-DD');
-      subinfo.repeat_count = repeatCount;
 
       // 添加选择的应用到提交数据
       if (Platform.OS === 'ios') {
-        subinfo.apps = selectedApps.map(r => `${r.id}:${r.type}`);
+        subinfo.apps = selectedApps.map(r => `${r.stableId}:${r.type}`);
       }
 
       // 根据模式调用不同的接口
       if (isEditing) {
         pstore.editPlan(pstore.editing_plan.id, subinfo, async res => {
           if (res) {
-            Toast({ type: 'success', message: '编辑任务成功' });
+            toast('编辑任务成功', 'success');
             router.back();
           } else {
-            Toast({ type: 'fail', message: '编辑任务失败' });
+            toast('编辑任务失败', 'error');
           }
         });
       } else {
         pstore.addPlan(subinfo, async res => {
           if (res) {
-            Toast({ type: 'success', message: '添加任务成功' });
+            toast('添加任务成功', 'success');
             router.back();
           } else {
-            Toast({ type: 'fail', message: '添加任务失败' });
+            toast('添加任务失败', 'error');
           }
         });
       }
     } catch (error) {
-      Toast({ type: 'fail', message: '添加任务出错' });
+      toast('添加任务出错', 'error');
       console.log('添加任务失败：', error);
     }
   };
@@ -304,10 +278,7 @@ const App = observer(() => {
       const start = dayjs(form.start);
       const end = dayjs(val);
       if (end.diff(start, 'minute') < 20) {
-        Toast({
-          type: 'fail',
-          message: '时长至少20分钟，更容易培养专注力',
-        });
+        toast('时长至少20分钟', 'error');
         return;
       }
       setForm({
@@ -327,16 +298,9 @@ const App = observer(() => {
     } else if (key === 'end_date') {
       // 确保结束日期不早于开始日期
       if (dayjs(val).isBefore(dayjs(form.start_date), 'day')) {
-        Toast({
-          type: 'fail',
-          message: '结束日期不能早于开始日期',
-        });
+        toast('结束日期不能早于开始日期', 'error');
         return;
       }
-      setForm({
-        ...form,
-        end_date: val,
-      });
     } else {
       setForm({
         ...form,
@@ -356,10 +320,7 @@ const App = observer(() => {
         }
       })
       .catch(() => {
-        Toast({
-          type: 'fail',
-          message: '选择应用失败，请重试',
-        });
+        toast('选择应用失败，请重试', 'error');
       });
   };
 
@@ -408,7 +369,7 @@ const App = observer(() => {
           <Flex direction="row" align="center" style={{ gap: 8 }}>
             {selectedApps.map((app, index) => (
               <AppToken
-                key={`${app.id}-${index}`}
+                key={`${app.stableId}-${index}`}
                 app={app}
                 size={25}
                 gap={16}

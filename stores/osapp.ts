@@ -12,18 +12,13 @@ class AppStore {
   focus_apps: string[] = []; // 专注APP包名
   shield_apps: string[] = []; // 屏蔽APP包名
 
-  // iOS选中的应用stableId列表
-  ios_selected_sids: any[] = [];
+  // iOS选中的应用apps列表
+  ios_selected_apps: any[] = [];
   // iOS所有应用列表
   ios_all_apps: any[] = []; // 所有应用（iOS）
 
   get ios_stableids() {
     return this.ios_all_apps.map(r => r.stableId);
-  }
-  get ios_selected_apps() {
-    return this.ios_all_apps.filter(r =>
-      this.ios_selected_sids.includes(r.stableId),
-    );
   }
 
   setFocusApps = (apps: string[]) => {
@@ -39,8 +34,8 @@ class AppStore {
   };
 
   // 设置iOS选择的应用
-  setIosSelectedSids = (apps: any[]) => {
-    this.ios_selected_sids = apps;
+  setIosSelectedApps = (apps: any[]) => {
+    this.ios_selected_apps = apps;
     console.log('选中的：', apps);
   };
 
@@ -65,7 +60,7 @@ class AppStore {
       let final_apps = apps.filter(
         r => !this.ios_stableids.includes(r.stableId),
       );
-      this.setIosSelectedSids(apps.map(r => r.stableId));
+      this.setIosSelectedApps(apps);
       if (final_apps.length === 0) return;
       let res: HttpRes = await http.post('/iosapp/add', final_apps);
       if (res.statusCode == 200) {

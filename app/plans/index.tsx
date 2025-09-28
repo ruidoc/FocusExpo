@@ -319,7 +319,7 @@ const TaskArea = ({
                     <Flex style={{ gap: 6 }}>
                       {astore.ios_all_apps
                         .filter(app =>
-                          task.apps.includes(`${app.id}:${app.type}`),
+                          task.apps.includes(`${app.stableId}:${app.type}`),
                         )
                         .map(app => (
                           <AppToken key={app.id} app={app} size={23} />

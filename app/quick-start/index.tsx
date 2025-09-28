@@ -146,7 +146,9 @@ const QuickStartPage = observer(() => {
       ? astore.focus_apps
       : astore.shield_apps;
     if (Platform.OS === 'ios') {
-      select_apps = astore.ios_selected_apps.map(r => `${r.id}:${r.type}`);
+      select_apps = astore.ios_selected_apps.map(
+        r => `${r.stableId}:${r.type}`,
+      );
     }
     rstore.addRecord(
       from_data,

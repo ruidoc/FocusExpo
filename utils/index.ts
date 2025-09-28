@@ -2,8 +2,11 @@ import staticData from '@/config/static.json';
 import dayjs from 'dayjs';
 import Toast from 'react-native-toast-message';
 
-export const toast = (message: string) => {
-  Toast.show({ text1: message });
+export const toast = (
+  message: string,
+  type: 'info' | 'error' | 'success' = 'info',
+) => {
+  Toast.show({ text1: message, type: type });
 };
 
 export const checkCodePushUpdate = async () => {
