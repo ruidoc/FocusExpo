@@ -301,6 +301,10 @@ const App = observer(() => {
         toast('结束日期不能早于开始日期', 'error');
         return;
       }
+      setForm({
+        ...form,
+        end_date: val,
+      });
     } else {
       setForm({
         ...form,
