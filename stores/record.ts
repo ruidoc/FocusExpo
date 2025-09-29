@@ -53,6 +53,7 @@ class RecordStore {
   ) => {
     try {
       let res: HttpRes = await http.post('/record/add', {
+        title: plan.name || '一次性任务',
         plan_id: plan.id,
         start_min: plan.start_min,
         total_min: plan.end_min - plan.start_min,

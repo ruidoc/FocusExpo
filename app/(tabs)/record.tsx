@@ -185,15 +185,9 @@ const App = observer(() => {
   );
 
   const getAppIcon = (app: string) => {
-    let app_id = app.split(':')[0];
-    let cur_app = astore.ios_all_apps.find(a => a.id === app_id);
-    console.log(
-      '选择的app：',
-      cur_app,
-      app_id,
-      astore.ios_all_apps.map(a => a.id),
-    );
-    return cur_app ? <AppToken key={cur_app.id} app={cur_app} size={25} /> : null;
+    let app_stableid = app.split(':')[0];
+    let cur_app = astore.ios_all_apps.find(a => a.stableId === app_stableid);
+    return cur_app ? <AppToken key={cur_app.id} app={cur_app} size={20} /> : null;
   };
 
   const formatMins = (m: number) => {

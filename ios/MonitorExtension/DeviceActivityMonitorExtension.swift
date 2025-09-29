@@ -202,12 +202,41 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     /// 创建专注记录
     /// 仅在周期性任务开始时调用，向服务器记录专注开始
     private func createRecord() {
+        fetchCurrentPlan { planData in
+            if let planData = planData {
+                self.createRecordWithPlan(planData)
+            }
+        }
+    }
+    
+    /// 获取当前正在进行的计划
+    private func fetchCurrentPlan(completion: @escaping ([String: Any]?) -> Void) {
+        NetworkManager.shared.get(path: "/plan/current") { result in
+            switch result {
+            case .success(let response):
+                if let json = response.json(),
+                   let data = json["data"] as? [String: Any] {
+                    print("【网络请求成功】获取当前计划: \(data)")
+                    completion(data)
+                } else {
+                    print("【网络请求】当前无正在进行的计划")
+                    completion(nil)
+                }
+            case .failure(let error):
+                print("【网络请求失败】获取当前计划失败: \(error.localizedDescription)")
+                completion(nil)
+            }
+        }
+    }
+    
+    /// 使用计划数据创建专注记录
+    private func createRecordWithPlan(_ planData: [String: Any]) {
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else {
             print("【网络请求错误】无法获取 UserDefaults")
             return
         }
         
-        // 获取当前时间的分钟数
+        // 获取当前时间的分钟数（作为备用值）
         let now = Date()
         let calendar = Calendar.current
         let hour = calendar.component(.hour, from: now)
@@ -217,15 +246,23 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // 获取总时长（分钟）
         let totalMinutes = defaults.integer(forKey: "FocusOne.TotalMinutes")
         
+        // 从计划数据中提取字段，优先使用接口返回的值
+        let planId = planData["id"] as? String ?? "period_plan_id"
+        let startMin = planData["start_min"] as? Int ?? currentMinute
+        let apps = planData["apps"] as? [String] ?? []
+        let mode = planData["mode"] as? String ?? "shield"
+        let title = planData["name"] as? String ?? ""
+        
         // 构造请求参数
         let requestBody: [String: Any] = [
-            "plan_id": "period_plan_id",
-            "start_min": currentMinute,
+            "plan_id": planId,
+            "start_min": startMin,
             "total_min": totalMinutes,
-            "apps": [],
-            "mode": "shield",
-            "base_amount": 0,
-            "bet_amount": 0
+            "title": title,
+            "apps": apps,
+            "mode": mode,
+            // "base_amount": 0,
+            // "bet_amount": 0
         ]
         
         print("【网络请求】创建专注记录: \(requestBody)")

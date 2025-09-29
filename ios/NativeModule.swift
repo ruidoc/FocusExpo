@@ -799,18 +799,15 @@ class NativeModule: RCTEventEmitter {
   }
 
   private func generateMongoId(from originalString: String) -> String {
-      // 4字节时间戳（8位十六进制）
-      let timestamp = String(format: "%08x", Int(Date().timeIntervalSince1970))
-      
-      // 5字节基于原字符串的哈希（10位十六进制）
+      // 基于原字符串生成确定性的24位十六进制ID
       let hashData = SHA256.hash(data: originalString.data(using: .utf8) ?? Data())
       let hashHex = hashData.compactMap { String(format: "%02x", $0) }.joined()
-      let hashSubstring = String(hashHex.prefix(10))
       
-      // 3字节随机数（6位十六进制）
-      let randomBytes = String(format: "%06x", Int.random(in: 0...0xffffff))
-
-      return timestamp + hashSubstring + randomBytes
+      // 取前24位作为完整ID，确保MongoDB ObjectId格式
+      let fullId = String(hashHex.prefix(24))
+      
+      // 如果不足24位，用0补齐（理论上SHA256有64位十六进制，不会发生）
+      return fullId.padding(toLength: 24, withPad: "0", startingAt: 0)
   }
   
 }
