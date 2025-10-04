@@ -65,7 +65,9 @@ class PlanStore {
       BenefitStore.subBalance();
       await RecordStore.pauseRecord(record_id);
     }
-    this.cur_plan.is_pause = paused;
+    if (this.cur_plan) {
+      this.cur_plan.is_pause = paused;
+    }
     this.setPaused(paused);
   };
 

@@ -581,10 +581,14 @@ class NativeModule: RCTEventEmitter {
       }
     }
 
+    // 读取 record_id
+    let recordId = defaults.string(forKey: "record_id")
+    
     resolve([
       "active": active,
       "paused": paused,
       "plan_id": planId ?? NSNull(),
+      "record_id": recordId ?? NSNull(),
       "startAt": startAt,
       "endAt": endAt,
       "totalMinutes": total,

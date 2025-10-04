@@ -282,8 +282,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 }
             case .failure(let error):
                 print("【网络请求失败】创建专注记录失败: \(error.localizedDescription)")
-                // 记录失败信息，供主App重试
+                // 使用临时 ID，防止后续更新失败
+                let tempId = "pending_\(Int(Date().timeIntervalSince1970))"
+                defaults.set(tempId, forKey: "record_id")
                 defaults.set("create_failed", forKey: "FocusOne.LastNetworkError")
+                print("【使用临时ID】\(tempId)")
             }
         }
     }
@@ -322,8 +325,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 defaults.removeObject(forKey: "record_id")
             case .failure(let error):
                 print("【网络请求失败】完成专注记录失败: \(error.localizedDescription)")
-                // 记录失败信息，供主App重试
+                // 记录失败信息
                 defaults.set("complete_failed_\(recordId)", forKey: "FocusOne.LastNetworkError")
+                // 完成失败也清理 record_id，避免影响下次任务
+                defaults.removeObject(forKey: "record_id")
+                print("【清理record_id】完成失败，已清理")
             }
         }
     }

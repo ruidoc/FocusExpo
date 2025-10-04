@@ -7,10 +7,10 @@ import { buttonRipple, ScreenOptions } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { RecordStore } from '@/stores';
 import PlanStore from '@/stores/plan';
+import { storage } from '@/utils';
 import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Provider, Space } from '@fruits-chain/react-native-xiaoshu';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useRef } from 'react';
 import {
   AppState,
@@ -30,10 +30,8 @@ export default function RootLayout() {
   const delay = useRef(null);
 
   const asyncData = async () => {
-    const [once_plans, cus_plans] = await Promise.all([
-      AsyncStorage.getItem('once_plans'),
-      AsyncStorage.getItem('cus_plans'),
-    ]);
+    const once_plans = storage.getString('once_plans');
+    const cus_plans = storage.getString('cus_plans');
     if (once_plans) {
       PlanStore.setOncePlans(JSON.parse(once_plans));
     }
@@ -49,6 +47,7 @@ export default function RootLayout() {
       delay.current = null as any;
     }
     let record_id = RecordStore.record_id;
+    console.log('当前屏蔽时长：', elapsedMinutes);
     const schedule = () => {
       // 用获取分钟的方法，计算到下一个整分的秒数
       const now = new Date();
@@ -66,6 +65,15 @@ export default function RootLayout() {
     schedule();
   };
 
+  // 停止定时器的统一方法
+  const stopFocusTimer = () => {
+    if (delay.current) {
+      console.log('【停止定时器】');
+      clearTimeout(delay.current);
+      delay.current = null;
+    }
+  };
+
   // 提前在组件第一层定义副作用，避免条件调用 Hook 的告警
   useEffect(() => {
     const isIOS = Platform.OS === 'ios';
@@ -81,10 +89,14 @@ export default function RootLayout() {
           PlanStore.setCurPlanMinute(0);
           PlanStore.resetPlan();
         } else if (payload?.state === 'paused') {
+          // 暂停时停止定时器
+          stopFocusTimer();
           PlanStore.setCurrentPlanPause(true);
         } else if (payload?.state === 'resumed') {
+          // 恢复时重启定时器
           PlanStore.setCurrentPlanPause(false);
         } else if (payload?.state === 'ended') {
+          stopFocusTimer();
           PlanStore.complatePlan();
         }
       },
@@ -94,8 +106,13 @@ export default function RootLayout() {
       if (!isIOS) return;
       try {
         const s = await getIOSFocusStatus();
-        console.log('【启动app状态】', s);
+        console.log('【当前屏蔽状态】', s);
+
         if (s.active) {
+          // 同步 record_id（优先使用 iOS 的）
+          if (s.record_id !== RecordStore.record_id) {
+            RecordStore.setRecordId(s.record_id);
+          }
           PlanStore.setCurPlanMinute(s.elapsedMinutes || 0);
           updateElapsedMinute(s.elapsedMinutes || 0);
           if (!PlanStore.cur_plan) {
@@ -105,10 +122,15 @@ export default function RootLayout() {
             PlanStore.setCurrentPlanPause(s.paused);
           }
         } else {
+          // 专注已结束，停止定时器
+          stopFocusTimer();
+          RecordStore.removeRecordId();
           PlanStore.setCurPlanMinute(0);
           PlanStore.resetPlan();
         }
-      } catch {}
+      } catch (error) {
+        console.error('【同步iOS状态失败】', error);
+      }
     };
     // 首次同步（仅 iOS 执行）
     if (isIOS) {
@@ -122,10 +144,7 @@ export default function RootLayout() {
     return () => {
       focusState?.remove?.();
       appState?.remove?.();
-      if (delay.current) {
-        clearTimeout(delay.current);
-        delay.current = null;
-      }
+      stopFocusTimer();
     };
   }, []);
 

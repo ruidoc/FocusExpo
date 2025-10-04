@@ -103,6 +103,7 @@ export async function getIOSFocusStatus(): Promise<{
   totalMinutes?: number;
   elapsedMinutes?: number;
   plan_id?: string;
+  record_id?: string;
   paused?: boolean;
 }> {
   if (Platform.OS !== 'ios') return { active: false };

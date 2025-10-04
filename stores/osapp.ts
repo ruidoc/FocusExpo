@@ -81,7 +81,7 @@ class AppStore {
       if (res.statusCode === 200) {
         this.setIosAllApps(res.data);
       }
-      console.log('获取iOS应用：', res.data);
+      // console.log('获取iOS应用：', res.data);
     } catch (error) {
       console.log(error);
     }
