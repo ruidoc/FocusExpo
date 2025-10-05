@@ -187,7 +187,9 @@ const App = observer(() => {
   const getAppIcon = (app: string) => {
     let app_stableid = app.split(':')[0];
     let cur_app = astore.ios_all_apps.find(a => a.stableId === app_stableid);
-    return cur_app ? <AppToken key={cur_app.id} app={cur_app} size={20} /> : null;
+    return cur_app ? (
+      <AppToken key={cur_app.id} app={cur_app} size={20} />
+    ) : null;
   };
 
   const formatMins = (m: number) => {

@@ -125,13 +125,12 @@ const QuickStartPage = observer(() => {
     }
   }, [minBet, customBet]);
 
-  const setOncePlan = () => {
+  const setOncePlan = (plan_id: string) => {
     let now = dayjs();
     let cur_minute = now.hour() * 60 + now.minute();
     let cur_secend = cur_minute * 60 + now.second();
-    const newId = `once_${Math.floor(Math.random() * 99999999)}`;
     let from_data: CusPlan = {
-      id: newId,
+      id: plan_id,
       start: now.format('HH:mm'),
       start_min: cur_minute,
       start_sec: cur_secend,
@@ -156,7 +155,6 @@ const QuickStartPage = observer(() => {
       customBet,
       desc?.trim() || undefined,
     );
-    return newId;
   };
 
   const selectApps = () => {
@@ -181,14 +179,15 @@ const QuickStartPage = observer(() => {
     if (customBet > maxBet) {
       return Toast('超出自律币余额，请先充值');
     }
+    let plan_id = `once_${Math.floor(Math.random() * 99999999)}`;
     if (Platform.OS === 'ios') {
       // iOS: 使用屏幕时间限制开始屏蔽
-      let plan_id = setOncePlan();
-      // 立刻刷新当前计划，避免等待 AppState/原生事件导致 cur_plan 为空
-      pstore.setCurPlanMinute(0);
-      pstore.resetPlan();
       const ok = await startAppLimits(minute, plan_id);
       if (ok) {
+        setOncePlan(plan_id);
+        // 立刻刷新当前计划，避免等待 AppState/原生事件导致 cur_plan 为空
+        pstore.setCurPlanMinute(0);
+        pstore.resetPlan();
         Toast('已开始屏蔽');
       } else {
         Toast('开启屏蔽失败');
@@ -201,7 +200,7 @@ const QuickStartPage = observer(() => {
       if (mode === 'shield' && astore.shield_apps.length === 0) {
         return Toast('添加APP后开始屏蔽');
       }
-      setOncePlan();
+      setOncePlan(plan_id);
       pstore.resetPlan();
       store.startVpn();
     }
