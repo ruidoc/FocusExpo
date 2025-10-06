@@ -1,5 +1,6 @@
 import { storage } from '@/utils';
 import http from '@/utils/request';
+import { withRetry } from '@/utils/retry';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { makeAutoObservable } from 'mobx';
 import { BenefitStore } from '.';
@@ -45,12 +46,7 @@ class RecordStore {
     return `${mint}分钟`;
   }
 
-  addRecord = async (
-    plan: CusPlan,
-    apps: string[],
-    bet_amount: number,
-    description?: string,
-  ) => {
+  addRecord = async (plan: CusPlan, apps: string[], bet_amount: number) => {
     try {
       let res: HttpRes = await http.post('/record/add', {
         title: plan.name || '一次性任务',
@@ -98,18 +94,30 @@ class RecordStore {
     }
   };
 
-  // 每分钟更新专注时长
+  // 每分钟更新专注时长（带重试）
   updateActualMins = async (id: string, actual_min: number) => {
     try {
       if (!id) return;
-      let res: HttpRes = await http.post('/record/update/' + id, {
-        actual_min,
-      });
-      if (res.statusCode === 200) {
-        this.getRecords();
-      }
+      await withRetry(
+        async () => {
+          let res: HttpRes = await http.post('/record/update/' + id, {
+            actual_min,
+          });
+          if (res.statusCode !== 200) {
+            throw new Error('更新失败');
+          }
+          return res;
+        },
+        {
+          maxRetries: 2,
+          retryDelay: 500,
+        },
+      );
+      console.log('上报成功:', actual_min);
     } catch (error) {
-      console.log(error);
+      console.error('上报失败（已重试）:', error);
+      // 失败后本地缓存，下次补偿上报
+      // TODO: 可以在下次成功时补偿上报缺失的分钟数
     }
   };
 
@@ -140,7 +148,9 @@ class RecordStore {
   // 退出专注
   exitRecord = async (plan_id: string) => {
     try {
-      let res: HttpRes = await http.post('/record/fail/' + plan_id);
+      let res: HttpRes = await http.post('/record/fail/' + plan_id, {
+        reason: 'user_exit',
+      });
       if (res.statusCode === 200) {
         this.getRecords();
         BenefitStore.getBenefit();

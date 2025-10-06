@@ -83,6 +83,7 @@ export default function RootLayout() {
       (payload: {
         state: 'started' | 'ended' | 'paused' | 'resumed';
         type?: 'once' | 'periodic';
+        reason?: string;
       }) => {
         console.log('【监听状态变化】', payload);
         if (payload?.state === 'started') {
@@ -94,10 +95,28 @@ export default function RootLayout() {
           PlanStore.setCurrentPlanPause(true);
         } else if (payload?.state === 'resumed') {
           // 恢复时重启定时器
+          stopFocusTimer(); // 先停止旧定时器
           PlanStore.setCurrentPlanPause(false);
+          // 重新同步状态并启动定时器
+          syncIOSStatus();
         } else if (payload?.state === 'ended') {
           stopFocusTimer();
-          PlanStore.complatePlan();
+          // 检查是否是暂停超时导致的失败
+          if (payload.reason === 'pause_timeout') {
+            // 暂停超时失败，iOS已调用fail接口扣款，只清理本地状态
+            console.log('【暂停超时】清理本地状态，不调用后端');
+            RecordStore.removeRecordId();
+            PlanStore.setCurrentPlanPause(false);
+            PlanStore.setCurPlanMinute(0);
+            // 清理本地的一次性任务
+            if (PlanStore.cur_plan?.repeat === 'once') {
+              PlanStore.rmOncePlan(PlanStore.cur_plan.id);
+            }
+            PlanStore.resetPlan();
+          } else {
+            // 正常完成
+            PlanStore.complatePlan();
+          }
         }
       },
     );
@@ -107,6 +126,20 @@ export default function RootLayout() {
       try {
         const s = await getIOSFocusStatus();
         console.log('【当前屏蔽状态】', s);
+
+        // 检查任务是否已失败（暂停超时等）
+        if (s.failed) {
+          console.log('【任务已失败】清理状态');
+          stopFocusTimer();
+          RecordStore.removeRecordId();
+          PlanStore.setCurPlanMinute(0);
+          // 清理本地的一次性任务
+          if (PlanStore.cur_plan?.repeat === 'once') {
+            PlanStore.rmOncePlan(PlanStore.cur_plan.id);
+          }
+          PlanStore.resetPlan();
+          return;
+        }
 
         if (s.active) {
           // 同步 record_id（优先使用 iOS 的）

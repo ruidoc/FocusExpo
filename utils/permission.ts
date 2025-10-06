@@ -98,6 +98,7 @@ export async function stopAppLimits(): Promise<boolean> {
 // iOS 查询当前屏蔽状态
 export async function getIOSFocusStatus(): Promise<{
   active: boolean;
+  failed?: boolean;
   startAt?: number;
   endAt?: number;
   totalMinutes?: number;

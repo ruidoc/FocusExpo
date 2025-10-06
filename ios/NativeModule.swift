@@ -455,6 +455,9 @@ class NativeModule: RCTEventEmitter {
         if let pid = planId as String? {
           defaults.set(pid, forKey: "FocusOne.CurrentPlanId")
         }
+        // 清理之前的失败标记
+        defaults.removeObject(forKey: "FocusOne.TaskFailed")
+        defaults.removeObject(forKey: "FocusOne.FailedReason")
       }
       // 不再直接向 JS 发送 started，由扩展发 Darwin 事件统一驱动
       self.emitProgress()
@@ -489,6 +492,8 @@ class NativeModule: RCTEventEmitter {
       defaults.removeObject(forKey: "FocusOne.TotalMinutes")
       defaults.removeObject(forKey: "FocusOne.FocusType")
       defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
+      defaults.removeObject(forKey: "FocusOne.TaskFailed")
+      defaults.removeObject(forKey: "FocusOne.FailedReason")
     }
     
     resolve(true)
@@ -501,6 +506,14 @@ class NativeModule: RCTEventEmitter {
       resolve(["active": false])
       return
     }
+    
+    // 检查任务是否已失败（暂停超时等）
+    let taskFailed = defaults.bool(forKey: "FocusOne.TaskFailed")
+    if taskFailed {
+      resolve(["active": false, "failed": true])
+      return
+    }
+    
     let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
     let endAt = defaults.double(forKey: "FocusOne.FocusEndAt")
     let total = defaults.integer(forKey: "FocusOne.TotalMinutes")
@@ -512,7 +525,7 @@ class NativeModule: RCTEventEmitter {
     }
 
     let now = Date().timeIntervalSince1970
-    // 按整分对齐：以“分钟桶”计算，确保在每个自然分钟边界（秒=0）才变更
+    // 按整分对齐：以"分钟桶"计算，确保在每个自然分钟边界（秒=0）才变更
     let elapsedMinRaw = Int(floor(now / 60.0) - floor(startAt / 60.0))
     let elapsedMin = max(0, min(total, elapsedMinRaw))
 
@@ -598,7 +611,7 @@ class NativeModule: RCTEventEmitter {
     ])
   }
 
-  // 暂停当前屏蔽（分钟数可选；不传表示暂停剩余全时长；不超过任务总长度）
+  // 暂停当前屏蔽（最长3分钟，超时自动失败）
   @objc
   func pauseAppLimits(_ durationMinutes: NSNumber?, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     let now = Date().timeIntervalSince1970
@@ -617,21 +630,77 @@ class NativeModule: RCTEventEmitter {
       }
     }
     guard effectiveEnd > now else { resolve(false); return }
-    let remainingSec = effectiveEnd - now
+    
+    // 暂停最长3分钟（180秒），超过则自动失败
+    let maxPauseDuration: Double = 180
     var pauseSec: Double
     if let dm = durationMinutes?.doubleValue {
-      pauseSec = min(Double(dm) * 60.0, remainingSec)
+      pauseSec = min(Double(dm) * 60.0, maxPauseDuration)
     } else {
-      pauseSec = remainingSec
+      pauseSec = maxPauseDuration // 不传默认3分钟
     }
     pausedUntil = now + pauseSec
+    
     // 暂停期间清空屏蔽
     let store = ManagedSettingsStore()
     store.clearAllSettings()
     if let defaults = UserDefaults.groupUserDefaults() {
       defaults.set(pausedUntil, forKey: "FocusOne.PausedUntil")
+      defaults.set(now, forKey: "FocusOne.PauseStartTime")
       defaults.set("paused", forKey: "FocusOne.LastFocusEvent")
     }
+    
+    // 设置3分钟超时自动失败
+    DispatchQueue.main.asyncAfter(deadline: .now() + pauseSec) { [weak self] in
+      guard let self = self else { return }
+      // 检查是否仍在暂停状态（未恢复）
+      let currentTime = Date().timeIntervalSince1970
+      if self.pausedUntil > 0 && currentTime >= self.pausedUntil {
+        // 超时未恢复，自动失败
+        print("【暂停超时】3分钟未恢复，任务自动失败")
+        
+        // 标记任务已失败
+        if let defaults = UserDefaults.groupUserDefaults() {
+          defaults.set(true, forKey: "FocusOne.TaskFailed")
+          defaults.set("pause_timeout", forKey: "FocusOne.FailedReason")
+          
+          // 调用后端API更新record状态（传递失败原因）
+          if let recordId = defaults.string(forKey: "record_id"), !recordId.isEmpty {
+            let requestBody: [String: Any] = [
+              "reason": "pause_timeout"
+            ]
+            NetworkManager.shared.post(path: "/record/fail/\(recordId)", body: requestBody) { result in
+              switch result {
+              case .success(_):
+                print("【网络请求成功】记录已标记为失败（暂停超时）: \(recordId)")
+              case .failure(let error):
+                print("【网络请求失败】更新记录失败: \(error.localizedDescription)")
+              }
+            }
+          }
+        }
+        
+        // 停止监控和清理设置
+        self.center.stopMonitoring()
+        let store = ManagedSettingsStore()
+        store.clearAllSettings()
+        self.emitEnded()
+        self.pausedUntil = 0
+        self.emitState("ended", extra: ["reason": "pause_timeout"])
+        
+        // 清理状态数据
+        if let defaults = UserDefaults.groupUserDefaults() {
+          defaults.removeObject(forKey: "FocusOne.FocusStartAt")
+          defaults.removeObject(forKey: "FocusOne.FocusEndAt")
+          defaults.removeObject(forKey: "FocusOne.TotalMinutes")
+          defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
+          defaults.removeObject(forKey: "FocusOne.PausedUntil")
+          defaults.removeObject(forKey: "FocusOne.PauseStartTime")
+          defaults.removeObject(forKey: "record_id")
+        }
+      }
+    }
+    
     emitState("paused")
     resolve(true)
   }
@@ -640,6 +709,13 @@ class NativeModule: RCTEventEmitter {
   @objc
   func resumeAppLimits(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     let now = Date().timeIntervalSince1970
+    // 检查是否超过3分钟暂停时限
+    if pausedUntil > 0 && now > pausedUntil {
+      // 已超时，任务失败
+      print("【恢复失败】暂停已超时，无法恢复")
+      resolve(false)
+      return
+    }
     // 恢复前检查任务是否仍有效
     var canResume = false
     var selection: FamilyActivitySelection? = nil
@@ -664,6 +740,7 @@ class NativeModule: RCTEventEmitter {
     pausedUntil = 0
     if let defaults = UserDefaults.groupUserDefaults() {
       defaults.set(0, forKey: "FocusOne.PausedUntil")
+      defaults.removeObject(forKey: "FocusOne.PauseStartTime")
       defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
     }
     emitState("resumed")

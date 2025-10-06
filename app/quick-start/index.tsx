@@ -30,9 +30,7 @@ import TimeSlider from './time-slider';
 const QuickStartPage = observer(() => {
   const [mode, setMode] = useState<'focus' | 'shield'>('shield');
   const [minute, setMinute] = useState(15);
-  const [bet, setBet] = useState<number>(5); // 底注
   const [customBet, setCustomBet] = useState(0); // 自定义下注
-  const [desc, setDesc] = useState<string>('');
   const [pickerVisible, setPickerVisible] = useState<boolean>(false);
   const navigation = useNavigation();
   const pstore = useLocalObservable(() => PlanStore);
@@ -107,7 +105,6 @@ const QuickStartPage = observer(() => {
     });
   }, [navigation]);
 
-  const presetBets = useMemo(() => [1, 5, 10, 20], []);
   const maxBet = useMemo(
     () => Math.max(0, bstore.balance || 0),
     [bstore.balance],
@@ -149,12 +146,7 @@ const QuickStartPage = observer(() => {
         r => `${r.stableId}:${r.type}`,
       );
     }
-    rstore.addRecord(
-      from_data,
-      select_apps,
-      customBet,
-      desc?.trim() || undefined,
-    );
+    rstore.addRecord(from_data, select_apps, customBet);
   };
 
   const selectApps = () => {
@@ -181,6 +173,10 @@ const QuickStartPage = observer(() => {
     }
     let plan_id = `once_${Math.floor(Math.random() * 99999999)}`;
     if (Platform.OS === 'ios') {
+      // iOS: 验证应用选择
+      if (astore.ios_selected_apps.length === 0) {
+        return Toast('请先选择要屏蔽的应用');
+      }
       // iOS: 使用屏幕时间限制开始屏蔽
       const ok = await startAppLimits(minute, plan_id);
       if (ok) {
