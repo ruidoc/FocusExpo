@@ -101,10 +101,10 @@ export default function RootLayout() {
           syncIOSStatus();
         } else if (payload?.state === 'ended') {
           stopFocusTimer();
-          // 检查是否是暂停超时导致的失败
-          if (payload.reason === 'pause_timeout') {
-            // 暂停超时失败，iOS已调用fail接口扣款，只清理本地状态
-            console.log('【暂停超时】清理本地状态，不调用后端');
+          // 检查结束原因
+          if (payload.reason === 'user_exit') {
+            // 手动停止，RN端已调用exitPlan处理，只清理本地状态
+            console.log('【手动停止】清理本地状态，不调用后端');
             RecordStore.removeRecordId();
             PlanStore.setCurrentPlanPause(false);
             PlanStore.setCurPlanMinute(0);
@@ -126,20 +126,6 @@ export default function RootLayout() {
       try {
         const s = await getIOSFocusStatus();
         console.log('【当前屏蔽状态】', s);
-
-        // 检查任务是否已失败（暂停超时等）
-        if (s.failed) {
-          console.log('【任务已失败】清理状态');
-          stopFocusTimer();
-          RecordStore.removeRecordId();
-          PlanStore.setCurPlanMinute(0);
-          // 清理本地的一次性任务
-          if (PlanStore.cur_plan?.repeat === 'once') {
-            PlanStore.rmOncePlan(PlanStore.cur_plan.id);
-          }
-          PlanStore.resetPlan();
-          return;
-        }
 
         if (s.active) {
           // 同步 record_id（优先使用 iOS 的）
@@ -169,8 +155,19 @@ export default function RootLayout() {
     if (isIOS) {
       syncIOSStatus();
     }
-    const appState = AppState.addEventListener('change', state => {
+    const appState = AppState.addEventListener('change', async state => {
       if (isIOS && state === 'active') {
+        // 先检查暂停超时（回到前台时立即恢复）
+        try {
+          const status = await getIOSFocusStatus();
+          if (status.pausedUntil && Date.now() / 1000 > status.pausedUntil) {
+            console.log('【回到前台检测到暂停超时】立即恢复');
+            await NativeModules.NativeModule.resumeAppLimits();
+          }
+        } catch (error) {
+          console.error('【检查暂停超时失败】', error);
+        }
+        // 同步状态
         syncIOSStatus();
       }
     });

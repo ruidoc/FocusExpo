@@ -21,6 +21,8 @@ interface ConfirmationModalProps {
   // 可选：展示经济信息（本次消耗与剩余）
   coinCost?: number;
   coinBalance?: number;
+  // 可选：额外的警告信息（如周期任务后续不再触发的提示）
+  extraWarning?: string;
   onConfirm: () => void;
   onCancel: () => void;
   onClose: () => void;
@@ -38,6 +40,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   cancelText,
   coinCost,
   coinBalance,
+  extraWarning,
   onConfirm,
   onCancel,
   onClose,
@@ -198,6 +201,18 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 </Text>
               </View>
 
+              {/* 额外警告信息 */}
+              {extraWarning && (
+                <View style={styles.warningBanner}>
+                  <Icon
+                    name="information-circle-outline"
+                    size={16}
+                    color="#F7AF5D"
+                  />
+                  <Text style={styles.warningText}>{extraWarning}</Text>
+                </View>
+              )}
+
               {/* 按钮区域 */}
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
@@ -333,6 +348,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#FFFFFF',
+  },
+  warningBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(247, 175, 93, 0.1)',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 24,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#F7AF5D',
+    lineHeight: 18,
   },
 });
 

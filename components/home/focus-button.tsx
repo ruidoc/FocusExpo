@@ -7,13 +7,13 @@ import {
   UserStore,
 } from '@/stores';
 import { toast } from '@/utils';
-import { stopAppLimits } from '@/utils/permission';
+import { getIOSFocusStatus, stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, Theme } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   NativeModules,
   Platform,
@@ -38,6 +38,8 @@ const FocusButton = observer(() => {
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [showStopModal, setShowStopModal] = useState(false);
   const [stopCost, setStopCost] = useState<number>(0);
+  // 暂停倒计时
+  const [pauseRemaining, setPauseRemaining] = useState<number>(0);
 
   const getStateName = () => {
     if (pstore.cur_plan) {
@@ -125,7 +127,7 @@ const FocusButton = observer(() => {
     if (!pstore.cur_plan) return;
     if (Platform.OS === 'ios') {
       // console.log('暂停：', pstore.cur_plan);
-      NativeModules.NativeModule.pauseAppLimits(1);
+      NativeModules.NativeModule.pauseAppLimits(2);
     }
   };
 
@@ -136,13 +138,58 @@ const FocusButton = observer(() => {
     }
   };
 
+  // 暂停倒计时逻辑
+  useEffect(() => {
+    if (!pstore.cur_plan?.is_pause || Platform.OS !== 'ios') {
+      setPauseRemaining(0);
+      return;
+    }
+
+    // 定时获取剩余时间
+    const timer = setInterval(async () => {
+      try {
+        const status = await getIOSFocusStatus();
+        if (status.pausedUntil) {
+          const now = Date.now() / 1000;
+          const remaining = Math.max(0, status.pausedUntil - now);
+          setPauseRemaining(remaining);
+        } else {
+          setPauseRemaining(0);
+        }
+      } catch (error) {
+        console.error('获取暂停状态失败', error);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [pstore.cur_plan?.is_pause]);
+
+  // 格式化倒计时显示
+  const formatPauseTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <>
       <Flex justify="center">
         <TimeFlow />
       </Flex>
       <Flex justify="center" style={{ marginTop: 30, marginBottom: 50 }}>
-        <View>{descDom}</View>
+        <View>
+          {descDom}
+          {/* 暂停倒计时显示 */}
+          {pstore.cur_plan?.is_pause && pauseRemaining > 0 && (
+            <Text
+              style={[
+                styles.descFont,
+                { marginTop: 8, color: '#F7AF5D', fontSize: 14 },
+              ]}>
+              暂停倒计时：{formatPauseTime(pauseRemaining)}
+            </Text>
+          )}
+        </View>
       </Flex>
       <Flex
         justify="center"
@@ -171,7 +218,7 @@ const FocusButton = observer(() => {
             <Icon name="play" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {pstore.cur_plan?.repeat === 'once' && (
+        {pstore.cur_plan && (
           <TouchableOpacity
             onPress={async () => {
               try {
@@ -222,6 +269,11 @@ const FocusButton = observer(() => {
         cancelText="继续专注"
         coinCost={stopCost}
         coinBalance={BenefitStore.balance}
+        extraWarning={
+          pstore.cur_plan?.repeat !== 'once'
+            ? '注意：停止后，今天该任务后续不会再触发'
+            : undefined
+        }
         onConfirm={stopFocus}
         onCancel={() => {}}
         onClose={() => setShowStopModal(false)}

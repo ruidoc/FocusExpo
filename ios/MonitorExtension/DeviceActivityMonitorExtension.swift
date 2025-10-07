@@ -23,6 +23,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     /// 4. 发送开始通知和事件记录
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
+        
+        // 首先检查暂停超时（后台保障）
+        checkAndResumeIfPauseTimeout()
+        
         // 区间开始：周期计划或暂停恢复调度，均应处理
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
         let now = Date()
@@ -113,6 +117,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
         
+        // 首先检查暂停超时（后台保障）
+        checkAndResumeIfPauseTimeout()
+        
         // 到点自动清理屏蔽
         let store = ManagedSettingsStore()
         store.clearAllSettings()
@@ -152,6 +159,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     /// 3. 发送结束通知和清理状态
     override func intervalWillEndWarning(for activity: DeviceActivityName) {
         super.intervalWillEndWarning(for: activity)
+        
+        // 首先检查暂停超时（后台保障）
+        checkAndResumeIfPauseTimeout()
         
         // 在警告阶段（区间结束前 warningTime 分钟）提前清理，支持 <15 分钟的"有效时长"
         let store = ManagedSettingsStore()
@@ -197,6 +207,49 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // Handle the warning before the event reaches its threshold.
     }
     
+    // MARK: - 暂停超时检查
+    
+    /// 检查暂停是否超时，如果超时则自动恢复屏蔽
+    /// 在 Extension 生命周期方法中调用，确保后台也能恢复
+    private func checkAndResumeIfPauseTimeout() {
+        guard let defaults = UserDefaults(suiteName: "group.com.focusone") else {
+            return
+        }
+        
+        let pausedUntil = defaults.double(forKey: "FocusOne.PausedUntil")
+        let now = Date().timeIntervalSince1970
+        
+        // 检查是否处于暂停状态且已超时
+        if pausedUntil > 0 && now >= pausedUntil {
+            print("【Extension检测到暂停超时】自动恢复屏蔽")
+            
+            // 获取应用选择数据
+            guard let data = defaults.data(forKey: "FocusOne.AppSelection"),
+                  let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else {
+                print("【Extension恢复失败】无法获取应用选择数据")
+                return
+            }
+            
+            // 恢复屏蔽设置
+            let store = ManagedSettingsStore()
+            store.shield.applications = selection.applicationTokens
+            store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
+            store.shield.webDomains = selection.webDomainTokens
+            
+            // 清理暂停状态
+            defaults.set(0, forKey: "FocusOne.PausedUntil")
+            defaults.removeObject(forKey: "FocusOne.PauseStartTime")
+            defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
+            
+            // 发送 Darwin 通知，让主 app 同步状态
+            let center = CFNotificationCenterGetDarwinNotifyCenter()
+            let name = CFNotificationName("com.focusone.focus.resumed" as CFString)
+            CFNotificationCenterPostNotification(center, name, nil, nil, true)
+            
+            print("【Extension恢复成功】屏蔽已恢复，已发送resumed通知")
+        }
+    }
+    
     // MARK: - 网络请求方法
     
     /// 创建专注记录
@@ -216,6 +269,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             case .success(let response):
                 if let json = response.json(),
                    let data = json["data"] as? [String: Any] {
+                    // 检查任务状态，只有 active 才创建 record
+                    let status = data["status"] as? String ?? ""
+                    if status != "active" {
+                        print("【任务状态检查】任务状态为 \(status)，跳过创建 record")
+                        completion(nil)
+                        return
+                    }
                     print("【网络请求成功】获取当前计划: \(data)")
                     completion(data)
                 } else {
@@ -296,6 +356,16 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     private func completeRecord() {
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else {
             print("【网络请求错误】无法获取 UserDefaults")
+            return
+        }
+        
+        // 检查任务是否已失败（暂停超时或手动停止）
+        let taskFailed = defaults.bool(forKey: "FocusOne.TaskFailed")
+        if taskFailed {
+            print("【网络请求跳过】任务已失败，不调用 complete")
+            // 清理失败标记
+            defaults.removeObject(forKey: "FocusOne.TaskFailed")
+            defaults.removeObject(forKey: "FocusOne.FailedReason")
             return
         }
         

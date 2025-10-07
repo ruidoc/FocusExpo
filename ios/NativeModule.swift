@@ -105,9 +105,11 @@ class NativeModule: RCTEventEmitter {
         if n == "com.focusone.focus.ended" {
           instance.emitState("ended")
           instance.emitEnded()
-        } else if n == "com.focusone.focus.started" {
-          instance.emitState("started")
-        }
+          } else if n == "com.focusone.focus.started" {
+            instance.emitState("started")
+          } else if n == "com.focusone.focus.resumed" {
+            instance.emitState("resumed")
+          }
       }
     }
   }
@@ -137,11 +139,13 @@ class NativeModule: RCTEventEmitter {
     guard !darwinObserverAdded else { return }
     darwinObserverAdded = true
     let center = CFNotificationCenterGetDarwinNotifyCenter()
-    let endedName = "com.focusone.focus.ended" as CFString
-    let startedName = "com.focusone.focus.started" as CFString
-    let observer = Unmanaged.passUnretained(self).toOpaque()
-    CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, endedName, nil, .deliverImmediately)
-    CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, startedName, nil, .deliverImmediately)
+      let endedName = "com.focusone.focus.ended" as CFString
+      let startedName = "com.focusone.focus.started" as CFString
+      let resumedName = "com.focusone.focus.resumed" as CFString
+      let observer = Unmanaged.passUnretained(self).toOpaque()
+      CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, endedName, nil, .deliverImmediately)
+      CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, startedName, nil, .deliverImmediately)
+      CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, resumedName, nil, .deliverImmediately)
   }
   private func removeDarwinObserverIfNeeded() {
     guard darwinObserverAdded else { return }
@@ -477,6 +481,12 @@ class NativeModule: RCTEventEmitter {
   // 停止限制应用
   @objc
   func stopAppLimits(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    // 标记任务失败（手动停止），阻止 Extension 调用 complete
+    if let defaults = UserDefaults.groupUserDefaults() {
+      defaults.set(true, forKey: "FocusOne.TaskFailed")
+      defaults.set("user_exit", forKey: "FocusOne.FailedReason")
+    }
+    
     center.stopMonitoring()
     
     // 清除所有限制
@@ -485,15 +495,15 @@ class NativeModule: RCTEventEmitter {
     emitEnded()
     invalidateTimer()
     pausedUntil = 0
-    emitState("ended")
+    // 手动停止发送 user_exit 原因
+    emitState("ended", extra: ["reason": "user_exit"])
     if let defaults = UserDefaults.groupUserDefaults() {
       defaults.removeObject(forKey: "FocusOne.FocusStartAt")
       defaults.removeObject(forKey: "FocusOne.FocusEndAt")
       defaults.removeObject(forKey: "FocusOne.TotalMinutes")
       defaults.removeObject(forKey: "FocusOne.FocusType")
       defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
-      defaults.removeObject(forKey: "FocusOne.TaskFailed")
-      defaults.removeObject(forKey: "FocusOne.FailedReason")
+      // 注意：不在这里清理 TaskFailed，让 Extension 去清理
     }
     
     resolve(true)
@@ -650,54 +660,15 @@ class NativeModule: RCTEventEmitter {
       defaults.set("paused", forKey: "FocusOne.LastFocusEvent")
     }
     
-    // 设置3分钟超时自动失败
+    // 设置3分钟超时自动恢复（前台场景）
     DispatchQueue.main.asyncAfter(deadline: .now() + pauseSec) { [weak self] in
       guard let self = self else { return }
-      // 检查是否仍在暂停状态（未恢复）
+      // 检查是否仍在暂停状态（未手动恢复）
       let currentTime = Date().timeIntervalSince1970
       if self.pausedUntil > 0 && currentTime >= self.pausedUntil {
-        // 超时未恢复，自动失败
-        print("【暂停超时】3分钟未恢复，任务自动失败")
-        
-        // 标记任务已失败
-        if let defaults = UserDefaults.groupUserDefaults() {
-          defaults.set(true, forKey: "FocusOne.TaskFailed")
-          defaults.set("pause_timeout", forKey: "FocusOne.FailedReason")
-          
-          // 调用后端API更新record状态（传递失败原因）
-          if let recordId = defaults.string(forKey: "record_id"), !recordId.isEmpty {
-            let requestBody: [String: Any] = [
-              "reason": "pause_timeout"
-            ]
-            NetworkManager.shared.post(path: "/record/fail/\(recordId)", body: requestBody) { result in
-              switch result {
-              case .success(_):
-                print("【网络请求成功】记录已标记为失败（暂停超时）: \(recordId)")
-              case .failure(let error):
-                print("【网络请求失败】更新记录失败: \(error.localizedDescription)")
-              }
-            }
-          }
-        }
-        
-        // 停止监控和清理设置
-        self.center.stopMonitoring()
-        let store = ManagedSettingsStore()
-        store.clearAllSettings()
-        self.emitEnded()
-        self.pausedUntil = 0
-        self.emitState("ended", extra: ["reason": "pause_timeout"])
-        
-        // 清理状态数据
-        if let defaults = UserDefaults.groupUserDefaults() {
-          defaults.removeObject(forKey: "FocusOne.FocusStartAt")
-          defaults.removeObject(forKey: "FocusOne.FocusEndAt")
-          defaults.removeObject(forKey: "FocusOne.TotalMinutes")
-          defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
-          defaults.removeObject(forKey: "FocusOne.PausedUntil")
-          defaults.removeObject(forKey: "FocusOne.PauseStartTime")
-          defaults.removeObject(forKey: "record_id")
-        }
+        // 超时未恢复，自动恢复屏蔽
+        print("【暂停超时】3分钟未恢复，自动恢复屏蔽（前台定时器）")
+        _ = self.performResumeShield()
       }
     }
     
@@ -705,17 +676,10 @@ class NativeModule: RCTEventEmitter {
     resolve(true)
   }
 
-  // 手动恢复屏蔽：撤销暂停并按一次性或周期状态恢复 ManagedSettings
-  @objc
-  func resumeAppLimits(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  // 执行恢复屏蔽的核心逻辑（可被多处调用）
+  private func performResumeShield() -> Bool {
     let now = Date().timeIntervalSince1970
-    // 检查是否超过3分钟暂停时限
-    if pausedUntil > 0 && now > pausedUntil {
-      // 已超时，任务失败
-      print("【恢复失败】暂停已超时，无法恢复")
-      resolve(false)
-      return
-    }
+    
     // 恢复前检查任务是否仍有效
     var canResume = false
     var selection: FamilyActivitySelection? = nil
@@ -729,22 +693,41 @@ class NativeModule: RCTEventEmitter {
       if now >= window.start && now < window.end { canResume = true }
     }
     guard canResume, let sel = selection else {
-      resolve(false)
-      return
+      print("【恢复失败】任务已结束或无效")
+      return false
     }
+    
     // 恢复屏蔽设置
     let store = ManagedSettingsStore()
     store.shield.applications = sel.applicationTokens
     store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
     store.shield.webDomains = sel.webDomainTokens
     pausedUntil = 0
+    
     if let defaults = UserDefaults.groupUserDefaults() {
       defaults.set(0, forKey: "FocusOne.PausedUntil")
       defaults.removeObject(forKey: "FocusOne.PauseStartTime")
       defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
     }
     emitState("resumed")
-    resolve(true)
+    print("【恢复成功】屏蔽已恢复")
+    return true
+  }
+  
+  // 手动恢复屏蔽：撤销暂停并按一次性或周期状态恢复 ManagedSettings
+  @objc
+  func resumeAppLimits(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    let now = Date().timeIntervalSince1970
+    // 检查是否超过3分钟暂停时限
+    if pausedUntil > 0 && now > pausedUntil {
+      // 已超时，任务失败
+      print("【恢复失败】暂停已超时，无法恢复")
+      resolve(false)
+      return
+    }
+    
+    let success = performResumeShield()
+    resolve(success)
   }
 
   // 计算“当前时刻”命中的周期计划窗口（若存在）
