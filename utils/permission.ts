@@ -106,7 +106,7 @@ export async function getIOSFocusStatus(): Promise<{
   plan_id?: string;
   record_id?: string;
   paused?: boolean;
-  pausedUntil?: number; // 暂停结束时间戳
+  pausedUntil?: number; // 暂停结束时间戳（仅用于 JS 端倒计时显示）
 }> {
   if (Platform.OS !== 'ios') return { active: false };
   try {

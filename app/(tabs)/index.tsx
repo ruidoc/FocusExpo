@@ -57,7 +57,11 @@ const App = observer(() => {
 
   const onRefresh = () => {
     setRefreshing(true);
-    Promise.all([rstore.getStatis(), bstore.getBenefit()]).finally(() => {
+    Promise.all([
+      rstore.getStatis(),
+      bstore.getBenefit(),
+      astore.getIosApps(),
+    ]).finally(() => {
       setRefreshing(false);
     });
   };

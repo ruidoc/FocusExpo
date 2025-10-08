@@ -1,3 +1,4 @@
+import { storage } from '@/utils';
 import http from '@/utils/request';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -42,6 +43,7 @@ class AppStore {
   // 设置iOS选择的应用
   setIosAllApps = (apps: any[]) => {
     this.ios_all_apps = apps;
+    storage.setGroup('ios_all_apps', JSON.stringify(apps));
   };
 
   addApps = async (form: Record<string, any>) => {

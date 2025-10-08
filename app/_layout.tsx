@@ -155,19 +155,8 @@ export default function RootLayout() {
     if (isIOS) {
       syncIOSStatus();
     }
-    const appState = AppState.addEventListener('change', async state => {
+    const appState = AppState.addEventListener('change', state => {
       if (isIOS && state === 'active') {
-        // 先检查暂停超时（回到前台时立即恢复）
-        try {
-          const status = await getIOSFocusStatus();
-          if (status.pausedUntil && Date.now() / 1000 > status.pausedUntil) {
-            console.log('【回到前台检测到暂停超时】立即恢复');
-            await NativeModules.NativeModule.resumeAppLimits();
-          }
-        } catch (error) {
-          console.error('【检查暂停超时失败】', error);
-        }
-        // 同步状态
         syncIOSStatus();
       }
     });

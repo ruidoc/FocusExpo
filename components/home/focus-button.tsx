@@ -127,7 +127,7 @@ const FocusButton = observer(() => {
     if (!pstore.cur_plan) return;
     if (Platform.OS === 'ios') {
       // console.log('暂停：', pstore.cur_plan);
-      NativeModules.NativeModule.pauseAppLimits(2);
+      NativeModules.NativeModule.pauseAppLimits(1);
     }
   };
 

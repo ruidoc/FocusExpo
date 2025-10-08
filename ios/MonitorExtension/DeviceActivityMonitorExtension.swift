@@ -18,95 +18,59 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     /// 当 DeviceActivity 监控区间开始时触发
     /// 主要处理：
     /// 1. 周期性计划任务：根据当前时间匹配计划配置，应用屏蔽设置
-    /// 2. 暂停恢复任务：恢复之前暂停的屏蔽设置
-    /// 3. 更新共享状态：写入开始时间、结束时间、总时长等信息
-    /// 4. 发送开始通知和事件记录
+    /// 2. 暂停恢复任务：不处理（在 intervalWillEndWarning 处理）
+    /// 3. 一次性任务：只发送开始通知
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
         
-        // 首先检查暂停超时（后台保障）
-        checkAndResumeIfPauseTimeout()
-        
-        // 区间开始：周期计划或暂停恢复调度，均应处理
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
-        let now = Date()
-        var startAtTs = now.timeIntervalSince1970
-        var endAtTs = now.addingTimeInterval(60 * 60).timeIntervalSince1970 // 兜底1小时
-        var hasPlannedMatch = false
-        // 已弃用“自动恢复活动”，不再处理 FocusOne.PauseResume
-        if let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"),
-           let cfgData = cfgStr.data(using: .utf8) {
-            struct PlanCfg: Codable { let start: Int; let end: Int; let repeatDays: [Int]? }
-            if let cfgs = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) {
-                let cal = Calendar.current
-                let comp = cal.dateComponents([.weekday, .hour, .minute], from: now)
-                let weekdayApple = comp.weekday ?? 1 // 1=周日
-                // 将 Apple weekday 转换为我们 1=周一..7=周日
-                let mondayFirst = (weekdayApple == 1) ? 7 : (weekdayApple - 1)
-                func hm(_ sec: Int) -> (Int, Int) { let m = max(0, sec/60); return (m/60, m%60) }
-                for c in cfgs {
-                    let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
-                    if !days.contains(mondayFirst) { continue }
-                    let (sh, sm) = hm(c.start)
-                    let (eh, em) = hm(c.end)
-                    let startHM = sh * 60 + sm
-                    let endHM = eh * 60 + em
-
-                    guard let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: now) else { continue }
-                    guard var eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: now) else { continue }
-
-                    // 跨午夜：结束时间在开始时间之前/相等，则结束时间为次日同刻
-                    if endHM <= startHM {
-                        if let nextDay = cal.date(byAdding: .day, value: 1, to: eDate) {
-                            eDate = nextDay
-                        }
-                    }
-
-                    // 仅当当前时间位于该区间内才命中该计划
-                    if now >= sDate && now < eDate {
-                        startAtTs = sDate.timeIntervalSince1970
-                        endAtTs = eDate.timeIntervalSince1970
-                        hasPlannedMatch = true
-                        break
-                    }
-                }
-            }
+        
+        // 1. 暂停恢复活动：不处理
+        if activity.rawValue == "FocusOne.PauseResume" {
+            print("【Extension】暂停恢复活动开始，无需处理")
+            return
         }
-        // 已移除“自动恢复”活动逻辑
-        // 若不存在周期性计划匹配（一次性任务场景），不覆盖一次性任务在主 App 设定的时间
-        if hasPlannedMatch {
+        
+        // 2. 一次性任务：只发送通知，不做其他处理
+        if activity.rawValue == "FocusOne.ScreenTime" {
+            print("【Extension】一次性任务开始，发送通知")
+            sendStartedNotification()
+            return
+        }
+        
+        // 3. 周期任务：匹配计划并应用屏蔽
+        if let timeWindow = matchCurrentPeriodicPlan() {
+            print("【Extension】匹配到周期计划，应用屏蔽")
+            
             // 加载选择的应用并应用屏蔽
             var selection: FamilyActivitySelection? = nil
             if let data = defaults.data(forKey: "FocusOne.AppSelection"),
                let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
                 selection = sel
             }
+            
             let store = ManagedSettingsStore()
             if let sel = selection {
                 store.shield.applications = sel.applicationTokens
                 store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
                 store.shield.webDomains = sel.webDomainTokens
             }
+            
             // 使用计划中的开始/结束时间
-            defaults.set(startAtTs, forKey: "FocusOne.FocusStartAt")
-            defaults.set(endAtTs, forKey: "FocusOne.FocusEndAt")
-            let totalMin = max(1, Int((endAtTs - startAtTs) / 60))
+            defaults.set(timeWindow.start, forKey: "FocusOne.FocusStartAt")
+            defaults.set(timeWindow.end, forKey: "FocusOne.FocusEndAt")
+            let totalMin = max(1, Int((timeWindow.end - timeWindow.start) / 60))
             defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
             defaults.set("periodic", forKey: "FocusOne.FocusType")
-            // 发送开始通知（周期计划）
-            let content = UNMutableNotificationContent()
-            content.title = "专注一点"
-            content.body = "屏蔽已开启，保持专注"
-            let request = UNNotificationRequest(identifier: "FocusStartPeriodic", content: content, trigger: nil)
-            UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
             
             // 创建专注记录（仅周期性任务）
             createRecord()
+            
+            // 发送 Darwin 跨进程"开始"事件
+            sendStartedNotification()
+        } else {
+            print("【Extension】未匹配到周期计划")
         }
-        // 统一发送 Darwin 跨进程“开始”事件（一次性与周期均会调用到此处）
-        let dCenter = CFNotificationCenterGetDarwinNotifyCenter()
-        let dName = CFNotificationName("com.focusone.focus.started" as CFString)
-        CFNotificationCenterPostNotification(dCenter, dName, nil, nil, true)
     }
     
     /// 当 DeviceActivity 监控区间结束时触发
@@ -116,9 +80,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     /// 3. 清理共享状态数据
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
-        
-        // 首先检查暂停超时（后台保障）
-        checkAndResumeIfPauseTimeout()
         
         // 到点自动清理屏蔽
         let store = ManagedSettingsStore()
@@ -157,27 +118,63 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     /// 1. 提前清理屏蔽设置，支持小于15分钟的"有效时长"场景
     /// 2. 通过 warningTime 参数控制提前清理的时机
     /// 3. 发送结束通知和清理状态
+    /// 4. 处理暂停恢复（3分钟后触发）
     override func intervalWillEndWarning(for activity: DeviceActivityName) {
         super.intervalWillEndWarning(for: activity)
         
-        // 首先检查暂停超时（后台保障）
-        checkAndResumeIfPauseTimeout()
+        guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
         
-        // 在警告阶段（区间结束前 warningTime 分钟）提前清理，支持 <15 分钟的"有效时长"
-        let store = ManagedSettingsStore()
-        store.clearAllSettings()
+        // 区分暂停恢复 vs 正常任务
+        if activity.rawValue == "FocusOne.PauseResume" {
+            // ===== 暂停恢复逻辑 =====
+            print("【Extension】暂停3分钟已到，自动恢复屏蔽")
+            
+            // 检查是否仍在暂停中（防止手动恢复后重复触发）
+            let isPauseActivity = defaults.bool(forKey: "FocusOne.IsPauseActivity")
+            
+            if isPauseActivity {
+                // 获取应用选择数据并恢复屏蔽
+                if let data = defaults.data(forKey: "FocusOne.AppSelection"),
+                   let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+                    
+                    let store = ManagedSettingsStore()
+                    store.shield.applications = selection.applicationTokens
+                    store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
+                    store.shield.webDomains = selection.webDomainTokens
+                    
+                    notifyResume()
+                    
+                    print("【Extension恢复成功】屏蔽已恢复")
+                } else {
+                    print("【Extension恢复失败】无法获取应用选择数据")
+                }
+            } else {
+                print("【Extension】已手动恢复，跳过自动恢复")
+            }
+            
+        } else {
+            // ===== 正常任务结束逻辑 =====
+            // 在警告阶段（区间结束前 warningTime 分钟）提前清理，支持 <15 分钟的"有效时长"
+            let store = ManagedSettingsStore()
+            store.clearAllSettings()
+            
+            // 完成专注记录
+            completeRecord()
+            
+            notifyEnd()
+        }
+    }
+
+    /// 在监控事件达到阈值前的警告阶段触发
+    /// 当前实现：预留接口，未实现具体逻辑
+    /// 可用于：在应用使用时间即将达到限制前提前警告用户
+    override func eventWillReachThresholdWarning(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
+        super.eventWillReachThresholdWarning(event, activity: activity)
         
-        // 完成专注记录
-        completeRecord()
-        
-        notifyEnd()
+        // Handle the warning before the event reaches its threshold.
     }
 
     /// 私有方法：处理屏蔽结束的统一逻辑
-    /// 主要功能：
-    /// 1. 发送应用内广播通知，供主 App 的 EventEmitter 转发为 JS 事件
-    /// 2. 发送系统本地通知，告知用户专注结束
-    /// 3. 清理共享状态数据（开始时间、结束时间、总时长等）
     private func notifyEnd() {
         // 发送 Darwin 跨进程通知，供主 App 转发为 JS 事件（仅当前台时转发）
         let center = CFNotificationCenterGetDarwinNotifyCenter()
@@ -197,60 +194,103 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
         }
     }
-    
-    /// 在监控事件达到阈值前的警告阶段触发
-    /// 当前实现：预留接口，未实现具体逻辑
-    /// 可用于：在应用使用时间即将达到限制前提前警告用户
-    override func eventWillReachThresholdWarning(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
-        super.eventWillReachThresholdWarning(event, activity: activity)
-        
-        // Handle the warning before the event reaches its threshold.
+
+    /// 私有方法：处理屏蔽恢复的统一逻辑
+    private func notifyResume() {
+        // 发送 Darwin 跨进程通知，供主 App 转发为 JS 事件（仅当前台时转发）
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+        let name = CFNotificationName("com.focusone.focus.resumed" as CFString)
+        CFNotificationCenterPostNotification(center, name, nil, nil, true)
+        // 可选：直接发一条系统本地通知（需要扩展 Notification 权限）
+        let content = UNMutableNotificationContent()
+        content.title = "专注恢复"
+        content.body = "屏蔽已自动恢复，继续加油！"
+        let request = UNNotificationRequest(identifier: "FocusResume", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+        // 清理共享状态
+        if let defaults = UserDefaults(suiteName: "group.com.focusone") {
+            defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
+            defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
+            defaults.removeObject(forKey: "FocusOne.PausedUntil")
+        }
     }
     
-    // MARK: - 暂停超时检查
-    
-    /// 检查暂停是否超时，如果超时则自动恢复屏蔽
-    /// 在 Extension 生命周期方法中调用，确保后台也能恢复
-    private func checkAndResumeIfPauseTimeout() {
-        guard let defaults = UserDefaults(suiteName: "group.com.focusone") else {
-            return
+    /// 匹配当前时间对应的周期计划
+    /// 返回匹配的时间窗口（开始和结束时间戳），如果没有匹配则返回 nil
+    private func matchCurrentPeriodicPlan() -> (start: TimeInterval, end: TimeInterval)? {
+        guard let defaults = UserDefaults(suiteName: "group.com.focusone"),
+              let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"),
+              let cfgData = cfgStr.data(using: .utf8) else {
+            return nil
         }
         
-        let pausedUntil = defaults.double(forKey: "FocusOne.PausedUntil")
-        let now = Date().timeIntervalSince1970
+        struct PlanCfg: Codable {
+            let start: Int
+            let end: Int
+            let repeatDays: [Int]?
+        }
         
-        // 检查是否处于暂停状态且已超时
-        if pausedUntil > 0 && now >= pausedUntil {
-            print("【Extension检测到暂停超时】自动恢复屏蔽")
+        guard let cfgs = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) else {
+            return nil
+        }
+        
+        let now = Date()
+        let cal = Calendar.current
+        let comp = cal.dateComponents([.weekday, .hour, .minute], from: now)
+        let weekdayApple = comp.weekday ?? 1 // 1=周日
+        
+        // 将 Apple weekday 转换为我们 1=周一..7=周日
+        let mondayFirst = (weekdayApple == 1) ? 7 : (weekdayApple - 1)
+        
+        // 辅助函数：秒 → (小时, 分钟)
+        func hm(_ sec: Int) -> (Int, Int) {
+            let m = max(0, sec / 60)
+            return (m / 60, m % 60)
+        }
+        
+        // 遍历所有计划，查找匹配的
+        for c in cfgs {
+            let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
+            if !days.contains(mondayFirst) { continue }
             
-            // 获取应用选择数据
-            guard let data = defaults.data(forKey: "FocusOne.AppSelection"),
-                  let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else {
-                print("【Extension恢复失败】无法获取应用选择数据")
-                return
+            let (sh, sm) = hm(c.start)
+            let (eh, em) = hm(c.end)
+            let startHM = sh * 60 + sm
+            let endHM = eh * 60 + em
+            
+            guard let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: now) else { continue }
+            guard var eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: now) else { continue }
+            
+            // 跨午夜：结束时间在开始时间之前/相等，则结束时间为次日同刻
+            if endHM <= startHM {
+                if let nextDay = cal.date(byAdding: .day, value: 1, to: eDate) {
+                    eDate = nextDay
+                }
             }
             
-            // 恢复屏蔽设置
-            let store = ManagedSettingsStore()
-            store.shield.applications = selection.applicationTokens
-            store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
-            store.shield.webDomains = selection.webDomainTokens
-            
-            // 清理暂停状态
-            defaults.set(0, forKey: "FocusOne.PausedUntil")
-            defaults.removeObject(forKey: "FocusOne.PauseStartTime")
-            defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
-            
-            // 发送 Darwin 通知，让主 app 同步状态
-            let center = CFNotificationCenterGetDarwinNotifyCenter()
-            let name = CFNotificationName("com.focusone.focus.resumed" as CFString)
-            CFNotificationCenterPostNotification(center, name, nil, nil, true)
-            
-            print("【Extension恢复成功】屏蔽已恢复，已发送resumed通知")
+            // 仅当当前时间位于该区间内才命中该计划
+            if now >= sDate && now < eDate {
+                return (start: sDate.timeIntervalSince1970, end: eDate.timeIntervalSince1970)
+            }
         }
+        
+        return nil
     }
     
-    // MARK: - 网络请求方法
+    /// 发送任务开始的 Darwin 通知
+    private func sendStartedNotification() {
+        let dCenter = CFNotificationCenterGetDarwinNotifyCenter()
+        let dName = CFNotificationName("com.focusone.focus.started" as CFString)
+        CFNotificationCenterPostNotification(dCenter, dName, nil, nil, true)
+
+        // 发送开始通知（周期计划）
+        let content = UNMutableNotificationContent()
+        content.title = "专注一点"
+        content.body = "屏蔽已开启，保持专注"
+        let request = UNNotificationRequest(identifier: "FocusStartPeriodic", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
+
     
     /// 创建专注记录
     /// 仅在周期性任务开始时调用，向服务器记录专注开始
