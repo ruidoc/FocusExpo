@@ -34,43 +34,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // 2. 一次性任务：只发送通知，不做其他处理
         if activity.rawValue == "FocusOne.ScreenTime" {
             print("【Extension】一次性任务开始，发送通知")
-            sendStartedNotification()
+            notifyStart()
             return
         }
         
-        // 3. 周期任务：匹配计划并应用屏蔽
-        if let timeWindow = matchCurrentPeriodicPlan() {
-            print("【Extension】匹配到周期计划，应用屏蔽")
-            
-            // 加载选择的应用并应用屏蔽
-            var selection: FamilyActivitySelection? = nil
-            if let data = defaults.data(forKey: "FocusOne.AppSelection"),
-               let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
-                selection = sel
-            }
-            
-            let store = ManagedSettingsStore()
-            if let sel = selection {
-                store.shield.applications = sel.applicationTokens
-                store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
-                store.shield.webDomains = sel.webDomainTokens
-            }
-            
-            // 使用计划中的开始/结束时间
-            defaults.set(timeWindow.start, forKey: "FocusOne.FocusStartAt")
-            defaults.set(timeWindow.end, forKey: "FocusOne.FocusEndAt")
-            let totalMin = max(1, Int((timeWindow.end - timeWindow.start) / 60))
-            defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
-            defaults.set("periodic", forKey: "FocusOne.FocusType")
-            
-            // 创建专注记录（仅周期性任务）
-            createRecord()
-            
-            // 发送 Darwin 跨进程"开始"事件
-            sendStartedNotification()
-        } else {
-            print("【Extension】未匹配到周期计划")
-        }
+        // 3. 周期任务：获取当前计划并应用屏蔽
+        createRecordAndShield(defaults: defaults)
     }
     
     /// 当 DeviceActivity 监控区间结束时触发
@@ -81,6 +50,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
         
+        // 检查是否是暂停恢复活动，如果是则跳过处理
+        if activity.rawValue == "FocusOne.PauseResume" {
+            print("【Extension】暂停恢复活动结束，跳过处理")
+            return
+        }
+        
         // 到点自动清理屏蔽
         let store = ManagedSettingsStore()
         store.clearAllSettings()
@@ -89,10 +64,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         completeRecord()
         
         notifyEnd()
-        // 记录统一事件，供主 App 拉起后转发
-        if let defaults = UserDefaults(suiteName: "group.com.focusone") {
-            defaults.set("ended", forKey: "FocusOne.LastFocusEvent")
-        }
     }
     
     /// 当监控事件达到阈值时触发
@@ -114,11 +85,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     }
     
     /// 在监控区间结束前的警告阶段触发
-    /// 主要处理：
-    /// 1. 提前清理屏蔽设置，支持小于15分钟的"有效时长"场景
-    /// 2. 通过 warningTime 参数控制提前清理的时机
-    /// 3. 发送结束通知和清理状态
-    /// 4. 处理暂停恢复（3分钟后触发）
     override func intervalWillEndWarning(for activity: DeviceActivityName) {
         super.intervalWillEndWarning(for: activity)
         
@@ -126,17 +92,25 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         // 区分暂停恢复 vs 正常任务
         if activity.rawValue == "FocusOne.PauseResume" {
-            // ===== 暂停恢复逻辑 =====
-            print("【Extension】暂停3分钟已到，自动恢复屏蔽")
-            
             // 检查是否仍在暂停中（防止手动恢复后重复触发）
             let isPauseActivity = defaults.bool(forKey: "FocusOne.IsPauseActivity")
             
             if isPauseActivity {
-                // 获取应用选择数据并恢复屏蔽
-                if let data = defaults.data(forKey: "FocusOne.AppSelection"),
-                   let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
-                    
+                // 优先使用当前任务的屏蔽设置，如果没有则使用历史选择数据
+                var selection: FamilyActivitySelection? = nil
+                
+                // 首先尝试读取当前任务的屏蔽设置
+                if let data = defaults.data(forKey: "FocusOne.CurrentShieldSelection"),
+                   let currentSelection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+                    selection = currentSelection
+                    print("【Extension恢复】使用当前任务的屏蔽设置")
+                } else if let data = defaults.data(forKey: "FocusOne.AppSelection"),
+                          let appSelection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+                    selection = appSelection
+                    print("【Extension恢复】使用历史应用选择数据")
+                }
+                
+                if let selection = selection {
                     let store = ManagedSettingsStore()
                     store.shield.applications = selection.applicationTokens
                     store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
@@ -146,7 +120,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                     
                     print("【Extension恢复成功】屏蔽已恢复")
                 } else {
-                    print("【Extension恢复失败】无法获取应用选择数据")
+                    print("【Extension恢复失败】无法获取屏蔽设置数据")
                 }
             } else {
                 print("【Extension】已手动恢复，跳过自动恢复")
@@ -188,10 +162,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
         // 清理共享状态
         if let defaults = UserDefaults(suiteName: "group.com.focusone") {
+            defaults.set("ended", forKey: "FocusOne.LastFocusEvent")
             defaults.removeObject(forKey: "FocusOne.FocusStartAt")
             defaults.removeObject(forKey: "FocusOne.FocusEndAt")
             defaults.removeObject(forKey: "FocusOne.TotalMinutes")
             defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
+            defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
         }
     }
 
@@ -213,72 +189,16 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
             defaults.removeObject(forKey: "FocusOne.PausedUntil")
         }
-    }
-    
-    /// 匹配当前时间对应的周期计划
-    /// 返回匹配的时间窗口（开始和结束时间戳），如果没有匹配则返回 nil
-    private func matchCurrentPeriodicPlan() -> (start: TimeInterval, end: TimeInterval)? {
-        guard let defaults = UserDefaults(suiteName: "group.com.focusone"),
-              let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"),
-              let cfgData = cfgStr.data(using: .utf8) else {
-            return nil
-        }
         
-        struct PlanCfg: Codable {
-            let start: Int
-            let end: Int
-            let repeatDays: [Int]?
-        }
-        
-        guard let cfgs = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) else {
-            return nil
-        }
-        
-        let now = Date()
-        let cal = Calendar.current
-        let comp = cal.dateComponents([.weekday, .hour, .minute], from: now)
-        let weekdayApple = comp.weekday ?? 1 // 1=周日
-        
-        // 将 Apple weekday 转换为我们 1=周一..7=周日
-        let mondayFirst = (weekdayApple == 1) ? 7 : (weekdayApple - 1)
-        
-        // 辅助函数：秒 → (小时, 分钟)
-        func hm(_ sec: Int) -> (Int, Int) {
-            let m = max(0, sec / 60)
-            return (m / 60, m % 60)
-        }
-        
-        // 遍历所有计划，查找匹配的
-        for c in cfgs {
-            let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
-            if !days.contains(mondayFirst) { continue }
-            
-            let (sh, sm) = hm(c.start)
-            let (eh, em) = hm(c.end)
-            let startHM = sh * 60 + sm
-            let endHM = eh * 60 + em
-            
-            guard let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: now) else { continue }
-            guard var eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: now) else { continue }
-            
-            // 跨午夜：结束时间在开始时间之前/相等，则结束时间为次日同刻
-            if endHM <= startHM {
-                if let nextDay = cal.date(byAdding: .day, value: 1, to: eDate) {
-                    eDate = nextDay
-                }
-            }
-            
-            // 仅当当前时间位于该区间内才命中该计划
-            if now >= sDate && now < eDate {
-                return (start: sDate.timeIntervalSince1970, end: eDate.timeIntervalSince1970)
-            }
-        }
-        
-        return nil
+        // 停止暂停恢复监控，防止重复触发
+        let deviceActivityCenter = DeviceActivityCenter()
+        let pauseResumeActivity = DeviceActivityName("FocusOne.PauseResume")
+        deviceActivityCenter.stopMonitoring([pauseResumeActivity])
+        print("【Extension恢复】已停止暂停恢复监控")
     }
     
     /// 发送任务开始的 Darwin 通知
-    private func sendStartedNotification() {
+    private func notifyStart() {
         let dCenter = CFNotificationCenterGetDarwinNotifyCenter()
         let dName = CFNotificationName("com.focusone.focus.started" as CFString)
         CFNotificationCenterPostNotification(dCenter, dName, nil, nil, true)
@@ -291,13 +211,60 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
 
-    
-    /// 创建专注记录
     /// 仅在周期性任务开始时调用，向服务器记录专注开始
-    private func createRecord() {
+    private func createRecordAndShield(defaults: UserDefaults) {
         fetchCurrentPlan { planData in
             if let planData = planData {
+                // 从计划数据中提取时间信息
+                let startMin = planData["start_min"] as? Int ?? 0
+                let endMin = planData["end_min"] as? Int ?? 0
+                let startSec = planData["start_sec"] as? Int ?? 0
+                let endSec = planData["end_sec"] as? Int ?? 0
+                
+                // 计算时间戳
+                let now = Date()
+                let calendar = Calendar.current
+                let today = calendar.startOfDay(for: now)
+                
+                let startTime = today.addingTimeInterval(TimeInterval(startMin * 60 + startSec))
+                let endTime = today.addingTimeInterval(TimeInterval(endMin * 60 + endSec))
+                
+                // 处理跨午夜情况
+                let finalEndTime = endTime > startTime ? endTime : calendar.date(byAdding: .day, value: 1, to: endTime) ?? endTime
+                
+                // 设置时间信息
+                defaults.set(startTime.timeIntervalSince1970, forKey: "FocusOne.FocusStartAt")
+                defaults.set(finalEndTime.timeIntervalSince1970, forKey: "FocusOne.FocusEndAt")
+                let totalMin = max(1, Int((finalEndTime.timeIntervalSince1970 - startTime.timeIntervalSince1970) / 60))
+                defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
+                defaults.set("periodic", forKey: "FocusOne.FocusType")
+
+                // 应用屏蔽设置
+                let apps = planData["apps"] as? [String] ?? []
+                if let selection = self.buildShieldSelectionFromPlanApps(apps) {
+                    // 保存屏蔽设置到本地，供暂停恢复使用
+                    if let data = try? JSONEncoder().encode(selection) {
+                        defaults.set(data, forKey: "FocusOne.CurrentShieldSelection")
+                    }
+                    
+                    // 应用屏蔽设置
+                    let store = ManagedSettingsStore()
+                    store.shield.applications = selection.applicationTokens
+                    store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
+                    store.shield.webDomains = selection.webDomainTokens
+                    
+                    print("【屏蔽设置】已应用基于计划的屏蔽设置")
+                } else {
+                    print("【屏蔽设置】无法构建屏蔽设置")
+                }
+
+                // 创建专注记录
                 self.createRecordWithPlan(planData)
+                
+                // 发送 Darwin 跨进程"开始"事件
+                self.notifyStart()
+            } else {
+                print("【Extension】未获取到当前计划")
             }
         }
     }
@@ -327,6 +294,88 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 completion(nil)
             }
         }
+    }
+    
+    /// 根据计划中的应用列表构建屏蔽设置
+    /// - Returns: 构建好的 FamilyActivitySelection，如果失败返回 nil
+    private func buildShieldSelectionFromPlanApps(_ apps: [String]) -> FamilyActivitySelection? {
+        guard let defaults = UserDefaults(suiteName: "group.com.focusone") else {
+            print("【屏蔽设置错误】无法获取 UserDefaults")
+            return nil
+        }
+        
+        // 1. 从 apps 中提取 stableIds
+        let stableIds = apps.compactMap { appString in
+            let components = appString.components(separatedBy: ":")
+            return components.count >= 2 ? components[0] : nil
+        }
+        
+        guard !stableIds.isEmpty else {
+            print("【屏蔽设置】计划中无有效应用")
+            return nil
+        }
+         
+        // 2. 从 UserDefaults 读取 ios_all_apps 数据
+        guard let iosAllAppsData = defaults.string(forKey: "ios_all_apps"),
+              let data = iosAllAppsData.data(using: .utf8),
+              let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            print("【屏蔽设置错误】无法读取 ios_all_apps 数据")
+            return nil
+        }
+        let iosAllApps = jsonArray
+        
+        // 3. 根据 stableId 筛选出对应的应用数据
+        let filteredApps = iosAllApps.filter { app in
+            guard let stableId = app["stableId"] as? String else { return false }
+            return stableIds.contains(stableId)
+        }
+        
+        guard !filteredApps.isEmpty else {
+            print("【屏蔽设置】未找到匹配的应用数据")
+            return nil
+        }
+        
+        // 4. 构建 FamilyActivitySelection
+        var selection = FamilyActivitySelection()
+        var successCount = 0
+        
+        for app in filteredApps {
+            guard let tokenDataBase64 = app["tokenData"] as? String,
+                  let tokenData = Data(base64Encoded: tokenDataBase64),
+                  let type = app["type"] as? String else {
+                print("【屏蔽设置】应用数据不完整: \(app)")
+                continue
+            }
+            
+            do {
+                switch type {
+                case "application":
+                    let token = try JSONDecoder().decode(ApplicationToken.self, from: tokenData)
+                    selection.applicationTokens.insert(token)
+                    successCount += 1
+                    
+                case "webDomain":
+                    let token = try JSONDecoder().decode(WebDomainToken.self, from: tokenData)
+                    selection.webDomainTokens.insert(token)
+                    successCount += 1
+                    
+                case "category":
+                    let token = try JSONDecoder().decode(ActivityCategoryToken.self, from: tokenData)
+                    selection.categoryTokens.insert(token)
+                    successCount += 1
+                    
+                default:
+                    print("【屏蔽设置】未知的应用类型: \(type)")
+                    continue
+                }
+            } catch {
+                print("【屏蔽设置】Token 解码失败: \(error.localizedDescription)")
+                continue
+            }
+        }
+        
+        print("【屏蔽设置】成功构建屏蔽设置，应用数量: \(selection.applicationTokens.count), 网站数量: \(selection.webDomainTokens.count), 类别数量: \(selection.categoryTokens.count)")
+        return successCount > 0 ? selection : nil
     }
     
     /// 使用计划数据创建专注记录
@@ -442,5 +491,66 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 print("【清理record_id】完成失败，已清理")
             }
         }
+    }
+
+    /// 匹配当前时间对应的周期计划（暂时不用）
+    private func matchCurrentPeriodicPlan() -> (start: TimeInterval, end: TimeInterval)? {
+        guard let defaults = UserDefaults(suiteName: "group.com.focusone"),
+              let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"),
+              let cfgData = cfgStr.data(using: .utf8) else {
+            return nil
+        }
+        
+        struct PlanCfg: Codable {
+            let start: Int
+            let end: Int
+            let repeatDays: [Int]?
+        }
+        
+        guard let cfgs = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) else {
+            return nil
+        }
+        
+        let now = Date()
+        let cal = Calendar.current
+        let comp = cal.dateComponents([.weekday, .hour, .minute], from: now)
+        let weekdayApple = comp.weekday ?? 1 // 1=周日
+        
+        // 将 Apple weekday 转换为我们 1=周一..7=周日
+        let mondayFirst = (weekdayApple == 1) ? 7 : (weekdayApple - 1)
+        
+        // 辅助函数：秒 → (小时, 分钟)
+        func hm(_ sec: Int) -> (Int, Int) {
+            let m = max(0, sec / 60)
+            return (m / 60, m % 60)
+        }
+        
+        // 遍历所有计划，查找匹配的
+        for c in cfgs {
+            let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
+            if !days.contains(mondayFirst) { continue }
+            
+            let (sh, sm) = hm(c.start)
+            let (eh, em) = hm(c.end)
+            let startHM = sh * 60 + sm
+            let endHM = eh * 60 + em
+            
+            guard let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: now) else { continue }
+            guard var eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: now) else { continue }
+            
+            // 跨午夜：结束时间在开始时间之前/相等，则结束时间为次日同刻
+            if endHM <= startHM {
+                if let nextDay = cal.date(byAdding: .day, value: 1, to: eDate) {
+                    eDate = nextDay
+                }
+            }
+            
+            // 仅当当前时间位于该区间内才命中该计划
+            if now >= sDate && now < eDate {
+                return (start: sDate.timeIntervalSince1970, end: eDate.timeIntervalSince1970)
+            }
+        }
+        
+        return nil
     }
 }

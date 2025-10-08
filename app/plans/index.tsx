@@ -25,8 +25,7 @@ const getTasksInTimeRange = (
 ) => {
   return plans.filter(plan => {
     const startTime = parseInt(plan.start.split(':')[0]);
-    const endTime = parseInt(plan.end.split(':')[0]);
-    return startTime < endHour && endTime > startHour;
+    return startTime >= startHour && startTime < endHour;
   });
 };
 
@@ -157,8 +156,8 @@ const App = observer(() => {
                     backgroundColor: isSelected
                       ? colors.blue2
                       : isToday
-                      ? `${colors.blue2}30`
-                      : 'transparent',
+                        ? `${colors.blue2}30`
+                        : 'transparent',
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     borderRadius: 12,

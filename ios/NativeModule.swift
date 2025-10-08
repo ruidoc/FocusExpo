@@ -439,6 +439,17 @@ class NativeModule: RCTEventEmitter {
         events: [eventName: event]
       )
       
+      // 保存屏蔽设置到本地，供暂停恢复使用
+      if let defaults = UserDefaults.groupUserDefaults() {
+        do {
+          let data = try JSONEncoder().encode(selection)
+          defaults.set(data, forKey: "FocusOne.CurrentShieldSelection")
+          print("【一次性任务】已保存屏蔽设置到本地")
+        } catch {
+          print("【一次性任务错误】保存屏蔽设置失败: \(error.localizedDescription)")
+        }
+      }
+      
       // 立即激活屏蔽
       let store = ManagedSettingsStore()
       store.shield.applications = selection.applicationTokens
@@ -485,7 +496,7 @@ class NativeModule: RCTEventEmitter {
       defaults.set(true, forKey: "FocusOne.TaskFailed")
       defaults.set("user_exit", forKey: "FocusOne.FailedReason")
     }
-    
+
     center.stopMonitoring()
     
     // 清除所有限制
@@ -502,6 +513,7 @@ class NativeModule: RCTEventEmitter {
       defaults.removeObject(forKey: "FocusOne.FocusType")
       defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
       defaults.removeObject(forKey: "FocusOne.TaskFailed")
+      defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
       defaults.removeObject(forKey: "FocusOne.FailedReason")
       defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
       defaults.removeObject(forKey: "FocusOne.PausedUntil")
@@ -529,6 +541,8 @@ class NativeModule: RCTEventEmitter {
     let endAt = defaults.double(forKey: "FocusOne.FocusEndAt")
     let total = defaults.integer(forKey: "FocusOne.TotalMinutes")
 
+    print("startAt: \(startAt), endAt: \(endAt), total: \(total)")
+
     // 若没有一次性/周期任务的时间信息，则认为未激活
     if startAt <= 0 || endAt <= 0 || total <= 0 {
       resolve(["active": false])
@@ -550,14 +564,18 @@ class NativeModule: RCTEventEmitter {
     let hasCats = (store.shield.applicationCategories != nil)
     let isShielding = hasApps || hasDomains || hasCats
 
+    // 检查暂停状态
+    let pausedUntil = defaults.double(forKey: "FocusOne.PausedUntil")
+    let isPaused = pausedUntil > 0 && now < pausedUntil
+
     // 暂停：当仍在专注窗口，但系统未在屏蔽（清空了 ManagedSettings）
-    let paused = inWindow && !isShielding
+    let paused = inWindow && !isShielding && isPaused
 
     // 业务上的 active：在窗口内即为 true，即使暂停中也为 true
-    let active = inWindow
+    // 如果有暂停状态（无论是否超时），都应该返回 active
+    let active = inWindow || (pausedUntil > 0)
 
     let ftype = defaults.string(forKey: "FocusOne.FocusType")
-    let pausedUntil = defaults.double(forKey: "FocusOne.PausedUntil")
     let accessToken = defaults.string(forKey: "access_token")
     print("accessToken: \(accessToken)")
     // 简单序列化：key=value 以逗号连接（按 key 排序，便于稳定）
@@ -618,7 +636,7 @@ class NativeModule: RCTEventEmitter {
       "totalMinutes": total,
       "elapsedMinutes": elapsedMin,
       "focusType": ftype ?? NSNull(),
-      "pausedUntil": pausedUntil > 0 ? pausedUntil : NSNull()
+      "pausedUntil": (pausedUntil > 0 && isPaused) ? pausedUntil : NSNull()
     ])
   }
 
@@ -629,12 +647,16 @@ class NativeModule: RCTEventEmitter {
     let calendar = Calendar.current
     
     // 获取暂停时长，默认为3分钟
-    let minutes = durationMinutes?.doubleValue ?? 3.0
-    let pauseDuration: TimeInterval = minutes * 60 // 屏蔽时长（秒）
+    let minutes = durationMinutes?.intValue ?? 3
+    let pauseDuration: TimeInterval = TimeInterval(minutes) * 60 // 屏蔽时长（秒）
 
     // 初始化屏蔽时长
-    let minTime = 15
-    let warningTime = minTime - Int(minutes)
+    let minTime: Int = 15
+    let warningTime = minTime - minutes
+    
+    // 先停止旧的暂停恢复监控（如果存在）
+    center.stopMonitoring([pauseResumeActivity])
+    print("【暂停】已停止旧的暂停恢复监控")
     
     // 暂停期间清空屏蔽
     let store = ManagedSettingsStore()
@@ -645,7 +667,7 @@ class NativeModule: RCTEventEmitter {
     
     // 创建15分钟的 Schedule（满足最低要求）
     // 使用 warningTime=12分钟，在3分钟后触发
-    let scheduleEndTime = now.addingTimeInterval(minTime * 60)
+    let scheduleEndTime = now.addingTimeInterval(TimeInterval(minTime * 60))
     
     let schedule = DeviceActivitySchedule(
       intervalStart: DateComponents(
@@ -696,9 +718,13 @@ class NativeModule: RCTEventEmitter {
     // 恢复前检查任务是否仍有效
     var canResume = false
     var selection: FamilyActivitySelection? = nil
-    if let data = UserDefaults.groupUserDefaults()?.data(forKey: "FocusOne.AppSelection"),
+    
+    // 优先使用当前任务的屏蔽设置
+    if let defaults = UserDefaults.groupUserDefaults(),
+       let data = defaults.data(forKey: "FocusOne.CurrentShieldSelection"),
        let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
       selection = sel
+      print("【恢复】使用当前任务的屏蔽设置")
     }
     if endTimestamp > now {
       canResume = true
@@ -722,6 +748,10 @@ class NativeModule: RCTEventEmitter {
       defaults.removeObject(forKey: "FocusOne.PausedUntil") // 清理倒计时数据
       defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
     }
+    
+    // 停止暂停恢复监控
+    center.stopMonitoring([pauseResumeActivity])
+    print("【手动恢复】已停止暂停恢复监控")
     
     emitState("resumed")
     print("【手动恢复成功】屏蔽已恢复")

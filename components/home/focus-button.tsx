@@ -120,14 +120,14 @@ const FocusButton = observer(() => {
         store.stopVpn();
         store.setVpnState('close');
       }
-    } catch {}
+    } catch { }
   };
 
   const pauseFocus = () => {
     if (!pstore.cur_plan) return;
     if (Platform.OS === 'ios') {
       // console.log('暂停：', pstore.cur_plan);
-      NativeModules.NativeModule.pauseAppLimits(1);
+      NativeModules.NativeModule.pauseAppLimits();
     }
   };
 
@@ -256,7 +256,7 @@ const FocusButton = observer(() => {
         coinCost={1}
         coinBalance={BenefitStore.balance}
         onConfirm={pauseFocus}
-        onCancel={() => {}}
+        onCancel={() => { }}
         onClose={() => setShowPauseModal(false)}
       />
 
@@ -275,7 +275,7 @@ const FocusButton = observer(() => {
             : undefined
         }
         onConfirm={stopFocus}
-        onCancel={() => {}}
+        onCancel={() => { }}
         onClose={() => setShowStopModal(false)}
       />
     </>

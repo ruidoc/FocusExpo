@@ -126,8 +126,18 @@ const QuickStartPage = observer(() => {
     let now = dayjs();
     let cur_minute = now.hour() * 60 + now.minute();
     let cur_secend = cur_minute * 60 + now.second();
+    let select_apps = pstore.is_focus_mode
+      ? astore.focus_apps
+      : astore.shield_apps;
+    if (Platform.OS === 'ios') {
+      select_apps = astore.ios_selected_apps.map(
+        r => `${r.stableId}:${r.type}`,
+      );
+    }
     let from_data: CusPlan = {
       id: plan_id,
+      name: '一次性任务',
+      apps: select_apps,
       start: now.format('HH:mm'),
       start_min: cur_minute,
       start_sec: cur_secend,
@@ -138,14 +148,6 @@ const QuickStartPage = observer(() => {
       mode: mode,
     };
     pstore.addOncePlan(from_data);
-    let select_apps = pstore.is_focus_mode
-      ? astore.focus_apps
-      : astore.shield_apps;
-    if (Platform.OS === 'ios') {
-      select_apps = astore.ios_selected_apps.map(
-        r => `${r.stableId}:${r.type}`,
-      );
-    }
     rstore.addRecord(from_data, select_apps, customBet);
   };
 
@@ -334,7 +336,7 @@ const QuickStartPage = observer(() => {
           visible={pickerVisible}
           defaultMinutes={minute}
           onConfirm={m => setMinute(m)}
-          onCancel={() => {}}
+          onCancel={() => { }}
           onClose={() => setPickerVisible(false)}
         />
       </View>

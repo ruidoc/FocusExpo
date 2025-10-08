@@ -185,7 +185,7 @@ class PlanStore {
       let res: HttpRes = await http.post('/plan/add', form_data);
       if (res.statusCode === 200) {
         fun(res);
-        this.getPlans();
+        this.getPlans(null, () => this.setScheduleIOS());
       } else {
         Toast(res.message);
         fun();
@@ -208,7 +208,7 @@ class PlanStore {
       let res: HttpRes = await http.put(`/plan/edit/${id}`, form_data);
       if (res.statusCode === 200) {
         fun(res);
-        this.getPlans();
+        this.getPlans(null, () => this.setScheduleIOS());
         this.clearEditingPlan(); // 编辑成功后清除编辑状态
       } else {
         Toast(res.message);
@@ -224,13 +224,7 @@ class PlanStore {
     try {
       let res: HttpRes = await http.get('/plan/lists', { params });
       if (res.statusCode === 200) {
-        let plans_count = storage.getString('cus_plans_count');
         this.setCusPlans(res.data);
-        // console.log('【周期计划数量】: ', plans_count, res.data.length);
-        if (!plans_count || plans_count !== `${res.data.length}`) {
-          this.setScheduleIOS();
-          storage.set('cus_plans_count', `${res.data.length}`);
-        }
         if (fun) fun(res);
       }
     } catch (error) {
@@ -243,7 +237,7 @@ class PlanStore {
       let res: HttpRes = await http.delete('/plan/remove/' + id);
       if (res.statusCode === 200) {
         if (fun) fun(res);
-        await this.getPlans();
+        await this.getPlans(null, () => this.setScheduleIOS());
         // iOS: 删除后需要重新同步周期任务至原生
         try {
           const plans = this.cus_plans
