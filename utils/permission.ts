@@ -47,10 +47,14 @@ export interface AppSelectionResult {
 // 选择要限制的应用
 export async function selectAppsToLimit(
   maxCount: number = 0,
+  apps?: string[],
 ): Promise<AppSelectionResult> {
   if (Platform.OS !== 'ios') return { success: false };
   try {
-    let result = await NativeModules.NativeModule.selectAppsToLimit(maxCount);
+    let result = await NativeModules.NativeModule.selectAppsToLimit(
+      maxCount,
+      apps || null,
+    );
     console.log('selectAppsToLimit result', result);
     if (result.success) {
       return result as AppSelectionResult;

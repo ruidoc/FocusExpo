@@ -296,86 +296,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         }
     }
     
-    /// 根据计划中的应用列表构建屏蔽设置
+    /// 根据计划中的应用列表构建屏蔽设置（使用共享方法）
     /// - Returns: 构建好的 FamilyActivitySelection，如果失败返回 nil
     private func buildShieldSelectionFromPlanApps(_ apps: [String]) -> FamilyActivitySelection? {
-        guard let defaults = UserDefaults(suiteName: "group.com.focusone") else {
-            print("【屏蔽设置错误】无法获取 UserDefaults")
-            return nil
-        }
-        
-        // 1. 从 apps 中提取 stableIds
-        let stableIds = apps.compactMap { appString in
-            let components = appString.components(separatedBy: ":")
-            return components.count >= 2 ? components[0] : nil
-        }
-        
-        guard !stableIds.isEmpty else {
-            print("【屏蔽设置】计划中无有效应用")
-            return nil
-        }
-         
-        // 2. 从 UserDefaults 读取 ios_all_apps 数据
-        guard let iosAllAppsData = defaults.string(forKey: "ios_all_apps"),
-              let data = iosAllAppsData.data(using: .utf8),
-              let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            print("【屏蔽设置错误】无法读取 ios_all_apps 数据")
-            return nil
-        }
-        let iosAllApps = jsonArray
-        
-        // 3. 根据 stableId 筛选出对应的应用数据
-        let filteredApps = iosAllApps.filter { app in
-            guard let stableId = app["stableId"] as? String else { return false }
-            return stableIds.contains(stableId)
-        }
-        
-        guard !filteredApps.isEmpty else {
-            print("【屏蔽设置】未找到匹配的应用数据")
-            return nil
-        }
-        
-        // 4. 构建 FamilyActivitySelection
-        var selection = FamilyActivitySelection()
-        var successCount = 0
-        
-        for app in filteredApps {
-            guard let tokenDataBase64 = app["tokenData"] as? String,
-                  let tokenData = Data(base64Encoded: tokenDataBase64),
-                  let type = app["type"] as? String else {
-                print("【屏蔽设置】应用数据不完整: \(app)")
-                continue
-            }
-            
-            do {
-                switch type {
-                case "application":
-                    let token = try JSONDecoder().decode(ApplicationToken.self, from: tokenData)
-                    selection.applicationTokens.insert(token)
-                    successCount += 1
-                    
-                case "webDomain":
-                    let token = try JSONDecoder().decode(WebDomainToken.self, from: tokenData)
-                    selection.webDomainTokens.insert(token)
-                    successCount += 1
-                    
-                case "category":
-                    let token = try JSONDecoder().decode(ActivityCategoryToken.self, from: tokenData)
-                    selection.categoryTokens.insert(token)
-                    successCount += 1
-                    
-                default:
-                    print("【屏蔽设置】未知的应用类型: \(type)")
-                    continue
-                }
-            } catch {
-                print("【屏蔽设置】Token 解码失败: \(error.localizedDescription)")
-                continue
-            }
-        }
-        
-        print("【屏蔽设置】成功构建屏蔽设置，应用数量: \(selection.applicationTokens.count), 网站数量: \(selection.webDomainTokens.count), 类别数量: \(selection.categoryTokens.count)")
-        return successCount > 0 ? selection : nil
+        return Helper.buildSelectionFromApps(apps)
     }
     
     /// 使用计划数据创建专注记录

@@ -33,6 +33,7 @@ type FormState = {
   end_date: Date;
   repeat: number[] | 'once';
   mode: 'focus' | 'shield';
+  apps: string[];
 };
 
 const App = observer(() => {
@@ -152,6 +153,7 @@ const App = observer(() => {
         end,
         start_date,
         end_date,
+        apps: plan.apps,
         repeat: Array.isArray(plan.repeat)
           ? plan.repeat
           : (parseRepeat(plan.repeat) as number[]),
@@ -172,6 +174,7 @@ const App = observer(() => {
       end_date: tomorrow,
       repeat: [1, 2, 3, 4, 5],
       mode: 'shield',
+      apps: [],
     };
   });
 
@@ -314,8 +317,9 @@ const App = observer(() => {
   };
 
   // 选择应用函数
-  const selectApps = () => {
-    selectAppsToLimit()
+  const selectApps = (apps: string[]) => {
+    console.log('选择默认的应用列表：', apps);
+    selectAppsToLimit(0, apps)
       .then(data => {
         if (data.success && data.apps) {
           // 同时存储到AppStore和当前组件状态
@@ -458,7 +462,9 @@ const App = observer(() => {
             column
             bottom={16}
             action={
-              <Pressable onPress={selectApps} style={styles.selectApps}>
+              <Pressable
+                onPress={() => selectApps(form.apps)}
+                style={styles.selectApps}>
                 <Icon name="add" size={16} color="#B3B3BA" />
                 <Text style={{ color: '#858699', fontSize: 13 }}>选择</Text>
               </Pressable>

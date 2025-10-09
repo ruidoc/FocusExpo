@@ -10,6 +10,8 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		145AACC62E79B9A600E55C88 /* Networking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 145AACC32E79B9A600E55C88 /* Networking.swift */; };
 		145AACC72E79B9A600E55C88 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 145AACC42E79B9A600E55C88 /* Storage.swift */; };
+		145AACC82E79B9A600E55C88 /* Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 145AACC92E79B9A600E55C88 /* Helper.swift */; };
+		145AACCA2E79B9A600E55C88 /* Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 145AACC92E79B9A600E55C88 /* Helper.swift */; };
 		14663DC12DF02EDD00B0C458 /* NativeModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 14663DC02DF02EDD00B0C458 /* NativeModuleBridge.m */; };
 		14663DC22DF02EDD00B0C458 /* NativeModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14663DBF2DF02EDD00B0C458 /* NativeModule.swift */; };
 		14663DD42DF03E7300B0C458 /* ReportExtension.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 14663DC82DF03E7200B0C458 /* ReportExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -88,6 +90,7 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = FocusOne/Info.plist; sourceTree = "<group>"; };
 		145AACC32E79B9A600E55C88 /* Networking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking.swift; sourceTree = "<group>"; };
 		145AACC42E79B9A600E55C88 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		145AACC92E79B9A600E55C88 /* Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helper.swift; sourceTree = "<group>"; };
 		14663DBB2DF0292E00B0C458 /* FamilyControls.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FamilyControls.framework; path = System/Library/Frameworks/FamilyControls.framework; sourceTree = SDKROOT; };
 		14663DBD2DF0293E00B0C458 /* DeviceActivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DeviceActivity.framework; path = System/Library/Frameworks/DeviceActivity.framework; sourceTree = SDKROOT; };
 		14663DBF2DF02EDD00B0C458 /* NativeModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeModule.swift; sourceTree = "<group>"; };
@@ -222,6 +225,7 @@
 			children = (
 				145AACC32E79B9A600E55C88 /* Networking.swift */,
 				145AACC42E79B9A600E55C88 /* Storage.swift */,
+				145AACC92E79B9A600E55C88 /* Helper.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -599,6 +603,7 @@
 			files = (
 				145AACC62E79B9A600E55C88 /* Networking.swift in Sources */,
 				145AACC72E79B9A600E55C88 /* Storage.swift in Sources */,
+				145AACC82E79B9A600E55C88 /* Helper.swift in Sources */,
 				14663DC12DF02EDD00B0C458 /* NativeModuleBridge.m in Sources */,
 				14663DC22DF02EDD00B0C458 /* NativeModule.swift in Sources */,
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
@@ -628,6 +633,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				14F011BC2E7C3A7900B3F812 /* Networking.swift in Sources */,
+				145AACCA2E79B9A600E55C88 /* Helper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

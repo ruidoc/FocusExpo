@@ -289,7 +289,7 @@ class NativeModule: RCTEventEmitter {
   // 选择要限制的应用
   // maxCount: 0 表示不限制；>0 表示限制选择数量并禁止分组
   @objc
-  func selectAppsToLimit(_ maxCount: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  func selectAppsToLimit(_ maxCount: NSNumber, apps: NSArray?, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     Task {
       do {
         // 确保已获取权限
@@ -303,8 +303,29 @@ class NativeModule: RCTEventEmitter {
             resolve(["success": false])
             return
           }
-          // 创建自定义选择器，默认带入上一次保存的选择
-          var selection = self.loadSelection() ?? FamilyActivitySelection()
+          
+          // 根据参数决定默认选择：
+          // 1. 传 null/undefined/不传：使用上次保存的选择（默认模式）
+          // 2. 传空数组 []：不选中任何应用（空选择器）
+          // 3. 传非空数组：选中指定的应用（编辑模式）
+          var selection: FamilyActivitySelection
+          
+          if let apps = apps as? [String] {
+            // apps 不为 nil，说明传了数组（可能为空或有元素）
+            if apps.isEmpty {
+              // 传了空数组，不选中任何应用
+              selection = FamilyActivitySelection()
+              print("【应用选择】传入空数组，不选中任何应用")
+            } else {
+              // 传了非空数组，选中指定应用
+              selection = Helper.buildSelectionFromApps(apps) ?? FamilyActivitySelection()
+              print("【应用选择】使用传入的应用列表，共 \(apps.count) 个应用")
+            }
+          } else {
+            // apps 为 nil（JS 传了 null/undefined 或不传参数），使用上次保存的选择
+            selection = self.loadSelection() ?? FamilyActivitySelection()
+            print("【应用选择】传入 null，使用上次保存的选择")
+          }
           
           let pickerViewController = UIHostingController(
             rootView: CustomFamilyActivityPicker(
