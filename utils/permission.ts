@@ -34,8 +34,8 @@ export interface AppDetail {
   id: string;
   name: string;
   type: 'application' | 'webDomain' | 'category';
-  tokenData?: string; // Base64编码的原生token数据，推荐使用
-  icon?: string; // 兼容旧字段
+  tokenData: string; // Base64编码的原生token数据，推荐使用
+  stableId: string; // 兼容旧字段
 }
 
 // 应用选择结果接口
@@ -47,13 +47,13 @@ export interface AppSelectionResult {
 // 选择要限制的应用
 export async function selectAppsToLimit(
   maxCount: number = 0,
-  apps?: string[],
+  apps: string[] | undefined = undefined,
 ): Promise<AppSelectionResult> {
   if (Platform.OS !== 'ios') return { success: false };
   try {
     let result = await NativeModules.NativeModule.selectAppsToLimit(
       maxCount,
-      apps || null,
+      apps ? apps.join() : 'null',
     );
     console.log('selectAppsToLimit result', result);
     if (result.success) {

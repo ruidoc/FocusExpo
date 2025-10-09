@@ -236,11 +236,6 @@ const App = observer(() => {
       subinfo.start_date = dayjs(start_date).format('YYYY-MM-DD');
       subinfo.end_date = dayjs(end_date).format('YYYY-MM-DD');
 
-      // 添加选择的应用到提交数据
-      if (Platform.OS === 'ios') {
-        subinfo.apps = selectedApps.map(r => `${r.stableId}:${r.type}`);
-      }
-
       // 根据模式调用不同的接口
       if (isEditing) {
         pstore.editPlan(pstore.editing_plan.id, subinfo, async res => {
@@ -325,6 +320,10 @@ const App = observer(() => {
           // 同时存储到AppStore和当前组件状态
           astore.addIosApps(data.apps);
           setSelectedApps(data.apps);
+          setForm({
+            ...form,
+            apps: data.apps.map(r => `${r.stableId}:${r.type}`),
+          });
         }
       })
       .catch(() => {
@@ -579,10 +578,10 @@ const App = observer(() => {
               预计重复次数：
               {Array.isArray(form.repeat)
                 ? calculateRepeatCount(
-                    form.start_date,
-                    form.end_date,
-                    form.repeat,
-                  )
+                  form.start_date,
+                  form.end_date,
+                  form.repeat,
+                )
                 : 0}{' '}
               次
             </Text>

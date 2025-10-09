@@ -46,18 +46,19 @@ class RecordStore {
     return `${mint}分钟`;
   }
 
-  addRecord = async (plan: CusPlan, apps: string[], bet_amount: number) => {
+  addRecord = async (plan: CusPlan, bet_amount: number) => {
     try {
       let res: HttpRes = await http.post('/record/add', {
         title: plan.name || '一次性任务',
         plan_id: plan.id,
         start_min: plan.start_min,
         total_min: plan.end_min - plan.start_min,
-        apps: apps,
+        apps: plan.apps,
         mode: plan.mode,
         base_amount: 0,
         bet_amount,
       });
+      console.log('添加记录结果：', res);
       if (res.statusCode === 200) {
         this.setRecordId(res.data.id);
       } else {
@@ -146,9 +147,9 @@ class RecordStore {
   };
 
   // 退出专注
-  exitRecord = async (plan_id: string) => {
+  exitRecord = async (record_id: string) => {
     try {
-      let res: HttpRes = await http.post('/record/fail/' + plan_id, {
+      let res: HttpRes = await http.post('/record/fail/' + record_id, {
         reason: 'user_exit',
       });
       if (res.statusCode === 200) {

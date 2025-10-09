@@ -6,7 +6,6 @@ import {
   RecordStore,
   UserStore,
 } from '@/stores';
-import { toast } from '@/utils';
 import { getIOSFocusStatus, stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, Theme } from '@fruits-chain/react-native-xiaoshu';
@@ -110,24 +109,23 @@ const FocusButton = observer(() => {
     try {
       if (Platform.OS === 'ios') {
         await stopAppLimits();
-        // await Notifications.cancelAllScheduledNotificationsAsync();
-        pstore.rmOncePlan(pstore.cur_plan.id);
-        pstore.exitPlan();
-        toast('专注任务失败！');
-        return;
+        // pstore.rmOncePlan(pstore.cur_plan.id);
+        // pstore.exitPlan();
       } else {
         // Android 维持原有逻辑
         store.stopVpn();
         store.setVpnState('close');
       }
-    } catch { }
+    } catch (error) {
+      console.log('stopFocus error', error);
+    }
   };
 
   const pauseFocus = () => {
     if (!pstore.cur_plan) return;
     if (Platform.OS === 'ios') {
       // console.log('暂停：', pstore.cur_plan);
-      NativeModules.NativeModule.pauseAppLimits();
+      NativeModules.NativeModule.pauseAppLimits(3);
     }
   };
 

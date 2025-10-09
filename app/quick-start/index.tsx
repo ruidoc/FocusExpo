@@ -148,7 +148,7 @@ const QuickStartPage = observer(() => {
       mode: mode,
     };
     pstore.addOncePlan(from_data);
-    rstore.addRecord(from_data, select_apps, customBet);
+    rstore.addRecord(from_data, customBet);
   };
 
   const selectApps = () => {

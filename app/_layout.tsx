@@ -81,7 +81,7 @@ export default function RootLayout() {
     const focusState = nativeListener.addListener(
       'focus-state',
       (payload: {
-        state: 'started' | 'ended' | 'paused' | 'resumed';
+        state: 'started' | 'ended' | 'paused' | 'resumed' | 'failed';
         type?: 'once' | 'periodic';
         reason?: string;
       }) => {
@@ -99,24 +99,20 @@ export default function RootLayout() {
           PlanStore.setCurrentPlanPause(false);
           // 重新同步状态并启动定时器
           syncIOSStatus();
+        } else if (payload?.state === 'failed') {
+          stopFocusTimer();
+          PlanStore.exitPlan();
+          // 清理本地的一次性任务
+          if (PlanStore.cur_plan?.repeat === 'once') {
+            PlanStore.rmOncePlan(PlanStore.cur_plan.id);
+          }
+          if (payload.reason === 'user_exit') {
+            console.log('【手动停止任务】');
+          }
         } else if (payload?.state === 'ended') {
           stopFocusTimer();
-          // 检查结束原因
-          if (payload.reason === 'user_exit') {
-            // 手动停止，RN端已调用exitPlan处理，只清理本地状态
-            console.log('【手动停止】清理本地状态，不调用后端');
-            RecordStore.removeRecordId();
-            PlanStore.setCurrentPlanPause(false);
-            PlanStore.setCurPlanMinute(0);
-            // 清理本地的一次性任务
-            if (PlanStore.cur_plan?.repeat === 'once') {
-              PlanStore.rmOncePlan(PlanStore.cur_plan.id);
-            }
-            PlanStore.resetPlan();
-          } else {
-            // 正常完成
-            PlanStore.complatePlan();
-          }
+          // 正常完成
+          PlanStore.complatePlan();
         }
       },
     );
@@ -140,6 +136,8 @@ export default function RootLayout() {
           if (PlanStore.cur_plan?.id === s.plan_id) {
             PlanStore.setCurrentPlanPause(s.paused);
           }
+        } else if (PlanStore.cur_plan) {
+          console.log('【专注同步错误】');
         } else {
           // 专注已结束，停止定时器
           stopFocusTimer();

@@ -49,12 +49,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     /// 3. 清理共享状态数据
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
+
+        guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
+        
+        if defaults.bool(forKey: "FocusOne.TaskFailed") { return }
         
         // 检查是否是暂停恢复活动，如果是则跳过处理
-        if activity.rawValue == "FocusOne.PauseResume" {
-            print("【Extension】暂停恢复活动结束，跳过处理")
-            return
-        }
+        if activity.rawValue == "FocusOne.PauseResume" { return }
         
         // 到点自动清理屏蔽
         let store = ManagedSettingsStore()
@@ -90,6 +91,8 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
         
+        if defaults.bool(forKey: "FocusOne.TaskFailed") { return }
+
         // 区分暂停恢复 vs 正常任务
         if activity.rawValue == "FocusOne.PauseResume" {
             // 检查是否仍在暂停中（防止手动恢复后重复触发）

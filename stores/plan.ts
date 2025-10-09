@@ -74,10 +74,6 @@ class PlanStore {
   // 专注计划完成
   complatePlan = async () => {
     console.log('【专注计划完成】');
-    // let record_id = RecordStore.record_id;
-    // if (record_id) {
-    //   await RecordStore.completeRecord(record_id);
-    // }
     RecordStore.removeRecordId();
     this.setCurrentPlanPause(false);
     this.setCurPlanMinute(0);
@@ -86,14 +82,15 @@ class PlanStore {
 
   // 专注计划终止
   exitPlan = async () => {
-    let record_id = RecordStore.record_id;
+    let record_id = storage.getString('record_id');
+    console.log('record_id：', record_id);
     if (record_id) {
       await RecordStore.exitRecord(record_id);
+      RecordStore.removeRecordId();
+      this.setCurrentPlanPause(false);
+      this.setCurPlanMinute(0);
+      this.resetPlan();
     }
-    RecordStore.removeRecordId();
-    this.setCurrentPlanPause(false);
-    this.setCurPlanMinute(0);
-    this.resetPlan();
   };
 
   // 更新计划列表（Android原生占位，iOS不同步）

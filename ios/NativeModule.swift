@@ -289,7 +289,7 @@ class NativeModule: RCTEventEmitter {
   // 选择要限制的应用
   // maxCount: 0 表示不限制；>0 表示限制选择数量并禁止分组
   @objc
-  func selectAppsToLimit(_ maxCount: NSNumber, apps: NSArray?, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  func selectAppsToLimit(_ maxCount: NSNumber, apps: NSString, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     Task {
       do {
         // 确保已获取权限
@@ -297,6 +297,8 @@ class NativeModule: RCTEventEmitter {
           try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
         }
         
+        let appsString = (apps as String).trimmingCharacters(in: .whitespacesAndNewlines)
+
         // 在主线程显示应用选择器
         DispatchQueue.main.async { [weak self] in
           guard let self = self else {
@@ -304,27 +306,25 @@ class NativeModule: RCTEventEmitter {
             return
           }
           
-          // 根据参数决定默认选择：
-          // 1. 传 null/undefined/不传：使用上次保存的选择（默认模式）
-          // 2. 传空数组 []：不选中任何应用（空选择器）
-          // 3. 传非空数组：选中指定的应用（编辑模式）
+          // 根据字符串参数决定默认选择：
+          // 1. 'null'（或 nil）：使用上次保存的选择
+          // 2. ''：不选中任何应用
+          // 3. 其他字符串：按逗号拆分为 token 列表，选中指定应用
           var selection: FamilyActivitySelection
-          
-          if let apps = apps as? [String] {
-            // apps 不为 nil，说明传了数组（可能为空或有元素）
-            if apps.isEmpty {
-              // 传了空数组，不选中任何应用
-              selection = FamilyActivitySelection()
-              print("【应用选择】传入空数组，不选中任何应用")
-            } else {
-              // 传了非空数组，选中指定应用
-              selection = Helper.buildSelectionFromApps(apps) ?? FamilyActivitySelection()
-              print("【应用选择】使用传入的应用列表，共 \(apps.count) 个应用")
-            }
-          } else {
-            // apps 为 nil（JS 传了 null/undefined 或不传参数），使用上次保存的选择
+          if appsString.lowercased() == "null" {
             selection = self.loadSelection() ?? FamilyActivitySelection()
-            print("【应用选择】传入 null，使用上次保存的选择")
+          } else if appsString.isEmpty {
+            selection = FamilyActivitySelection()
+          } else {
+            let tokens = appsString
+              .split(separator: ",")
+              .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+              .filter { !$0.isEmpty }
+            if tokens.isEmpty {
+              selection = self.loadSelection() ?? FamilyActivitySelection()
+            } else {
+              selection = Helper.buildSelectionFromApps(tokens) ?? FamilyActivitySelection()
+            }
           }
           
           let pickerViewController = UIHostingController(
@@ -340,10 +340,8 @@ class NativeModule: RCTEventEmitter {
                 if success {
                   // 用户点击完成
                   self.saveSelection(selection: selection)
-                  
                   // 获取应用详细信息
                   let appDetails = self.getSelectedAppDetails(from: selection)
-                  
                   // 返回选择结果
                   resolve([
                     "success": true,
@@ -525,8 +523,9 @@ class NativeModule: RCTEventEmitter {
     store.clearAllSettings()
     emitEnded()
     invalidateTimer()
+
     // 手动停止发送 user_exit 原因
-    emitState("ended", extra: ["reason": "user_exit"])
+    emitState("failed", extra: ["reason": "user_exit"])
     if let defaults = UserDefaults.groupUserDefaults() {
       defaults.removeObject(forKey: "FocusOne.FocusStartAt")
       defaults.removeObject(forKey: "FocusOne.FocusEndAt")
