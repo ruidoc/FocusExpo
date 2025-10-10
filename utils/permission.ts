@@ -91,10 +91,10 @@ export async function stopAppLimits(): Promise<boolean> {
   if (Platform.OS !== 'ios') return false;
   try {
     let result = await NativeModules.NativeModule.stopAppLimits();
-    console.log('stopAppLimits result', result);
+    console.log('停止任务结果：', result);
     return result;
   } catch (error) {
-    console.log('stopAppLimits error', error);
+    console.log('停止任务错误：', error);
     return false;
   }
 }

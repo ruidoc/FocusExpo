@@ -5,8 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { buttonRipple, ScreenOptions } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
-import { RecordStore } from '@/stores';
-import PlanStore from '@/stores/plan';
+import { AppStore, PlanStore, RecordStore } from '@/stores';
 import { storage } from '@/utils';
 import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -30,6 +29,7 @@ export default function RootLayout() {
   const delay = useRef(null);
 
   const asyncData = async () => {
+    AppStore.getIosApps();
     const once_plans = storage.getString('once_plans');
     const cus_plans = storage.getString('cus_plans');
     if (once_plans) {
@@ -116,6 +116,11 @@ export default function RootLayout() {
         }
       },
     );
+    const appState = AppState.addEventListener('change', state => {
+      if (isIOS && state === 'active') {
+        syncIOSStatus();
+      }
+    });
     asyncData();
     const syncIOSStatus = async () => {
       if (!isIOS) return;
@@ -153,11 +158,7 @@ export default function RootLayout() {
     if (isIOS) {
       syncIOSStatus();
     }
-    const appState = AppState.addEventListener('change', state => {
-      if (isIOS && state === 'active') {
-        syncIOSStatus();
-      }
-    });
+
     return () => {
       focusState?.remove?.();
       appState?.remove?.();

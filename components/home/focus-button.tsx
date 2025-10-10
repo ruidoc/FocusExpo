@@ -1,5 +1,4 @@
 import {
-  AppStore,
   BenefitStore,
   HomeStore,
   PlanStore,
@@ -9,7 +8,6 @@ import {
 import { getIOSFocusStatus, stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, Theme } from '@fruits-chain/react-native-xiaoshu';
-import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
@@ -28,9 +26,7 @@ const FocusButton = observer(() => {
   const ustore = useLocalObservable(() => UserStore);
   const pstore = useLocalObservable(() => PlanStore);
   const store = useLocalObservable(() => HomeStore);
-  const astore = useLocalObservable(() => AppStore);
   const rstore = useLocalObservable(() => RecordStore);
-  const { dark } = useTheme();
   const xcolor = Theme.useThemeTokens();
 
   // 弹窗状态
@@ -39,16 +35,6 @@ const FocusButton = observer(() => {
   const [stopCost, setStopCost] = useState<number>(0);
   // 暂停倒计时
   const [pauseRemaining, setPauseRemaining] = useState<number>(0);
-
-  const getStateName = () => {
-    if (pstore.cur_plan) {
-      return pstore.paused ? '已暂停' : '正在专注中';
-    }
-    switch (store.vpn_state) {
-      default:
-        return '当前无任务';
-    }
-  };
 
   const styles = StyleSheet.create({
     btnFont: {
@@ -109,8 +95,6 @@ const FocusButton = observer(() => {
     try {
       if (Platform.OS === 'ios') {
         await stopAppLimits();
-        // pstore.rmOncePlan(pstore.cur_plan.id);
-        // pstore.exitPlan();
       } else {
         // Android 维持原有逻辑
         store.stopVpn();
@@ -254,7 +238,7 @@ const FocusButton = observer(() => {
         coinCost={1}
         coinBalance={BenefitStore.balance}
         onConfirm={pauseFocus}
-        onCancel={() => { }}
+        onCancel={() => {}}
         onClose={() => setShowPauseModal(false)}
       />
 
@@ -273,7 +257,7 @@ const FocusButton = observer(() => {
             : undefined
         }
         onConfirm={stopFocus}
-        onCancel={() => { }}
+        onCancel={() => {}}
         onClose={() => setShowStopModal(false)}
       />
     </>

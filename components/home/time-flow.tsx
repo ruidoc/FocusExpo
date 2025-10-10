@@ -1,7 +1,7 @@
 import { BenefitStore, PlanStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { observer, useLocalObservable } from 'mobx-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   StyleSheet,
@@ -66,16 +66,18 @@ const TimeFlow = observer(() => {
   const zeroProgressDashoffset = circumference - minVisibleArcLength;
   // 进度动画：首帧从0到当前值，之后每次变更平滑过渡
   const [progressAnim] = useState(new Animated.Value(0));
-  const [didInitAnim, setDidInitAnim] = useState(false);
+  const didInitAnimRef = useRef(false);
   useEffect(() => {
     progressAnim.stopAnimation();
-    if (!didInitAnim) {
+    if (!didInitAnimRef.current) {
       progressAnim.setValue(0);
       Animated.timing(progressAnim, {
         toValue: progress,
         duration: 400,
         useNativeDriver: false,
-      }).start(() => setDidInitAnim(true));
+      }).start(() => {
+        didInitAnimRef.current = true;
+      });
     } else {
       Animated.timing(progressAnim, {
         toValue: progress,
@@ -83,10 +85,10 @@ const TimeFlow = observer(() => {
         useNativeDriver: false,
       }).start();
     }
-  }, [progress, didInitAnim, progressAnim]);
+  }, [progress, progressAnim]);
   // 当切换/重置计划时，重置首帧动画
   useEffect(() => {
-    setDidInitAnim(false);
+    didInitAnimRef.current = false;
     progressAnim.setValue(0);
   }, [pstore.cur_plan?.id, progressAnim]);
   const animatedDashoffset = progressAnim.interpolate({

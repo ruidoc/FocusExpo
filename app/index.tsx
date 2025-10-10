@@ -1,4 +1,4 @@
-import { AppStore, HomeStore, PermisStore, UserStore } from '@/stores';
+import { HomeStore, PermisStore } from '@/stores';
 import { checkScreenTimePermission } from '@/utils/permission';
 import { Redirect } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -6,16 +6,13 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 
 const Index = observer(() => {
-  const store = useLocalObservable(() => UserStore);
   const hstore = useLocalObservable(() => HomeStore);
-  const astore = useLocalObservable(() => AppStore);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const initAction = async () => {
       if (Platform.OS === 'ios') {
         try {
-          await astore.getIosApps();
           const screenTimeStatus = await checkScreenTimePermission();
           const isApproved = screenTimeStatus === 'approved';
           hstore.setIOSScreenTimePermission(isApproved);

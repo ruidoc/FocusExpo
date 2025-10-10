@@ -305,51 +305,10 @@ const App = observer(() => {
         {/* 顶部Header */}
         <Header />
 
-        {/* 专注提醒通知 */}
-        {/* {ustore.uInfo && <FocusNotice />} */}
-
-        {/* 管理入口（当没有计划时显示） */}
-        {/* {!pstore.cur_plan && <ManageEntry />} */}
-
         {/* 中央时间流动组件 */}
         <View style={styles.timeFlowContainer}>
           <FocusButton />
         </View>
-
-        {/* 应用展示区域（如果有当前计划） */}
-        {/* {pstore.cur_plan && (
-          <View style={styles.appsContainer}>
-            <Text style={styles.appsDescription}>
-              已屏蔽的应用
-            </Text>
-            <View style={styles.appsGrid}>
-              {Platform.OS === 'ios'
-                ? astore.ios_selected_apps.map(item => (
-                    <AppToken key={item.id} app={item} size={40} />
-                  ))
-                : store.all_apps
-                    .filter(r => apps.includes(r.packageName))
-                    .map(app => (
-                      <TouchableOpacity
-                        key={app.packageName}
-                        style={styles.appIconWrapper}
-                        onPress={() => toOpenApp(app.packageName)}>
-                        <Image
-                          source={{
-                            uri: 'data:image/jpeg;base64,' + app.icon,
-                            width: 36,
-                            height: 36,
-                          }}
-                          style={{
-                            opacity: pstore.is_focus_mode ? 1 : 0.6,
-                            borderRadius: 8,
-                          }}
-                        />
-                      </TouchableOpacity>
-                    ))}
-            </View>
-          </View>
-        )} */}
       </ScrollView>
       {/* 通知权限提醒 */}
       {!pmstore.pm_notify && (
