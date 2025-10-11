@@ -88,5 +88,21 @@ export const getWeekDates = () => {
   return weekDates;
 };
 
+// 分钟转几小时几分钟
+export const minutesToHours = (minutes: number): string => {
+  if (minutes < 0) return '0分钟';
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours === 0) {
+    return `${remainingMinutes}分钟`;
+  } else if (remainingMinutes === 0) {
+    return `${hours}h`;
+  } else {
+    return `${hours}h${remainingMinutes} 分钟`;
+  }
+};
+
 // 重新导出存储实例和相关工具
 export { storage } from './storage';

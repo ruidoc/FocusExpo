@@ -1,6 +1,7 @@
 import { getCurrentMinute, parseRepeat, storage } from '@/utils';
 import http from '@/utils/request';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
+import dayjs from 'dayjs';
 import { makeAutoObservable } from 'mobx';
 import { NativeModules } from 'react-native';
 import { BenefitStore, RecordStore } from '.';
@@ -15,8 +16,9 @@ class PlanStore {
   once_plans: CusPlan[] = []; // 一次性任务列表
   cur_plan: CusPlan = null; // 当前任务
   next_plan: CusPlan = null; // 下一个
-  paused: boolean = false; // 是否处于暂停中（iOS）
   editing_plan: CusPlan | null = null; // 当前编辑的任务
+  paused_plan_id: string = ''; // 暂停中的任务
+  exit_plan_ids: string[] = []; // 退出任务ID列表
 
   // 当前任务已运行时长，退出重进后重新计时
   curplan_minute: number = 0;
@@ -26,6 +28,9 @@ class PlanStore {
   }
   get all_plans() {
     return [...this.cus_plans, ...this.once_plans];
+  }
+  get is_pause() {
+    return this.cur_plan && this.cur_plan.id === this.paused_plan_id;
   }
 
   setCusPlans = (plans: any[]) => {
@@ -42,11 +47,27 @@ class PlanStore {
     storage.set('once_plans', JSON.stringify(plans));
   };
 
+  addExitPlanIds = (id: string) => {
+    // 拼接字符串为当天日期+id
+    let date = dayjs().format('YYYY-MM-DD');
+    this.setExitPlanIds([...this.exit_plan_ids, `${date}:${id}`]);
+  };
+
+  setExitPlanIds = (ids: string[]) => {
+    let date = dayjs().format('YYYY-MM-DD');
+    console.log('退出任务列表', ids)
+    let today_ids = ids.filter(r => r.includes(date));
+    this.exit_plan_ids = today_ids;
+    storage.set('exit_plan_ids', today_ids.join(','));
+    this.resetPlan()
+  };
+
   setCurPlanMinute = (minute: number) => {
     this.curplan_minute = minute;
   };
-  setPaused = (v: boolean) => {
-    this.paused = v;
+  setPaused = (id: string) => {
+    this.paused_plan_id = id;
+    storage.set('paused_plan_id', id);
   };
 
   // 编辑任务相关方法
@@ -59,23 +80,26 @@ class PlanStore {
   };
 
   // 设置当前任务的暂停状态，并同步到列表中
-  setCurrentPlanPause = async (paused: boolean) => {
+  pauseCurPlan = async (paused: boolean) => {
     let record_id = RecordStore.record_id;
     if (paused && record_id) {
       BenefitStore.subBalance();
       await RecordStore.pauseRecord(record_id);
     }
     if (this.cur_plan) {
-      this.cur_plan.is_pause = paused;
+      if (paused) {
+        this.setPaused(this.cur_plan.id);
+      } else {
+        this.setPaused('');
+      }
     }
-    this.setPaused(paused);
   };
 
   // 专注计划完成
   complatePlan = async () => {
     console.log('【专注计划完成】');
     RecordStore.removeRecordId();
-    this.setCurrentPlanPause(false);
+    this.pauseCurPlan(false);
     this.setCurPlanMinute(0);
     this.resetPlan();
   };
@@ -83,11 +107,10 @@ class PlanStore {
   // 专注计划终止
   exitPlan = async () => {
     let record_id = storage.getString('record_id');
-    console.log('record_id：', record_id);
     if (record_id) {
       await RecordStore.exitRecord(record_id);
       RecordStore.removeRecordId();
-      this.setCurrentPlanPause(false);
+      this.pauseCurPlan(false);
       this.setCurPlanMinute(0);
       this.resetPlan();
     }
@@ -105,16 +128,6 @@ class PlanStore {
     }));
     console.log('计划列表：', plan_arrs);
     // NativeClass.setTimerange(JSON.stringify(plan_arrs));
-  };
-
-  setCurPlan = (id: string, is_pause: boolean) => {
-    let cur_plan = this.all_plans.find(p => p.id === id);
-    if (cur_plan) {
-      cur_plan.is_pause = is_pause;
-      this.cur_plan = cur_plan;
-    } else {
-      this.resetPlan();
-    }
   };
 
   // iOS 定时屏蔽配置：与保存计划并行执行
@@ -158,7 +171,7 @@ class PlanStore {
 
     // 查找当前正在进行中的计划
     this.cur_plan =
-      filteredPlans.find(p => minutes >= p.start_min && minutes < p.end_min) ||
+      filteredPlans.find(p => minutes >= p.start_min && minutes < p.end_min && !this.exit_plan_ids.includes(`${dayjs().format('YYYY-MM-DD')}:${p.id}`)) ||
       null;
 
     // 查找下一个计划（同日内开始时间在当前之后的第一个）
@@ -217,8 +230,13 @@ class PlanStore {
     }
   };
 
-  getPlans = async (params = {}, fun?: (data?: HttpRes) => void) => {
+  getPlans = async (params: any = {}, fun?: (data?: HttpRes) => void) => {
     try {
+      if (!params || !params.date) {
+        params = {
+          date: dayjs().format('YYYY-MM-DD')
+        }
+      }
       let res: HttpRes = await http.get('/plan/lists', { params });
       if (res.statusCode === 200) {
         this.setCusPlans(res.data);

@@ -23,7 +23,6 @@ interface CusPlan {
   // 定时任务：使用多选周几（1..7，周一..周日），一次性任务仍使用 'once'
   repeat: 'once' | number[];
   mode: 'focus' | 'shield';
-  is_pause?: boolean; // 是否暂停
   apps?: string[]; // 选择的应用列表，格式为 "id:type"
 }
 

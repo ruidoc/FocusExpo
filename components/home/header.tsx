@@ -1,4 +1,5 @@
 import { RecordStore, UserStore } from '@/stores';
+import { minutesToHours } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -43,7 +44,7 @@ const Header: React.FC<HeaderProps> = observer(() => {
           {getGreeting()}，{getUserName()}！
         </Text>
         <Text style={styles.encouragementText}>
-          今日已专注 {rstore.actual_mins} 分钟 👍
+          今日已专注 {minutesToHours(rstore.actual_mins)} 👍
         </Text>
       </View>
 

@@ -77,7 +77,7 @@ const FocusButton = observer(() => {
   } else {
     descDom = (
       <Text style={styles.descFont}>
-        {pstore.cur_plan.repeat === 'once' ? '一次性任务' : '定时任务'}
+        {pstore.cur_plan.name || '一次性任务'}
         {` · ${pstore.cur_plan.end} 结束`}
       </Text>
     );
@@ -122,7 +122,7 @@ const FocusButton = observer(() => {
 
   // 暂停倒计时逻辑
   useEffect(() => {
-    if (!pstore.cur_plan?.is_pause || Platform.OS !== 'ios') {
+    if (!pstore.is_pause || Platform.OS !== 'ios') {
       setPauseRemaining(0);
       return;
     }
@@ -144,7 +144,7 @@ const FocusButton = observer(() => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [pstore.cur_plan?.is_pause]);
+  }, [pstore.is_pause]);
 
   // 格式化倒计时显示
   const formatPauseTime = (seconds: number) => {
@@ -162,7 +162,7 @@ const FocusButton = observer(() => {
         <View>
           {descDom}
           {/* 暂停倒计时显示 */}
-          {pstore.cur_plan?.is_pause && pauseRemaining > 0 && (
+          {pstore.is_pause && pauseRemaining > 0 && (
             <Text
               style={[
                 styles.descFont,
@@ -184,7 +184,7 @@ const FocusButton = observer(() => {
             <Icon name="play" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {pstore.cur_plan && !pstore.cur_plan.is_pause && (
+        {pstore.cur_plan && !pstore.is_pause && (
           <TouchableOpacity
             onPress={() => setShowPauseModal(true)}
             activeOpacity={0.8}
@@ -192,7 +192,7 @@ const FocusButton = observer(() => {
             <Icon name="pause" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {pstore.cur_plan?.is_pause && (
+        {pstore.is_pause && (
           <TouchableOpacity
             onPress={resumeFocus}
             activeOpacity={0.8}
@@ -238,7 +238,7 @@ const FocusButton = observer(() => {
         coinCost={1}
         coinBalance={BenefitStore.balance}
         onConfirm={pauseFocus}
-        onCancel={() => {}}
+        onCancel={() => { }}
         onClose={() => setShowPauseModal(false)}
       />
 
@@ -257,7 +257,7 @@ const FocusButton = observer(() => {
             : undefined
         }
         onConfirm={stopFocus}
-        onCancel={() => {}}
+        onCancel={() => { }}
         onClose={() => setShowStopModal(false)}
       />
     </>

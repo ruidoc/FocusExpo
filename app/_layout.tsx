@@ -32,11 +32,19 @@ export default function RootLayout() {
     AppStore.getIosApps();
     const once_plans = storage.getString('once_plans');
     const cus_plans = storage.getString('cus_plans');
+    const exit_plan_ids = storage.getString('exit_plan_ids');
+    const paused_plan_id = storage.getString('paused_plan_id');
     if (once_plans) {
       PlanStore.setOncePlans(JSON.parse(once_plans));
     }
     if (cus_plans) {
       PlanStore.setCusPlans(JSON.parse(cus_plans));
+    }
+    if (exit_plan_ids) {
+      PlanStore.setExitPlanIds(exit_plan_ids.split(','));
+    }
+    if (paused_plan_id) {
+      PlanStore.setPaused(paused_plan_id);
     }
   };
 
@@ -92,20 +100,22 @@ export default function RootLayout() {
         } else if (payload?.state === 'paused') {
           // 暂停时停止定时器
           stopFocusTimer();
-          PlanStore.setCurrentPlanPause(true);
+          PlanStore.pauseCurPlan(true);
         } else if (payload?.state === 'resumed') {
           // 恢复时重启定时器
           stopFocusTimer(); // 先停止旧定时器
-          PlanStore.setCurrentPlanPause(false);
+          PlanStore.pauseCurPlan(false);
           // 重新同步状态并启动定时器
           syncIOSStatus();
         } else if (payload?.state === 'failed') {
           stopFocusTimer();
-          PlanStore.exitPlan();
           // 清理本地的一次性任务
           if (PlanStore.cur_plan?.repeat === 'once') {
             PlanStore.rmOncePlan(PlanStore.cur_plan.id);
+          } else {
+            PlanStore.addExitPlanIds(PlanStore.cur_plan.id);
           }
+          PlanStore.exitPlan();
           if (payload.reason === 'user_exit') {
             console.log('【手动停止任务】');
           }
@@ -139,7 +149,7 @@ export default function RootLayout() {
             PlanStore.resetPlan();
           }
           if (PlanStore.cur_plan?.id === s.plan_id) {
-            PlanStore.setCurrentPlanPause(s.paused);
+            PlanStore.pauseCurPlan(s.paused);
           }
         } else if (PlanStore.cur_plan) {
           console.log('【专注同步错误】');

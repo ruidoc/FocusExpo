@@ -40,10 +40,6 @@ const App = observer(() => {
   const scrollViewRef = useRef<ScrollView>(null);
   const { colors } = useCustomTheme();
 
-  const initapp = useCallback(async () => {
-    store.getPlans();
-  }, [store]);
-
   const toRoute = useCallback(
     (path: string) => {
       (navigation as any).navigate(path);
@@ -73,10 +69,13 @@ const App = observer(() => {
     toRoute('plans/add');
   };
 
+  const initPlans = () => {
+    return store.getPlans();
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
-    const dateStr = selectedDate.toISOString().split('T')[0];
-    store.getPlans({ date: dateStr }).finally(() => {
+    initPlans().finally(() => {
       setRefreshing(false);
     });
   };
@@ -111,8 +110,8 @@ const App = observer(() => {
   };
 
   useEffect(() => {
-    initapp();
-  }, [initapp]);
+    initPlans();
+  }, []);
 
   useEffect(() => {
     navigation.setOptions({
