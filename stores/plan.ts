@@ -55,11 +55,11 @@ class PlanStore {
 
   setExitPlanIds = (ids: string[]) => {
     let date = dayjs().format('YYYY-MM-DD');
-    console.log('退出任务列表', ids)
+    console.log('退出任务列表', ids);
     let today_ids = ids.filter(r => r.includes(date));
     this.exit_plan_ids = today_ids;
     storage.set('exit_plan_ids', today_ids.join(','));
-    this.resetPlan()
+    this.resetPlan();
   };
 
   setCurPlanMinute = (minute: number) => {
@@ -144,7 +144,7 @@ class PlanStore {
           mode: p.mode,
         }));
       const json = JSON.stringify(existing);
-      await NativeModule.configurePlannedLimits(json);
+      await NativeModule.setSchedulePlans(json);
       return true;
     } catch (e) {
       console.log('IOS添加时间段失败：', e);
@@ -171,8 +171,14 @@ class PlanStore {
 
     // 查找当前正在进行中的计划
     this.cur_plan =
-      filteredPlans.find(p => minutes >= p.start_min && minutes < p.end_min && !this.exit_plan_ids.includes(`${dayjs().format('YYYY-MM-DD')}:${p.id}`)) ||
-      null;
+      filteredPlans.find(
+        p =>
+          minutes >= p.start_min &&
+          minutes < p.end_min &&
+          !this.exit_plan_ids.includes(
+            `${dayjs().format('YYYY-MM-DD')}:${p.id}`,
+          ),
+      ) || null;
 
     // 查找下一个计划（同日内开始时间在当前之后的第一个）
     this.next_plan = filteredPlans.find(p => minutes < p.start_min) || null;
@@ -234,8 +240,8 @@ class PlanStore {
     try {
       if (!params || !params.date) {
         params = {
-          date: dayjs().format('YYYY-MM-DD')
-        }
+          date: dayjs().format('YYYY-MM-DD'),
+        };
       }
       let res: HttpRes = await http.get('/plan/lists', { params });
       if (res.statusCode === 200) {
@@ -266,8 +272,7 @@ class PlanStore {
             }));
           const json = JSON.stringify(plans);
           const mod: any = (NativeModules as any).NativeModule;
-          if (mod?.configurePlannedLimits)
-            await mod.configurePlannedLimits(json);
+          if (mod?.setSchedulePlans) await mod.setSchedulePlans(json);
         } catch (e) {
           console.log('iOS 同步删除后计划失败', e);
         }

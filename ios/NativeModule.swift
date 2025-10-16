@@ -177,7 +177,7 @@ class NativeModule: RCTEventEmitter {
   // plansJSON: [{ id, start: 秒, end: 秒, repeatDays: [1..7], mode }]
   // 说明：repeatDays 约定 1=周一 ... 7=周日；将转换为 iOS Calendar.weekday (1=周日 ... 7=周六)
   @objc
-  func configurePlannedLimits(_ plansJSON: NSString, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  func setSchedulePlans(_ plansJSON: NSString, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     struct PlanCfg: Codable {
       let id: String
       let start: Int
@@ -390,6 +390,23 @@ class NativeModule: RCTEventEmitter {
       reject("NO_SELECTION", "没有选择需要限制的应用", nil)
       return
     }
+    // 重叠校验：禁止与当前任务或周期计划时间重叠
+    let nowTs = Date().timeIntervalSince1970
+    if let defaults = UserDefaults.groupUserDefaults() {
+      let startAtExist = defaults.double(forKey: "FocusOne.FocusStartAt")
+      let endAtExist = defaults.double(forKey: "FocusOne.FocusEndAt")
+      let totalExist = defaults.integer(forKey: "FocusOne.TotalMinutes")
+      if startAtExist > 0 && endAtExist > nowTs && totalExist > 0 {
+        reject("OVERLAP_ERROR", "已有任务进行中，禁止重叠创建", nil)
+        return
+      }
+    }
+    if let window = currentPlannedWindow() {
+      if nowTs >= window.start && nowTs < window.end {
+        reject("OVERLAP_ERROR", "已处于周期计划窗口内，禁止重叠创建一次性任务", nil)
+        return
+      }
+    }
     
     // 根据传入时长构造日程
     let minutes = Int(truncating: durationMinutes)
@@ -448,8 +465,8 @@ class NativeModule: RCTEventEmitter {
     )
     
     do {
-      // 停止之前的监控
-      center.stopMonitoring()
+      // 停止一次性与暂停恢复监控，保留周期性计划
+      center.stopMonitoring([activityName, pauseResumeActivity])
       
       // 开始新的监控
       try center.startMonitoring(
@@ -515,8 +532,8 @@ class NativeModule: RCTEventEmitter {
       defaults.set(true, forKey: "FocusOne.TaskFailed")
       defaults.set("user_exit", forKey: "FocusOne.FailedReason")
     }
-
-    center.stopMonitoring()
+    // 仅停止一次性任务与暂停恢复活动，保留周期性计划监控，确保下个周期继续生效
+    center.stopMonitoring([activityName, pauseResumeActivity])
     
     // 清除所有限制
     let store = ManagedSettingsStore()
@@ -540,6 +557,65 @@ class NativeModule: RCTEventEmitter {
     }
     
     resolve(true)
+  }
+
+  // 返回当前仍然有效（已注册且未被停用）的周期性定时计划
+  // 基于保存的 FocusOne.PlannedConfigs 与 FocusOne.ActiveScheduleNames 进行比对
+  @objc
+  func getSchedulePlans(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    struct PlanCfg: Codable {
+      let id: String
+      let start: Int
+      let end: Int
+      let repeatDays: [Int]?
+      let mode: String?
+    }
+    func hourMinute(from seconds: Int) -> (Int, Int) {
+      let m = max(0, seconds / 60)
+      return (m / 60, m % 60)
+    }
+
+    guard let defaults = UserDefaults.groupUserDefaults() else {
+      resolve([])
+      return
+    }
+    guard let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"),
+          let cfgData = cfgStr.data(using: .utf8),
+          let plans = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) else {
+      resolve([])
+      return
+    }
+    let activeNames = (defaults.array(forKey: "FocusOne.ActiveScheduleNames") as? [String]) ?? []
+
+    var effective: [[String: Any]] = []
+    for (idx, p) in plans.enumerated() {
+      let (sh, sm) = hourMinute(from: p.start)
+      let (ehRaw, emRaw) = hourMinute(from: p.end)
+      let startHM = sh * 60 + sm
+      let endHM = ehRaw * 60 + emRaw
+      let eh = (endHM <= startHM) ? 23 : ehRaw
+      let em = (endHM <= startHM) ? 59 : emRaw
+
+      let days = (p.repeatDays?.isEmpty == false) ? p.repeatDays! : [1,2,3,4,5,6,7]
+      var expectedNames: [String] = []
+      for d in days {
+        // 与 setSchedulePlans 中的命名保持一致
+        let name = "FocusOne.Schedule_\(idx)_\(d)_\(sh)_\(sm)_\(eh)_\(em)"
+        expectedNames.append(name)
+      }
+      let isEffective = expectedNames.contains { activeNames.contains($0) }
+      if isEffective {
+        var item: [String: Any] = [
+          "id": p.id,
+          "start": p.start,
+          "end": p.end
+        ]
+        if let r = p.repeatDays { item["repeatDays"] = r }
+        if let m = p.mode { item["mode"] = m }
+        effective.append(item)
+      }
+    }
+    resolve(effective)
   }
 
   // 查询当前屏蔽状态与进度
@@ -596,8 +672,6 @@ class NativeModule: RCTEventEmitter {
     let active = inWindow || (pausedUntil > 0)
 
     let ftype = defaults.string(forKey: "FocusOne.FocusType")
-    let accessToken = defaults.string(forKey: "access_token")
-    print("accessToken: \(accessToken)")
     // 简单序列化：key=value 以逗号连接（按 key 排序，便于稳定）
     // let blockedAppsSerialized = blockedAppsDict
     //   .map { "\($0.key)=\($0.value)" }
@@ -668,6 +742,11 @@ class NativeModule: RCTEventEmitter {
     
     // 获取暂停时长，默认为3分钟
     let minutes = durationMinutes?.intValue ?? 3
+    // 校验：暂停不允许大于 10 分钟
+    if minutes > 10 {
+      reject("PAUSE_LIMIT", "暂停不允许大于10分钟", nil)
+      return
+    }
     let pauseDuration: TimeInterval = TimeInterval(minutes) * 60 // 屏蔽时长（秒）
 
     // 初始化屏蔽时长
@@ -811,22 +890,6 @@ class NativeModule: RCTEventEmitter {
       }
     }
     return nil
-  }
-  
-  // 渲染所有选择的应用Label为图片并返回base64数组
-  @objc
-  func renderAppLabelToImage(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-    // 从UserDefaults获取已保存的应用选择
-    guard let selection = self.loadSelection() else {
-      reject("NO_SELECTION", "没有选择需要限制的应用", nil)
-      return
-    }
-    
-    DispatchQueue.main.async { [weak self] in
-      guard let self = self else { return }
-      let appIcons = self.getSelectedAppDetails(from: selection)
-      resolve(appIcons)
-    }
   }
   
   // 获取选择应用的详细信息

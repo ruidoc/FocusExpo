@@ -121,15 +121,3 @@ export async function getIOSFocusStatus(): Promise<{
     return { active: false };
   }
 }
-
-// 渲染应用Label为图片列表
-export async function getSelectIosApps(): Promise<AppDetail[]> {
-  if (Platform.OS !== 'ios') return [];
-  try {
-    let appIcons = await NativeModules.NativeModule.renderAppLabelToImage();
-    return appIcons as AppDetail[];
-  } catch (error) {
-    console.log('获取选中app异常：', error);
-    return [];
-  }
-}
