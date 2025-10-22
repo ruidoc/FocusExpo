@@ -27,16 +27,13 @@ const App = observer(() => {
   };
 
   const loginResult = (result: any) => {
-    console.log('微信登录结果', result);
     if (result.statusCode === 20003) {
       return toRegister(result.data);
-    }
-    store.login(result as Record<string, any>, val => {
+    } else {
+      store.loginSuccess(result.data);
       setLoading(false);
-      if (val) {
-        router.replace('/(tabs)');
-      }
-    });
+      router.replace('/(tabs)');
+    }
   };
 
   const styles = StyleSheet.create({

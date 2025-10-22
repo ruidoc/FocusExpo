@@ -27,8 +27,7 @@ const App = (props: Props) => {
         data: { code },
       } = await sendAuthRequest();
       setLoading(true);
-      console.log('微信登录结果', code);
-      let result: any = await http.post('/user/wechat', { code });
+      let result: any = await http.post('/user/wechat-app', { code });
       if (result?.statusCode) {
         props.onSuccess(result);
       }

@@ -60,15 +60,7 @@ class UserStore {
         res = await http.post('/user/login', form);
       }
       if (res.statusCode === 200) {
-        storage.set('access_token', res.token);
-        storage.setGroup('access_token', res.token);
-        HomeStore.loadApps();
-        AppStore.getCurapp();
-        PlanStore.getPlans();
-        this.getInfo();
-        // setTimeout(() => {
-        //   HomeStore.startVpn();
-        // }, 1000);
+        this.loginSuccess(res);
         fun(res);
       } else {
         Toast(res.message);
@@ -113,6 +105,17 @@ class UserStore {
     }
   };
 
+  // 登录成功后处理
+  loginSuccess = (res: any) => {
+    storage.set('access_token', res.token);
+    storage.setGroup('access_token', res.token);
+    HomeStore.loadApps();
+    AppStore.getCurapp();
+    PlanStore.getPlans();
+    this.getInfo();
+  };
+
+  // 退出登录后处理
   logout = () => {
     storage.delete('user_info');
     storage.delete('access_token');
