@@ -1,3 +1,5 @@
+import '../config/styles.css';
+
 import { ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
