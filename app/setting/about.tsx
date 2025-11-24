@@ -14,7 +14,10 @@ const App = () => {
   return (
     <Flex justify="center" style={styles.root}>
       <Space align="center" style={styles.logobox}>
-        <Image source={require('@/assets/images/splash.png')} style={styles.avator} />
+        <Image
+          source={require('@/assets/images/splash.png')}
+          style={styles.avator}
+        />
         {/* <Text style={{ fontSize: 20, color: colors.text }}>Version 1.0</Text> */}
       </Space>
       <Space justify="center" align="center" gap={3} style={styles.footer}>
@@ -29,7 +32,7 @@ const App = () => {
         <Link href="/others/webview" style={{ color: colors.primary }}>
           《隐私政策》
         </Link>
-        <Text style={{ fontSize: 12, marginTop: 8, color: colors.text3 }}>
+        <Text className="text-white mt-2 text-sm">
           北京自由岸科技 ©️版权所有
         </Text>
       </Space>

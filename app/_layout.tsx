@@ -1,11 +1,10 @@
-import '../config/styles.css';
-
 import { ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { buttonRipple, ScreenOptions } from '@/config/navigation';
+import '@/config/styles.css';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore, RecordStore } from '@/stores';
 import { storage } from '@/utils';
