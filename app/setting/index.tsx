@@ -1,5 +1,5 @@
-import { CusPage } from '@/components';
-import CustomDivider from '@/components/cus-divider';
+import { Page } from '@/components/business';
+import CustomDivider from '@/components/ui/divider';
 import { HomeStore, UserStore } from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -76,13 +76,13 @@ const App = observer(() => {
         store.logout();
         navigation.goBack();
       })
-      .catch(e => {});
+      .catch(e => { });
   };
 
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 
   return (
-    <CusPage>
+    <Page>
       <CustomDivider />
       <View className="flex-col gap-y-2.5 pb-10">
         <View
@@ -140,7 +140,7 @@ const App = observer(() => {
           </TouchableOpacity>
         )}
       </View>
-    </CusPage>
+    </Page>
   );
 });
 

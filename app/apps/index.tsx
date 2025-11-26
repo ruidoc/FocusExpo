@@ -1,4 +1,5 @@
-import { AppToken, CusCard, CusPage } from '@/components';
+import { AppToken, Page } from '@/components/business';
+import { Card } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, HomeStore } from '@/stores';
 import { selectAppsToLimit } from '@/utils/permission';
@@ -109,7 +110,7 @@ const App = observer(() => {
   );
 
   return (
-    <CusPage>
+    <Page>
       {Platform.OS !== 'ios' && (
         <NoticeBar
           wrapable
@@ -124,7 +125,7 @@ const App = observer(() => {
         }>
         <Space gap={20}>
           {Platform.OS !== 'ios' && (
-            <CusCard
+            <Card
               title="专注的APP"
               desc="推荐添加学习相关的应用"
               action={
@@ -152,9 +153,9 @@ const App = observer(() => {
                     .map(app => AppItem(app))}
                 </Flex>
               )}
-            </CusCard>
+            </Card>
           )}
-          <CusCard
+          <Card
             title="屏蔽的APP"
             desc="推荐添加游戏、短视频、社交类应用"
             action={
@@ -204,10 +205,10 @@ const App = observer(() => {
                 )}
               </View>
             )}
-          </CusCard>
+          </Card>
         </Space>
       </ScrollView>
-    </CusPage>
+    </Page>
   );
 });
 

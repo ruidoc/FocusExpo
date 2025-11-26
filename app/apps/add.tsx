@@ -1,4 +1,4 @@
-import { CusPage } from '@/components';
+import { Page } from '@/components/business';
 import { AppStore, GuideStore, HomeStore, UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Flex, Space } from '@fruits-chain/react-native-xiaoshu';
@@ -177,7 +177,7 @@ const App = observer(() => {
     </Flex>
   );
   return (
-    <CusPage>
+    <Page>
       <View style={styles.cardTitle}>
         {selApps[0] && (
           <Text style={styles.title}>已添加 {selApps.length} 个 APP</Text>
@@ -212,7 +212,7 @@ const App = observer(() => {
           </Flex>
         </ScrollView>
       </View>
-    </CusPage>
+    </Page>
   );
 });
 

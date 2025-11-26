@@ -1,4 +1,4 @@
-import { AppToken, CusPage } from '@/components';
+import { AppToken, Page } from '@/components/business';
 import { buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
@@ -126,7 +126,7 @@ const App = observer(() => {
   }, [colors.text, navigation, toRoute]);
 
   return (
-    <CusPage>
+    <Page>
       {/* 日期选择区域 */}
       <View
         style={{
@@ -208,7 +208,7 @@ const App = observer(() => {
           </ScrollView>
         </View>
       </Flex>
-    </CusPage>
+    </Page>
   );
 });
 

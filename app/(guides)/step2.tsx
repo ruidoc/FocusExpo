@@ -1,6 +1,5 @@
-import AnimatedCascade from '@/components/cascade';
-import CusButton from '@/components/cus-button';
-import Typewriter from '@/components/type-writer';
+import { Cascade, Typewriter } from '@/components/business';
+import { Button } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, GuideStore, HomeStore } from '@/stores';
 import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
@@ -307,7 +306,7 @@ const GuideStep2 = observer(() => {
         />
         {/* 步骤卡片动画，打字机完成后再出现 */}
         {optionsVisible && (
-          <AnimatedCascade
+          <Cascade
             interval={120}
             duration={400}
             distance={32}
@@ -350,11 +349,11 @@ const GuideStep2 = observer(() => {
               </View>
               <Text style={styles.stepText}>选择一款{getStep2Lables()}APP</Text>
             </TouchableOpacity>
-          </AnimatedCascade>
+          </Cascade>
         )}
       </View>
       {/* 下一步按钮动画，所有步骤完成后再出现 */}
-      {step2Completed && step1Completed && <CusButton onPress={handleNext} />}
+      {step2Completed && step1Completed && <Button onPress={handleNext} />}
     </View>
   );
 });

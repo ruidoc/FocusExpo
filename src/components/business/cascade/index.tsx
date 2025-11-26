@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, View, ViewStyle } from 'react-native';
 
-interface AnimatedCascadeProps {
+interface CascadeProps {
   children: React.ReactNode[];
   interval?: number; // 每个子项动画间隔(ms)
   duration?: number; // 单个动画时长(ms)
@@ -11,7 +11,7 @@ interface AnimatedCascadeProps {
   onFinish?: () => void;
 }
 
-const AnimatedCascade: React.FC<AnimatedCascadeProps> = ({
+const Cascade: React.FC<CascadeProps> = ({
   children,
   interval = 150,
   duration = 400,
@@ -85,14 +85,8 @@ const AnimatedCascade: React.FC<AnimatedCascadeProps> = ({
 
   return (
     <View
-      style={[
-        { width: '100%' },
-        (direction === 'bottom' || direction === 'top') && {
-          flexDirection: 'row',
-          justifyContent: 'center',
-        },
-        style,
-      ]}>
+      className={`w-full ${(direction === 'bottom' || direction === 'top') ? 'flex-row justify-center' : ''}`}
+      style={style}>
       {React.Children.map(children, (child, idx) => (
         <Animated.View
           key={idx}
@@ -107,4 +101,4 @@ const AnimatedCascade: React.FC<AnimatedCascadeProps> = ({
   );
 };
 
-export default AnimatedCascade;
+export default Cascade;

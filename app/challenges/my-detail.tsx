@@ -1,4 +1,4 @@
-import { CusPage } from '@/components';
+import { Page } from '@/components/business';
 import ChallengeStore, { UserChallenge } from '@/stores/challenge';
 import {
   Button,
@@ -208,21 +208,21 @@ const MyChallengeDetailScreen = observer(() => {
 
   if (loading) {
     return (
-      <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+      <Page safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <ActivityIndicator size="large" />
         </Flex>
-      </CusPage>
+      </Page>
     );
   }
 
   if (!userChallenge) {
     return (
-      <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+      <Page safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <Text style={styles.errorText}>挑战不存在</Text>
         </Flex>
-      </CusPage>
+      </Page>
     );
   }
 
@@ -230,7 +230,7 @@ const MyChallengeDetailScreen = observer(() => {
   const isInProgress = userChallenge.status === 'in_progress';
 
   return (
-    <CusPage safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+    <Page safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -511,7 +511,7 @@ const MyChallengeDetailScreen = observer(() => {
           </View>
         </View>
       </Modal>
-    </CusPage>
+    </Page>
   );
 });
 

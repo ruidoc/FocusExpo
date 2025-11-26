@@ -1,6 +1,5 @@
-import Keyboard from '@/components/keybord';
-import Privicy from '@/components/privicy';
-import Wechat from '@/components/wecaht';
+import { Privicy, Wechat } from '@/components/business';
+import { Keyboard } from '@/components/system';
 import { UserStore } from '@/stores';
 import { toast } from '@/utils';
 import { Button, TextInput, Toast } from '@fruits-chain/react-native-xiaoshu';

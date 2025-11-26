@@ -1,6 +1,5 @@
-import AnimatedCascade from '@/components/cascade';
-import CusButton from '@/components/cus-button';
-import Typewriter from '@/components/type-writer';
+import { Cascade, Typewriter } from '@/components/business';
+import { Button } from '@/components/ui';
 import { GuideStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -249,9 +248,9 @@ export const GuideStep1 = observer(() => {
           lineStyle={styles.question}
           onFinish={() => setTypewriterDone(true)}
         />
-        {/* 选项卡动画包裹：用 AnimatedCascade 实现依次滑入+渐显 */}
+        {/* 选项卡动画包裹：用 Cascade 实现依次滑入+渐显 */}
         {optionsVisible && (
-          <AnimatedCascade onFinish={() => setOptionsAllShown(true)}>
+          <Cascade onFinish={() => setOptionsAllShown(true)}>
             {addictionOptions.map(option => (
               <TouchableOpacity
                 key={option.id}
@@ -281,12 +280,12 @@ export const GuideStep1 = observer(() => {
                 </Text> */}
               </TouchableOpacity>
             ))}
-          </AnimatedCascade>
+          </Cascade>
         )}
       </View>
       {/* 下一步按钮动画包裹：只有选项卡全部出现且用户选择后才会淡入显示 */}
       {store.problem && (
-        <CusButton
+        <Button
           disabled={!store.problem || !optionsAllShown}
           onPress={handleNext}
         />

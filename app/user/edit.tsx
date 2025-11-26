@@ -1,5 +1,5 @@
-import { CusPage } from '@/components';
-import CustomDivider from '@/components/cus-divider';
+import { Page } from '@/components/business';
+import { Divider } from '@/components/ui';
 import { UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { ActionSheet, Flex, Space } from '@fruits-chain/react-native-xiaoshu';
@@ -27,7 +27,7 @@ const App = observer(() => {
           />
         </Flex>
       </Flex>
-      {!opts.noborder && <CustomDivider />}
+      {!opts.noborder && <Divider />}
     </TouchableOpacity>
   );
 
@@ -46,10 +46,10 @@ const App = observer(() => {
         store.logout();
         router.back();
       })
-      .catch(e => {});
+      .catch(e => { });
   };
 
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 
   const styles = StyleSheet.create({
     userBox: {
@@ -98,10 +98,10 @@ const App = observer(() => {
   });
 
   return (
-    <CusPage>
+    <Page>
       {/* <View
         style={{ backgroundColor: '#232323', height: 0.5, margin: 0 }}></View> */}
-      <CustomDivider />
+      <Divider />
       <Space gapVertical={10} tail={40}>
         {store.uInfo && (
           <View style={styles.itemBoxWrap}>
@@ -116,7 +116,7 @@ const App = observer(() => {
           </View>
         )}
       </Space>
-    </CusPage>
+    </Page>
   );
 });
 

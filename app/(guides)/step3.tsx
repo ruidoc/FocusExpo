@@ -1,7 +1,5 @@
-import { AppToken } from '@/components';
-import AnimatedCascade from '@/components/cascade';
-import CusButton from '@/components/cus-button';
-import Typewriter from '@/components/type-writer';
+import { AppToken, Cascade, Typewriter } from '@/components/business';
+import { Button } from '@/components/ui';
 import { AppStore, GuideStore, HomeStore, PlanStore } from '@/stores';
 import { startAppLimits } from '@/utils/permission';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
@@ -172,7 +170,7 @@ const GuideStep3 = observer(() => {
         />
         {/* 2. app 动画 */}
         {appsVisible && (
-          <AnimatedCascade
+          <Cascade
             interval={120}
             duration={300}
             distance={32}
@@ -202,7 +200,7 @@ const GuideStep3 = observer(() => {
                   <Text style={styles.appName}>{app.appName}</Text>
                 </Flex>
               ))}
-          </AnimatedCascade>
+          </Cascade>
         )}
         {/* 3. 打字机第二行 */}
         {typewriter2Visible && (
@@ -224,7 +222,7 @@ const GuideStep3 = observer(() => {
       </View>
       {/* 4. 按钮动画 */}
       {buttonVisible && (
-        <CusButton
+        <Button
           text={gstore.mode === 'shield' ? '立刻屏蔽' : '开始专注学习'}
           onPress={handleBlock}
         />

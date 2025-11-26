@@ -1,5 +1,5 @@
-import { CusPage } from '@/components';
-import CustomDivider from '@/components/cus-divider';
+import { Page } from '@/components/business';
+import { Divider } from '@/components/ui';
 import { PermisStore } from '@/stores';
 import { Switch } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
@@ -24,7 +24,7 @@ const App = observer(() => {
           onChange={() => onClick(opts.tag)}
         />
       </View>
-      {!opts.noborder && <CustomDivider />}
+      {!opts.noborder && <Divider />}
     </TouchableOpacity>
   );
 
@@ -43,8 +43,8 @@ const App = observer(() => {
   }, []);
 
   return (
-    <CusPage>
-      <CustomDivider />
+    <Page>
+      <Divider />
       <View className="flex-col gap-y-2.5 pb-10">
         <View
           className="mb-5 overflow-hidden"
@@ -57,7 +57,7 @@ const App = observer(() => {
           })}
         </View>
       </View>
-    </CusPage>
+    </Page>
   );
 });
 

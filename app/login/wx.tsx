@@ -1,5 +1,4 @@
-import Privicy from '@/components/privicy';
-import Wechat from '@/components/wecaht';
+import { Privicy, Wechat } from '@/components/business';
 import { UserStore } from '@/stores';
 import { Button, Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';

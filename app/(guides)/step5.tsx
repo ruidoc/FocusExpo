@@ -1,6 +1,4 @@
-import Privicy from '@/components/privicy';
-import Typewriter from '@/components/type-writer';
-import Wechat from '@/components/wecaht';
+import { Privicy, Typewriter, Wechat } from '@/components/business';
 import { GuideStore, HomeStore, UserStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';

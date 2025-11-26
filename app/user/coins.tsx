@@ -1,4 +1,4 @@
-import { CusPage } from '@/components';
+import { Page } from '@/components/business';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { ErrorCode, useIAP } from 'expo-iap';
 import React, { useEffect } from 'react';
@@ -66,7 +66,7 @@ export default function UserCoinsPage() {
   };
 
   return (
-    <CusPage>
+    <Page>
       {!connected && (
         <View style={{ alignItems: 'center', marginTop: 24 }}>
           <Text style={{ color: '#fff' }}>正在连接 App Store…</Text>
@@ -130,6 +130,6 @@ export default function UserCoinsPage() {
           )}
         </ScrollView>
       )}
-    </CusPage>
+    </Page>
   );
 }

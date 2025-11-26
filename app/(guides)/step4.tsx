@@ -1,5 +1,5 @@
-import CusButton from '@/components/cus-button';
-import Typewriter from '@/components/type-writer';
+import { Typewriter } from '@/components/business';
+import { Button } from '@/components/ui';
 import { GuideStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import {
@@ -252,7 +252,7 @@ const GuideStep4 = () => {
           onFinish={() => setTypewriterDone(true)}
         />
       </View>
-      {buttonVisible && <CusButton onPress={handleNext} text="我已确认" />}
+      {buttonVisible && <Button onPress={handleNext} text="我已确认" />}
     </View>
   );
 };

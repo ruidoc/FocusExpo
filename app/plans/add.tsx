@@ -1,4 +1,5 @@
-import { AppToken, CusButton, CusPage } from '@/components';
+import { AppToken, Page } from '@/components/business';
+import { Button } from '@/components/ui';
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
@@ -400,7 +401,7 @@ const App = observer(() => {
   };
 
   return (
-    <CusPage>
+    <Page>
       <ScrollView style={{ padding: 15 }}>
         <Flex align="center" style={{ ...styles.item, gap: 8 }}>
           <Text>{isEditing ? '✏️' : '🏆'}</Text>
@@ -589,9 +590,9 @@ const App = observer(() => {
         )}
       </ScrollView>
       <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
-        <CusButton onPress={submit} text={isEditing ? '保存修改' : '确认'} />
+        <Button onPress={submit} text={isEditing ? '保存修改' : '确认'} />
       </View>
-    </CusPage>
+    </Page>
   );
 });
 

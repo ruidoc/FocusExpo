@@ -1,4 +1,4 @@
-import CustomDivider from '@/components/cus-divider';
+import { Divider } from '@/components/ui';
 import { UserStore } from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -55,7 +55,7 @@ const App = observer(() => {
         </Flex>
         <Icon name="chevron-forward" size={17} color={colors.text} />
       </Flex>
-      {opts.border && <CustomDivider />}
+      {opts.border && <Divider />}
     </TouchableOpacity>
   );
 

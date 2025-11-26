@@ -1,4 +1,4 @@
-import { CusPage } from '@/components';
+import { Page } from '@/components/business';
 import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { Challenge } from '@/stores/challenge';
 import PlanStore from '@/stores/plan';
@@ -346,27 +346,27 @@ const ChallengeDetailScreen = observer(() => {
 
   if (loading) {
     return (
-      <CusPage safe bgcolor={colors.background}>
+      <Page safe bgcolor={colors.background}>
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <ActivityIndicator size="large" />
           <Text style={styles.errorText}>加载中...</Text>
         </Flex>
-      </CusPage>
+      </Page>
     );
   }
 
   if (!challenge) {
     return (
-      <CusPage safe bgcolor={colors.background}>
+      <Page safe bgcolor={colors.background}>
         <Flex justify="center" align="center" style={{ flex: 1 }}>
           <Text style={styles.errorText}>挑战不存在</Text>
         </Flex>
-      </CusPage>
+      </Page>
     );
   }
 
   return (
-    <CusPage safe bgcolor={colors.background}>
+    <Page safe bgcolor={colors.background}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -551,7 +551,7 @@ const ChallengeDetailScreen = observer(() => {
           </View>
         </Flex>
       </Modal>
-    </CusPage>
+    </Page>
   );
 });
 

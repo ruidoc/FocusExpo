@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import ViewShot from 'react-native-view-shot';
-import TokenLabel from '../native/TokenLabel';
+import TokenLabel from '../../native/TokenLabel';
 
 const CustomAppToken = (props: AppToken) => {
   const size = props.size || 20;

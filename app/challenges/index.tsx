@@ -1,4 +1,4 @@
-import { CusPage } from '@/components';
+import { Page } from '@/components/business';
 import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { Challenge } from '@/stores/challenge';
 import {
@@ -229,7 +229,7 @@ const ChallengeListScreen = observer(() => {
   );
 
   return (
-    <CusPage safe bgcolor={colors.background}>
+    <Page safe bgcolor={colors.background}>
       <View style={styles.container}>
         {/* 页面标题 */}
         <View style={styles.header}>
@@ -293,7 +293,7 @@ const ChallengeListScreen = observer(() => {
           <Space />
         </ScrollView>
       </View>
-    </CusPage>
+    </Page>
   );
 });
 

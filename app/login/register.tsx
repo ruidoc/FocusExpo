@@ -1,5 +1,5 @@
-import Keyboard from '@/components/keybord';
-import Privicy from '@/components/privicy';
+import { Privicy } from '@/components/business';
+import { Keyboard } from '@/components/system';
 import { UserStore } from '@/stores';
 import { toast } from '@/utils';
 import {
@@ -65,7 +65,7 @@ const App = observer(() => {
     });
   };
 
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 
   const styles = StyleSheet.create({
     linearBox: {

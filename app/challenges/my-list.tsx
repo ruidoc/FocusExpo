@@ -1,4 +1,4 @@
-import { CusPage } from '@/components';
+import { Page } from '@/components/business';
 import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { UserChallenge } from '@/stores/challenge';
 import {
@@ -328,7 +328,7 @@ const MyChallengesScreen = observer(() => {
   const filteredChallenges = store.my_challenges;
 
   return (
-    <CusPage>
+    <Page>
       {/* 状态筛选 */}
       <Flex style={styles.filterCard}>
         <ScrollView
@@ -372,7 +372,7 @@ const MyChallengesScreen = observer(() => {
           filteredChallenges.map(renderChallengeItem)
         )}
       </ScrollView>
-    </CusPage>
+    </Page>
   );
 });
 

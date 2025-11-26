@@ -1,7 +1,7 @@
 import { buttonRipple, ScreenOptions } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
-import '@/global.css';
 import { AppStore, PlanStore, RecordStore } from '@/stores';
+import '@/styles/global.css';
 import { storage } from '@/utils';
 import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -23,7 +23,7 @@ const { NativeModule } = NativeModules;
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require('../src/assets/fonts/SpaceMono-Regular.ttf'),
   });
   const theme = useCustomTheme();
   const delay = useRef(null);

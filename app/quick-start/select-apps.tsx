@@ -1,4 +1,4 @@
-import { AppToken } from '@/components';
+import { AppToken } from '@/components/business';
 import { AppStore, HomeStore } from '@/stores';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { observer, useLocalObservable } from 'mobx-react-lite';

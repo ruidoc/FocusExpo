@@ -1,4 +1,4 @@
-import { AppToken, CusPage } from '@/components';
+import { AppToken, Page } from '@/components/business';
 import { AppStore, StatisticStore } from '@/stores';
 import type { Period } from '@/stores/statistic';
 import { Flex } from '@fruits-chain/react-native-xiaoshu';
@@ -215,7 +215,7 @@ const App = observer(() => {
   const total = sstore.app_statis;
 
   return (
-    <CusPage safe>
+    <Page safe>
       <ScrollView
         style={styles.container}
         refreshControl={
@@ -317,7 +317,7 @@ const App = observer(() => {
           </View>
         )}
       </ScrollView>
-    </CusPage>
+    </Page>
   );
 });
 

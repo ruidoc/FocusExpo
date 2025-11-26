@@ -1,15 +1,14 @@
-import React, { Checkbox, Flex } from '@fruits-chain/react-native-xiaoshu';
-import { Link, useTheme } from '@react-navigation/native';
-import { ReactNode, useState } from 'react';
+import React from '@fruits-chain/react-native-xiaoshu';
+import { useTheme } from '@react-navigation/native';
+import { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
 interface Props {
   children: ReactNode;
 }
 
-const App = (props: Props) => {
+const Keyboard = (props: Props) => {
   const { colors } = useTheme();
-  const [agree, setAgree] = useState(false);
 
   return (
     <KeyboardAvoidingView
@@ -27,4 +26,4 @@ const App = (props: Props) => {
   );
 };
 
-export default App;
+export { Keyboard };

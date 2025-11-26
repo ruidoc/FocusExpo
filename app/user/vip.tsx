@@ -1,4 +1,4 @@
-import { CusPage } from '@/components';
+import { Page } from '@/components/business';
 import { vipStore } from '@/stores/vip';
 import { fenToYuan } from '@/utils';
 import { Toast } from '@fruits-chain/react-native-xiaoshu';
@@ -327,7 +327,7 @@ const VipPage = observer(() => {
   };
 
   return (
-    <CusPage>
+    <Page>
       {/* 套餐选择 */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>选择套餐</Text>
@@ -430,7 +430,7 @@ const VipPage = observer(() => {
           </TouchableOpacity>
         </View>
       </View>
-    </CusPage>
+    </Page>
   );
 });
 

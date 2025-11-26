@@ -1,4 +1,4 @@
-import { CusButton, DurationPickerModal } from '@/components';
+import { Button } from '@/components/ui';
 import {
   AppStore,
   BenefitStore,
@@ -307,16 +307,9 @@ const QuickStartPage = observer(() => {
         </ItemRow> */}
       </ScrollView>
       <View className="absolute left-0 right-0 bottom-0 bg-transparent px-5 pb-6 z-10">
-        <CusButton
+        <Button
           onPress={toSetting}
           text={mode === 'focus' ? '开始专注' : '开始屏蔽'}
-        />
-        <DurationPickerModal
-          visible={pickerVisible}
-          defaultMinutes={minute}
-          onConfirm={m => setMinute(m)}
-          onCancel={() => { }}
-          onClose={() => setPickerVisible(false)}
         />
       </View>
     </>

@@ -5,7 +5,7 @@ import { Button } from '@fruits-chain/react-native-xiaoshu';
 import { registerApp, sendAuthRequest } from 'expo-native-wechat';
 import { useEffect, useState } from 'react';
 import { Text } from 'react-native';
-import CusButton from './cus-button';
+import { Button as CusButton } from '@/components/ui';
 
 interface Props {
   disabled?: boolean;

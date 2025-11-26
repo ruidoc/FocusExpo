@@ -12,6 +12,7 @@ import {
   UserStore,
 } from '@/stores';
 import { toast } from '@/utils';
+import { checkScreenTimePermission } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import {
   Card,
@@ -265,9 +266,6 @@ const App = observer(() => {
     const sub = AppState.addEventListener('change', async state => {
       if (state === 'active') {
         try {
-          const { checkScreenTimePermission } = await import(
-            '@/utils/permission'
-          );
           const status = await checkScreenTimePermission();
           const isApproved = status === 'approved';
           if (isApproved !== store.ios_screen_time_permission) {
