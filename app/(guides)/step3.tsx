@@ -1,8 +1,7 @@
 import { AppToken, Cascade, Typewriter } from '@/components/business';
-import { Button } from '@/components/ui';
+import { Button, Flex } from '@/components/ui';
 import { AppStore, GuideStore, HomeStore, PlanStore } from '@/stores';
 import { startAppLimits } from '@/utils/permission';
-import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
@@ -188,8 +187,8 @@ const GuideStep3 = observer(() => {
                 <Flex
                   key={app.packageName}
                   style={styles.appItem}
-                  direction="column"
-                  align="center">
+                  className='flex-col items-center'
+                >
                   <Image
                     source={{
                       uri: 'data:image/jpeg;base64,' + app.icon,

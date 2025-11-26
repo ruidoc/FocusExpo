@@ -1,6 +1,6 @@
+import { Flex } from '@/components/ui';
 import { AppStore, PlanStore, UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -28,15 +28,15 @@ const ManageEntry: React.FC = () => {
       ? '#777'
       : '#FF5C1F'
     : app_count
-    ? '#777'
-    : '#FF5C1F';
+      ? '#777'
+      : '#FF5C1F';
   const planCountColor = dark
     ? plan_count
       ? '#777'
       : '#FF5C1F'
     : plan_count
-    ? '#777'
-    : '#FF5C1F';
+      ? '#777'
+      : '#FF5C1F';
 
   const toRoute = (path: string) => {
     if (!ustore.uInfo) {
@@ -48,16 +48,12 @@ const ManageEntry: React.FC = () => {
   if (pstore.cur_plan) return null;
 
   return (
-    <Flex justify="between" align="center" style={{ paddingVertical: 4 }}>
+    <Flex className="justify-between py-1">
       <Flex
-        align="center"
-        justify="center"
         onPress={() => toRoute('apps')}
+        className="flex-1 rounded-[10px] mb-3.5"
         style={{
-          flex: 1,
           height: 60,
-          borderRadius: 10,
-          marginBottom: 14,
           backgroundColor: colors.card,
         }}>
         <View
@@ -78,14 +74,10 @@ const ManageEntry: React.FC = () => {
       </Flex>
       <View style={{ width: 20 }} />
       <Flex
-        align="center"
-        justify="center"
         onPress={() => toRoute('plans')}
+        className="flex-1 rounded-[10px] mb-3.5"
         style={{
-          flex: 1,
           height: 60,
-          borderRadius: 10,
-          marginBottom: 14,
           backgroundColor: colors.card,
         }}>
         <View

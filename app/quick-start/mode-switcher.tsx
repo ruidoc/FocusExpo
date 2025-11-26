@@ -1,5 +1,6 @@
+import { Flex } from '@/components/ui';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Button, Flex } from '@fruits-chain/react-native-xiaoshu';
+import { Button } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Text, View } from 'react-native';
@@ -51,7 +52,7 @@ const ModeSwitcher: React.FC<Props> = ({
   });
 
   return (
-    <Animated.View 
+    <Animated.View
       className="rounded-2xl px-5 py-6 mx-5 mb-0"
       style={{ backgroundColor: bgColor }}>
       <View className="flex-row bg-white/30 self-center rounded-[10px] p-0 mb-3 w-[230px]">
@@ -91,7 +92,7 @@ const ModeSwitcher: React.FC<Props> = ({
         />
       </View>
       <Text className="text-white text-[15px] mt-2 min-h-[22px] text-center">{desc}</Text>
-      <Flex justify="center" align="center" className="min-h-9 mt-3 mb-1.5 h-9">
+      <Flex className="justify-center min-h-9 mt-3 mb-1.5 h-9">
         {(() => {
           const apps = mode === 'focus' ? focusApps : shieldApps;
           const showApps = allApps
@@ -100,10 +101,7 @@ const ModeSwitcher: React.FC<Props> = ({
           if (apps.length === 0) {
             return (
               <Flex
-                direction="row"
-                align="center"
-                justify="center"
-                className="border border-white/70 rounded-[18px] px-3.5 py-1.5 bg-transparent min-w-[90px] min-h-9"
+                className="justify-center border border-white/70 rounded-[18px] px-3.5 py-1.5 bg-transparent min-w-[90px] min-h-9"
                 onPress={() => addApp(mode)}>
                 <Icon
                   name="add"
@@ -119,13 +117,11 @@ const ModeSwitcher: React.FC<Props> = ({
           }
           return (
             <Flex
-              className="h-9 gap-2"
-              justify="center"
-              align="center"
+              className="justify-center h-9 gap-2"
               onPress={() => addApp(mode)}>
               {showApps.map(app => (
-                <View 
-                  key={app.packageName} 
+                <View
+                  key={app.packageName}
                   className="w-9 h-9 rounded-[18px] overflow-hidden bg-white mx-0"
                   style={{
                     shadowColor: '#000',

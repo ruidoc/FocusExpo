@@ -1,10 +1,10 @@
 import { AppToken, Page } from '@/components/business';
-import { Card } from '@/components/ui';
+import { Card, Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, HomeStore } from '@/stores';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Flex, NoticeBar, Space } from '@fruits-chain/react-native-xiaoshu';
+import { NoticeBar, Space } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
@@ -96,8 +96,8 @@ const App = observer(() => {
     <Flex
       key={app.packageName}
       style={styles.appWrap}
-      direction="column"
-      align="center">
+      className='flex-col items-center'
+    >
       <Image
         source={{
           uri: 'data:image/jpeg;base64,' + app.icon,
@@ -147,7 +147,7 @@ const App = observer(() => {
                   </Text>
                 </View>
               ) : (
-                <Flex wrap="wrap" justify="start">
+                <Flex className="flex-wrap justify-start">
                   {store.all_apps
                     .filter(r => astore.focus_apps.includes(r.packageName))
                     .map(app => AppItem(app))}
@@ -179,7 +179,7 @@ const App = observer(() => {
                     </Text>
                   </View>
                 ) : (
-                  <Flex wrap="wrap" justify="start">
+                  <Flex className="flex-wrap justify-start">
                     {store.all_apps
                       .filter(r => astore.shield_apps.includes(r.packageName))
                       .map(app => AppItem(app))}
@@ -197,7 +197,7 @@ const App = observer(() => {
                     </Text>
                   </View>
                 ) : (
-                  <Flex wrap="wrap" justify="start">
+                  <Flex className="flex-wrap justify-start">
                     {astore.ios_selected_apps.map(item => (
                       <AppToken key={item.id} app={item} size={20} />
                     ))}

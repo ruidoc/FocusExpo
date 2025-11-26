@@ -163,7 +163,7 @@ const App = observer(() => {
             onPress={toSubmit}>
             注册
           </Button>
-          <Flex justify="end">
+          <Flex className="justify-end">
             <TouchableOpacity activeOpacity={0.7} onPress={toRoute}>
               <Text style={{ color: colors.primary }}>已有账号？去登录</Text>
             </TouchableOpacity>

@@ -1,7 +1,8 @@
 import { Page } from '@/components/business';
 import { AppStore, GuideStore, HomeStore, UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Flex, Space } from '@fruits-chain/react-native-xiaoshu';
+import { Space } from '@fruits-chain/react-native-xiaoshu';
+import { Flex } from '@/components/ui';
 import { useNavigation, useRoute, useTheme } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useRef, useState } from 'react';
@@ -192,7 +193,7 @@ const App = observer(() => {
           </ScrollView>
         )}
         {!selApps[0] && (
-          <Flex justify="center" style={{ paddingVertical: 25 }}>
+          <Flex className="justify-center py-6">
             <Text style={{ color: '#999', textAlign: 'center' }}>
               暂未添加APP
             </Text>
@@ -205,7 +206,7 @@ const App = observer(() => {
         </Text>
         {/* <NoticeBar message="点击下方APP选择" status="primary" /> */}
         <ScrollView style={{ flex: 1 }}>
-          <Flex wrap="wrap" style={{ paddingHorizontal: 14 }}>
+          <Flex className="flex-wrap px-3.5">
             {store.all_apps
               .filter(r => !selApps.includes(r.packageName))
               .map(app => AppItem(app))}

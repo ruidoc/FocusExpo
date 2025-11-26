@@ -1,8 +1,8 @@
-import { Divider } from '@/components/ui';
+import { Divider, Flex } from '@/components/ui';
 import { UserStore } from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Flex, Space } from '@fruits-chain/react-native-xiaoshu';
+import { Space } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -41,7 +41,7 @@ const App = observer(() => {
     <TouchableOpacity
       onPress={() => toNavigate(opts.route || '')}
       activeOpacity={0.7}>
-      <Flex justify="between" align="center" style={{ ...styles.itemBox }}>
+      <Flex className="justify-between" style={{ ...styles.itemBox }}>
         <Flex>
           <View
             style={{
@@ -103,7 +103,7 @@ const App = observer(() => {
 
   return (
     <ScrollView style={{ flex: 1 }}>
-      <Flex justify="between" align="center" style={styles.userBox}>
+      <Flex className="justify-between" style={styles.userBox}>
         <Flex onPress={toLogin}>
           {store.uInfo?.avatar && (
             <Image source={{ uri: store.uInfo.avatar }} style={styles.avator} />
@@ -129,8 +129,7 @@ const App = observer(() => {
             onPress={() => toNavigate('user/vip')}
             activeOpacity={0.7}>
             <Flex
-              align="center"
-              justify="center"
+              className="justify-center"
               style={{
                 backgroundColor: dark ? '#232323' : '#ffffff',
                 padding: 8,
@@ -174,7 +173,7 @@ const App = observer(() => {
         </View>
         {/* {store.uInfo && (
           <TouchableOpacity onPress={toLogout} activeOpacity={0.7}>
-            <Flex justify="center" align="center" style={styles.itemBox}>
+            <Flex className="justify-center" style={styles.itemBox}>
               <Text style={styles.itemText}>退出</Text>
             </Flex>
           </TouchableOpacity>

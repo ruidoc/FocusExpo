@@ -1,9 +1,9 @@
 import { Page } from '@/components/business';
+import { Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { UserChallenge } from '@/stores/challenge';
 import {
   Card,
-  Flex,
   Tag,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
@@ -144,9 +144,9 @@ const MyChallengesScreen = observer(() => {
               params: { id: userChallenge.id },
             } as any)
           }>
-          <Flex direction="column">
+          <Flex className="flex-col">
             {/* 标题和状态 */}
-            <Flex justify="between" align="center">
+            <Flex className="justify-between">
               <Text style={styles.challengeTitle}>
                 {userChallenge.challenge?.title || '挑战标题'}
               </Text>
@@ -156,8 +156,8 @@ const MyChallengesScreen = observer(() => {
             </Flex>
 
             {/* 进度条 */}
-            <Flex direction="column">
-              <Flex justify="between" align="center">
+            <Flex className="flex-col">
+              <Flex className="justify-between">
                 <Text style={styles.progressLabel}>进度</Text>
                 <Text style={styles.progressText}>{progress.toFixed(1)}%</Text>
               </Flex>
@@ -184,7 +184,7 @@ const MyChallengesScreen = observer(() => {
             </Flex>
 
             {/* 截止时间 */}
-            <Flex justify="between" align="center">
+            <Flex className="justify-between">
               <Text
                 style={[
                   styles.deadlineText,
@@ -206,7 +206,7 @@ const MyChallengesScreen = observer(() => {
 
             {/* 关联计划 */}
             {userChallenge.plan_ids.length > 0 && (
-              <Flex align="center" style={{ gap: 4 }}>
+              <Flex className="gap-1">
                 <Text style={styles.planLabel}>关联计划：</Text>
                 <Text style={styles.planCount}>
                   {userChallenge.plan_ids.length} 个

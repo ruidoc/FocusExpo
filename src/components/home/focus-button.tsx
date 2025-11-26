@@ -7,7 +7,8 @@ import {
 } from '@/stores';
 import { getIOSFocusStatus, stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Flex, Theme } from '@fruits-chain/react-native-xiaoshu';
+import { Theme } from '@fruits-chain/react-native-xiaoshu';
+import { Flex } from '@/components/ui';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
@@ -155,10 +156,10 @@ const FocusButton = observer(() => {
 
   return (
     <>
-      <Flex justify="center">
+      <Flex className="justify-center">
         <TimeFlow />
       </Flex>
-      <Flex justify="center" style={{ marginTop: 30, marginBottom: 50 }}>
+      <Flex className="justify-center mt-[30px] mb-[50px]">
         <View>
           {descDom}
           {/* 暂停倒计时显示 */}

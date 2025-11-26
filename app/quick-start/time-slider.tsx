@@ -1,4 +1,4 @@
-import { Flex } from '@fruits-chain/react-native-xiaoshu';
+import { Flex } from '@/components/ui';
 import Slider from '@react-native-community/slider';
 import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
@@ -45,7 +45,7 @@ const TimeSlider: React.FC<Props> = ({ minute, setMinute }) => {
         thumbTintColor={dark ? colors.primary : '#0065FE'}
         style={{ marginTop: 24 }}
       />
-      <Flex justify="between" align="center" className="px-0.5">
+      <Flex className="justify-between px-0.5">
         <Text className={`text-[13px] ${dark ? 'text-[#aaa]' : 'text-[#888]'}`}>
           5分钟
         </Text>

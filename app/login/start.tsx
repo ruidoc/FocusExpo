@@ -1,5 +1,6 @@
 import { HomeStore, UserStore } from '@/stores';
-import { Button, Dialog, Flex } from '@fruits-chain/react-native-xiaoshu';
+import { Button, Dialog } from '@fruits-chain/react-native-xiaoshu';
+import { Flex } from '@/components/ui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   useFocusEffect,
@@ -118,11 +119,9 @@ const App = observer(() => {
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={styles.linearBox}>
-      <Flex direction="column" align="stretch" style={styles.sectionBox}>
+      <Flex className="flex-col items-stretch flex-1" style={styles.sectionBox}>
         <Flex
-          direction="column"
-          justify="center"
-          align="center"
+          className="flex-col justify-center flex-[2]"
           style={styles.logoBox}>
           <Image source={require('@/assets/images/logo.png')} style={styles.avator} />
           <Text

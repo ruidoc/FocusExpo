@@ -1,9 +1,9 @@
 import { Page } from '@/components/business';
+import { Flex } from '@/components/ui';
 import ChallengeStore, { UserChallenge } from '@/stores/challenge';
 import {
   Button,
   Card,
-  Flex,
   Space,
   Tag,
   Toast,
@@ -209,7 +209,7 @@ const MyChallengeDetailScreen = observer(() => {
   if (loading) {
     return (
       <Page safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
-        <Flex justify="center" align="center" style={{ flex: 1 }}>
+        <Flex className="justify-center flex-1">
           <ActivityIndicator size="large" />
         </Flex>
       </Page>
@@ -219,7 +219,7 @@ const MyChallengeDetailScreen = observer(() => {
   if (!userChallenge) {
     return (
       <Page safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
-        <Flex justify="center" align="center" style={{ flex: 1 }}>
+        <Flex className="justify-center flex-1">
           <Text style={styles.errorText}>挑战不存在</Text>
         </Flex>
       </Page>
@@ -237,8 +237,8 @@ const MyChallengeDetailScreen = observer(() => {
         showsVerticalScrollIndicator={false}>
         {/* 挑战基本信息 */}
         <Card style={styles.card}>
-          <Flex direction="column">
-            <Flex justify="between" align="start">
+          <Flex className="flex-col">
+            <Flex className="justify-between items-start">
               <Text style={styles.title}>
                 {userChallenge.challenge?.title || '挑战标题'}
               </Text>
@@ -258,8 +258,8 @@ const MyChallengeDetailScreen = observer(() => {
         {/* 进度信息 */}
         <Card style={styles.card}>
           <Text style={styles.sectionTitle}>挑战进度</Text>
-          <Flex direction="column">
-            <Flex justify="between" align="center">
+          <Flex className="flex-col">
+            <Flex className="justify-between">
               <Text style={styles.infoLabel}>完成度</Text>
               <Text
                 style={[
@@ -284,7 +284,7 @@ const MyChallengeDetailScreen = observer(() => {
             </View>
 
             {isInProgress && (
-              <Flex justify="end" style={{ marginTop: 8 }}>
+              <Flex className="justify-end mt-2">
                 <Button
                   type="primary"
                   size="s"

@@ -1,7 +1,7 @@
 import { AppToken, Page } from '@/components/business';
+import { Flex } from '@/components/ui';
 import { AppStore, StatisticStore } from '@/stores';
 import type { Period } from '@/stores/statistic';
-import { Flex } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';

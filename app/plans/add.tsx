@@ -1,5 +1,5 @@
 import { AppToken, Page } from '@/components/business';
-import { Button } from '@/components/ui';
+import { Button, Flex } from '@/components/ui';
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
@@ -9,7 +9,6 @@ import Icon from '@expo/vector-icons/Ionicons';
 import {
   DatePicker,
   Field,
-  Flex,
   TextInput,
 } from '@fruits-chain/react-native-xiaoshu';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -334,9 +333,7 @@ const App = observer(() => {
 
   const FeildItem = (props: any) => (
     <Flex
-      direction={props.column ? 'column' : 'row'}
-      justify="between"
-      align={props.column ? 'stretch' : 'center'}
+      className={props.column ? 'flex-col items-stretch' : 'items-center'}
       style={{
         ...styles.item,
         marginBottom: props.itemTop ? 0 : 16,
@@ -347,7 +344,7 @@ const App = observer(() => {
         borderBottomWidth: props.itemTop ? 0.5 : 0,
         borderColor: colors.border,
       }}>
-      <Flex align="center" justify="between" style={{ gap: 8 }}>
+      <Flex className="justify-between gap-2">
         {/* {props.required && <Text style={{ color: 'red', fontSize: 12 }}>*</Text>} */}
         <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>
           {props.title}
@@ -374,7 +371,7 @@ const App = observer(() => {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 2 }}>
-          <Flex direction="row" align="center" style={{ gap: 8 }}>
+          <Flex className="gap-2">
             {selectedApps.map((app, index) => (
               <AppToken
                 key={`${app.stableId}-${index}`}
@@ -403,7 +400,7 @@ const App = observer(() => {
   return (
     <Page>
       <ScrollView style={{ padding: 15 }}>
-        <Flex align="center" style={{ ...styles.item, gap: 8 }}>
+        <Flex className="gap-2" style={{ ...styles.item }}>
           <Text>{isEditing ? '✏️' : '🏆'}</Text>
           <TextInput
             placeholder={isEditing ? '修改任务名称' : '给任务起个名字'}
@@ -415,7 +412,7 @@ const App = observer(() => {
 
         <FeildItem title="哪天开始" itemTop style={{ borderRadiusLeftTop: 0 }}>
           <Flex
-            justify="end"
+            className="justify-end"
             style={{ flex: 1 }}
             onPress={() => {
               DatePicker({
@@ -437,7 +434,7 @@ const App = observer(() => {
 
         <FeildItem title="哪天结束" itemEnd>
           <Flex
-            justify="end"
+            className="justify-end"
             style={{ flex: 1 }}
             onPress={() => {
               DatePicker({
@@ -487,7 +484,7 @@ const App = observer(() => {
 
         <FeildItem title="几点开始" itemTop>
           <Flex
-            justify="end"
+            className="justify-end"
             style={{ flex: 1 }}
             onPress={() => {
               DatePicker({
@@ -509,7 +506,7 @@ const App = observer(() => {
 
         <FeildItem title="几点结束" itemEnd>
           <Flex
-            justify="end"
+            className="justify-end"
             style={{ flex: 1 }}
             onPress={() => {
               DatePicker({
@@ -543,8 +540,7 @@ const App = observer(() => {
                 Array.isArray(form.repeat) && form.repeat.includes(item.value);
               return (
                 <Flex
-                  align="center"
-                  justify="center"
+                  className="items-center justify-center"
                   key={item.value}
                   onPress={() => {
                     if (Array.isArray(form.repeat)) {

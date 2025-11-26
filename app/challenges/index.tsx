@@ -1,9 +1,9 @@
 import { Page } from '@/components/business';
+import { Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { Challenge } from '@/stores/challenge';
 import {
   Card,
-  Flex,
   Space,
   Switch,
   Tag,
@@ -176,7 +176,7 @@ const ChallengeListScreen = observer(() => {
         }>
         <View style={{ gap: 12 }}>
           {/* 标题和难度 */}
-          <Flex justify="between" align="center">
+          <Flex className="justify-between">
             <Text style={styles.challengeTitle}>
               {challenge.title}
             </Text>
@@ -198,7 +198,7 @@ const ChallengeListScreen = observer(() => {
           </Text>
 
           {/* 入场币和奖励 */}
-          <Flex justify="between" align="center">
+          <Flex className="justify-between">
             <View style={{ flexDirection: 'row', gap: 16 }}>
               <Text style={styles.entryCoinsText}>
                 入场币：{challenge.entry_coins}
@@ -215,7 +215,7 @@ const ChallengeListScreen = observer(() => {
           </Flex>
 
           {/* 目标信息 */}
-          <Flex justify="between" align="center">
+          <Flex className="justify-between">
             <Text style={styles.goalText}>
               目标：{challenge.goal_total_mins}分钟总时长
             </Text>
@@ -238,7 +238,7 @@ const ChallengeListScreen = observer(() => {
 
         {/* 筛选器 */}
         <Card style={styles.filterCard}>
-          <Flex justify="between" align="center">
+          <Flex className="justify-between">
             <View
               style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text style={styles.filterText}>仅显示上架</Text>

@@ -1,4 +1,5 @@
-import { Checkbox, Flex } from "@fruits-chain/react-native-xiaoshu";
+import { Flex } from '@/components/ui';
+import { Checkbox } from "@fruits-chain/react-native-xiaoshu";
 import { Link, useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
@@ -22,7 +23,7 @@ const Privicy = (props: Props) => {
   }, [props.agree]);
 
   return (
-    <Flex justify="center" className="absolute bottom-5 left-0 right-0 px-7.5">
+    <Flex className="justify-center absolute bottom-5 left-0 right-0 px-7.5">
       <Checkbox.Icon
         active={agree}
         size={17}

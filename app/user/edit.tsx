@@ -1,8 +1,8 @@
 import { Page } from '@/components/business';
-import { Divider } from '@/components/ui';
+import { Divider, Flex } from '@/components/ui';
 import { UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import { ActionSheet, Flex, Space } from '@fruits-chain/react-native-xiaoshu';
+import { ActionSheet, Space } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -15,9 +15,9 @@ const App = observer(() => {
 
   const ItemDom = (label: string, opts: any) => (
     <TouchableOpacity onPress={() => onClick(opts.tag)} activeOpacity={0.7}>
-      <Flex justify="between" align="center" style={styles.itemBox}>
+      <Flex className="justify-between" style={styles.itemBox}>
         <Text style={styles.itemText}>{label}</Text>
-        <Flex align="center">
+        <Flex>
           <Text style={styles.labelText}>{opts.label}</Text>
           <Icon
             name="chevron-forward"

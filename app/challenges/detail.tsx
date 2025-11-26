@@ -1,4 +1,5 @@
 import { Page } from '@/components/business';
+import { Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { Challenge } from '@/stores/challenge';
 import PlanStore from '@/stores/plan';
@@ -6,7 +7,6 @@ import {
   Button,
   Card,
   Checkbox,
-  Flex,
   Space,
   Tag,
   Toast,
@@ -347,7 +347,7 @@ const ChallengeDetailScreen = observer(() => {
   if (loading) {
     return (
       <Page safe bgcolor={colors.background}>
-        <Flex justify="center" align="center" style={{ flex: 1 }}>
+        <Flex className="justify-center flex-1">
           <ActivityIndicator size="large" />
           <Text style={styles.errorText}>加载中...</Text>
         </Flex>
@@ -358,7 +358,7 @@ const ChallengeDetailScreen = observer(() => {
   if (!challenge) {
     return (
       <Page safe bgcolor={colors.background}>
-        <Flex justify="center" align="center" style={{ flex: 1 }}>
+        <Flex className="justify-center flex-1">
           <Text style={styles.errorText}>挑战不存在</Text>
         </Flex>
       </Page>
@@ -379,8 +379,8 @@ const ChallengeDetailScreen = observer(() => {
 
         {/* 基本信息 */}
         <Card style={styles.card}>
-          <Flex direction="column">
-            <Flex justify="between" align="start">
+          <Flex className="flex-col">
+            <Flex className="justify-between items-start">
               <Text style={styles.title}>{challenge.title}</Text>
               <Tag color={getDifficultyColor(challenge.difficulty)}>
                 {getDifficultyText(challenge.difficulty)}
@@ -391,13 +391,13 @@ const ChallengeDetailScreen = observer(() => {
               <Text style={styles.description}>{challenge.description}</Text>
             )}
 
-            <Flex justify="between" align="center">
+            <Flex className="justify-between">
               <Text style={styles.infoLabel}>开始时间：</Text>
               <Text style={styles.infoValue}>
                 {formatDateTime(challenge.starts_at)}
               </Text>
             </Flex>
-            <Flex justify="between" align="center">
+            <Flex className="justify-between">
               <Text style={styles.infoLabel}>结束时间：</Text>
               <Text style={styles.infoValue}>
                 {formatDateTime(challenge.ends_at)}
@@ -409,26 +409,26 @@ const ChallengeDetailScreen = observer(() => {
         {/* 目标配置 */}
         <Card style={styles.card}>
           <Text style={styles.sectionTitle}>挑战目标</Text>
-          <Flex direction="column">
-            <Flex justify="between" align="center">
+          <Flex className="flex-col">
+            <Flex className="justify-between">
               <Text style={styles.infoLabel}>总专注时长</Text>
               <Text style={styles.infoValue}>
                 {challenge.goal_total_mins} 分钟
               </Text>
             </Flex>
-            <Flex justify="between" align="center">
+            <Flex className="justify-between">
               <Text style={styles.infoLabel}>单次最少时长</Text>
               <Text style={styles.infoValue}>
                 {challenge.goal_once_mins} 分钟
               </Text>
             </Flex>
-            <Flex justify="between" align="center">
+            <Flex className="justify-between">
               <Text style={styles.infoLabel}>重复次数</Text>
               <Text style={styles.infoValue}>
                 {challenge.goal_repeat_times} 次
               </Text>
             </Flex>
-            <Flex justify="between" align="center">
+            <Flex className="justify-between">
               <Text style={styles.infoLabel}>重复天数</Text>
               <Text style={styles.infoValue}>
                 {challenge.goal_repeat_days} 天
@@ -441,7 +441,7 @@ const ChallengeDetailScreen = observer(() => {
         {challenge.required_apps && challenge.required_apps.length > 0 && (
           <Card style={styles.card}>
             <Text style={styles.sectionTitle}>必须屏蔽的应用</Text>
-            <Flex direction="row" wrap="wrap" style={{ gap: 8 }}>
+            <Flex className="flex-wrap gap-2">
               {challenge.required_apps.map((bundleId, index) => (
                 <Tag key={index} color="#FF4D4F">
                   {bundleId}
@@ -454,14 +454,14 @@ const ChallengeDetailScreen = observer(() => {
         {/* 费用和奖励 */}
         <Card style={styles.card}>
           <Text style={styles.sectionTitle}>费用与奖励</Text>
-          <Flex direction="column">
-            <Flex justify="between" align="center">
+          <Flex className="flex-col">
+            <Flex className="justify-between">
               <Text style={styles.infoLabel}>入场费用</Text>
               <Text style={styles.priceText}>{challenge.entry_coins} 金币</Text>
             </Flex>
 
             <Text style={styles.rewardLabel}>完成奖励：</Text>
-            <Flex direction="row" wrap="wrap" style={{ gap: 8 }}>
+            <Flex className="flex-wrap gap-2">
               {challenge.reward_apps > 0 && (
                 <Tag color="#1890FF">+{challenge.reward_apps} 个可选App</Tag>
               )}
@@ -497,7 +497,7 @@ const ChallengeDetailScreen = observer(() => {
         animationType="slide"
         transparent={true}
         onRequestClose={() => setShowPlanModal(false)}>
-        <Flex justify="center" align="center" style={styles.modalOverlay}>
+        <Flex className="justify-center" style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>选择计划</Text>
             <Text style={styles.modalSubtitle}>请选择要关联的专注计划：</Text>
@@ -512,12 +512,12 @@ const ChallengeDetailScreen = observer(() => {
                     styles.planItemSelected,
                   ]}
                   onPress={() => togglePlanSelection(plan.id!)}>
-                  <Flex align="center" style={{ gap: 12 }}>
+                  <Flex className="gap-3">
                     <Checkbox
                       value={selectedPlanIds.includes(plan.id!)}
                       onChange={() => togglePlanSelection(plan.id!)}
                     />
-                    <Flex direction="column" style={{ flex: 1 }}>
+                    <Flex className="flex-col flex-1">
                       <Text style={styles.planTime}>
                         {dayjs(plan.start, 'HH:mm').format('HH:mm')} -{' '}
                         {dayjs(plan.end, 'HH:mm').format('HH:mm')}

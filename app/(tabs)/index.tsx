@@ -229,7 +229,7 @@ const App = observer(() => {
   const RotDom = (path: string, title: string) => (
     <TouchableOpacity onPress={() => toRoute(path)} activeOpacity={0.7}>
       <Card bodyPadding={20}>
-        <Flex justify="between">
+        <Flex className="justify-between">
           <Text style={styles.titleFont}>{title}</Text>
           <Icon name="chevron-forward" size={20} color={colors.text} />
         </Flex>

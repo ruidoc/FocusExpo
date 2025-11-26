@@ -1,10 +1,11 @@
 import { AppToken, Page } from '@/components/business';
+import { Flex } from '@/components/ui';
 import { buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
 import { getWeekDates } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Dialog, Flex } from '@fruits-chain/react-native-xiaoshu';
+import { Dialog } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -141,7 +142,7 @@ const App = observer(() => {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 10 }}>
-          <Flex direction="row" style={{ gap: 12 }}>
+          <Flex className="gap-3">
             {weekDates.map((day, index) => {
               const isSelected =
                 selectedDate.toDateString() === day.date.toDateString();
@@ -188,7 +189,7 @@ const App = observer(() => {
       </View>
 
       {/* 时间轴和任务区域 */}
-      <Flex direction="row" style={{ flex: 1 }}>
+      <Flex className="flex-1">
         {/* 时间轴 */}
         <TimeAxis />
 
@@ -295,8 +296,7 @@ const TaskArea = ({
                   end={{ x: 1.0751, y: 0.5 }}
                   style={{ borderRadius: 15 }}>
                   <Flex
-                    direction="column"
-                    align="stretch"
+                    className="flex-col items-stretch"
                     key={task.id}
                     onPress={() => toEdit(task)}
                     onLongPress={() => toRemove(task.id)}
