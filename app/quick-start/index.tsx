@@ -24,7 +24,6 @@ import {
 } from 'react-native';
 import ModeSwitcher from './mode-switcher';
 import SelectApps from './select-apps';
-import styles from './styles';
 import TimeSlider from './time-slider';
 
 const QuickStartPage = observer(() => {
@@ -53,30 +52,20 @@ const QuickStartPage = observer(() => {
     tag?: string;
   }> = ({ title, children, tag }) => {
     return (
-      <View
-        style={{
-          backgroundColor: 'rgba(255,255,255, 0.1)',
-          marginBottom: 18,
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderRadius: 12,
-        }}>
+      <View className="bg-white/10 mb-[18px] px-4 py-3 rounded-xl">
         <Flex justify="between" align="center">
-          <Text style={styles.titleStyle}>{title}</Text>
+          <Text className="text-[15px] font-semibold leading-[22px] text-white">
+            {title}
+          </Text>
           {tag === 'apps' && (
             <>
               <Pressable onPress={selectApps}>
                 <Flex
                   justify="between"
                   align="center"
-                  style={{
-                    backgroundColor: 'rgba(0,0,0, 0.2)',
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: 14,
-                  }}>
+                  className="bg-black/20 px-2 py-1 rounded-[14px]">
                   <Icon name="add" size={17} color={colors.text} />
-                  <Text style={{ color: colors.text, fontSize: 12 }}>
+                  <Text className="text-white text-xs" style={{ color: colors.text }}>
                     添加{' '}
                   </Text>
                 </Flex>
@@ -98,7 +87,7 @@ const QuickStartPage = observer(() => {
       headerRight: (): React.ReactNode => (
         <Pressable
           onPress={() => navigation.goBack()}
-          style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+          className="px-4 py-2">
           <Icon name="close" size={22} color="#fff" />
         </Pressable>
       ),
@@ -207,9 +196,9 @@ const QuickStartPage = observer(() => {
 
   return (
     <>
-      <ScrollView style={{ flex: 1, paddingHorizontal: 20 }}>
-        <Flex justify="center" style={{ marginTop: 30, marginBottom: 25 }}>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#fff' }}>
+      <ScrollView className="flex-1 px-5">
+        <Flex justify="center" className="mt-[30px] mb-[25px]">
+          <Text className="text-xl font-bold text-white">
             快速开始
           </Text>
         </Flex>
@@ -242,7 +231,7 @@ const QuickStartPage = observer(() => {
           <TimeSlider minute={minute} setMinute={setMinute} />
         </ItemRow>
         <ItemRow title="选择下注">
-          <Flex align="center" justify="center" style={styles.betRow}>
+          <Flex align="center" justify="center" className="px-4 my-[14px] gap-3">
             <Flex align="center">
               <Pressable
                 onPress={() => {
@@ -250,7 +239,7 @@ const QuickStartPage = observer(() => {
                   n = Math.min(n, maxBet);
                   setCustomBet(n);
                 }}
-                style={styles.stepperBtn}>
+                className="w-[34px] h-[34px] rounded-lg items-center justify-center bg-white/8 mx-1.5">
                 <Icon name="remove" size={16} color={colors.text} />
               </Pressable>
               <TextInput
@@ -262,7 +251,7 @@ const QuickStartPage = observer(() => {
                   const clamped = Math.max(minBet, Math.min(maxBet, n));
                   setCustomBet(clamped);
                 }}
-                style={styles.stepperInput}
+                className="w-16 h-[34px] rounded-lg px-2.5 text-white bg-white/8 text-center mx-0.5"
                 maxLength={5}
                 placeholder="数量"
               />
@@ -272,7 +261,7 @@ const QuickStartPage = observer(() => {
                   n = Math.max(minBet, Math.min(maxBet, n));
                   setCustomBet(n);
                 }}
-                style={styles.stepperBtn}>
+                className="w-[34px] h-[34px] rounded-lg items-center justify-center bg-white/8 mx-1.5">
                 <Icon name="add" size={16} color={colors.text} />
               </Pressable>
             </Flex>
@@ -280,35 +269,25 @@ const QuickStartPage = observer(() => {
           <Flex
             justify="between"
             align="center"
-            style={{ paddingHorizontal: 16, marginTop: 8 }}>
+            className="px-4 mt-2">
             <Flex align="center">
-              <Text style={styles.tipText}>可用自律币：{bstore.balance}</Text>
+              <Text className="text-xs text-white/65">可用自律币：{bstore.balance}</Text>
               {(bstore.balance || 0) < customBet && (
                 <Pressable
                   onPress={() => router.push('/user/coins')}
-                  style={{
-                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: 12,
-                    marginLeft: 8,
-                  }}>
-                  <Text style={{ color: '#fff', fontSize: 12 }}>去充值</Text>
+                  className="bg-blue-500/80 px-2 py-1 rounded-xl ml-2">
+                  <Text className="text-white text-xs">去充值</Text>
                 </Pressable>
               )}
             </Flex>
-            <Text style={styles.tipText}>本次将消耗：{customBet}</Text>
+            <Text className="text-xs text-white/65">本次将消耗：{customBet}</Text>
           </Flex>
-          <View style={{ paddingHorizontal: 16, marginTop: 4 }}>
-            <Text style={[styles.tipText, { fontSize: 12, opacity: 0.8 }]}>
+          <View className="px-4 mt-1">
+            <Text className="text-xs text-white/65 opacity-80">
               当前时长最小下注：{minBet}个自律币
             </Text>
             {(bstore.balance || 0) < customBet && (
-              <Text
-                style={[
-                  styles.tipText,
-                  { fontSize: 12, color: '#ff6b6b', marginTop: 4 },
-                ]}>
+              <Text className="text-xs text-[#ff6b6b] mt-1">
                 余额不足，请充值后开始专注
               </Text>
             )}
@@ -327,7 +306,7 @@ const QuickStartPage = observer(() => {
           </View>
         </ItemRow> */}
       </ScrollView>
-      <View style={styles.bottomBar}>
+      <View className="absolute left-0 right-0 bottom-0 bg-transparent px-5 pb-6 z-10">
         <CusButton
           onPress={toSetting}
           text={mode === 'focus' ? '开始专注' : '开始屏蔽'}

@@ -3,12 +3,7 @@ import CustomDivider from '@/components/cus-divider';
 import { HomeStore, UserStore } from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import {
-  ActionSheet,
-  Flex,
-  Space,
-  Switch,
-} from '@fruits-chain/react-native-xiaoshu';
+import { ActionSheet, Switch } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
@@ -16,7 +11,6 @@ import {
   Appearance,
   Linking,
   Platform,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -30,11 +24,13 @@ const App = observer(() => {
 
   const ItemDom = (label: string, opts: any) => (
     <TouchableOpacity onPress={() => onClick(opts.tag)} activeOpacity={0.7}>
-      <Flex justify="between" align="center" style={styles.itemBox}>
-        <Text style={styles.itemText}>{label}</Text>
+      <View className="flex-row justify-between items-center px-4 py-[15px]">
+        <Text className="text-base" style={{ color: colors.text }}>
+          {label}
+        </Text>
         {/* @ts-ignore */}
         <Icon name="chevron-forward" size={17} color={colors.text} as any />
-      </Flex>
+      </View>
       {!opts.noborder && <CustomDivider />}
     </TouchableOpacity>
   );
@@ -85,56 +81,17 @@ const App = observer(() => {
 
   useEffect(() => {}, []);
 
-  const styles = StyleSheet.create({
-    userBox: {
-      paddingHorizontal: 30,
-      paddingBottom: 30,
-      paddingTop: 75,
-      // borderBottomColor: colors.border,
-      // borderBottomWidth: 0.5,
-      marginBottom: 10,
-      // backgroundColor: colors.card,
-    },
-    userTitle: {
-      fontSize: 25,
-      marginBottom: 5,
-      fontWeight: '500',
-      color: colors.text,
-    },
-    userDesc: {
-      fontSize: 14,
-      color: '#666',
-    },
-    itemBoxWrap: {
-      marginBottom: 20,
-      overflow: 'hidden',
-      backgroundColor: colors.card,
-    },
-    itemBox: {
-      paddingHorizontal: 16,
-      paddingVertical: 15,
-    },
-    itemText: {
-      fontSize: 16,
-      color: colors.text,
-    },
-    avator: {
-      width: 60,
-      height: 60,
-      borderRadius: 21,
-      marginRight: 14,
-    },
-  });
-
   return (
     <CusPage>
-      {/* <View
-        style={{ backgroundColor: '#232323', height: 0.5, margin: 0 }}></View> */}
       <CustomDivider />
-      <Space gapVertical={10} tail={40}>
-        <View style={styles.itemBoxWrap}>
-          <Flex justify="between" align="center" style={styles.itemBox}>
-            <Text style={styles.itemText}>跟随系统主题</Text>
+      <View className="flex-col gap-y-2.5 pb-10">
+        <View
+          className="mb-5 overflow-hidden"
+          style={{ backgroundColor: colors.card }}>
+          <View className="flex-row justify-between items-center px-4 py-[15px]">
+            <Text className="text-base" style={{ color: colors.text }}>
+              跟随系统主题
+            </Text>
             <Switch
               value={homeStore.followSystem}
               size={22}
@@ -149,17 +106,19 @@ const App = observer(() => {
                 }
               }}
             />
-          </Flex>
+          </View>
           <CustomDivider />
-          <Flex justify="between" align="center" style={styles.itemBox}>
-            <Text style={styles.itemText}>暗色模式</Text>
+          <View className="flex-row justify-between items-center px-4 py-[15px]">
+            <Text className="text-base" style={{ color: colors.text }}>
+              暗色模式
+            </Text>
             <Switch
               value={homeStore.them === 'dark'}
               size={22}
               disabled={homeStore.followSystem}
               onChange={v => homeStore.setThem(v ? 'dark' : 'light', false)}
             />
-          </Flex>
+          </View>
           <CustomDivider />
           {ItemDom('检查更新', { tag: 'check' })}
           {ItemDom('隐私', { tag: 'privicy' })}
@@ -169,15 +128,18 @@ const App = observer(() => {
         </View>
         {store.uInfo && (
           <TouchableOpacity
-            style={styles.itemBoxWrap}
+            className="mb-5 overflow-hidden"
+            style={{ backgroundColor: colors.card }}
             onPress={toLogout}
             activeOpacity={0.7}>
-            <Flex justify="center" align="center" style={styles.itemBox}>
-              <Text style={styles.itemText}>退出登录</Text>
-            </Flex>
+            <View className="flex-row justify-center items-center px-4 py-[15px]">
+              <Text className="text-base" style={{ color: colors.text }}>
+                退出登录
+              </Text>
+            </View>
           </TouchableOpacity>
         )}
-      </Space>
+      </View>
     </CusPage>
   );
 });

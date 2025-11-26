@@ -2,7 +2,7 @@ import Icon from '@expo/vector-icons/Ionicons';
 import { Button, Flex } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Text, View } from 'react-native';
 
 interface Props {
   mode: 'focus' | 'shield';
@@ -51,14 +51,22 @@ const ModeSwitcher: React.FC<Props> = ({
   });
 
   return (
-    <Animated.View style={[styles.container, { backgroundColor: bgColor }]}>
-      <View style={styles.btnGroup}>
+    <Animated.View 
+      className="rounded-2xl px-5 py-6 mx-5 mb-0"
+      style={{ backgroundColor: bgColor }}>
+      <View className="flex-row bg-white/30 self-center rounded-[10px] p-0 mb-3 w-[230px]">
         <Button.Option
           text="专注模式"
           type="white"
-          style={[styles.btn, mode === 'focus' && styles.activeBtn]}
+          className={`flex-1 bg-transparent rounded-[10px] min-w-[60px] m-0 py-2 items-center justify-center h-[38px] border-0 ${mode === 'focus' ? 'bg-white' : ''}`}
+          style={mode === 'focus' ? {
+            shadowColor: '#ddd',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.12,
+            shadowRadius: 8,
+          } : undefined}
           textStyle={[
-            styles.btnText,
+            { color: '#fff', fontWeight: 'bold', fontSize: 15, opacity: 0.8 },
             mode === 'focus' && { color: MODE_COLORS.focus, opacity: 1 },
           ]}
           onPress={() => setMode('focus')}
@@ -67,17 +75,23 @@ const ModeSwitcher: React.FC<Props> = ({
         <Button.Option
           text="屏蔽模式"
           type="white"
-          style={[styles.btn, mode === 'shield' && styles.activeBtn]}
+          className={`flex-1 bg-transparent rounded-[10px] min-w-[60px] m-0 py-2 items-center justify-center h-[38px] border-0 ${mode === 'shield' ? 'bg-white' : ''}`}
+          style={mode === 'shield' ? {
+            shadowColor: '#ddd',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.12,
+            shadowRadius: 8,
+          } : undefined}
           textStyle={[
-            styles.btnText,
+            { color: '#fff', fontWeight: 'bold', fontSize: 15, opacity: 0.8 },
             mode === 'shield' && { color: MODE_COLORS.shield, opacity: 1 },
           ]}
           onPress={() => setMode('shield')}
           active={mode === 'shield'}
         />
       </View>
-      <Text style={styles.desc}>{desc}</Text>
-      <Flex justify="center" align="center" style={styles.appIconsRow}>
+      <Text className="text-white text-[15px] mt-2 min-h-[22px] text-center">{desc}</Text>
+      <Flex justify="center" align="center" className="min-h-9 mt-3 mb-1.5 h-9">
         {(() => {
           const apps = mode === 'focus' ? focusApps : shieldApps;
           const showApps = allApps
@@ -89,30 +103,15 @@ const ModeSwitcher: React.FC<Props> = ({
                 direction="row"
                 align="center"
                 justify="center"
-                style={{
-                  borderWidth: 1,
-                  borderColor: 'rgba(255,255,255,0.7)',
-                  borderRadius: 18,
-                  paddingHorizontal: 14,
-                  paddingVertical: 6,
-                  backgroundColor: 'transparent',
-                  minWidth: 90,
-                  minHeight: 36,
-                }}
+                className="border border-white/70 rounded-[18px] px-3.5 py-1.5 bg-transparent min-w-[90px] min-h-9"
                 onPress={() => addApp(mode)}>
                 <Icon
                   name="add"
                   size={18}
                   color="#fff"
-                  style={{ marginRight: 6 }}
+                  className="mr-1.5"
                 />
-                <Text
-                  style={{
-                    color: '#fff',
-                    fontSize: 15,
-                    fontWeight: '500',
-                    opacity: 0.85,
-                  }}>
+                <Text className="text-white text-[15px] font-medium opacity-85">
                   添加APP
                 </Text>
               </Flex>
@@ -120,30 +119,32 @@ const ModeSwitcher: React.FC<Props> = ({
           }
           return (
             <Flex
-              style={styles.iconRowInner}
+              className="h-9 gap-2"
               justify="center"
               align="center"
               onPress={() => addApp(mode)}>
               {showApps.map(app => (
-                <View key={app.packageName} style={styles.appIconWrap}>
+                <View 
+                  key={app.packageName} 
+                  className="w-9 h-9 rounded-[18px] overflow-hidden bg-white mx-0"
+                  style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}>
                   <Animated.Image
                     source={{ uri: 'data:image/jpeg;base64,' + app.icon }}
-                    style={styles.appIcon}
+                    className="w-9 h-9 rounded-[18px]"
                     resizeMode="cover"
                   />
                 </View>
               ))}
               {apps.length > 4 && (
                 <View
-                  style={[
-                    styles.appIconWrap,
-                    {
-                      backgroundColor: '#eee',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    },
-                  ]}>
-                  <Text style={{ fontSize: 12, color: '#888' }}>
+                  className="w-9 h-9 rounded-[18px] justify-center items-center bg-[#eee]">
+                  <Text className="text-xs text-[#888]">
                     +{apps.length - 4}
                   </Text>
                 </View>
@@ -155,88 +156,5 @@ const ModeSwitcher: React.FC<Props> = ({
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    marginHorizontal: 20,
-    marginBottom: 0,
-  },
-  activeBtn: {
-    backgroundColor: '#fff',
-    shadowColor: '#ddd',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-  },
-  btnGroup: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    alignSelf: 'center',
-    borderRadius: 10,
-    padding: 0,
-    marginBottom: 12,
-    width: 230,
-  },
-  btn: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    borderRadius: 10,
-    minWidth: 60,
-    margin: 0,
-    paddingVertical: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 38,
-    borderWidth: 0,
-  },
-  btnText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 15,
-    opacity: 0.8,
-  },
-  activeText: {
-    color: '#333',
-    opacity: 1,
-  },
-  desc: {
-    color: '#fff',
-    fontSize: 15,
-    marginTop: 8,
-    minHeight: 22,
-    textAlign: 'center',
-  },
-  appIconsRow: {
-    minHeight: 36,
-    marginTop: 12,
-    marginBottom: 6,
-    height: 36,
-  },
-  iconRowInner: {
-    height: 36,
-    gap: 8,
-  },
-  appIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
-    marginHorizontal: 0,
-  },
-  appIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-});
 
 export default ModeSwitcher;

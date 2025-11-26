@@ -5,6 +5,7 @@
     "checkJs": true,
     "skipLibCheck": true,
     "strictNullChecks": false,
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }

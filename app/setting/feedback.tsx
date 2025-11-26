@@ -2,12 +2,11 @@ import { toast } from '@/utils';
 import {
   Button,
   Checkbox,
-  Space,
   TextInput,
 } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 const App = () => {
   const { colors, dark } = useTheme();
@@ -25,22 +24,17 @@ const App = () => {
     toast('提交成功，感谢您的反馈！');
   };
 
-  // 动态样式
-  const dynamicStyles = {
-    inputWrap: {
-      backgroundColor: colors.card,
-      borderRadius: 9,
-      marginBottom: 30,
-      paddingVertical: 15,
-      paddingHorizontal: 15,
-    },
-  };
-
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <Space align="stretch" style={styles.wrap}>
-        <Text style={{ fontSize: 16, color: colors.text }}>反馈类型</Text>
-        <View style={dynamicStyles.inputWrap}>
+    <View
+      className="flex-1 pt-[30px]"
+      style={{ backgroundColor: colors.background }}>
+      <View className="flex-col items-stretch mx-5">
+        <Text className="text-base" style={{ color: colors.text }}>
+          反馈类型
+        </Text>
+        <View
+          className="rounded-lg mb-[30px] py-[15px] px-[15px]"
+          style={{ backgroundColor: colors.card }}>
           <Checkbox.Group
             value={type}
             iconSize={20}
@@ -53,10 +47,14 @@ const App = () => {
             onChange={v => setType(v as string)}
           />
         </View>
-      </Space>
-      <Space align="stretch" style={styles.wrap}>
-        <Text style={{ fontSize: 16, color: colors.text }}>反馈内容</Text>
-        <View style={dynamicStyles.inputWrap}>
+      </View>
+      <View className="flex-col items-stretch mx-5">
+        <Text className="text-base" style={{ color: colors.text }}>
+          反馈内容
+        </Text>
+        <View
+          className="rounded-lg mb-[30px] py-[15px] px-[15px]"
+          style={{ backgroundColor: colors.card }}>
           <TextInput
             type="textarea"
             rows={4}
@@ -68,10 +66,10 @@ const App = () => {
             onChange={setReason}
           />
         </View>
-      </Space>
+      </View>
       <Button
         disabled={!reason || !type}
-        style={styles.wrap}
+        style={{ marginHorizontal: 20 }}
         loading={loading}
         onPress={toSubmit}>
         提交反馈
@@ -79,15 +77,5 @@ const App = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    paddingTop: 30,
-  },
-  wrap: {
-    marginHorizontal: 20,
-  },
-});
 
 export default App;

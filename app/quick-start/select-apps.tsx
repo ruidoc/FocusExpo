@@ -17,7 +17,7 @@ const TimeSlider = () => {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 2 }}>
-        <Flex direction="row" align="center" style={{ gap: 0 }}>
+        <Flex direction="row" align="center" className="gap-0">
           {astore.ios_selected_apps.map(item => (
             <AppToken key={item.stableId} app={item} size={23} />
           ))}
@@ -28,12 +28,8 @@ const TimeSlider = () => {
           direction="row"
           align="center"
           justify="center"
-          style={{ padding: 16 }}>
-          <Text
-            style={{
-              color: '#999',
-              fontSize: 16,
-            }}>
+          className="p-4">
+          <Text className="text-[#999] text-base">
             请添加APP
           </Text>
         </Flex>

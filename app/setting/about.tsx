@@ -1,26 +1,19 @@
 import { useCustomTheme } from '@/config/theme';
-import { Flex, Space } from '@fruits-chain/react-native-xiaoshu';
 import { Link } from 'expo-router';
-import { useState } from 'react';
-import { Image, StyleSheet, Text } from 'react-native';
+import { Image, Text, View } from 'react-native';
 
 const App = () => {
   const { colors } = useCustomTheme();
-  const [agree, setAgree] = useState(false);
 
-  const changeStage = (val: boolean) => {
-    setAgree(val);
-  };
   return (
-    <Flex justify="center" style={styles.root}>
-      <Space align="center" style={styles.logobox}>
+    <View className="flex-1 items-start">
+      <View className="flex-col items-center mt-20">
         <Image
           source={require('@/assets/images/splash.png')}
-          style={styles.avator}
+          className="w-[130px] h-[180px] rounded-none"
         />
-        {/* <Text style={{ fontSize: 20, color: colors.text }}>Version 1.0</Text> */}
-      </Space>
-      <Space justify="center" align="center" gap={3} style={styles.footer}>
+      </View>
+      <View className="flex-row justify-center items-center gap-0.5 absolute bottom-[50px] left-0 right-0 px-[30px]">
         <Link
           href={{
             pathname: '/others/webview',
@@ -35,31 +28,9 @@ const App = () => {
         <Text className="text-white mt-2 text-sm">
           北京自由岸科技 ©️版权所有
         </Text>
-      </Space>
-    </Flex>
+      </View>
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  logobox: {
-    marginTop: 80,
-  },
-  avator: {
-    width: 130,
-    height: 180,
-    borderRadius: 0,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 50,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 30,
-  },
-});
 
 export default App;

@@ -1,13 +1,11 @@
-import Icon from '@expo/vector-icons/Ionicons';
-import { Tabs, useNavigation } from 'expo-router';
-import React from 'react';
-
-// import { useColorScheme } from '@/hooks/useColorScheme';
 import { BottomTabOptions, buttonRipple } from '@/config/navigation';
+import { useCustomTheme } from '@/config/theme';
 import { toast } from '@/utils';
+import Icon from '@expo/vector-icons/Ionicons';
 import { Space } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTheme } from '@react-navigation/native';
+import { Tabs, useNavigation } from 'expo-router';
+import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
 // 左侧组件
@@ -44,8 +42,7 @@ const RightDom = ({
 );
 
 const TabLayout = () => {
-  // const colorScheme = useColorScheme();
-  const { colors, dark } = useTheme();
+  const { colors, isDark } = useCustomTheme();
   const navigation = useNavigation();
 
   const toRoute = async (path: string) => {
@@ -57,8 +54,8 @@ const TabLayout = () => {
   };
 
   const tabBarStyle = {
-    backgroundColor: dark ? '#14141C' : colors.card,
-    borderTopColor: dark ? '#1C1C26' : colors.border,
+    backgroundColor: isDark ? '#14141C' : colors.card,
+    borderTopColor: isDark ? '#1C1C26' : colors.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     elevation: 0,
   } as const;

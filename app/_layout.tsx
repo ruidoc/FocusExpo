@@ -1,16 +1,15 @@
-import { ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { router, Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-
 import { buttonRipple, ScreenOptions } from '@/config/navigation';
-import '@/config/styles.css';
 import { useCustomTheme } from '@/config/theme';
+import '@/global.css';
 import { AppStore, PlanStore, RecordStore } from '@/stores';
 import { storage } from '@/utils';
 import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Provider, Space } from '@fruits-chain/react-native-xiaoshu';
+import { ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import { router, Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 import {
   AppState,
@@ -199,6 +198,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={theme.navigation}>
       <Provider theme={theme.xiaoshu}>
+        <StatusBar style={theme.isDark ? 'light' : 'dark'} />
         <Stack
           screenOptions={{
             ...ScreenOptions,
@@ -272,7 +272,6 @@ export default function RootLayout() {
           />
           <Stack.Screen name="+not-found" />
         </Stack>
-        <StatusBar style={theme.isDark ? 'light' : 'dark'} />
       </Provider>
     </ThemeProvider>
   );
