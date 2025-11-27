@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { Text } from 'react-native';
 import DialogComponent from './component';
 
 interface DialogConfig {
@@ -68,7 +69,7 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({
         onPressConfirm={handleConfirm}
         onPressCancel={handleCancel}>
         {config.message && (
-          <Text style={{ color: '#333', fontSize: 16, lineHeight: 24 }}>
+          <Text className="text-[17px] text-center leading-6 text-white/80">
             {config.message}
           </Text>
         )}

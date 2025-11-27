@@ -1,24 +1,31 @@
 import { useTheme } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
-import {
-  Animated,
-  Modal,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { BottomSheet } from './action';
 
 // ActionSheet 配置
 interface ActionSheetConfig {
-  actions: string[];
+  actions?: string[];
   cancelText?: string;
   description?: string;
+  children?:
+  | React.ReactNode
+  | ((helpers: {
+    onCancel: () => void;
+    onActionPress: (index: number) => void;
+  }) => React.ReactNode);
+  actionStyle?: ViewStyle;
+  cancelStyle?: ViewStyle;
+  contentStyle?: ViewStyle;
+  className?: string;
+  showIndicator?: boolean;
+  showCloseButton?: boolean;
 }
 
 // 全局 ActionSheet 管理器
 class ActionSheetManager {
-  private listeners: Set<(config: ActionSheetConfig | null) => void> = new Set();
+  private listeners: Set<(config: ActionSheetConfig | null) => void> =
+    new Set();
   private currentResolve: ((index?: number) => void) | null = null;
   private currentReject: ((error?: any) => void) | null = null;
 
@@ -41,7 +48,7 @@ class ActionSheetManager {
     this.listeners.forEach(listener => listener(null));
   }
 
-  subscribe(listener: (config: ActionSheetConfig | null) => void) {
+  subscribe(listener: (config: ActionSheetConfig | null) => void): () => void {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
@@ -51,164 +58,253 @@ class ActionSheetManager {
 
 const actionSheetManager = new ActionSheetManager();
 
+// 共享的内容渲染组件（不包含容器和顶部指示条，这些由 BottomSheet 处理）
+const ActionSheetBody: React.FC<{
+  config: ActionSheetConfig;
+  onActionPress: (index: number) => void;
+  onCancel: () => void;
+  colors: any;
+}> = ({ config, onActionPress, onCancel, colors }) => {
+  const hasCustomContent = !!config.children;
+  const hasActions = config.actions && config.actions.length > 0;
+
+  return (
+    <>
+      {/* 描述文本 */}
+      {config.description && (
+        <View className="px-6 py-5">
+          <Text
+            className="text-[17px] text-center leading-6 text-white/80">
+            {config.description}
+          </Text>
+        </View>
+      )}
+
+      {/* 自定义内容 */}
+      {hasCustomContent && (
+        <View className="px-4 py-5">
+          {typeof config.children === 'function'
+            ? config.children({ onCancel, onActionPress })
+            : config.children}
+        </View>
+      )}
+
+      {/* 默认操作按钮 */}
+      {hasActions && (
+        <View className="px-4 py-2">
+          {config.actions!.map((action, index) => (
+            <TouchableOpacity
+              key={index}
+              className="py-4 px-4 rounded-3xl bg-[#171717]"
+              onPress={() => onActionPress(index)}
+              activeOpacity={0.7}>
+              <Text
+                className="text-base text-center font-semibold"
+                style={{ color: colors.primary }}>
+                {action}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* 取消按钮 */}
+      {config.cancelText && (
+        <View className="px-4 pb-6 pt-2">
+          <TouchableOpacity
+            className="py-4 px-4 rounded-3xl bg-[#171717]"
+            onPress={onCancel}
+            activeOpacity={0.7}>
+            <Text
+              className="text-base text-center font-medium"
+              style={{ color: colors.text }}>
+              {config.cancelText}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </>
+  );
+};
+
+// ActionSheet Modal 组件（使用 BottomSheet 组件）
+const ActionSheetModal: React.FC<{
+  visible: boolean;
+  config: ActionSheetConfig;
+  onActionPress: (index: number) => void;
+  onCancel: () => void;
+  onModalHide?: () => void;
+}> = ({ visible, config, onActionPress, onCancel, onModalHide }) => {
+  const { colors } = useTheme();
+
+  return (
+    <BottomSheet
+      visible={visible}
+      onClose={onCancel}
+      onModalHide={onModalHide}
+      showIndicator={config.showIndicator !== false}
+      showCloseButton={config.showCloseButton}
+      contentStyle={config.contentStyle}
+      className={config.className || ''}>
+      <ActionSheetBody
+        config={config}
+        onActionPress={onActionPress}
+        onCancel={onCancel}
+        colors={colors}
+      />
+    </BottomSheet>
+  );
+};
+
 // ActionSheet 全局组件（用于静态方法）
 const ActionSheetGlobal: React.FC = () => {
-  const { colors } = useTheme();
-  const [visible, setVisible] = useState(false);
   const [config, setConfig] = useState<ActionSheetConfig | null>(null);
-  const slideAnim = useState(new Animated.Value(300))[0];
-  const opacityAnim = useState(new Animated.Value(0))[0];
+  const [visible, setVisible] = useState(false);
+  const pendingActionIndexRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const unsubscribe = actionSheetManager.subscribe(newConfig => {
       setConfig(newConfig);
-      if (newConfig) {
-        setVisible(true);
-        Animated.parallel([
-          Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacityAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      } else {
-        Animated.parallel([
-          Animated.timing(slideAnim, {
-            toValue: 300,
-            duration: 250,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacityAnim, {
-            toValue: 0,
-            duration: 250,
-            useNativeDriver: true,
-          }),
-        ]).start(() => {
-          setVisible(false);
-        });
-      }
+      setVisible(!!newConfig);
+      pendingActionIndexRef.current = undefined;
     });
     return unsubscribe;
   }, []);
 
-  const handleActionPress = (index: number) => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 300,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      actionSheetManager.hide(index);
-    });
-  };
+  const handleActionPress = useCallback((index: number) => {
+    // 保存 index，等待动画完成后再使用
+    pendingActionIndexRef.current = index;
+    // 先触发退出动画
+    setVisible(false);
+  }, []);
 
-  const handleCancel = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 300,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
+  const handleCancel = useCallback(() => {
+    // 清除 pendingActionIndex，表示是取消操作
+    pendingActionIndexRef.current = undefined;
+    // 先触发退出动画
+    setVisible(false);
+  }, []);
+
+  const handleModalHide = useCallback(() => {
+    // 动画完成后，根据 pendingActionIndex 调用相应的 hide
+    if (pendingActionIndexRef.current !== undefined) {
+      actionSheetManager.hide(pendingActionIndexRef.current);
+    } else {
       actionSheetManager.hide();
-    });
-  };
+    }
+    setConfig(null);
+    setVisible(false);
+    pendingActionIndexRef.current = undefined;
+  }, []);
 
-  if (!config) {
-    return null;
-  }
+  if (!config) return null;
 
   return (
-    <Modal
+    <ActionSheetModal
       visible={visible}
-      transparent
-      animationType="none"
-      onRequestClose={handleCancel}>
-      <Pressable
-        className="flex-1 justify-end"
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-        onPress={handleCancel}>
-        <Animated.View
-          style={{
-            opacity: opacityAnim,
-            transform: [{ translateY: slideAnim }],
-          }}>
-          <Pressable
-            className="bg-white rounded-t-[20px] overflow-hidden"
-            style={{ backgroundColor: colors.card }}
-            onPress={e => e.stopPropagation()}>
-            {config.description && (
-              <View className="px-5 pt-5 pb-3">
-                <Text
-                  className="text-base text-center leading-6"
-                  style={{ color: colors.text }}>
-                  {config.description}
-                </Text>
-              </View>
-            )}
-            <View className="px-2 py-2">
-              {config.actions.map((action, index) => (
-                <TouchableOpacity
-                  key={index}
-                  className="py-4 px-4 rounded-lg mb-2"
-                  style={{ backgroundColor: colors.background }}
-                  onPress={() => handleActionPress(index)}
-                  activeOpacity={0.7}>
-                  <Text
-                    className="text-base text-center font-medium"
-                    style={{ color: colors.primary }}>
-                    {action}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {config.cancelText && (
-              <View className="px-2 pb-4">
-                <TouchableOpacity
-                  className="py-4 px-4 rounded-lg"
-                  style={{ backgroundColor: colors.background }}
-                  onPress={handleCancel}
-                  activeOpacity={0.7}>
-                  <Text
-                    className="text-base text-center"
-                    style={{ color: colors.text }}>
-                    {config.cancelText}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </Pressable>
-        </Animated.View>
-      </Pressable>
-    </Modal>
+      config={config}
+      onActionPress={handleActionPress}
+      onCancel={handleCancel}
+      onModalHide={handleModalHide}
+    />
   );
 };
 
-// ActionSheet 函数
+// ActionSheet 函数（静态方法）
 const ActionSheet = (config: ActionSheetConfig): Promise<number> => {
   return actionSheetManager.show(config);
 };
 
+// ActionSheet 组件（可自定义内容）
+interface ActionSheetComponentProps {
+  visible: boolean;
+  onClose: () => void;
+  onActionPress?: (index: number) => void;
+  actions?: string[];
+  cancelText?: string;
+  description?: string;
+  children?:
+  | React.ReactNode
+  | ((helpers: {
+    onCancel: () => void;
+    onActionPress: (index: number) => void;
+  }) => React.ReactNode);
+  actionStyle?: ViewStyle;
+  cancelStyle?: ViewStyle;
+  contentStyle?: ViewStyle;
+  className?: string;
+  showIndicator?: boolean;
+  showCloseButton?: boolean;
+}
+
+const ActionSheetComponent: React.FC<ActionSheetComponentProps> = ({
+  visible,
+  onClose,
+  onActionPress,
+  actions = [],
+  cancelText,
+  description,
+  children,
+  actionStyle,
+  cancelStyle,
+  contentStyle,
+  className = '',
+  showIndicator = true,
+  showCloseButton = false,
+}) => {
+  const handleActionPress = useCallback(
+    (index: number) => {
+      onActionPress?.(index);
+      onClose();
+    },
+    [onActionPress, onClose],
+  );
+
+  const config: ActionSheetConfig = {
+    actions,
+    cancelText,
+    description,
+    children:
+      typeof children === 'function'
+        ? (helpers: {
+          onCancel: () => void;
+          onActionPress: (index: number) => void;
+        }) => {
+          const childFn = children as unknown as (helpers: {
+            onClose: () => void;
+            onActionPress: (index: number) => void;
+          }) => React.ReactNode;
+          return childFn({
+            onClose: helpers.onCancel,
+            onActionPress: helpers.onActionPress,
+          });
+        }
+        : children,
+    actionStyle,
+    cancelStyle,
+    contentStyle,
+    className,
+    showIndicator,
+    showCloseButton,
+  };
+
+  return (
+    <ActionSheetModal
+      visible={visible}
+      config={config}
+      onActionPress={handleActionPress}
+      onCancel={onClose}
+    />
+  );
+};
+
 // 导出 ActionSheet 对象
-const ActionSheetComponent = Object.assign(ActionSheet, {
+const ActionSheetExport = Object.assign(ActionSheet, {
   Global: ActionSheetGlobal,
+  Component: ActionSheetComponent,
 });
 
-export default ActionSheetComponent;
+export default ActionSheetExport;
+export { BottomSheet } from './action';
+export { ActionSheetComponent };
 
