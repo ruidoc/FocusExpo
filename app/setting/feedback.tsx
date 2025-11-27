@@ -1,9 +1,6 @@
+import { Checkbox, TextInput } from '@/components/ui';
 import { toast } from '@/utils';
-import {
-  Button,
-  Checkbox,
-  TextInput,
-} from '@fruits-chain/react-native-xiaoshu';
+import { Button } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
@@ -53,7 +50,7 @@ const App = () => {
           反馈内容
         </Text>
         <View
-          className="rounded-lg mb-[30px] py-[15px] px-[15px]"
+          className="rounded-lg mb-[30px] py-[10px] px-[15px]"
           style={{ backgroundColor: colors.card }}>
           <TextInput
             type="textarea"

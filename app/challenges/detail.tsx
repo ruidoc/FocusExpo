@@ -1,12 +1,11 @@
 import { Page } from '@/components/business';
-import { Flex } from '@/components/ui';
+import { Checkbox, Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { Challenge } from '@/stores/challenge';
 import PlanStore from '@/stores/plan';
 import {
   Button,
   Card,
-  Checkbox,
   Space,
   Tag,
   Toast,
@@ -371,7 +370,6 @@ const ChallengeDetailScreen = observer(() => {
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}>
-
         {/* 页面标题 */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>挑战详情</Text>
@@ -509,7 +507,7 @@ const ChallengeDetailScreen = observer(() => {
                   style={[
                     styles.planItem,
                     selectedPlanIds.includes(plan.id!) &&
-                    styles.planItemSelected,
+                      styles.planItemSelected,
                   ]}
                   onPress={() => togglePlanSelection(plan.id!)}>
                   <Flex className="gap-3">
@@ -554,6 +552,5 @@ const ChallengeDetailScreen = observer(() => {
     </Page>
   );
 });
-
 
 export default ChallengeDetailScreen;

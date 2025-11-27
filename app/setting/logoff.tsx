@@ -1,5 +1,6 @@
+import { TextInput } from '@/components/ui';
 import { toast } from '@/utils';
-import { Button, TextInput } from '@fruits-chain/react-native-xiaoshu';
+import { Button } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { useState } from 'react';
 import { Text, View } from 'react-native';

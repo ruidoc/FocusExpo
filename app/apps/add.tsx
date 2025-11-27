@@ -1,8 +1,8 @@
 import { Page } from '@/components/business';
+import { Flex } from '@/components/ui';
 import { AppStore, GuideStore, HomeStore, UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Space } from '@fruits-chain/react-native-xiaoshu';
-import { Flex } from '@/components/ui';
 import { useNavigation, useRoute, useTheme } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useRef, useState } from 'react';
@@ -153,7 +153,7 @@ const App = observer(() => {
       key={app.packageName}
       style={row ? { width: 63 } : styles.appWrap}
       onPress={() => (row ? null : appChange(app.packageName))}
-      justify="center">
+      className="justify-center">
       <Space align="center" style={styles.itemWrap} gap={0}>
         <Image
           source={{

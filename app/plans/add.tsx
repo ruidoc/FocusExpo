@@ -6,10 +6,10 @@ import { AppStore, PlanStore } from '@/stores';
 import { parseRepeat, toast } from '@/utils';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
+import { TextInput } from '@/components/ui';
 import {
   DatePicker,
   Field,
-  TextInput,
 } from '@fruits-chain/react-native-xiaoshu';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';

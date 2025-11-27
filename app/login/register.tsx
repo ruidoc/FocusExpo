@@ -1,11 +1,11 @@
 import { Privicy } from '@/components/business';
 import { Keyboard } from '@/components/system';
+import { TextInput } from '@/components/ui';
 import { UserStore } from '@/stores';
 import { toast } from '@/utils';
 import {
   Button,
   Flex,
-  TextInput,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';

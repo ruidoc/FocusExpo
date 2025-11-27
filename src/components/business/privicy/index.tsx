@@ -1,8 +1,7 @@
-import { Flex } from '@/components/ui';
-import { Checkbox } from "@fruits-chain/react-native-xiaoshu";
-import { Link, useTheme } from "@react-navigation/native";
-import { useEffect, useState } from "react";
-import { Text } from "react-native";
+import { Checkbox, Flex } from '@/components/ui';
+import { Link, useTheme } from '@react-navigation/native';
+import { useEffect, useState } from 'react';
+import { Text } from 'react-native';
 
 interface Props {
   agree?: boolean;
@@ -30,14 +29,13 @@ const Privicy = (props: Props) => {
         onPress={() => changeStage(!agree)}
         activeColor={colors.primary}
       />
-      <Text className="ml-0.5" style={{ color: dark ? "#fff" : "#333" }}>
+      <Text className="ml-0.5" style={{ color: dark ? '#fff' : '#333' }}>
         已阅读并同意
       </Text>
       <Link
         href="/WebView"
         style={{ color: colors.primary }}
-        action={{ type: "push" }}
-      >
+        action={{ type: 'push' }}>
         《隐私政策》
       </Link>
     </Flex>

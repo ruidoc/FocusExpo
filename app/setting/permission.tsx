@@ -1,7 +1,6 @@
 import { Page } from '@/components/business';
-import { Divider } from '@/components/ui';
+import { Divider, Switch } from '@/components/ui';
 import { PermisStore } from '@/stores';
-import { Switch } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
