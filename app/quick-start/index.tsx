@@ -1,4 +1,4 @@
-import { Button, Flex } from '@/components/ui';
+import { Button, Flex, Toast } from '@/components/ui';
 import {
   AppStore,
   BenefitStore,
@@ -8,7 +8,6 @@ import {
 } from '@/stores';
 import { selectAppsToLimit, startAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
@@ -63,7 +62,9 @@ const QuickStartPage = observer(() => {
                 onPress={selectApps}
                 className="justify-between items-center bg-black/20 px-2 py-1 rounded-[14px]">
                 <Icon name="add" size={17} color={colors.text} />
-                <Text className="text-white text-xs" style={{ color: colors.text }}>
+                <Text
+                  className="text-white text-xs"
+                  style={{ color: colors.text }}>
                   添加{' '}
                 </Text>
               </Flex>
@@ -82,9 +83,7 @@ const QuickStartPage = observer(() => {
       headerLeft: (): React.ReactNode => null,
       headerTransparent: true,
       headerRight: (): React.ReactNode => (
-        <Pressable
-          onPress={() => navigation.goBack()}
-          className="px-4 py-2">
+        <Pressable onPress={() => navigation.goBack()} className="px-4 py-2">
           <Icon name="close" size={22} color="#fff" />
         </Pressable>
       ),
@@ -195,9 +194,7 @@ const QuickStartPage = observer(() => {
     <>
       <ScrollView className="flex-1 px-5">
         <Flex className="justify-center mt-[30px] mb-[25px]">
-          <Text className="text-xl font-bold text-white">
-            快速开始
-          </Text>
+          <Text className="text-xl font-bold text-white">快速开始</Text>
         </Flex>
         <ItemRow title="选择APP" tag="apps">
           {Platform.OS === 'ios' ? (
@@ -265,7 +262,9 @@ const QuickStartPage = observer(() => {
           </Flex>
           <Flex className="justify-between px-4 mt-2">
             <Flex>
-              <Text className="text-xs text-white/65">可用自律币：{bstore.balance}</Text>
+              <Text className="text-xs text-white/65">
+                可用自律币：{bstore.balance}
+              </Text>
               {(bstore.balance || 0) < customBet && (
                 <Pressable
                   onPress={() => router.push('/user/coins')}
@@ -274,7 +273,9 @@ const QuickStartPage = observer(() => {
                 </Pressable>
               )}
             </Flex>
-            <Text className="text-xs text-white/65">本次将消耗：{customBet}</Text>
+            <Text className="text-xs text-white/65">
+              本次将消耗：{customBet}
+            </Text>
           </Flex>
           <View className="px-4 mt-1">
             <Text className="text-xs text-white/65 opacity-80">

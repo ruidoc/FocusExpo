@@ -1,22 +1,26 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import { PageProps } from './type';
 import { useTheme } from '@react-navigation/native';
+import React from 'react';
+import { Text, View } from 'react-native';
+import { PageProps } from './type';
 
 const Card = (props: PageProps) => {
   const { colors } = useTheme();
+  const cardClassName =
+    `rounded-lg overflow-hidden ${props.className || ''}`.trim();
 
   return (
-    <View className="rounded-lg overflow-hidden" style={{ backgroundColor: colors.card }}>
-      <View className="flex-row justify-between items-center p-3.5 border-b border-[0.5px]" style={{ borderBottomColor: colors.border }}>
+    <View className={cardClassName} style={{ backgroundColor: colors.card }}>
+      <View
+        className="flex-row justify-between items-center p-3.5 border-b border-[0.5px]"
+        style={{ borderBottomColor: colors.border }}>
         <View>
-          <Text className="text-[15px] font-bold mb-0.5" style={{ color: colors.text }}>
+          <Text
+            className="text-[15px] font-bold mb-0.5"
+            style={{ color: colors.text }}>
             {props.title}
           </Text>
           {props.desc && (
-            <Text className="text-xs text-[#888]">
-              {props.desc}
-            </Text>
+            <Text className="text-xs text-[#888]">{props.desc}</Text>
           )}
         </View>
         {props.action}

@@ -5,4 +5,5 @@ interface PageProps {
   desc?: string;
   action?: ReactNode | undefined;
   children: ReactNode | undefined;
+  className?: string;
 }

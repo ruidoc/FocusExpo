@@ -1,4 +1,4 @@
-import { Dialog } from '@fruits-chain/react-native-xiaoshu';
+import { Dialog } from '@/components/ui';
 import * as Notifications from 'expo-notifications';
 import { makeAutoObservable } from 'mobx';
 import { NativeModules, Platform } from 'react-native';
@@ -57,7 +57,7 @@ class PermissionStore {
         console.log('通知权限结果:', result);
 
         if (result.status !== 'granted') {
-          Dialog({
+          Dialog.confirm({
             title: '通知权限提醒',
             message:
               '为了确保前台服务稳定运行，并持续显示专注时间，您需要授予通知权限。\n\n' +

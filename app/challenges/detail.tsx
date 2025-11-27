@@ -1,15 +1,9 @@
 import { Page } from '@/components/business';
-import { Checkbox, Flex } from '@/components/ui';
+import { Button, Checkbox, Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { Challenge } from '@/stores/challenge';
 import PlanStore from '@/stores/plan';
-import {
-  Button,
-  Card,
-  Space,
-  Tag,
-  Toast,
-} from '@fruits-chain/react-native-xiaoshu';
+import { Card, Tag, Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -475,7 +469,7 @@ const ChallengeDetailScreen = observer(() => {
           </Flex>
         </Card>
 
-        <Space />
+        <Flex />
 
         {/* 领取按钮 */}
         <Button
@@ -486,7 +480,7 @@ const ChallengeDetailScreen = observer(() => {
           {challenge.is_active ? '领取挑战' : '挑战已下架'}
         </Button>
 
-        <Space />
+        <Flex />
       </ScrollView>
 
       {/* 计划选择弹框 */}

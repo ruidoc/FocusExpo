@@ -1,13 +1,8 @@
 import { Privicy } from '@/components/business';
 import { Keyboard } from '@/components/system';
-import { TextInput } from '@/components/ui';
+import { Button, Flex, TextInput, Toast } from '@/components/ui';
 import { UserStore } from '@/stores';
 import { toast } from '@/utils';
-import {
-  Button,
-  Flex,
-  Toast,
-} from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -65,7 +60,7 @@ const App = observer(() => {
     });
   };
 
-  useEffect(() => { }, []);
+  useEffect(() => {}, []);
 
   const styles = StyleSheet.create({
     linearBox: {

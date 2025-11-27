@@ -1,5 +1,5 @@
 import { Page } from '@/components/business';
-import { Toast } from '@fruits-chain/react-native-xiaoshu';
+import { Toast } from '@/components/ui';
 import { ErrorCode, useIAP } from 'expo-iap';
 import React, { useEffect } from 'react';
 import {
@@ -12,7 +12,11 @@ import {
 } from 'react-native';
 
 // 请将以下 SKU 替换为你在 App Store Connect 配置的实际消耗型产品 ID
-const consumableSkus = ['com.focusone.coins_10', 'com.focusone.coins_30', 'com.focusone.coins_50'];
+const consumableSkus = [
+  'com.focusone.coins_10',
+  'com.focusone.coins_30',
+  'com.focusone.coins_50',
+];
 
 export default function UserCoinsPage() {
   const [loading, setLoading] = React.useState<boolean>(false);

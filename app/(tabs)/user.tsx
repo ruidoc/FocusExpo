@@ -2,7 +2,6 @@ import { Divider, Flex } from '@/components/ui';
 import { UserStore } from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Space } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -59,7 +58,7 @@ const App = observer(() => {
     </TouchableOpacity>
   );
 
-  useEffect(() => { }, []);
+  useEffect(() => {}, []);
 
   const styles = StyleSheet.create({
     userBox: {
@@ -146,7 +145,7 @@ const App = observer(() => {
           </TouchableOpacity>
         )}
       </Flex>
-      <Space>
+      <Flex className="flex-col items-stretch gap-2">
         {store.uInfo && (
           <View style={styles.itemBoxWrap}>
             {ItemDom('#FFA238', '打卡', 'brush-sharp', {
@@ -178,7 +177,7 @@ const App = observer(() => {
             </Flex>
           </TouchableOpacity>
         )} */}
-      </Space>
+      </Flex>
     </ScrollView>
   );
 });

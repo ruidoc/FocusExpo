@@ -1,9 +1,8 @@
 import { Flex } from '@/components/ui';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Button } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Text, View } from 'react-native';
+import { Animated, Pressable, Text, View } from 'react-native';
 
 interface Props {
   mode: 'focus' | 'shield';
@@ -56,9 +55,7 @@ const ModeSwitcher: React.FC<Props> = ({
       className="rounded-2xl px-5 py-6 mx-5 mb-0"
       style={{ backgroundColor: bgColor }}>
       <View className="flex-row bg-white/30 self-center rounded-[10px] p-0 mb-3 w-[230px]">
-        <Button.Option
-          text="专注模式"
-          type="white"
+        <Pressable
           className={`flex-1 bg-transparent rounded-[10px] min-w-[60px] m-0 py-2 items-center justify-center h-[38px] border-0 ${mode === 'focus' ? 'bg-white' : ''}`}
           style={mode === 'focus' ? {
             shadowColor: '#ddd',
@@ -66,16 +63,16 @@ const ModeSwitcher: React.FC<Props> = ({
             shadowOpacity: 0.12,
             shadowRadius: 8,
           } : undefined}
-          textStyle={[
-            { color: '#fff', fontWeight: 'bold', fontSize: 15, opacity: 0.8 },
-            mode === 'focus' && { color: MODE_COLORS.focus, opacity: 1 },
-          ]}
-          onPress={() => setMode('focus')}
-          active={mode === 'focus'}
-        />
-        <Button.Option
-          text="屏蔽模式"
-          type="white"
+          onPress={() => setMode('focus')}>
+          <Text
+            style={[
+              { color: '#fff', fontWeight: 'bold', fontSize: 15, opacity: 0.8 },
+              mode === 'focus' && { color: MODE_COLORS.focus, opacity: 1 },
+            ]}>
+            专注模式
+          </Text>
+        </Pressable>
+        <Pressable
           className={`flex-1 bg-transparent rounded-[10px] min-w-[60px] m-0 py-2 items-center justify-center h-[38px] border-0 ${mode === 'shield' ? 'bg-white' : ''}`}
           style={mode === 'shield' ? {
             shadowColor: '#ddd',
@@ -83,13 +80,15 @@ const ModeSwitcher: React.FC<Props> = ({
             shadowOpacity: 0.12,
             shadowRadius: 8,
           } : undefined}
-          textStyle={[
-            { color: '#fff', fontWeight: 'bold', fontSize: 15, opacity: 0.8 },
-            mode === 'shield' && { color: MODE_COLORS.shield, opacity: 1 },
-          ]}
-          onPress={() => setMode('shield')}
-          active={mode === 'shield'}
-        />
+          onPress={() => setMode('shield')}>
+          <Text
+            style={[
+              { color: '#fff', fontWeight: 'bold', fontSize: 15, opacity: 0.8 },
+              mode === 'shield' && { color: MODE_COLORS.shield, opacity: 1 },
+            ]}>
+            屏蔽模式
+          </Text>
+        </Pressable>
       </View>
       <Text className="text-white text-[15px] mt-2 min-h-[22px] text-center">{desc}</Text>
       <Flex className="justify-center min-h-9 mt-3 mb-1.5 h-9">

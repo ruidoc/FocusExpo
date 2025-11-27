@@ -1,7 +1,7 @@
 import { Page } from '@/components/business';
+import { Toast } from '@/components/ui';
 import { vipStore } from '@/stores/vip';
 import { fenToYuan } from '@/utils';
-import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { Purchase, useIAP, validateReceipt } from 'expo-iap';
 import { LinearGradient } from 'expo-linear-gradient';

@@ -1,8 +1,7 @@
 import { Page } from '@/components/business';
-import { Divider, Flex } from '@/components/ui';
+import { ActionSheet, Divider, Flex } from '@/components/ui';
 import { UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import { ActionSheet, Space } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -46,10 +45,10 @@ const App = observer(() => {
         store.logout();
         router.back();
       })
-      .catch(e => { });
+      .catch(e => {});
   };
 
-  useEffect(() => { }, []);
+  useEffect(() => {}, []);
 
   const styles = StyleSheet.create({
     userBox: {
@@ -102,7 +101,7 @@ const App = observer(() => {
       {/* <View
         style={{ backgroundColor: '#232323', height: 0.5, margin: 0 }}></View> */}
       <Divider />
-      <Space gapVertical={10} tail={40}>
+      <Flex className="flex-col" style={{ gap: 10, paddingBottom: 40 }}>
         {store.uInfo && (
           <View style={styles.itemBoxWrap}>
             {ItemDom('用户名', { tag: 'check', label: store.uInfo.username })}
@@ -115,7 +114,7 @@ const App = observer(() => {
             {ItemDom('修改密码', { tag: 'clear', noborder: true })}
           </View>
         )}
-      </Space>
+      </Flex>
     </Page>
   );
 });

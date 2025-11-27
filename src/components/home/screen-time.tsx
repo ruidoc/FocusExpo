@@ -1,9 +1,9 @@
 // 屏幕时间权限获取页面组件
 
+import { Button } from '@/components/ui';
 import { HomeStore } from '@/stores';
 import { getScreenTimePermission } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Button } from '@fruits-chain/react-native-xiaoshu';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 const ScreenTimePermissionPage = ({
@@ -75,7 +75,7 @@ const ScreenTimePermissionPage = ({
         <Button
           style={styles.button}
           onPress={handleRequestPermission}
-          textStyle={styles.buttonText}>
+          className="text-white font-bold text-lg">
           获取权限
         </Button>
       </View>

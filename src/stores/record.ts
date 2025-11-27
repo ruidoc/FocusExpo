@@ -1,7 +1,7 @@
+import { Toast } from '@/components/ui';
 import { storage } from '@/utils';
 import http from '@/utils/request';
 import { withRetry } from '@/utils/retry';
-import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import { makeAutoObservable } from 'mobx';
 import { BenefitStore } from '.';
 

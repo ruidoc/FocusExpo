@@ -1,3 +1,4 @@
+import { ActionSheet, Dialog, Flex, Toast } from '@/components/ui';
 import { buttonRipple, ScreenOptions } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore, RecordStore } from '@/stores';
@@ -5,7 +6,7 @@ import '@/styles/global.css';
 import { storage } from '@/utils';
 import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Provider, Space } from '@fruits-chain/react-native-xiaoshu';
+import { Provider } from '@fruits-chain/react-native-xiaoshu';
 import { ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
@@ -188,17 +189,20 @@ export default function RootLayout() {
   }
 
   const BackIcon = () => (
-    <Space direction="horizontal" align="center" gap={16}>
+    <Flex className="items-center gap-4">
       <Pressable android_ripple={buttonRipple} onPress={() => router.back()}>
         <Icon name="chevron-back" size={24} color="#fff" />
       </Pressable>
-    </Space>
+    </Flex>
   );
 
   return (
     <ThemeProvider value={theme.navigation}>
       <Provider theme={theme.xiaoshu}>
         <StatusBar style={theme.isDark ? 'light' : 'dark'} />
+        <ActionSheet.Global />
+        <Dialog.Global />
+        <Toast.Global />
         <Stack
           screenOptions={{
             ...ScreenOptions,

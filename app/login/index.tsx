@@ -1,9 +1,8 @@
 import { Privicy, Wechat } from '@/components/business';
 import { Keyboard } from '@/components/system';
-import { TextInput } from '@/components/ui';
+import { Button, TextInput, Toast } from '@/components/ui';
 import { UserStore } from '@/stores';
 import { toast } from '@/utils';
-import { Button, Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';

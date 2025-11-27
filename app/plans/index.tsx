@@ -1,11 +1,10 @@
 import { AppToken, Page } from '@/components/business';
-import { Flex } from '@/components/ui';
+import { Dialog, Flex } from '@/components/ui';
 import { buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
 import { getWeekDates } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Dialog } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { observer, useLocalObservable } from 'mobx-react';

@@ -1,3 +1,4 @@
+import { Flex } from '@/components/ui';
 import {
   BenefitStore,
   HomeStore,
@@ -8,7 +9,6 @@ import {
 import { getIOSFocusStatus, stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Theme } from '@fruits-chain/react-native-xiaoshu';
-import { Flex } from '@/components/ui';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
@@ -175,7 +175,7 @@ const FocusButton = observer(() => {
         </View>
       </Flex>
       <Flex
-        justify="center"
+        className="justify-center"
         style={{ marginTop: 0, marginBottom: 20, gap: 30 }}>
         {!pstore.cur_plan && (
           <TouchableOpacity
@@ -239,7 +239,7 @@ const FocusButton = observer(() => {
         coinCost={1}
         coinBalance={BenefitStore.balance}
         onConfirm={pauseFocus}
-        onCancel={() => { }}
+        onCancel={() => {}}
         onClose={() => setShowPauseModal(false)}
       />
 
@@ -258,7 +258,7 @@ const FocusButton = observer(() => {
             : undefined
         }
         onConfirm={stopFocus}
-        onCancel={() => { }}
+        onCancel={() => {}}
         onClose={() => setShowStopModal(false)}
       />
     </>

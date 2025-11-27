@@ -1,6 +1,6 @@
+import { Toast } from '@/components/ui';
 import { getCurrentMinute, parseRepeat, storage } from '@/utils';
 import http from '@/utils/request';
-import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import dayjs from 'dayjs';
 import { makeAutoObservable } from 'mobx';
 import { NativeModules } from 'react-native';

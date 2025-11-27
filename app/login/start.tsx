@@ -1,6 +1,5 @@
+import { Button, Dialog, Flex } from '@/components/ui';
 import { HomeStore, UserStore } from '@/stores';
-import { Button, Dialog } from '@fruits-chain/react-native-xiaoshu';
-import { Flex } from '@/components/ui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   useFocusEffect,
@@ -123,7 +122,10 @@ const App = observer(() => {
         <Flex
           className="flex-col justify-center flex-[2]"
           style={styles.logoBox}>
-          <Image source={require('@/assets/images/logo.png')} style={styles.avator} />
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.avator}
+          />
           <Text
             style={{
               fontSize: 24,
@@ -153,7 +155,7 @@ const App = observer(() => {
       </Flex>
       {/* <Privicy agree={agree} onChange={handlePrivacyAgree} /> */}
       {/* 隐私政策弹窗（组件调用方式） */}
-      <Dialog.Component
+      <Dialog
         visible={privacyVisible}
         title="隐私政策"
         showCancelButton
@@ -172,7 +174,7 @@ const App = observer(() => {
             ，同意后方可继续使用。
           </Text>
         </View>
-      </Dialog.Component>
+      </Dialog>
     </LinearGradient>
   );
 });

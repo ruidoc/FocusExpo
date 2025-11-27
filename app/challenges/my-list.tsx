@@ -1,24 +1,14 @@
 import { Page } from '@/components/business';
-import { Flex } from '@/components/ui';
+import { Card, Flex, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import ChallengeStore, { UserChallenge } from '@/stores/challenge';
-import {
-  Card,
-  Tag,
-  Toast,
-} from '@fruits-chain/react-native-xiaoshu';
+import { Tag } from '@fruits-chain/react-native-xiaoshu';
 import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const MyChallengesScreen = observer(() => {
   const store = useLocalObservable(() => ChallengeStore);
@@ -42,7 +32,7 @@ const MyChallengesScreen = observer(() => {
       await store.fetchUserChallenges(status);
     } catch {
       Toast({
-        type: 'fail',
+        type: 'error',
         message: '获取我的挑战失败',
       });
     } finally {
@@ -136,7 +126,7 @@ const MyChallengesScreen = observer(() => {
     const progress = parseFloat(userChallenge.progress_percent);
 
     return (
-      <Card key={userChallenge.id} style={styles.challengeCard}>
+      <Card key={userChallenge.id} title="" className="mb-3">
         <Pressable
           onPress={() =>
             router.push({

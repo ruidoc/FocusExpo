@@ -4,7 +4,7 @@ import { useCustomTheme } from '@/config/theme';
 import { AppStore, HomeStore } from '@/stores';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { NoticeBar, Space } from '@fruits-chain/react-native-xiaoshu';
+import { NoticeBar } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
@@ -123,7 +123,7 @@ const App = observer(() => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
-        <Space gap={20}>
+        <Flex className="flex-col" style={{ gap: 20 }}>
           {Platform.OS !== 'ios' && (
             <Card
               title="专注的APP"
@@ -206,7 +206,7 @@ const App = observer(() => {
               </View>
             )}
           </Card>
-        </Space>
+        </Flex>
       </ScrollView>
     </Page>
   );

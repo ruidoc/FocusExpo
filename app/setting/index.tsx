@@ -1,9 +1,9 @@
 import { Page } from '@/components/business';
+import { ActionSheet, Switch } from '@/components/ui';
 import CustomDivider from '@/components/ui/divider';
 import { HomeStore, UserStore } from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import { ActionSheet, Switch } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
@@ -76,10 +76,10 @@ const App = observer(() => {
         store.logout();
         navigation.goBack();
       })
-      .catch(e => { });
+      .catch(e => {});
   };
 
-  useEffect(() => { }, []);
+  useEffect(() => {}, []);
 
   return (
     <Page>

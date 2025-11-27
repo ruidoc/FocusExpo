@@ -1,7 +1,6 @@
 import { Privicy, Wechat } from '@/components/business';
-import { Flex } from '@/components/ui';
+import { Button, Flex } from '@/components/ui';
 import { UserStore } from '@/stores';
-import { Button } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';

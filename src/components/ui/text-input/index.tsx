@@ -71,6 +71,7 @@ const TextInput = ({
             paddingRight: clearable && value ? 30 : 0,
             minHeight: isTextarea ? textareaHeight : undefined,
             textAlignVertical: isTextarea ? 'top' : 'center',
+            lineHeight: isTextarea ? 24 : undefined, // 多行文本增加行间距
           },
           style,
         ]}

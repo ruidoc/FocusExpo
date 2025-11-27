@@ -1,6 +1,6 @@
+import { Toast } from '@/components/ui';
 import { storage } from '@/utils';
 import http from '@/utils/request';
-import { Toast } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { makeAutoObservable } from 'mobx';
 import HomeStore from './home';

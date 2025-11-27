@@ -1,8 +1,10 @@
+import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Animated,
   Text,
+  TextStyle,
   TouchableOpacity,
   ViewStyle,
 } from 'react-native';
@@ -11,19 +13,32 @@ interface ButtonProps {
   disabled?: boolean;
   onPress: () => void;
   text?: string;
+  children?: React.ReactNode;
   style?: ViewStyle;
+  className?: string;
   loading?: boolean;
   loadingText?: string;
+  size?: 'xl' | 'l' | 'm' | 's';
+  type?: 'primary' | 'ghost' | 'custom';
+  textStyle?: TextStyle;
+  textClassName?: string;
 }
 
 const Button = ({
   disabled,
   onPress,
-  text = '下一步',
+  text,
+  children,
   style,
+  className = '',
   loading = false,
   loadingText = '加载中...',
+  size = 'l',
+  type = 'primary',
+  textStyle,
+  textClassName = '',
 }: ButtonProps) => {
+  const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -37,20 +52,67 @@ const Button = ({
 
   const isDisabled = disabled || loading;
 
+  // 根据 size 设置高度和字体大小
+  const sizeStyles = {
+    xl: { height: 52, fontSize: 17, paddingVertical: 16 },
+    l: { height: 48, fontSize: 16, paddingVertical: 14 },
+    m: { height: 44, fontSize: 15, paddingVertical: 12 },
+    s: { height: 36, fontSize: 14, paddingVertical: 8 },
+  };
+
+  const currentSizeStyle = sizeStyles[size];
+
+  // 根据 type 设置样式
+  const getButtonStyle = () => {
+    if (type === 'ghost') {
+      return {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: colors.primary || '#7A5AF8',
+      };
+    }
+    return {
+      backgroundColor: isDisabled ? '#E5E6EB' : colors.primary || '#53389E',
+    };
+  };
+
+  const getTextStyle = () => {
+    if (type === 'ghost') {
+      return {
+        color: colors.primary || '#7A5AF8',
+      };
+    }
+    return {
+      color: '#FFFFFF',
+    };
+  };
+
+  // 确定显示的文本
+  const displayText = children || text || '下一步';
+
+  // 合并按钮的 className
+  const buttonClassName =
+    `flex-row justify-center items-center rounded-[20px] ${className}`.trim();
+
+  // 合并文字的 className
+  const combinedTextClassName =
+    `font-bold tracking-[0.5px] bg-transparent ${className} ${textClassName}`.trim();
+
   return (
-    <Animated.View style={{ opacity }} className="w-[88%] self-center mb-8">
+    <Animated.View style={[{ opacity }, style]}>
       <TouchableOpacity
         activeOpacity={0.8}
-        className={`flex-row justify-center items-center py-[18px] rounded-[20px] ${isDisabled ? 'bg-[#E5E6EB]' : 'bg-[#53389E]'
-          }`}
+        className={buttonClassName}
         style={[
           {
+            ...currentSizeStyle,
             shadowColor: '#3478F6',
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.08,
             shadowRadius: 12,
             elevation: 3,
           },
+          getButtonStyle(),
           style,
         ]}
         onPress={onPress}
@@ -59,16 +121,28 @@ const Button = ({
           <>
             <ActivityIndicator
               size="small"
-              color="#fff"
+              color={type === 'ghost' ? colors.primary : '#fff'}
               className="mr-2"
             />
-            <Text className="text-white text-base font-bold tracking-[0.5px] bg-transparent">
+            <Text
+              className={combinedTextClassName}
+              style={[
+                { fontSize: currentSizeStyle.fontSize },
+                getTextStyle(),
+                textStyle,
+              ]}>
               {loadingText}
             </Text>
           </>
         ) : (
-          <Text className="text-white text-base font-bold tracking-[0.5px] bg-transparent">
-            {text}
+          <Text
+            className={combinedTextClassName}
+            style={[
+              { fontSize: currentSizeStyle.fontSize },
+              getTextStyle(),
+              textStyle,
+            ]}>
+            {displayText}
           </Text>
         )}
       </TouchableOpacity>

@@ -2,7 +2,6 @@ import { Page } from '@/components/business';
 import { Flex } from '@/components/ui';
 import { AppStore, GuideStore, HomeStore, UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Space } from '@fruits-chain/react-native-xiaoshu';
 import { useNavigation, useRoute, useTheme } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useRef, useState } from 'react';
@@ -154,7 +153,7 @@ const App = observer(() => {
       style={row ? { width: 63 } : styles.appWrap}
       onPress={() => (row ? null : appChange(app.packageName))}
       className="justify-center">
-      <Space align="center" style={styles.itemWrap} gap={0}>
+      <Flex className="items-center" style={styles.itemWrap}>
         <Image
           source={{
             uri: 'data:image/jpeg;base64,' + app.icon,
@@ -174,7 +173,7 @@ const App = observer(() => {
         <Text style={styles.desc} numberOfLines={1}>
           {app.appName}
         </Text>
-      </Space>
+      </Flex>
     </Flex>
   );
   return (

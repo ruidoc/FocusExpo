@@ -1,8 +1,8 @@
+import { Flex } from '@/components/ui';
 import { BottomTabOptions, buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Space } from '@fruits-chain/react-native-xiaoshu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Tabs, useNavigation } from 'expo-router';
 import React from 'react';
@@ -16,11 +16,11 @@ const LeftDom = ({
   colors: any;
   toRoute: (path: string) => void;
 }) => (
-  <Space direction="horizontal" align="center" gap={16} head={16}>
+  <Flex className="flex-row items-center" style={{ gap: 16, paddingLeft: 16 }}>
     <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Guide')}>
       <Icon name="help-circle-outline" size={23} color={colors.text} />
     </Pressable>
-  </Space>
+  </Flex>
 );
 
 // 右侧组件
@@ -31,14 +31,14 @@ const RightDom = ({
   colors: any;
   toRoute: (path: string) => void;
 }) => (
-  <Space direction="horizontal" align="center" gap={16} tail={16}>
+  <Flex className="flex-row items-center" style={{ gap: 16, paddingRight: 16 }}>
     <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Apps')}>
       <Icon name="grid-outline" size={19} color={colors.text} />
     </Pressable>
     <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Plans')}>
       <Icon name="time-outline" size={22} color={colors.text} />
     </Pressable>
-  </Space>
+  </Flex>
 );
 
 const TabLayout = () => {
