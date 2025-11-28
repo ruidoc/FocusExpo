@@ -35,7 +35,7 @@ const FieldGroup: React.FC<FieldGroupProps> = ({
   const dividerCol = dividerColor || colors.border;
 
   // 默认 className，如果没有提供则使用默认值
-  const defaultClassName = 'rounded-xl mb-1 overflow-hidden';
+  const defaultClassName = 'mb-1 overflow-hidden';
   const groupClassName = className
     ? `${defaultClassName} ${className}`.trim()
     : defaultClassName;

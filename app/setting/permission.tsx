@@ -1,31 +1,12 @@
 import { Page } from '@/components/business';
-import { Divider, Switch } from '@/components/ui';
+import { FieldGroup, FieldItem, Switch } from '@/components/ui';
 import { PermisStore } from '@/stores';
-import { useTheme } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { View } from 'react-native';
 
 const App = observer(() => {
   const store = useLocalObservable(() => PermisStore);
-  const { colors } = useTheme();
-
-  const ItemDom = (label: string, opts: any) => (
-    <TouchableOpacity activeOpacity={0.7}>
-      <View className="flex-row justify-between items-center px-4 py-[15px]">
-        <Text className="text-base" style={{ color: colors.text }}>
-          {label}
-        </Text>
-        <Switch
-          value={opts.open}
-          disabled={opts.open}
-          size={22}
-          onChange={() => onClick(opts.tag)}
-        />
-      </View>
-      {!opts.noborder && <Divider />}
-    </TouchableOpacity>
-  );
 
   const onClick = (tag: string) => {
     switch (tag) {
@@ -43,18 +24,33 @@ const App = observer(() => {
 
   return (
     <Page>
-      <Divider />
       <View className="flex-col gap-y-2.5 pb-10">
-        <View
-          className="mb-5 overflow-hidden"
-          style={{ backgroundColor: colors.card }}>
-          {ItemDom('允许通知', { tag: 'notify', open: store.pm_notify })}
-          {ItemDom('关闭电池优化', {
-            tag: 'battery',
-            open: store.pm_battery,
-            noborder: true,
-          })}
-        </View>
+        <FieldGroup className="rounded-xl mx-5 mb-5">
+          <FieldItem
+            title="允许通知"
+            rightElement={
+              <Switch
+                size={18}
+                value={store.pm_notify}
+                disabled={store.pm_notify}
+                onChange={() => onClick('notify')}
+              />
+            }
+            showArrow={false}
+          />
+          <FieldItem
+            title="关闭电池优化"
+            rightElement={
+              <Switch
+                size={18}
+                value={store.pm_battery}
+                disabled={store.pm_battery}
+                onChange={() => onClick('battery')}
+              />
+            }
+            showArrow={false}
+          />
+        </FieldGroup>
       </View>
     </Page>
   );

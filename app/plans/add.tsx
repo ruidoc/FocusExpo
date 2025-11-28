@@ -1,5 +1,12 @@
 import { AppToken, Page } from '@/components/business';
-import { Button, DatePicker, Flex, TextInput } from '@/components/ui';
+import {
+  Button,
+  DatePicker,
+  FieldGroup,
+  FieldItem,
+  Flex,
+  TextInput,
+} from '@/components/ui';
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
@@ -79,13 +86,6 @@ const App = observer(() => {
   }, []);
 
   const styles = StyleSheet.create({
-    item: {
-      marginBottom: 16,
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      padding: 16,
-      gap: 18,
-    },
     week: {
       width: 38,
       height: 38,
@@ -326,30 +326,6 @@ const App = observer(() => {
       });
   };
 
-  const FeildItem = (props: any) => (
-    <Flex
-      className={props.column ? 'flex-col items-stretch' : 'items-center'}
-      style={{
-        ...styles.item,
-        marginBottom: props.itemTop ? 0 : 16,
-        borderTopLeftRadius: props.itemEnd ? 0 : 12,
-        borderBottomLeftRadius: props.itemTop ? 0 : 12,
-        borderTopRightRadius: props.itemEnd ? 0 : 12,
-        borderBottomRightRadius: props.itemTop ? 0 : 12,
-        borderBottomWidth: props.itemTop ? 0.5 : 0,
-        borderColor: colors.border,
-      }}>
-      <Flex className="justify-between gap-2">
-        {/* {props.required && <Text style={{ color: 'red', fontSize: 12 }}>*</Text>} */}
-        <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>
-          {props.title}
-        </Text>
-        {props.action || null}
-      </Flex>
-      {props.children}
-    </Flex>
-  );
-
   // 渲染已选择的应用
   const renderSelectedApps = () => {
     if (Platform.OS !== 'ios' || selectedApps.length === 0) {
@@ -395,20 +371,24 @@ const App = observer(() => {
   return (
     <Page>
       <ScrollView style={{ padding: 15 }}>
-        <Flex className="gap-2" style={{ ...styles.item }}>
-          <Text>{isEditing ? '✏️' : '🏆'}</Text>
-          <TextInput
-            placeholder={isEditing ? '修改任务名称' : '给任务起个名字'}
-            value={title}
-            placeholderTextColor={colors.text2}
-            onChange={setTitle}
-          />
-        </Flex>
+        {/* 任务名称输入框 */}
+        <FieldGroup className="rounded-xl mb-4 p-4">
+          <Flex className="flex-row items-center gap-2">
+            <Text>{isEditing ? '✏️' : '🏆'}</Text>
+            <TextInput
+              placeholder={isEditing ? '修改任务名称' : '给任务起个名字'}
+              value={title}
+              placeholderTextColor={colors.text2}
+              onChange={setTitle}
+            />
+          </Flex>
+        </FieldGroup>
 
-        <FeildItem title="哪天开始" itemTop style={{ borderRadiusLeftTop: 0 }}>
-          <Flex
-            className="justify-end"
-            style={{ flex: 1 }}
+        {/* 日期选择组 */}
+        <FieldGroup className="rounded-xl mb-4">
+          <FieldItem
+            title="哪天开始"
+            rightText={dayjs(form.start_date).format('M-D')}
             onPress={() => {
               DatePicker({
                 defaultValue: form.start_date,
@@ -419,18 +399,11 @@ const App = observer(() => {
                   setInfo(value, 'start_date');
                 }
               });
-            }}>
-            <Text style={{ color: colors.text, fontSize: 16 }}>
-              {dayjs(form.start_date).format('M-D')}
-            </Text>
-            <Icon name="chevron-forward" size={20} color={colors.text} />
-          </Flex>
-        </FeildItem>
-
-        <FeildItem title="哪天结束" itemEnd>
-          <Flex
-            className="justify-end"
-            style={{ flex: 1 }}
+            }}
+          />
+          <FieldItem
+            title="哪天结束"
+            rightText={dayjs(form.end_date).format('M-D')}
             onPress={() => {
               DatePicker({
                 defaultValue: form.end_date,
@@ -441,34 +414,35 @@ const App = observer(() => {
                   setInfo(value, 'end_date');
                 }
               });
-            }}>
-            <Text style={{ color: colors.text, fontSize: 16 }}>
-              {dayjs(form.end_date).format('M-D')}
-            </Text>
-            <Icon name="chevron-forward" size={20} color={colors.text} />
-          </Flex>
-        </FeildItem>
+            }}
+          />
+        </FieldGroup>
+
+        {/* 应用选择（仅 iOS） */}
         {Platform.OS === 'ios' && (
-          <FeildItem
-            title="要屏蔽的应用"
-            column
-            bottom={16}
-            action={
-              <Pressable
-                onPress={() => selectApps(form.apps)}
-                style={styles.selectApps}>
-                <Icon name="add" size={16} color="#B3B3BA" />
-                <Text style={{ color: '#858699', fontSize: 13 }}>选择</Text>
-              </Pressable>
-            }>
-            {renderSelectedApps()}
-          </FeildItem>
+          <FieldGroup divider={false} className="rounded-xl mb-4">
+            <FieldItem
+              title="要屏蔽的应用"
+              className="pb-2"
+              rightElement={
+                <Pressable
+                  onPress={() => selectApps(form.apps)}
+                  style={styles.selectApps}>
+                  <Icon name="add" size={16} color="#B3B3BA" />
+                  <Text style={{ color: '#858699', fontSize: 13 }}>选择</Text>
+                </Pressable>
+              }
+              showArrow={false}
+            />
+            <View className="px-4 pb-4">{renderSelectedApps()}</View>
+          </FieldGroup>
         )}
 
-        <FeildItem title="几点开始" itemTop>
-          <Flex
-            className="justify-end"
-            style={{ flex: 1 }}
+        {/* 时间选择组 */}
+        <FieldGroup className="rounded-xl mb-4">
+          <FieldItem
+            title="几点开始"
+            rightText={dayjs(form.start).format('HH:mm')}
             onPress={() => {
               DatePicker({
                 defaultValue: form.start,
@@ -479,18 +453,11 @@ const App = observer(() => {
                   setInfo(value, 'start');
                 }
               });
-            }}>
-            <Text style={{ color: colors.text, fontSize: 16 }}>
-              {dayjs(form.start).format('HH:mm')}
-            </Text>
-            <Icon name="chevron-forward" size={20} color={colors.text} />
-          </Flex>
-        </FeildItem>
-
-        <FeildItem title="几点结束" itemEnd>
-          <Flex
-            className="justify-end"
-            style={{ flex: 1 }}
+            }}
+          />
+          <FieldItem
+            title="几点结束"
+            rightText={dayjs(form.end).format('HH:mm')}
             onPress={() => {
               DatePicker({
                 defaultValue: form.end,
@@ -501,72 +468,56 @@ const App = observer(() => {
                   setInfo(value, 'end');
                 }
               });
-            }}>
-            <Text style={{ color: colors.text, fontSize: 16 }}>
-              {dayjs(form.end).format('HH:mm')}
-            </Text>
-            <Icon name="chevron-forward" size={20} color={colors.text} />
-          </Flex>
-        </FeildItem>
+            }}
+          />
+        </FieldGroup>
 
-        <FeildItem
-          title="每周几生效"
-          action={
-            <Text style={{ color: colors.text3, fontSize: 14 }}>
-              已选{Array.isArray(form.repeat) ? form.repeat.length : 0}天
-            </Text>
-          }
-          column>
-          <Flex style={{ flex: 1, gap: 12, paddingBottom: 6, paddingTop: 2 }}>
-            {staticData.repeats.map(item => {
-              const isSelected =
-                Array.isArray(form.repeat) && form.repeat.includes(item.value);
-              return (
-                <Flex
-                  className="items-center justify-center"
-                  key={item.value}
-                  onPress={() => {
-                    if (Array.isArray(form.repeat)) {
-                      const newRepeat = isSelected
-                        ? form.repeat.filter(day => day !== item.value)
-                        : [...form.repeat, item.value];
-                      setInfo(newRepeat, 'repeat');
-                    }
-                  }}
-                  style={{
-                    ...styles.week,
-                    backgroundColor: isSelected
-                      ? colors.primary
-                      : colors.border,
-                  }}>
-                  <Text
+        {/* 周几选择 */}
+        <FieldGroup divider={false} className="rounded-xl mb-4">
+          <FieldItem
+            className="pb-2"
+            title="每周几生效"
+            rightText={`已选${Array.isArray(form.repeat) ? form.repeat.length : 0}天`}
+            rightTextStyle={{ fontSize: 14 }}
+            showArrow={false}
+          />
+          <View className="px-4 pb-5">
+            <Flex className="flex-1 gap-2 pt-2">
+              {staticData.repeats.map(item => {
+                const isSelected =
+                  Array.isArray(form.repeat) &&
+                  form.repeat.includes(item.value);
+                return (
+                  <Flex
+                    className="items-center justify-center"
+                    key={item.value}
+                    onPress={() => {
+                      if (Array.isArray(form.repeat)) {
+                        const newRepeat = isSelected
+                          ? form.repeat.filter(day => day !== item.value)
+                          : [...form.repeat, item.value];
+                        setInfo(newRepeat, 'repeat');
+                      }
+                    }}
                     style={{
-                      color: colors.primaryForeground,
-                      fontSize: 15,
+                      ...styles.week,
+                      backgroundColor: isSelected
+                        ? colors.primary
+                        : colors.border,
                     }}>
-                    {item.label}
-                  </Text>
-                </Flex>
-              );
-            })}
-          </Flex>
-        </FeildItem>
-
-        {Array.isArray(form.repeat) && form.repeat.length > 0 && (
-          <View style={{ paddingHorizontal: 6, paddingVertical: 4 }}>
-            <Text style={{ fontSize: 14, color: '#666' }}>
-              预计重复次数：
-              {Array.isArray(form.repeat)
-                ? calculateRepeatCount(
-                    form.start_date,
-                    form.end_date,
-                    form.repeat,
-                  )
-                : 0}{' '}
-              次
-            </Text>
+                    <Text
+                      style={{
+                        color: colors.primaryForeground,
+                        fontSize: 15,
+                      }}>
+                      {item.label}
+                    </Text>
+                  </Flex>
+                );
+              })}
+            </Flex>
           </View>
-        )}
+        </FieldGroup>
       </ScrollView>
       <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
         <Button onPress={submit} text={isEditing ? '保存修改' : '确认'} />

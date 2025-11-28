@@ -1,39 +1,16 @@
 import { Page } from '@/components/business';
-import { ActionSheet, Switch } from '@/components/ui';
-import CustomDivider from '@/components/ui/divider';
+import { ActionSheet, FieldGroup, FieldItem, Switch } from '@/components/ui';
 import { HomeStore, UserStore } from '@/stores';
 import { toast } from '@/utils';
-import Icon from '@expo/vector-icons/Ionicons';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
-import {
-  Appearance,
-  Linking,
-  Platform,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Appearance, Linking, Platform, View } from 'react-native';
 
 const App = observer(() => {
   const store = useLocalObservable(() => UserStore);
   const homeStore = useLocalObservable(() => HomeStore);
-  const { colors, dark } = useTheme();
   const navigation = useNavigation();
-
-  const ItemDom = (label: string, opts: any) => (
-    <TouchableOpacity onPress={() => onClick(opts.tag)} activeOpacity={0.7}>
-      <View className="flex-row justify-between items-center px-4 py-[15px]">
-        <Text className="text-base" style={{ color: colors.text }}>
-          {label}
-        </Text>
-        {/* @ts-ignore */}
-        <Icon name="chevron-forward" size={17} color={colors.text} as any />
-      </View>
-      {!opts.noborder && <CustomDivider />}
-    </TouchableOpacity>
-  );
 
   const onClick = (tag: string) => {
     switch (tag) {
@@ -83,61 +60,58 @@ const App = observer(() => {
 
   return (
     <Page>
-      <CustomDivider />
       <View className="flex-col gap-y-2.5 pb-10">
-        <View
-          className="mb-5 overflow-hidden"
-          style={{ backgroundColor: colors.card }}>
-          <View className="flex-row justify-between items-center px-4 py-[15px]">
-            <Text className="text-base" style={{ color: colors.text }}>
-              跟随系统主题
-            </Text>
-            <Switch
-              value={homeStore.followSystem}
-              size={22}
-              onChange={v => {
-                if (v) {
-                  // 如果开启跟随系统，使用当前系统主题
-                  const sys = Appearance.getColorScheme() || 'light';
-                  homeStore.setThem(sys === 'dark' ? 'dark' : 'light', true);
-                } else {
-                  // 如果关闭跟随系统，保持当前主题
-                  homeStore.setThem(homeStore.them, false);
-                }
-              }}
-            />
-          </View>
-          <CustomDivider />
-          <View className="flex-row justify-between items-center px-4 py-[15px]">
-            <Text className="text-base" style={{ color: colors.text }}>
-              暗色模式
-            </Text>
-            <Switch
-              value={homeStore.them === 'dark'}
-              size={22}
-              disabled={homeStore.followSystem}
-              onChange={v => homeStore.setThem(v ? 'dark' : 'light', false)}
-            />
-          </View>
-          <CustomDivider />
-          {ItemDom('检查更新', { tag: 'check' })}
-          {ItemDom('隐私', { tag: 'privicy' })}
-          {ItemDom('去评价', { tag: 'evaluate' })}
-          {store.uInfo && ItemDom('注销账号', { tag: 'logoff' })}
-          {ItemDom('清理缓存', { tag: 'clear', noborder: true })}
-        </View>
+        <FieldGroup>
+          <FieldItem
+            title="跟随系统主题"
+            rightElement={
+              <Switch
+                value={homeStore.followSystem}
+                size={18}
+                onChange={v => {
+                  if (v) {
+                    // 如果开启跟随系统，使用当前系统主题
+                    const sys = Appearance.getColorScheme() || 'light';
+                    homeStore.setThem(sys === 'dark' ? 'dark' : 'light', true);
+                  } else {
+                    // 如果关闭跟随系统，保持当前主题
+                    homeStore.setThem(homeStore.them, false);
+                  }
+                }}
+              />
+            }
+            showArrow={false}
+          />
+          <FieldItem
+            title="暗色模式"
+            rightElement={
+              <Switch
+                value={homeStore.them === 'dark'}
+                size={18}
+                disabled={homeStore.followSystem}
+                onChange={v => homeStore.setThem(v ? 'dark' : 'light', false)}
+              />
+            }
+            showArrow={false}
+          />
+          <FieldItem title="检查更新" onPress={() => onClick('check')} />
+          <FieldItem title="隐私" onPress={() => onClick('privicy')} />
+          <FieldItem title="去评价" onPress={() => onClick('evaluate')} />
+          {store.uInfo && (
+            <FieldItem title="注销账号" onPress={() => onClick('logoff')} />
+          )}
+          <FieldItem title="清理缓存" onPress={() => onClick('clear')} />
+        </FieldGroup>
         {store.uInfo && (
-          <TouchableOpacity
-            className="mb-5 overflow-hidden"
-            style={{ backgroundColor: colors.card }}
-            onPress={toLogout}
-            activeOpacity={0.7}>
-            <View className="flex-row justify-center items-center px-4 py-[15px]">
-              <Text className="text-base" style={{ color: colors.text }}>
-                退出登录
-              </Text>
-            </View>
-          </TouchableOpacity>
+          <FieldGroup>
+            <FieldItem
+              title="退出登录"
+              onPress={toLogout}
+              className="justify-center"
+              titleClassName="text-center"
+              showArrow={false}
+            />
+          </FieldGroup>
         )}
       </View>
     </Page>

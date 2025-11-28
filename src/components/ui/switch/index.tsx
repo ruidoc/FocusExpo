@@ -1,6 +1,6 @@
-import React from 'react';
-import { Switch as RNSwitch, SwitchProps as RNSwitchProps } from 'react-native';
 import { useTheme } from '@react-navigation/native';
+import React from 'react';
+import { Switch as RNSwitch } from 'react-native';
 
 interface SwitchProps {
   value?: boolean;
@@ -12,7 +12,7 @@ interface SwitchProps {
 const Switch = ({
   value = false,
   disabled = false,
-  size = 22,
+  size = 20,
   onChange,
 }: SwitchProps) => {
   const { colors } = useTheme();
@@ -25,11 +25,7 @@ const Switch = ({
   };
 
   // thumbColor 主要用于 Android
-  const thumbColor = value
-    ? '#FFFFFF'
-    : disabled
-    ? '#F5F5F5'
-    : '#FFFFFF';
+  const thumbColor = value ? '#FFFFFF' : disabled ? '#F5F5F5' : '#FFFFFF';
 
   // iOS 的 tintColor（未选中时的背景色）
   const iosBackgroundColor = colors.border || '#E5E6EB';
@@ -51,9 +47,9 @@ const Switch = ({
       // 注意：React Native Switch 的 size 属性在 iOS 上不支持自定义
       // 如果需要自定义大小，需要使用 transform scale 或其他方案
       style={
-        size !== 22
+        size !== 20
           ? {
-              transform: [{ scaleX: size / 22 }, { scaleY: size / 22 }],
+              transform: [{ scaleX: size / 20 }, { scaleY: size / 20 }],
             }
           : undefined
       }
@@ -62,4 +58,3 @@ const Switch = ({
 };
 
 export default Switch;
-
