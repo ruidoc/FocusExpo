@@ -519,7 +519,7 @@ const App = observer(() => {
           </View>
         </FieldGroup>
       </ScrollView>
-      <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+      <View className='px-5 pb-10'>
         <Button onPress={submit} text={isEditing ? '保存修改' : '确认'} />
       </View>
     </Page>

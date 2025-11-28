@@ -1,5 +1,5 @@
 import { ActionSheet, Dialog, Flex, Toast } from '@/components/ui';
-import { buttonRipple, ScreenOptions } from '@/config/navigation';
+import { ScreenOptions, buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore, RecordStore } from '@/stores';
 import '@/styles/global.css';
@@ -9,7 +9,7 @@ import Icon from '@expo/vector-icons/Ionicons';
 import { Provider } from '@fruits-chain/react-native-xiaoshu';
 import { ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { router, Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 import {
@@ -250,7 +250,7 @@ export default function RootLayout() {
             options={{
               title: '快速开始',
               // animation: 'fade_from_bottom',
-              presentation: 'modal',
+              // presentation: 'modal',
             }}
           />
           <Stack.Screen name="plans/index" options={{ title: '任务面板' }} />

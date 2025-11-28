@@ -92,7 +92,7 @@ const Button = ({
 
   // 合并按钮的 className
   const buttonClassName =
-    `flex-row justify-center items-center rounded-[20px] ${className}`.trim();
+    `flex-row justify-center items-center rounded-[24px] ${className}`.trim();
 
   // 合并文字的 className
   const combinedTextClassName =

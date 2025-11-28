@@ -1,5 +1,4 @@
-import { Flex } from '@/components/ui';
-import Slider from '@react-native-community/slider';
+import { Flex, Slider } from '@/components/ui';
 import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
@@ -43,6 +42,7 @@ const TimeSlider: React.FC<Props> = ({ minute, setMinute }) => {
         minimumTrackTintColor={dark ? colors.primary : '#0065FE'}
         maximumTrackTintColor={dark ? '#444' : '#ccc'}
         thumbTintColor={dark ? colors.primary : '#0065FE'}
+        useThemeColors={false}
         style={{ marginTop: 24 }}
       />
       <Flex className="justify-between px-0.5">

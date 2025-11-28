@@ -8,6 +8,7 @@ export { default as Divider } from './divider';
 export { default as FieldGroup } from './field-group';
 export { default as FieldItem } from './field-item';
 export { default as Flex } from './flex';
+export { default as Slider } from './slider';
 export { default as Switch } from './switch';
 export { default as TextInput } from './text-input';
 export { default as Toast } from './toast';
