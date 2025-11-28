@@ -1,16 +1,11 @@
 import { AppToken, Page } from '@/components/business';
-import { Button, Flex } from '@/components/ui';
+import { Button, DatePicker, Flex, TextInput } from '@/components/ui';
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
 import { parseRepeat, toast } from '@/utils';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { TextInput } from '@/components/ui';
-import {
-  DatePicker,
-  Field,
-} from '@fruits-chain/react-native-xiaoshu';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
@@ -470,18 +465,6 @@ const App = observer(() => {
           </FeildItem>
         )}
 
-        {Platform.OS !== 'ios' && (
-          <Field.Checkbox
-            title="模式"
-            options={[
-              { value: 'focus', label: '专注模式' },
-              { value: 'shield', label: '屏蔽模式' },
-            ]}
-            value={form.mode}
-            onChange={v => setInfo(v, 'mode')}
-          />
-        )}
-
         <FeildItem title="几点开始" itemTop>
           <Flex
             className="justify-end"
@@ -575,10 +558,10 @@ const App = observer(() => {
               预计重复次数：
               {Array.isArray(form.repeat)
                 ? calculateRepeatCount(
-                  form.start_date,
-                  form.end_date,
-                  form.repeat,
-                )
+                    form.start_date,
+                    form.end_date,
+                    form.repeat,
+                  )
                 : 0}{' '}
               次
             </Text>
