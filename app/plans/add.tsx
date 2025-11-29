@@ -1,4 +1,4 @@
-import { AppToken, Page } from '@/components/business';
+import { Page, SelectedApps } from '@/components/business';
 import {
   Button,
   DatePicker,
@@ -326,48 +326,6 @@ const App = observer(() => {
       });
   };
 
-  // 渲染已选择的应用
-  const renderSelectedApps = () => {
-    if (Platform.OS !== 'ios' || selectedApps.length === 0) {
-      return (
-        <View style={{ paddingVertical: 12 }}>
-          <Text style={{ color: '#666', fontSize: 14 }}>未选择应用</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={{ paddingVertical: 4 }}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 2 }}>
-          <Flex className="gap-2">
-            {selectedApps.map((app, index) => (
-              <AppToken
-                key={`${app.stableId}-${index}`}
-                app={app}
-                size={25}
-                gap={16}
-              />
-            ))}
-          </Flex>
-        </ScrollView>
-        {selectedApps.length > 0 && (
-          <Text
-            style={{
-              fontSize: 12,
-              color: '#666',
-              marginTop: 8,
-              textAlign: 'center',
-            }}>
-            已选择 {selectedApps.length} 个应用
-          </Text>
-        )}
-      </View>
-    );
-  };
-
   return (
     <Page>
       <ScrollView style={{ padding: 15 }}>
@@ -434,7 +392,9 @@ const App = observer(() => {
               }
               showArrow={false}
             />
-            <View className="px-4 pb-4">{renderSelectedApps()}</View>
+            <View className="px-4 pb-4">
+              <SelectedApps apps={selectedApps} />
+            </View>
           </FieldGroup>
         )}
 
@@ -519,7 +479,7 @@ const App = observer(() => {
           </View>
         </FieldGroup>
       </ScrollView>
-      <View className='px-5 pb-10'>
+      <View className="px-5 pb-10">
         <Button onPress={submit} text={isEditing ? '保存修改' : '确认'} />
       </View>
     </Page>

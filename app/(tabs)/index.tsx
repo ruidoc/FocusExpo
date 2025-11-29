@@ -11,17 +11,9 @@ import {
   RecordStore,
   UserStore,
 } from '@/stores';
-import { toast } from '@/utils';
 import { checkScreenTimePermission } from '@/utils/permission';
-import Icon from '@expo/vector-icons/Ionicons';
-import {
-  Card,
-  Flex,
-  NoticeBar,
-  Theme,
-} from '@fruits-chain/react-native-xiaoshu';
+import { NoticeBar, Theme } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
-import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import {
@@ -31,8 +23,6 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -176,81 +166,10 @@ const App = observer(() => {
     },
   });
 
-  const startVpn = () => {
-    if (!ustore.uInfo) {
-      return toast('请先登录');
-    }
-    if (store.vpn_state === 'start') {
-      return toast('正在专注');
-    }
-    if (astore.focus_apps.length === 0) {
-      return toast('请添加专注目标APP');
-    }
-    if (astore.shield_apps.length === 0) {
-      return toast('请添加屏蔽目标APP');
-    }
-    if (pstore.all_plans.length === 0) {
-      return toast('请添加专注任务');
-    }
-    store.startVpn();
-  };
-
-  const toRoute = (path: string) => {
-    if (!ustore.uInfo) {
-      return router.push('/login');
-    }
-    router.push(path as never);
-  };
-
-  const timeLong = (minutes: number) => {
-    let hour = Math.floor(minutes / 60);
-    let mint = minutes % 60;
-    if (hour) {
-      return [
-        <Text key={1} style={styles.lightFont}>
-          {hour}
-        </Text>,
-        <Text key={2}> 小时 </Text>,
-        <Text key={3} style={styles.lightFont}>
-          {mint || 1}
-        </Text>,
-        <Text key={4}> 分钟</Text>,
-      ];
-    } else {
-      return [
-        <Text key={1} style={styles.lightFont}>
-          {mint || 1}
-        </Text>,
-        <Text key={2}> 分钟</Text>,
-      ];
-    }
-  };
-
-  const RotDom = (path: string, title: string) => (
-    <TouchableOpacity onPress={() => toRoute(path)} activeOpacity={0.7}>
-      <Card bodyPadding={20}>
-        <Flex className="justify-between">
-          <Text style={styles.titleFont}>{title}</Text>
-          <Icon name="chevron-forward" size={20} color={colors.text} />
-        </Flex>
-      </Card>
-    </TouchableOpacity>
-  );
-
-  const toOpenApp = async (pname: string) => {
-    NativeClass.openAppByPackageName(pname);
-  };
-
   const initapp = () => {
-    pmstore.checkBattery();
     pmstore.checkNotify();
     if (!ustore.uInfo) return;
     if (!pstore.all_plans[0]) return;
-    if (Platform.OS === 'android') {
-      setTimeout(() => {
-        startVpn();
-      }, 1500);
-    }
   };
 
   useEffect(() => {

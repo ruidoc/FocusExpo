@@ -1,11 +1,6 @@
-import { Page } from '@/components/business';
+import { Page, SelectedApps } from '@/components/business';
 import { Button, FieldGroup, FieldItem } from '@/components/ui';
-import {
-  AppStore,
-  BenefitStore,
-  PlanStore,
-  RecordStore,
-} from '@/stores';
+import { AppStore, BenefitStore, PlanStore, RecordStore } from '@/stores';
 import { selectAppsToLimit, startAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -13,7 +8,6 @@ import dayjs from 'dayjs';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useLayoutEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import SelectApps from './select-apps';
 import TimeSlider from './time-slider';
 
 const QuickStartPage = observer(() => {
@@ -87,7 +81,7 @@ const QuickStartPage = observer(() => {
 
   return (
     <Page>
-      <View className='p-5'>
+      <View className="p-5">
         {/* 选择APP */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
@@ -104,24 +98,19 @@ const QuickStartPage = observer(() => {
             showArrow={false}
           />
           <View className="px-4 pb-4">
-            <SelectApps />
+            <SelectedApps apps={astore.ios_selected_apps} />
           </View>
         </FieldGroup>
 
         {/* 设置时长 */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
-          <FieldItem
-            title="设置时长"
-            className="pb-2"
-            showArrow={false}
-          />
+          <FieldItem title="设置时长" className="pb-2" showArrow={false} />
           <View className="px-4 pb-4">
             <TimeSlider minute={minute} setMinute={setMinute} />
           </View>
         </FieldGroup>
-
       </View>
-      <View className='px-8'>
+      <View className="px-8">
         <Button onPress={handleStart} text="开始屏蔽" />
       </View>
     </Page>
