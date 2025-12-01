@@ -245,10 +245,10 @@ const App = observer(() => {
 
         {/* 汇总卡片 */}
         <View style={styles.summaryCard}>
-          <Text style={{ color: '#8A8A98', fontSize: 12 }}>时间范围</Text>
+          {/* <Text style={{ color: '#8A8A98', fontSize: 12 }}>时间范围</Text>
           <Text style={{ color: colors.text, marginTop: 4 }}>
             {total?.start_at?.slice(0, 10)} ~ {total?.end_at?.slice(0, 10)}
-          </Text>
+          </Text> */}
           <View style={styles.sumRow}>
             <View style={styles.sumBlock}>
               <Text style={styles.sumLabel}>实际专注</Text>

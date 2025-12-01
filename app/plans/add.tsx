@@ -1,4 +1,4 @@
-import { Page, SelectedApps } from '@/components/business';
+import { Page, SelectApps, SelectedApps } from '@/components/business';
 import {
   Button,
   DatePicker,
@@ -11,8 +11,6 @@ import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
 import { parseRepeat, toast } from '@/utils';
-import { selectAppsToLimit } from '@/utils/permission';
-import Icon from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
@@ -20,11 +18,9 @@ import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import {
   Platform,
-  Pressable,
   ScrollView,
-  StyleSheet,
   Text,
-  View,
+  View
 } from 'react-native';
 
 type FormState = {
@@ -84,23 +80,6 @@ const App = observer(() => {
       }
     }
   }, []);
-
-  const styles = StyleSheet.create({
-    week: {
-      width: 38,
-      height: 38,
-      borderRadius: 20,
-    },
-    selectApps: {
-      backgroundColor: colors.background,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-  });
 
   // 计算重复次数的函数
   const calculateRepeatCount = (
@@ -307,23 +286,13 @@ const App = observer(() => {
   };
 
   // 选择应用函数
-  const selectApps = (apps: string[]) => {
-    console.log('选择默认的应用列表：', apps);
-    selectAppsToLimit(0, apps)
-      .then(data => {
-        if (data.success && data.apps) {
-          // 同时存储到AppStore和当前组件状态
-          astore.addIosApps(data.apps);
-          setSelectedApps(data.apps);
-          setForm({
-            ...form,
-            apps: data.apps.map(r => `${r.stableId}:${r.type}`),
-          });
-        }
-      })
-      .catch(() => {
-        toast('选择应用失败，请重试', 'error');
-      });
+  const selectApps = (apps: any[]) => {
+    astore.addIosApps(apps);
+    setSelectedApps(apps);
+    setForm({
+      ...form,
+      apps: apps.map(r => `${r.stableId}:${r.type}`),
+    });
   };
 
   return (
@@ -383,12 +352,7 @@ const App = observer(() => {
               title="要屏蔽的应用"
               className="pb-2"
               rightElement={
-                <Pressable
-                  onPress={() => selectApps(form.apps)}
-                  style={styles.selectApps}>
-                  <Icon name="add" size={16} color="#B3B3BA" />
-                  <Text style={{ color: '#858699', fontSize: 13 }}>选择</Text>
-                </Pressable>
+                <SelectApps apps={form.apps} onFinish={selectApps} />
               }
               showArrow={false}
             />
@@ -449,7 +413,7 @@ const App = observer(() => {
                   form.repeat.includes(item.value);
                 return (
                   <Flex
-                    className="items-center justify-center"
+                    className="items-center justify-center w-[38px] h-[38px] rounded-full"
                     key={item.value}
                     onPress={() => {
                       if (Array.isArray(form.repeat)) {
@@ -460,7 +424,6 @@ const App = observer(() => {
                       }
                     }}
                     style={{
-                      ...styles.week,
                       backgroundColor: isSelected
                         ? colors.primary
                         : colors.border,

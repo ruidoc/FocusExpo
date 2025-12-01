@@ -1,13 +1,12 @@
-import { Page, SelectedApps } from '@/components/business';
+import { Page, SelectApps, SelectedApps } from '@/components/business';
 import { Button, FieldGroup, FieldItem } from '@/components/ui';
 import { AppStore, BenefitStore, PlanStore, RecordStore } from '@/stores';
-import { selectAppsToLimit, startAppLimits } from '@/utils/permission';
-import Icon from '@expo/vector-icons/Ionicons';
+import { startAppLimits } from '@/utils/permission';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { observer, useLocalObservable } from 'mobx-react';
 import React, { useLayoutEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import TimeSlider from './time-slider';
 
 const QuickStartPage = observer(() => {
@@ -49,11 +48,8 @@ const QuickStartPage = observer(() => {
     rstore.addRecord(from_data, 0); // 下注设为 0
   };
 
-  const selectApps = () => {
-    const maxCount = Number(bstore.app_count || 0);
-    selectAppsToLimit(maxCount).then(data => {
-      astore.addIosApps(data.apps);
-    });
+  const selectApps = (apps: any[]) => {
+    astore.addIosApps(apps);
   };
 
   // 开始一次性任务
@@ -88,12 +84,7 @@ const QuickStartPage = observer(() => {
             title="要屏蔽的应用"
             className="pt-3 pb-2"
             rightElement={
-              <Pressable
-                onPress={selectApps}
-                className="flex-row items-center bg-black/10 px-3 py-2 rounded-2xl">
-                <Icon name="add" size={16} color="#858699" />
-                <Text className="text-[#858699] text-[13px] ml-1">选择</Text>
-              </Pressable>
+              <SelectApps apps={astore.ios_selected_apps} onFinish={selectApps} />
             }
             showArrow={false}
           />

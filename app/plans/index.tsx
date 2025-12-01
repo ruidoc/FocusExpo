@@ -3,41 +3,30 @@ import { Dialog, Flex } from '@/components/ui';
 import { buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { AppStore, PlanStore } from '@/stores';
-import { getWeekDates } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import dayjs from 'dayjs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { observer, useLocalObservable } from 'mobx-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 
-// 获取时间段内的任务
-const getTasksInTimeRange = (
-  plans: any[],
-  startHour: number,
-  endHour: number,
-) => {
-  return plans.filter(plan => {
-    const startTime = parseInt(plan.start.split(':')[0]);
-    return startTime >= startHour && startTime < endHour;
-  });
-};
+type FilterType = 'today' | 'week' | 'all';
 
 const App = observer(() => {
   const store = useLocalObservable(() => PlanStore);
   const astore = useLocalObservable(() => AppStore);
-  const { dark } = useTheme();
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const weekDates = getWeekDates();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const [filterType, setFilterType] = useState<FilterType>('today');
   const { colors } = useCustomTheme();
 
   const toRoute = useCallback(
@@ -69,48 +58,52 @@ const App = observer(() => {
     toRoute('plans/add');
   };
 
-  const initPlans = () => {
-    return store.getPlans();
+  const initPlans = async (type: FilterType = filterType) => {
+    const today = dayjs().format('YYYY-MM-DD');
+
+    if (type === 'today') {
+      // 今日：获取今天的计划
+      return store.getPlans({ date: today });
+    } else if (type === 'week') {
+      // 本周：获取本周所有日期的计划
+      const monday = dayjs().startOf('week').add(1, 'day'); // 周一
+      const sunday = dayjs().endOf('week').add(1, 'day'); // 周日
+
+      const promises = [];
+      let currentDate = monday;
+      while (currentDate.isBefore(sunday) || currentDate.isSame(sunday, 'day')) {
+        promises.push(store.getPlans({ date: currentDate.format('YYYY-MM-DD') }));
+        currentDate = currentDate.add(1, 'day');
+      }
+
+      await Promise.all(promises);
+    } else {
+      // 全部：获取今天的计划，前端会显示所有任务
+      return store.getPlans();
+    }
   };
 
   const onRefresh = () => {
     setRefreshing(true);
-    initPlans().finally(() => {
+    initPlans(filterType).finally(() => {
       setRefreshing(false);
     });
   };
 
-  // 处理日期选择
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
-
-    // 调用接口获取该日期的计划
-    const dateStr = date.toISOString().split('T')[0];
-    store.getPlans({ date: dateStr });
-
-    // 计算滚动位置，让选中的日期尽量居中
-    const selectedIndex = weekDates.findIndex(
-      day => day.date.toDateString() === date.toDateString(),
-    );
-
-    if (selectedIndex !== -1 && scrollViewRef.current) {
-      // 计算每个日期项的宽度（包括间距）
-      const itemWidth = 60 + 12; // minWidth + gap
-      const containerWidth = 300; // 假设容器宽度
-      const targetX = Math.max(
-        0,
-        selectedIndex * itemWidth - containerWidth / 2 + itemWidth / 2,
-      );
-
-      scrollViewRef.current.scrollTo({
-        x: targetX,
-        animated: true,
-      });
+  // 处理筛选类型切换
+  const handleFilterChange = async (type: FilterType) => {
+    setFilterType(type);
+    setRefreshing(true);
+    try {
+      await initPlans(type);
+    } finally {
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    initPlans();
+    initPlans('today');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -125,124 +118,112 @@ const App = observer(() => {
     });
   }, [colors.text, navigation, toRoute]);
 
-  return (
-    <Page>
-      {/* 日期选择区域 */}
-      <View
-        style={{
-          backgroundColor: colors.background,
-          paddingVertical: 16,
-          paddingHorizontal: 20,
-          borderBottomWidth: 1,
-          borderBottomColor: dark ? '#333' : '#e5e7eb',
-        }}>
-        <ScrollView
-          ref={scrollViewRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 10 }}>
-          <Flex className="gap-3">
-            {weekDates.map((day, index) => {
-              const isSelected =
-                selectedDate.toDateString() === day.date.toDateString();
-              const isToday = day.isToday;
+  // 根据筛选类型过滤任务
+  const getFilteredPlans = () => {
+    const allPlans = store.all_plans;
 
-              return (
-                <Pressable
-                  key={index}
-                  onPress={() => handleDateSelect(day.date)}
-                  style={{
-                    backgroundColor: isSelected
-                      ? colors.blue2
-                      : isToday
-                        ? `${colors.blue2}30`
-                        : 'transparent',
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    borderRadius: 12,
-                    minWidth: 60,
-                    alignItems: 'center',
-                  }}>
-                  <Text
-                    style={{
-                      color: isSelected ? '#fff' : '#999',
-                      fontSize: 12,
-                      fontWeight: '500',
-                      marginBottom: 2,
-                    }}>
-                    {day.dayName}
-                  </Text>
-                  <Text
-                    style={{
-                      color: isSelected ? '#fff' : '#ccc',
-                      fontSize: 16,
-                      fontWeight: 'bold',
-                    }}>
-                    {day.dayNumber}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </Flex>
-        </ScrollView>
-      </View>
+    if (filterType === 'today') {
+      // 今日：显示今天的任务
+      const today = dayjs();
+      const jsDay = today.day(); // 0=周日 ... 6=周六
+      const todayDay = jsDay === 0 ? 7 : jsDay; // 转换为 1=周一 ... 7=周日
 
-      {/* 时间轴和任务区域 */}
-      <Flex className="flex-1">
-        {/* 时间轴 */}
-        <TimeAxis />
+      return allPlans.filter(plan => {
+        const repeat = Array.isArray(plan.repeat) ? plan.repeat : [];
+        // 一次性任务或周期任务且今天在 repeat 中
+        return plan.repeat === 'once' || (repeat.length > 0 && repeat.includes(todayDay));
+      });
+    } else if (filterType === 'week') {
+      // 本周：显示本周的任务
+      const weekDays = [1, 2, 3, 4, 5, 6, 7]; // 周一到周日
 
-        {/* 任务区域 */}
-        <View style={{ flex: 1 }}>
-          <ScrollView
-            style={{ flex: 1 }}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }>
-            <TaskArea
-              plans={store.cus_plans}
-              toRemove={toRemove}
-              toEdit={toEdit}
-              astore={astore}
-            />
-          </ScrollView>
-        </View>
-      </Flex>
-    </Page>
-  );
-});
+      return allPlans.filter(plan => {
+        const repeat = Array.isArray(plan.repeat) ? plan.repeat : [];
+        // 一次性任务或周期任务且本周任意一天在 repeat 中
+        return plan.repeat === 'once' || (repeat.length > 0 && repeat.some(day => weekDays.includes(day)));
+      });
+    } else {
+      // 全部：显示所有任务
+      return allPlans;
+    }
+  };
 
-// 时间轴组件
-const TimeAxis = () => {
-  const { dark } = useTheme();
-  const timeRanges = [
-    { label: '0-6点', start: 0, end: 6 },
-    { label: '6-12点', start: 6, end: 12 },
-    { label: '12-18点', start: 12, end: 18 },
-    { label: '18-24点', start: 18, end: 24 },
+  const styles = StyleSheet.create({
+    segment: {
+      flexDirection: 'row',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    segBtn: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: '#2E2E3A',
+      backgroundColor: colors.card,
+    },
+    segBtnActive: {
+      backgroundColor: '#303044',
+      borderColor: '#45455C',
+    },
+    segText: {
+      fontSize: 13,
+      color: '#999',
+    },
+    segTextActive: {
+      color: '#fff',
+      fontWeight: '600',
+    },
+  });
+
+  const filterOptions: { key: FilterType; label: string }[] = [
+    { key: 'today', label: '今日' },
+    { key: 'week', label: '本周' },
+    { key: 'all', label: '全部' },
   ];
 
   return (
-    <View style={{ width: 60, backgroundColor: dark ? '#1a1a1a' : '#f8f9fa' }}>
-      {timeRanges.map((range, index) => (
-        <View
-          key={index}
-          style={{ flex: 1, paddingVertical: 20, paddingHorizontal: 8 }}>
-          <Text
-            style={{
-              color: dark ? '#999' : '#666',
-              fontSize: 12,
-              fontWeight: '500',
-              textAlign: 'center',
-              transform: [{ rotate: '-90deg' }],
-            }}>
-            {range.label}
-          </Text>
-        </View>
-      ))}
-    </View>
+    <Page>
+      {/* 筛选选项区域 */}
+      <Flex className='px-4 py-3'>
+        {filterOptions.map((option, index) => {
+          const active = filterType === option.key;
+          return (
+            <TouchableOpacity
+              key={option.key}
+              activeOpacity={0.7}
+              style={[
+                styles.segBtn,
+                active && styles.segBtnActive,
+                index > 0 && { marginLeft: 8 },
+              ]}
+              onPress={() => handleFilterChange(option.key)}>
+              <Text style={[styles.segText, active && styles.segTextActive]}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </Flex>
+
+      {/* 任务区域 */}
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
+          <TaskArea
+            plans={getFilteredPlans()}
+            toRemove={toRemove}
+            toEdit={toEdit}
+            astore={astore}
+          />
+        </ScrollView>
+      </View>
+    </Page>
   );
-};
+});
 
 // 任务区域组件
 const TaskArea = ({
@@ -257,102 +238,77 @@ const TaskArea = ({
   astore: typeof AppStore;
 }) => {
   const { colors } = useCustomTheme();
-  const timeRanges = [
-    { start: 0, end: 6, label: '0-6点' },
-    { start: 6, end: 12, label: '6-12点' },
-    { start: 12, end: 18, label: '12-18点' },
-    { start: 18, end: 24, label: '18-24点' },
-  ];
+
+  if (plans.length === 0) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          padding: 40,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <Text
+          style={{
+            color: colors.text2,
+            fontSize: 14,
+            textAlign: 'center',
+          }}>
+          暂无任务
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, padding: 16 }}>
-      {timeRanges.map((range, rangeIndex) => {
-        const tasksInRange = getTasksInTimeRange(plans, range.start, range.end);
-
-        if (tasksInRange.length === 0) return null;
-
-        return (
-          <View key={rangeIndex} style={{ marginBottom: 24 }}>
-            {/* 时间段标题 */}
-            <Text
+      {plans.map((task, index) => (
+        <View key={task.id} style={{ marginBottom: index < plans.length - 1 ? 12 : 0 }}>
+          <LinearGradient
+            colors={['#5C24FC', '#9D7AFF']}
+            start={{ x: -0.0042, y: 0.5 }}
+            end={{ x: 1.0751, y: 0.5 }}
+            style={{ borderRadius: 15 }}>
+            <Pressable
+              onPress={() => toEdit(task)}
+              onLongPress={() => toRemove(task.id)}
               style={{
-                color: colors.text2,
-                fontSize: 14,
-                fontWeight: '600',
-                marginBottom: 12,
-                paddingLeft: 8,
+                padding: 12,
+                elevation: 2,
               }}>
-              {range.label}
-            </Text>
-
-            {/* 任务列表 */}
-            <View style={{ gap: 8 }}>
-              {tasksInRange.map(task => (
-                <LinearGradient
-                  key={task.id}
-                  colors={['#5C24FC', '#9D7AFF']}
-                  start={{ x: -0.0042, y: 0.5 }}
-                  end={{ x: 1.0751, y: 0.5 }}
-                  style={{ borderRadius: 15 }}>
-                  <Flex
-                    className="flex-col items-stretch"
-                    key={task.id}
-                    onPress={() => toEdit(task)}
-                    onLongPress={() => toRemove(task.id)}
-                    style={{
-                      padding: 12,
-                      gap: 4,
-                      elevation: 2,
-                    }}>
-                    <Text
-                      style={{
-                        color: '#fff',
-                        fontSize: 17,
-                        fontWeight: 'bold',
-                        marginBottom: 4,
-                      }}>
-                      {task.name || '未命名任务'}
-                    </Text>
-                    <Flex style={{ gap: 6 }}>
-                      {astore.ios_all_apps
-                        .filter(app =>
-                          task.apps.includes(`${app.stableId}:${app.type}`),
-                        )
-                        .map(app => (
-                          <AppToken key={app.id} app={app} size={23} />
-                        ))}
-                    </Flex>
-                    <Text
-                      style={{
-                        color: '#fff',
-                        fontSize: 14,
-                        opacity: 0.8,
-                        textAlign: 'right',
-                      }}>
-                      {task.start} ~ {task.end}
-                    </Text>
-                  </Flex>
-                </LinearGradient>
-              ))}
-            </View>
-
-            {/* 分割线 */}
-            {rangeIndex < timeRanges.length - 1 && (
-              <View
+              <Text
                 style={{
-                  height: 0,
-                  backgroundColor: colors.border,
-                  marginTop: 16,
-                  marginHorizontal: 8,
-                  borderStyle: 'dashed',
-                  borderWidth: 0.5,
-                  borderColor: 'transparent',
-                }}
-              />
-            )}
-          </View>
-        );
-      })}
+                  color: '#fff',
+                  fontSize: 17,
+                  fontWeight: 'bold',
+                  marginBottom: 4,
+                }}>
+                {task.name || '未命名任务'}
+              </Text>
+              <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+                {astore.ios_all_apps
+                  .filter(app =>
+                    task.apps?.includes(`${app.stableId}:${app.type}`),
+                  )
+                  .map((app, idx) => (
+                    <View key={app.id} style={idx > 0 ? { marginLeft: 6 } : {}}>
+                      <AppToken app={app} size={23} />
+                    </View>
+                  ))}
+              </View>
+              <Text
+                style={{
+                  color: '#fff',
+                  fontSize: 14,
+                  opacity: 0.8,
+                  textAlign: 'right',
+                }}>
+                {task.start} ~ {task.end}
+              </Text>
+            </Pressable>
+          </LinearGradient>
+        </View>
+      ))}
     </View>
   );
 };
