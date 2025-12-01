@@ -1,5 +1,5 @@
 import { Button, Dialog, Flex } from '@/components/ui';
-import { HomeStore, UserStore } from '@/stores';
+import { useHomeStore, UserStore } from '@/stores';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   useFocusEffect,
@@ -17,7 +17,7 @@ const PRIVACY_KEY = 'privacy_readed';
 
 const App = observer(() => {
   const store = useLocalObservable(() => UserStore);
-  const hstore = useLocalObservable(() => HomeStore);
+  const hstore = useHomeStore();
   const { colors, dark } = useTheme();
   const [agree, setAgree] = useState(false);
   const [privacyVisible, setPrivacyVisible] = useState(false);

@@ -134,8 +134,8 @@ class AppStore {
   };
 
   getAppInfo = (apps: string[]) =>
-    HomeStore.all_apps
-      .filter(r => apps.includes(r.packageName))
+    HomeStore()
+      .all_apps.filter(r => apps.includes(r.packageName))
       .map(app => `${app.packageName}:${app.appName}`);
 }
 

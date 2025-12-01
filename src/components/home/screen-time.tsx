@@ -1,7 +1,7 @@
 // 屏幕时间权限获取页面组件
 
 import { Button } from '@/components/ui';
-import { HomeStore } from '@/stores';
+import { useHomeStore } from '@/stores';
 import { getScreenTimePermission } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
@@ -17,9 +17,9 @@ const ScreenTimePermissionPage = ({
     const granted = await getScreenTimePermission();
     if (granted) {
       // 成功获取权限，更新状态
-      HomeStore.setIOSScreenTimePermission(true);
+      useHomeStore().setIOSScreenTimePermission(true);
     } else {
-      HomeStore.setIOSScreenTimePermission(false);
+      useHomeStore().setIOSScreenTimePermission(false);
     }
   };
 

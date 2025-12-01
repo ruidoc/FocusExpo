@@ -1,6 +1,6 @@
 import { Page } from '@/components/business';
 import { Flex } from '@/components/ui';
-import { AppStore, GuideStore, HomeStore, UserStore } from '@/stores';
+import { AppStore, GuideStore, useHomeStore, UserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useNavigation, useRoute, useTheme } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 
 const App = observer(() => {
-  const store = useLocalObservable(() => HomeStore);
+  const store = useHomeStore();
   const astore = useLocalObservable(() => AppStore);
   const ustore = useLocalObservable(() => UserStore);
   const gstore = useLocalObservable(() => GuideStore);

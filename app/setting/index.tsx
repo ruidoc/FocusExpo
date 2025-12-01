@@ -1,6 +1,6 @@
 import { Page } from '@/components/business';
 import { ActionSheet, FieldGroup, FieldItem, Switch } from '@/components/ui';
-import { HomeStore, UserStore } from '@/stores';
+import { useHomeStore, UserStore } from '@/stores';
 import { toast } from '@/utils';
 import { useNavigation } from '@react-navigation/native';
 import { observer, useLocalObservable } from 'mobx-react';
@@ -9,7 +9,7 @@ import { Appearance, Linking, Platform, View } from 'react-native';
 
 const App = observer(() => {
   const store = useLocalObservable(() => UserStore);
-  const homeStore = useLocalObservable(() => HomeStore);
+  const homeStore = useHomeStore();
   const navigation = useNavigation();
 
   const onClick = (tag: string) => {

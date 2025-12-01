@@ -1,6 +1,6 @@
 import { AppToken, Cascade, Typewriter } from '@/components/business';
 import { Button, Flex } from '@/components/ui';
-import { AppStore, GuideStore, HomeStore, PlanStore } from '@/stores';
+import { AppStore, GuideStore, PlanStore, useHomeStore } from '@/stores';
 import { startAppLimits } from '@/utils/permission';
 import { useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 
 const GuideStep3 = observer(() => {
-  const store = useLocalObservable(() => HomeStore);
+  const store = useHomeStore();
   const gstore = useLocalObservable(() => GuideStore);
   const pstore = useLocalObservable(() => PlanStore);
   const astore = useLocalObservable(() => AppStore);
@@ -187,8 +187,7 @@ const GuideStep3 = observer(() => {
                 <Flex
                   key={app.packageName}
                   style={styles.appItem}
-                  className='flex-col items-center'
-                >
+                  className="flex-col items-center">
                   <Image
                     source={{
                       uri: 'data:image/jpeg;base64,' + app.icon,
@@ -205,9 +204,10 @@ const GuideStep3 = observer(() => {
         {typewriter2Visible && (
           <Typewriter
             lines={[
-              `接下来，${gstore.mode === 'shield'
-                ? '屏蔽该APP的网络'
-                : '只允许该APP访问网络'
+              `接下来，${
+                gstore.mode === 'shield'
+                  ? '屏蔽该APP的网络'
+                  : '只允许该APP访问网络'
               }`,
               `您将彻底隔绝任何打扰，专注学习`,
               '时长：5分钟，现在开始吧～',

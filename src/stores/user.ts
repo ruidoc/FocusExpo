@@ -2,7 +2,13 @@ import { Toast } from '@/components/ui';
 import { storage } from '@/utils';
 import http from '@/utils/request';
 import { makeAutoObservable } from 'mobx';
-import { AppStore, BenefitStore, HomeStore, PlanStore, RecordStore } from '.';
+import {
+  AppStore,
+  BenefitStore,
+  PlanStore,
+  RecordStore,
+  useHomeStore,
+} from '.';
 
 class UserStore {
   constructor() {
@@ -109,7 +115,7 @@ class UserStore {
   loginSuccess = (res: any) => {
     storage.set('access_token', res.token);
     storage.setGroup('access_token', res.token);
-    HomeStore.loadApps();
+    useHomeStore().loadApps();
     AppStore.getCurapp();
     PlanStore.getPlans();
     this.getInfo();
@@ -122,7 +128,7 @@ class UserStore {
     AppStore.setFocusApps([]);
     AppStore.setShieldApps([]);
     PlanStore.clearPlans();
-    HomeStore.stopVpn();
+    useHomeStore().stopVpn();
     this.setUinfo(null);
   };
 }

@@ -5,10 +5,10 @@ import ScreenTimePermissionPage from '@/components/home/screen-time';
 import {
   AppStore,
   BenefitStore,
-  HomeStore,
-  PermisStore,
   PlanStore,
   RecordStore,
+  useHomeStore,
+  usePermisStore,
   UserStore,
 } from '@/stores';
 import { checkScreenTimePermission } from '@/utils/permission';
@@ -30,12 +30,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const { NativeClass } = NativeModules;
 
 const App = observer(() => {
-  const store = useLocalObservable(() => HomeStore);
+  const store = useHomeStore();
   const ustore = useLocalObservable(() => UserStore);
   const pstore = useLocalObservable(() => PlanStore);
   const astore = useLocalObservable(() => AppStore);
   const rstore = useLocalObservable(() => RecordStore);
-  const pmstore = useLocalObservable(() => PermisStore);
+  const pmstore = usePermisStore();
   const bstore = useLocalObservable(() => BenefitStore);
   const { colors, dark } = useTheme();
   const xcolor = Theme.useThemeTokens();

@@ -1,5 +1,5 @@
 import { Privicy, Typewriter, Wechat } from '@/components/business';
-import { GuideStore, HomeStore, UserStore } from '@/stores';
+import { GuideStore, useHomeStore, UserStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { router } from 'expo-router';
@@ -11,7 +11,7 @@ type NavigationProp = NativeStackNavigationProp<any>;
 
 export const GuideStep5 = observer(() => {
   const navigation = useNavigation<NavigationProp>();
-  const store = useLocalObservable(() => HomeStore);
+  const store = useHomeStore();
   const gstore = useLocalObservable(() => GuideStore);
   const ustore = useLocalObservable(() => UserStore);
   const { colors, dark } = useTheme();

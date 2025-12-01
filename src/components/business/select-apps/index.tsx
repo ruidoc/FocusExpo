@@ -2,7 +2,7 @@ import { Flex, Toast } from '@/components/ui';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import React from 'react';
-import { Platform, Text, View } from 'react-native';
+import { Platform, Text } from 'react-native';
 
 interface SelectAppsProps {
   maxCount?: number;
@@ -10,15 +10,11 @@ interface SelectAppsProps {
   onFinish: (apps: any[]) => void;
 }
 
-const SelectApps: React.FC<SelectAppsProps> = ({ maxCount = 0, apps, onFinish }) => {
-  if (Platform.OS !== 'ios' || apps.length === 0) {
-    return (
-      <View style={{ paddingVertical: 12 }}>
-        <Text style={{ color: '#666', fontSize: 14 }}>未选择应用</Text>
-      </View>
-    );
-  }
-
+const SelectApps: React.FC<SelectAppsProps> = ({
+  maxCount = 0,
+  apps,
+  onFinish,
+}) => {
   const selectApps = () => {
     if (Platform.OS !== 'ios') return;
     selectAppsToLimit(maxCount, apps)
@@ -31,7 +27,7 @@ const SelectApps: React.FC<SelectAppsProps> = ({ maxCount = 0, apps, onFinish })
       .catch(() => {
         Toast('选择应用失败，请重试');
       });
-  }
+  };
 
   return (
     <Flex

@@ -1,7 +1,7 @@
 import { Cascade, Typewriter } from '@/components/business';
 import { Button } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
-import { AppStore, GuideStore, HomeStore } from '@/stores';
+import { AppStore, GuideStore, useHomeStore } from '@/stores';
 import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
 import { router } from 'expo-router';
 import { observer, useLocalObservable } from 'mobx-react-lite';
@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 
 const GuideStep2 = observer(() => {
-  const store = useLocalObservable(() => HomeStore);
+  const store = useHomeStore();
   const gstore = useLocalObservable(() => GuideStore);
   const astore = useLocalObservable(() => AppStore);
 

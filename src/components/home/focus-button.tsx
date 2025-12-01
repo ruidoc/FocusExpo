@@ -1,9 +1,9 @@
 import { Flex } from '@/components/ui';
 import {
   BenefitStore,
-  HomeStore,
   PlanStore,
   RecordStore,
+  useHomeStore,
   UserStore,
 } from '@/stores';
 import { getIOSFocusStatus, stopAppLimits } from '@/utils/permission';
@@ -26,7 +26,7 @@ import TimeFlow from './time-flow';
 const FocusButton = observer(() => {
   const ustore = useLocalObservable(() => UserStore);
   const pstore = useLocalObservable(() => PlanStore);
-  const store = useLocalObservable(() => HomeStore);
+  const store = useHomeStore();
   const rstore = useLocalObservable(() => RecordStore);
   const xcolor = Theme.useThemeTokens();
 

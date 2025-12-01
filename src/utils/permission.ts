@@ -1,3 +1,4 @@
+import * as Notifications from 'expo-notifications';
 import { NativeModules, Platform } from 'react-native';
 
 // 请求屏幕时间权限
@@ -131,5 +132,15 @@ export async function getSchedulePlans(): Promise<any[]> {
   } catch (error) {
     console.log('getSchedulePlans error', error);
     return [];
+  }
+}
+
+export async function checkNotify() {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    return status === 'granted';
+  } catch (error) {
+    console.error('检查通知权限失败:', error);
+    return null;
   }
 }

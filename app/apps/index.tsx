@@ -1,7 +1,7 @@
 import { AppToken, Page } from '@/components/business';
 import { Card, Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
-import { AppStore, HomeStore } from '@/stores';
+import { AppStore, useHomeStore } from '@/stores';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { NoticeBar } from '@fruits-chain/react-native-xiaoshu';
@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 
 const App = observer(() => {
-  const store = useLocalObservable(() => HomeStore);
+  const store = useHomeStore();
   const astore = useLocalObservable(() => AppStore);
   const [refreshing, setRefreshing] = useState(false);
   const { colors } = useCustomTheme();
@@ -96,8 +96,7 @@ const App = observer(() => {
     <Flex
       key={app.packageName}
       style={styles.appWrap}
-      className='flex-col items-center'
-    >
+      className="flex-col items-center">
       <Image
         source={{
           uri: 'data:image/jpeg;base64,' + app.icon,

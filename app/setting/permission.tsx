@@ -1,11 +1,11 @@
 import { Page } from '@/components/business';
 import { FieldGroup, FieldItem, Switch } from '@/components/ui';
-import { PermisStore } from '@/stores';
-import { observer, useLocalObservable } from 'mobx-react';
+import { usePermisStore } from '@/stores';
+import { observer } from 'mobx-react';
 import React, { useEffect } from 'react';
 
 const App = observer(() => {
-  const store = useLocalObservable(() => PermisStore);
+  const store = usePermisStore();
 
   const onClick = (tag: string) => {
     switch (tag) {
