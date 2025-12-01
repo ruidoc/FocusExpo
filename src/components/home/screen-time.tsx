@@ -13,13 +13,14 @@ const ScreenTimePermissionPage = ({
   colors: any;
   xcolor: any;
 }) => {
+  const store = useHomeStore();
   const handleRequestPermission = async () => {
     const granted = await getScreenTimePermission();
     if (granted) {
       // 成功获取权限，更新状态
-      useHomeStore().setIOSScreenTimePermission(true);
+      store.setIOSScreenTimePermission(true);
     } else {
-      useHomeStore().setIOSScreenTimePermission(false);
+      store.setIOSScreenTimePermission(false);
     }
   };
 

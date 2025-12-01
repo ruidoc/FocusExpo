@@ -19,7 +19,7 @@ instance.interceptors.request.use(async request => {
   if (request.data instanceof FormData) {
     request.headers['Content-Type'] = 'multipart/form-data';
   }
-  console.log('【网络请求】', request.method, request.url);
+  // console.log('【网络请求】', request.method, request.url);
   request.headers.Authorization = `Bearer ${
     storage.getString('access_token') || ''
   }`;
@@ -29,7 +29,7 @@ instance.interceptors.request.use(async request => {
 // 响应拦截器，全局错误处理
 instance.interceptors.response.use(
   response => {
-    // console.log('【响应结果】', response.data);
+    console.log('【响应结果】', response.data);
     return response.data;
   },
   error => {

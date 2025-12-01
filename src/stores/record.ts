@@ -154,7 +154,7 @@ const RecordStore = combine(
         });
         if (res.statusCode === 200) {
           (get() as any).getRecords();
-          useBenefitStore().getBenefit();
+          useBenefitStore.getState().getBenefit();
         }
       } catch (error) {
         console.log(error);

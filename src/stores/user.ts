@@ -37,9 +37,9 @@ const UserStore = combine(
           // 验证token是否仍然有效
           try {
             await (get() as any).getInfo();
-            usePlanStore().getPlans();
-            useBenefitStore().getBenefit();
-            useRecordStore().getStatis();
+            usePlanStore.getState().getPlans();
+            useBenefitStore.getState().getBenefit();
+            useRecordStore.getState().getStatis();
           } catch (error) {
             // 如果获取用户信息失败，说明token已过期，清除本地数据
             console.log('Token验证失败，重新登录', error);
@@ -112,9 +112,9 @@ const UserStore = combine(
     loginSuccess: (res: any) => {
       storage.set('access_token', res.token);
       storage.setGroup('access_token', res.token);
-      useHomeStore().loadApps();
-      useAppStore().getCurapp();
-      usePlanStore().getPlans();
+      useHomeStore.getState().loadApps();
+      useAppStore.getState().getCurapp();
+      usePlanStore.getState().getPlans();
       (get() as any).getInfo();
     },
 
@@ -122,10 +122,10 @@ const UserStore = combine(
     logout: () => {
       storage.delete('user_info');
       storage.delete('access_token');
-      useAppStore().setFocusApps([]);
-      useAppStore().setShieldApps([]);
-      usePlanStore().clearPlans();
-      useHomeStore().stopVpn();
+      useAppStore.getState().setFocusApps([]);
+      useAppStore.getState().setShieldApps([]);
+      usePlanStore.getState().clearPlans();
+      useHomeStore.getState().stopVpn();
       (get() as any).setUinfo(null);
     },
   }),

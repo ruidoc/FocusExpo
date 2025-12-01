@@ -1,10 +1,7 @@
-import { Button } from '@/components/ui';
-import { useCustomTheme } from '@/config/theme';
-import { toast } from '@/utils';
+import { Button, Toast } from '@/components/ui';
 import http from '@/utils/request';
 import { registerApp, sendAuthRequest } from 'expo-native-wechat';
 import { useEffect, useState } from 'react';
-import { Text } from 'react-native';
 
 interface Props {
   disabled?: boolean;
@@ -16,10 +13,9 @@ interface Props {
 
 const App = (props: Props) => {
   const [loading, setLoading] = useState(false);
-  const { colors } = useCustomTheme();
   const onButtonClicked = async () => {
     if (props.disabled) {
-      return toast('请阅读并勾选下方隐私政策');
+      return Toast('请阅读并勾选下方隐私政策');
     }
     try {
       let {
@@ -43,16 +39,14 @@ const App = (props: Props) => {
   }, []);
 
   return (
-    <>
-      <Button
-        type={props.type || 'primary'}
-        loading={loading}
-        loadingText="登录中..."
-        style={{ marginBottom: 15 }}
-        onPress={onButtonClicked}>
-        {props.label || '微信登录/注册'}
-      </Button>
-    </>
+    <Button
+      type={props.type || 'primary'}
+      loading={loading}
+      loadingText="登录中..."
+      style={{ marginBottom: 15 }}
+      onPress={onButtonClicked}>
+      {props.label || '微信登录/注册'}
+    </Button>
   );
 };
 

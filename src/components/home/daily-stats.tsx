@@ -1,37 +1,32 @@
-import { RecordStore } from '@/stores';
+import { useRecordStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React from 'react';
 import {
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
-interface DailyStatsProps {
-  // 可以传入自定义数据
-}
+const DailyStats = () => {
+  const rstore = useRecordStore();
 
-const DailyStats: React.FC<DailyStatsProps> = observer(() => {
-  const rstore = useLocalObservable(() => RecordStore);
-  
   // 导航到统计页面
   const handleTodayPress = () => {
     // 这里可以导航到详细的统计页面，暂时先跳转到挑战页面
     router.push('/(tabs)/user'); // 或者其他统计页面
   };
-  
+
   const handleSummaryPress = () => {
     router.push('/(tabs)/user');
   };
-  
+
   const handleChallengePress = () => {
     // 跳转到挑战页面，但这里是tabs内的页面，可能需要调整
     // router.push('/challenges');
   };
-  
+
   const handleProfilePress = () => {
     router.push('/(tabs)/user');
   };
@@ -39,7 +34,7 @@ const DailyStats: React.FC<DailyStatsProps> = observer(() => {
   return (
     <View style={styles.container}>
       {/* Today Tab - Active */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.tab, styles.activeTab]}
         onPress={handleTodayPress}
       >
@@ -49,27 +44,27 @@ const DailyStats: React.FC<DailyStatsProps> = observer(() => {
         </View>
         <Text style={styles.activeTabText}>Today</Text>
       </TouchableOpacity>
-      
+
       {/* Summary Tab */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.tab}
         onPress={handleSummaryPress}
       >
         <Icon name="bar-chart" size={20} color="#B3B3BA" />
         <Text style={styles.tabText}>Summary</Text>
       </TouchableOpacity>
-      
+
       {/* Challenge Tab */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.tab}
         onPress={handleChallengePress}
       >
         <Icon name="trophy" size={20} color="#B3B3BA" />
         <Text style={styles.tabText}>Challenge</Text>
       </TouchableOpacity>
-      
+
       {/* Profile Tab */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.tab}
         onPress={handleProfilePress}
       >
@@ -80,7 +75,7 @@ const DailyStats: React.FC<DailyStatsProps> = observer(() => {
       </TouchableOpacity>
     </View>
   );
-});
+};
 
 const styles = StyleSheet.create({
   container: {

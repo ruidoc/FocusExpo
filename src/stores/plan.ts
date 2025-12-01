@@ -8,6 +8,9 @@ import { combine } from 'zustand/middleware';
 import { useBenefitStore, useRecordStore } from '.';
 
 const { NativeModule } = NativeModules;
+const recordStore = useRecordStore.getState();
+const benefitStore = useBenefitStore.getState();
+
 const PlanStore = combine(
   {
     cus_plans: [] as CusPlan[], // 任务列表
@@ -78,10 +81,10 @@ const PlanStore = combine(
 
     // 设置当前任务的暂停状态，并同步到列表中
     pauseCurPlan: async (paused: boolean) => {
-      let record_id = useRecordStore().record_id;
+      let record_id = recordStore.record_id;
       if (paused && record_id) {
-        useBenefitStore().subBalance();
-        await useRecordStore().pauseRecord(record_id);
+        benefitStore.subBalance();
+        await recordStore.pauseRecord(record_id);
       }
       if (get().cur_plan) {
         if (paused) {
@@ -95,7 +98,7 @@ const PlanStore = combine(
     // 专注计划完成
     complatePlan: async () => {
       console.log('【专注计划完成】');
-      useRecordStore().removeRecordId();
+      recordStore.removeRecordId();
       (get() as any).pauseCurPlan(false);
       (get() as any).setCurPlanMinute(0);
       (get() as any).resetPlan();
@@ -105,8 +108,8 @@ const PlanStore = combine(
     exitPlan: async () => {
       let record_id = storage.getString('record_id');
       if (record_id) {
-        await useRecordStore().exitRecord(record_id);
-        useRecordStore().removeRecordId();
+        await recordStore.exitRecord(record_id);
+        recordStore.removeRecordId();
         (get() as any).pauseCurPlan(false);
         (get() as any).setCurPlanMinute(0);
         (get() as any).resetPlan();

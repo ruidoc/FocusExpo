@@ -1,18 +1,13 @@
-import { RecordStore, UserStore } from '@/stores';
+import { useRecordStore, useUserStore } from '@/stores';
 import { minutesToHours } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-interface HeaderProps {
-  // 可以传入自定义的问候语或用户名
-}
-
-const Header: React.FC<HeaderProps> = observer(() => {
-  const ustore = useLocalObservable(() => UserStore);
-  const rstore = useLocalObservable(() => RecordStore);
+const Header = () => {
+  const ustore = useUserStore();
+  const rstore = useRecordStore();
 
   // 获取问候语
   const getGreeting = () => {
@@ -60,7 +55,7 @@ const Header: React.FC<HeaderProps> = observer(() => {
       </TouchableOpacity>
     </View>
   );
-});
+};
 
 const styles = StyleSheet.create({
   container: {

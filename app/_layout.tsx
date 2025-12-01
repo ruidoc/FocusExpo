@@ -22,7 +22,10 @@ import {
 
 const { NativeModule } = NativeModules;
 
-export default function RootLayout() {
+const RootLayout = () => {
+  const astore = useAppStore();
+  const pstore = usePlanStore();
+  const rstore = useRecordStore();
   const [loaded] = useFonts({
     SpaceMono: require('../src/assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -30,22 +33,22 @@ export default function RootLayout() {
   const delay = useRef(null);
 
   const asyncData = async () => {
-    useAppStore().getIosApps();
+    astore.getIosApps();
     const once_plans = storage.getString('once_plans');
     const cus_plans = storage.getString('cus_plans');
     const exit_plan_ids = storage.getString('exit_plan_ids');
     const paused_plan_id = storage.getString('paused_plan_id');
     if (once_plans) {
-      usePlanStore().setOncePlans(JSON.parse(once_plans));
+      pstore.setOncePlans(JSON.parse(once_plans));
     }
     if (cus_plans) {
-      usePlanStore().setCusPlans(JSON.parse(cus_plans));
+      pstore.setCusPlans(JSON.parse(cus_plans));
     }
     if (exit_plan_ids) {
-      usePlanStore().setExitPlanIds(exit_plan_ids.split(','));
+      pstore.setExitPlanIds(exit_plan_ids.split(','));
     }
     if (paused_plan_id) {
-      usePlanStore().setPaused(paused_plan_id);
+      pstore.setPaused(paused_plan_id);
     }
   };
 
@@ -55,7 +58,7 @@ export default function RootLayout() {
       clearTimeout(delay.current as any);
       delay.current = null as any;
     }
-    let record_id = useRecordStore().record_id;
+    let record_id = rstore.record_id;
     console.log('当前屏蔽时长：', elapsedMinutes);
     const schedule = () => {
       // 用获取分钟的方法，计算到下一个整分的秒数
@@ -63,11 +66,11 @@ export default function RootLayout() {
       const remain = 60 - now.getSeconds();
       // console.log('【剩余时间】', remain);
       if (elapsedMinutes > 0) {
-        useRecordStore().updateActualMins(record_id, elapsedMinutes);
+        rstore.updateActualMins(record_id, elapsedMinutes);
       }
       delay.current = setTimeout(() => {
         elapsedMinutes += 1;
-        usePlanStore().setCurPlanMinute(elapsedMinutes);
+        pstore.setCurPlanMinute(elapsedMinutes);
         schedule();
       }, remain * 1000);
     };
@@ -101,34 +104,34 @@ export default function RootLayout() {
       }) => {
         console.log('【监听状态变化】', payload);
         if (payload?.state === 'started') {
-          usePlanStore().setCurPlanMinute(0);
-          usePlanStore().resetPlan();
+          pstore.setCurPlanMinute(0);
+          pstore.resetPlan();
         } else if (payload?.state === 'paused') {
           // 暂停时停止定时器
           stopFocusTimer();
-          usePlanStore().pauseCurPlan(true);
+          pstore.pauseCurPlan(true);
         } else if (payload?.state === 'resumed') {
           // 恢复时重启定时器
           stopFocusTimer(); // 先停止旧定时器
-          usePlanStore().pauseCurPlan(false);
+          pstore.pauseCurPlan(false);
           // 重新同步状态并启动定时器
           syncIOSStatus();
         } else if (payload?.state === 'failed') {
           stopFocusTimer();
           // 清理本地的一次性任务
-          if (usePlanStore().cur_plan?.repeat === 'once') {
-            usePlanStore().rmOncePlan(usePlanStore().cur_plan.id);
+          if (pstore.cur_plan?.repeat === 'once') {
+            pstore.rmOncePlan(pstore.cur_plan.id);
           } else {
-            usePlanStore().addExitPlanIds(usePlanStore().cur_plan.id);
+            pstore.addExitPlanIds(pstore.cur_plan.id);
           }
-          usePlanStore().exitPlan();
+          pstore.exitPlan();
           if (payload.reason === 'user_exit') {
             console.log('【手动停止任务】');
           }
         } else if (payload?.state === 'ended') {
           stopFocusTimer();
           // 正常完成
-          usePlanStore().complatePlan();
+          pstore.complatePlan();
         }
       },
     );
@@ -146,25 +149,25 @@ export default function RootLayout() {
 
         if (s.active) {
           // 同步 record_id（优先使用 iOS 的）
-          if (s.record_id !== useRecordStore().record_id) {
-            useRecordStore().setRecordId(s.record_id);
+          if (s.record_id !== rstore.record_id) {
+            rstore.setRecordId(s.record_id);
           }
-          usePlanStore().setCurPlanMinute(s.elapsedMinutes || 0);
+          pstore.setCurPlanMinute(s.elapsedMinutes || 0);
           updateElapsedMinute(s.elapsedMinutes || 0);
-          if (!usePlanStore().cur_plan) {
-            usePlanStore().resetPlan();
+          if (!pstore.cur_plan) {
+            pstore.resetPlan();
           }
-          if (usePlanStore().cur_plan?.id === s.plan_id) {
-            usePlanStore().pauseCurPlan(s.paused);
+          if (pstore.cur_plan?.id === s.plan_id) {
+            pstore.pauseCurPlan(s.paused);
           }
-        } else if (usePlanStore().cur_plan) {
+        } else if (pstore.cur_plan) {
           console.log('【专注同步错误】');
         } else {
           // 专注已结束，停止定时器
           stopFocusTimer();
-          useRecordStore().removeRecordId();
-          usePlanStore().setCurPlanMinute(0);
-          usePlanStore().resetPlan();
+          rstore.removeRecordId();
+          pstore.setCurPlanMinute(0);
+          pstore.resetPlan();
         }
       } catch (error) {
         console.error('【同步iOS状态失败】', error);
@@ -279,4 +282,6 @@ export default function RootLayout() {
       </Provider>
     </ThemeProvider>
   );
-}
+};
+
+export default RootLayout;
