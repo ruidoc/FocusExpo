@@ -1,8 +1,7 @@
-import { GuideStore } from '@/stores';
+import { useGuideStore } from '@/stores';
 import { useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useRef } from 'react';
 import { Animated, SafeAreaView, StyleSheet, View } from 'react-native';
 
@@ -14,10 +13,10 @@ export type OnboardingStackParamList = {
   step5: undefined;
 };
 
-const ProgressBar = observer(() => {
-  const store = useLocalObservable(() => GuideStore);
+const ProgressBar = () => {
+  const store = useGuideStore();
   const { colors, dark } = useTheme();
-  const progress = (store.currentStepIndex / 5) * 100;
+  const progress = (store.currentStepIndex() / 5) * 100;
 
   // 创建动画值
   const progressAnim = useRef(new Animated.Value(progress)).current;
@@ -65,10 +64,10 @@ const ProgressBar = observer(() => {
       </View>
     </View>
   );
-});
+};
 
 const OnboardingNavigator = () => {
-  const store = useLocalObservable(() => GuideStore);
+  const store = useGuideStore();
 
   const screenListeners = {
     state: (e: any) => {

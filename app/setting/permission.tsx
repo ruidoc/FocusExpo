@@ -1,10 +1,9 @@
 import { Page } from '@/components/business';
 import { FieldGroup, FieldItem, Switch } from '@/components/ui';
 import { usePermisStore } from '@/stores';
-import { observer } from 'mobx-react';
 import React, { useEffect } from 'react';
 
-const App = observer(() => {
+const App = () => {
   const store = usePermisStore();
 
   const onClick = (tag: string) => {
@@ -51,6 +50,6 @@ const App = observer(() => {
       </FieldGroup>
     </Page>
   );
-});
+};
 
 export default App;

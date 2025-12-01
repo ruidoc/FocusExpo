@@ -11,13 +11,12 @@ import {
 } from '@fruits-chain/react-native-xiaoshu';
 import Slider from '@react-native-community/slider';
 import {
-  useFocusEffect,
   useNavigation,
-  useTheme,
+  useTheme
 } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -84,11 +83,9 @@ const MyChallengeDetailScreen = () => {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchUserChallengeDetail();
-    }, [id, fetchUserChallengeDetail]),
-  );
+  useEffect(() => {
+    fetchUserChallengeDetail()
+  }, []);
 
   const getStatusColor = (status: UserChallenge['status']) => {
     switch (status) {
@@ -490,9 +487,8 @@ const MyChallengeDetailScreen = () => {
                   style={styles.textInput}
                   value={finishReason}
                   onChangeText={setFinishReason}
-                  placeholder={`请简要说明${
-                    finishStatus === 'failed' ? '失败' : '放弃'
-                  }原因...`}
+                  placeholder={`请简要说明${finishStatus === 'failed' ? '失败' : '放弃'
+                    }原因...`}
                   maxLength={200}
                   multiline
                 />

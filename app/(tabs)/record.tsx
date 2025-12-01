@@ -34,13 +34,13 @@ const App = () => {
   );
 
   useEffect(() => {
-    fetchData(period);
-  }, [period, fetchData]);
+    fetchData('today');
+  }, []);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = () => {
     setRefreshing(true);
     sstore.fetchAppStatis(period).finally(() => setRefreshing(false));
-  }, [period, sstore]);
+  };
 
   const styles = StyleSheet.create({
     container: {
@@ -233,7 +233,10 @@ const App = () => {
                 key={p.key}
                 activeOpacity={0.7}
                 style={[styles.segBtn, active && styles.segBtnActive]}
-                onPress={() => setPeriod(p.key)}>
+                onPress={() => {
+                  setPeriod(p.key);
+                  fetchData(p.key);
+                }}>
                 <Text style={[styles.segText, active && styles.segTextActive]}>
                   {p.label}
                 </Text>

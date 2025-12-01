@@ -1,17 +1,17 @@
 import { Page } from '@/components/business';
-import { Button, Checkbox, Flex } from '@/components/ui';
+import { Button, Card, Checkbox, Flex, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useChallengeStore, usePlanStore } from '@/stores';
 import { Challenge } from '@/stores/challenge';
-import { Card, Tag, Toast } from '@fruits-chain/react-native-xiaoshu';
-import { useFocusEffect } from '@react-navigation/native';
+import { Tag } from '@fruits-chain/react-native-xiaoshu';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -26,20 +26,20 @@ const ChallengeDetailScreen = () => {
 
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>([]);
 
   const fetchChallengeDetail = async () => {
     if (!id) return;
-
     setLoading(true);
     try {
       const result = await challengeStore.fetchChallengeById(id);
       setChallenge(result);
     } catch {
       Toast({
-        type: 'fail',
+        type: 'error',
         message: '获取挑战详情失败',
       });
     } finally {
@@ -47,45 +47,14 @@ const ChallengeDetailScreen = () => {
     }
   };
 
-  const fetchPlans = async () => {
-    try {
-      await planStore.getPlans();
-    } catch (error) {
-      console.log('获取计划列表失败:', error);
-    }
+  useEffect(() => {
+    fetchChallengeDetail()
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchChallengeDetail().finally(() => setRefreshing(false));
   };
-
-  useFocusEffect(
-    useCallback(() => {
-      const loadData = async () => {
-        if (!id) return;
-
-        setLoading(true);
-        try {
-          const result = await challengeStore.fetchChallengeById(id);
-          setChallenge(result);
-        } catch {
-          Toast({
-            type: 'fail',
-            message: '获取挑战详情失败',
-          });
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      const loadPlans = async () => {
-        try {
-          await planStore.getPlans();
-        } catch (error) {
-          console.log('获取计划列表失败:', error);
-        }
-      };
-
-      loadData();
-      loadPlans();
-    }, [id, challengeStore, planStore]),
-  );
 
   const getDifficultyColor = (difficulty: Challenge['difficulty']) => {
     switch (difficulty) {
@@ -120,7 +89,7 @@ const ChallengeDetailScreen = () => {
   const handleClaim = () => {
     if (planStore.all_plans.length === 0) {
       Toast({
-        type: 'fail',
+        type: 'error',
         message: '请先创建专注计划',
       });
       return;
@@ -131,7 +100,7 @@ const ChallengeDetailScreen = () => {
   const handleConfirmClaim = async () => {
     if (selectedPlanIds.length === 0) {
       Toast({
-        type: 'fail',
+        type: 'error',
         message: '请选择至少一个计划',
       });
       return;
@@ -154,7 +123,7 @@ const ChallengeDetailScreen = () => {
       }
     } catch {
       Toast({
-        type: 'fail',
+        type: 'error',
         message: '领取失败，请重试',
       });
     } finally {
@@ -360,6 +329,7 @@ const ChallengeDetailScreen = () => {
   return (
     <Page safe bgcolor={colors.background}>
       <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}>
@@ -369,19 +339,8 @@ const ChallengeDetailScreen = () => {
         </View>
 
         {/* 基本信息 */}
-        <Card style={styles.card}>
+        <Card title={challenge.title} desc={challenge.description}>
           <Flex className="flex-col">
-            <Flex className="justify-between items-start">
-              <Text style={styles.title}>{challenge.title}</Text>
-              <Tag color={getDifficultyColor(challenge.difficulty)}>
-                {getDifficultyText(challenge.difficulty)}
-              </Tag>
-            </Flex>
-
-            {challenge.description && (
-              <Text style={styles.description}>{challenge.description}</Text>
-            )}
-
             <Flex className="justify-between">
               <Text style={styles.infoLabel}>开始时间：</Text>
               <Text style={styles.infoValue}>
@@ -398,7 +357,7 @@ const ChallengeDetailScreen = () => {
         </Card>
 
         {/* 目标配置 */}
-        <Card style={styles.card}>
+        <Card title="挑战目标">
           <Text style={styles.sectionTitle}>挑战目标</Text>
           <Flex className="flex-col">
             <Flex className="justify-between">
@@ -430,8 +389,7 @@ const ChallengeDetailScreen = () => {
 
         {/* 必屏蔽应用 */}
         {challenge.required_apps && challenge.required_apps.length > 0 && (
-          <Card style={styles.card}>
-            <Text style={styles.sectionTitle}>必须屏蔽的应用</Text>
+          <Card title="必须屏蔽的应用">
             <Flex className="flex-wrap gap-2">
               {challenge.required_apps.map((bundleId, index) => (
                 <Tag key={index} color="#FF4D4F">
@@ -443,28 +401,10 @@ const ChallengeDetailScreen = () => {
         )}
 
         {/* 费用和奖励 */}
-        <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>费用与奖励</Text>
+        <Card title="费用与奖励">
           <Flex className="flex-col">
-            <Flex className="justify-between">
-              <Text style={styles.infoLabel}>入场费用</Text>
-              <Text style={styles.priceText}>{challenge.entry_coins} 金币</Text>
-            </Flex>
-
-            <Text style={styles.rewardLabel}>完成奖励：</Text>
-            <Flex className="flex-wrap gap-2">
-              {challenge.reward_apps > 0 && (
-                <Tag color="#1890FF">+{challenge.reward_apps} 个可选App</Tag>
-              )}
-              {challenge.reward_duration > 0 && (
-                <Tag color="#52C41A">
-                  +{challenge.reward_duration} 分钟专注时长
-                </Tag>
-              )}
-              {challenge.reward_unlimited > 0 && (
-                <Tag color="#722ED1">+{challenge.reward_unlimited} 天会员</Tag>
-              )}
-            </Flex>
+            <Text style={styles.infoLabel}>入场费用</Text>
+            <Text style={styles.priceText}>{challenge.entry_coins} 金币</Text>
           </Flex>
         </Card>
 
@@ -500,7 +440,7 @@ const ChallengeDetailScreen = () => {
                   style={[
                     styles.planItem,
                     selectedPlanIds.includes(plan.id!) &&
-                      styles.planItemSelected,
+                    styles.planItemSelected,
                   ]}
                   onPress={() => togglePlanSelection(plan.id!)}>
                   <Flex className="gap-3">

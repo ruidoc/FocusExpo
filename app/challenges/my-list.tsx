@@ -4,10 +4,9 @@ import { useCustomTheme } from '@/config/theme';
 import { useChallengeStore } from '@/stores';
 import { UserChallenge } from '@/stores/challenge';
 import { Tag } from '@fruits-chain/react-native-xiaoshu';
-import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const MyChallengesScreen = () => {
@@ -40,19 +39,9 @@ const MyChallengesScreen = () => {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      const loadData = async () => {
-        try {
-          const status = activeTab === 'all' ? undefined : activeTab;
-          await store.fetchUserChallenges(status);
-        } catch (error) {
-          console.log('获取我的挑战失败:', error);
-        }
-      };
-      loadData();
-    }, [activeTab, store]),
-  );
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const onRefresh = () => {
     fetchData(true);

@@ -1,11 +1,10 @@
 import { useHomeStore, usePermisStore } from '@/stores';
 import { checkScreenTimePermission } from '@/utils/permission';
 import { Redirect } from 'expo-router';
-import { observer } from 'mobx-react';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 
-const Index = observer(() => {
+const Index = () => {
   const hstore = useHomeStore();
   const pmstore = usePermisStore();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -42,6 +41,6 @@ const Index = observer(() => {
   const initialRoute = '/(tabs)';
 
   return <Redirect href={initialRoute} />;
-});
+};
 
 export default Index;

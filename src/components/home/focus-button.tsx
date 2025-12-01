@@ -193,7 +193,7 @@ const FocusButton = observer(() => {
             <Icon name="pause" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {pstore.is_pause && (
+        {pstore.is_pause() && (
           <TouchableOpacity
             onPress={resumeFocus}
             activeOpacity={0.8}
@@ -239,7 +239,7 @@ const FocusButton = observer(() => {
         coinCost={1}
         coinBalance={useBenefitStore().balance}
         onConfirm={pauseFocus}
-        onCancel={() => {}}
+        onCancel={() => { }}
         onClose={() => setShowPauseModal(false)}
       />
 
@@ -258,7 +258,7 @@ const FocusButton = observer(() => {
             : undefined
         }
         onConfirm={stopFocus}
-        onCancel={() => {}}
+        onCancel={() => { }}
         onClose={() => setShowStopModal(false)}
       />
     </>

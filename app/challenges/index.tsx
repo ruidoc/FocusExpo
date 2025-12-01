@@ -10,10 +10,9 @@ import {
   Tag,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
-import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Pressable,
   RefreshControl,
@@ -46,18 +45,10 @@ const ChallengeListScreen = () => {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      const loadData = async () => {
-        try {
-          await store.fetchChallenges(filters.is_active, filters.ongoing);
-        } catch (error) {
-          console.log('获取挑战列表失败:', error);
-        }
-      };
-      loadData();
-    }, [filters.is_active, filters.ongoing, store]),
-  );
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const onRefresh = () => {
     fetchData(true);
