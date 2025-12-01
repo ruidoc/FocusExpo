@@ -3,18 +3,17 @@ import FocusButton from '@/components/home/focus-button';
 import Header from '@/components/home/header';
 import ScreenTimePermissionPage from '@/components/home/screen-time';
 import {
-  AppStore,
-  BenefitStore,
-  PlanStore,
-  RecordStore,
+  useAppStore,
+  useBenefitStore,
   useHomeStore,
   usePermisStore,
-  UserStore,
+  usePlanStore,
+  useRecordStore,
+  useUserStore,
 } from '@/stores';
 import { checkScreenTimePermission } from '@/utils/permission';
 import { NoticeBar, Theme } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import {
   AppState,
@@ -29,14 +28,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { NativeClass } = NativeModules;
 
-const App = observer(() => {
+const App = () => {
   const store = useHomeStore();
-  const ustore = useLocalObservable(() => UserStore);
-  const pstore = useLocalObservable(() => PlanStore);
-  const astore = useLocalObservable(() => AppStore);
-  const rstore = useLocalObservable(() => RecordStore);
+  const ustore = useUserStore();
+  const pstore = usePlanStore();
+  const astore = useAppStore();
+  const rstore = useRecordStore();
   const pmstore = usePermisStore();
-  const bstore = useLocalObservable(() => BenefitStore);
+  const bstore = useBenefitStore();
   const { colors, dark } = useTheme();
   const xcolor = Theme.useThemeTokens();
 
@@ -169,7 +168,7 @@ const App = observer(() => {
   const initapp = () => {
     pmstore.checkNotify();
     if (!ustore.uInfo) return;
-    if (!pstore.all_plans[0]) return;
+    if (!pstore.cus_plans[0]) return;
   };
 
   useEffect(() => {
@@ -240,6 +239,6 @@ const App = observer(() => {
       )}
     </SafeAreaView>
   );
-});
+};
 
 export default App;

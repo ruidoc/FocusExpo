@@ -1,18 +1,17 @@
 import { Privicy, Wechat } from '@/components/business';
 import { Keyboard } from '@/components/system';
 import { Button, TextInput, Toast } from '@/components/ui';
-import { UserStore } from '@/stores';
+import { useUserStore } from '@/stores';
 import { toast } from '@/utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-const App = observer(() => {
-  const store = useLocalObservable(() => UserStore);
+const App = () => {
+  const store = useUserStore();
   const { colors, dark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [agree, setAgree] = useState(false);
@@ -218,6 +217,6 @@ const App = observer(() => {
       </LinearGradient>
     </Keyboard>
   );
-});
+};
 
 export default App;

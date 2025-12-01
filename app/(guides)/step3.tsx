@@ -1,19 +1,23 @@
 import { AppToken, Cascade, Typewriter } from '@/components/business';
 import { Button, Flex } from '@/components/ui';
-import { AppStore, GuideStore, PlanStore, useHomeStore } from '@/stores';
+import {
+  useAppStore,
+  useGuideStore,
+  useHomeStore,
+  usePlanStore,
+} from '@/stores';
 import { startAppLimits } from '@/utils/permission';
 import { useTheme } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
 import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 
-const GuideStep3 = observer(() => {
+const GuideStep3 = () => {
   const store = useHomeStore();
-  const gstore = useLocalObservable(() => GuideStore);
-  const pstore = useLocalObservable(() => PlanStore);
-  const astore = useLocalObservable(() => AppStore);
+  const gstore = useGuideStore();
+  const pstore = usePlanStore();
+  const astore = useAppStore();
   const { colors, dark } = useTheme();
 
   const descColor = dark ? '#aaa' : '#666';
@@ -228,6 +232,6 @@ const GuideStep3 = observer(() => {
       )}
     </View>
   );
-});
+};
 
 export default GuideStep3;

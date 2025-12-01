@@ -1,16 +1,15 @@
 import { Flex } from '@/components/ui';
-import { AppStore, PlanStore, UserStore } from '@/stores';
+import { useAppStore, usePlanStore, useUserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React from 'react';
 import { Platform, Text, View } from 'react-native';
 
-const ManageEntry: React.FC = () => {
-  const ustore = useLocalObservable(() => UserStore);
-  const pstore = useLocalObservable(() => PlanStore);
-  const astore = useLocalObservable(() => AppStore);
+const ManageEntry = () => {
+  const ustore = useUserStore();
+  const pstore = usePlanStore();
+  const astore = useAppStore();
   const { colors, dark } = useTheme();
 
   const plan_count = pstore.cus_plans.length;
@@ -100,4 +99,4 @@ const ManageEntry: React.FC = () => {
   );
 };
 
-export default observer(ManageEntry);
+export default ManageEntry;

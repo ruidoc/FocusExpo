@@ -1,9 +1,8 @@
 import { Cascade, Typewriter } from '@/components/business';
 import { Button } from '@/components/ui';
-import { GuideStore } from '@/stores';
+import { useGuideStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -15,9 +14,9 @@ import {
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
-export const GuideStep1 = observer(() => {
+export const GuideStep1 = () => {
   const navigation = useNavigation<NavigationProp>();
-  const store = useLocalObservable(() => GuideStore);
+  const store = useGuideStore();
   const { colors, dark } = useTheme();
 
   const descColor = dark ? '#999' : '#666';
@@ -103,11 +102,14 @@ export const GuideStep1 = observer(() => {
   useEffect(() => {
     if (!optionsVisible) return;
     const timers = optionAnimArr.map((anim, idx) => {
-      return setTimeout(() => {
-        if (idx === optionAnimArr.length - 1) {
-          setOptionsAllShown(true);
-        }
-      }, 150 * idx + 400); // 400为单个动画时长
+      return setTimeout(
+        () => {
+          if (idx === optionAnimArr.length - 1) {
+            setOptionsAllShown(true);
+          }
+        },
+        150 * idx + 400,
+      ); // 400为单个动画时长
     });
     return () => timers.forEach(t => clearTimeout(t));
   }, [optionsVisible]);
@@ -292,6 +294,6 @@ export const GuideStep1 = observer(() => {
       )}
     </View>
   );
-});
+};
 
 export default GuideStep1;

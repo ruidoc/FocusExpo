@@ -1,6 +1,6 @@
 import { Typewriter } from '@/components/business';
 import { Button } from '@/components/ui';
-import { GuideStore } from '@/stores';
+import { useGuideStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import {
   RouteProp,
@@ -9,7 +9,6 @@ import {
   useTheme,
 } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { observer, useLocalObservable } from 'mobx-react';
 import React from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 
@@ -19,7 +18,7 @@ type Step4RouteProp = RouteProp<{ Step4: { selectedAppName?: string } }>;
 const GuideStep4 = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<Step4RouteProp>();
-  const gstore = useLocalObservable(() => GuideStore);
+  const gstore = useGuideStore();
   const { colors, dark } = useTheme();
 
   // 获取路由参数中的应用名称
@@ -257,4 +256,4 @@ const GuideStep4 = () => {
   );
 };
 
-export default observer(GuideStep4);
+export default GuideStep4;

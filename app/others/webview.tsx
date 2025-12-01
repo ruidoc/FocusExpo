@@ -1,10 +1,9 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { observer } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView, WebViewNavigation } from 'react-native-webview';
 
-const WebScreen = observer(() => {
+const WebScreen = () => {
   // const store = useLocalObservable(() => UserStore);
   const [url, setUrl] = useState('');
   const [key, setKey] = useState('');
@@ -55,7 +54,7 @@ const WebScreen = observer(() => {
       />
     </View>
   );
-});
+};
 
 const styles = StyleSheet.create({
   container: {

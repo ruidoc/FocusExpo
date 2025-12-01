@@ -1,16 +1,16 @@
 import { Flex } from '@/components/ui';
 import {
-  BenefitStore,
-  PlanStore,
-  RecordStore,
+  useBenefitStore,
   useHomeStore,
-  UserStore,
+  usePlanStore,
+  useRecordStore,
+  useUserStore,
 } from '@/stores';
 import { getIOSFocusStatus, stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Theme } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
+import { observer } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import {
   NativeModules,
@@ -24,10 +24,10 @@ import ConfirmationModal from './confirm-modal';
 import TimeFlow from './time-flow';
 
 const FocusButton = observer(() => {
-  const ustore = useLocalObservable(() => UserStore);
-  const pstore = useLocalObservable(() => PlanStore);
+  const ustore = useUserStore();
+  const pstore = usePlanStore();
   const store = useHomeStore();
-  const rstore = useLocalObservable(() => RecordStore);
+  const rstore = useRecordStore();
   const xcolor = Theme.useThemeTokens();
 
   // 弹窗状态
@@ -237,7 +237,7 @@ const FocusButton = observer(() => {
         confirmText="确认暂停"
         cancelText="继续专注"
         coinCost={1}
-        coinBalance={BenefitStore.balance}
+        coinBalance={useBenefitStore().balance}
         onConfirm={pauseFocus}
         onCancel={() => {}}
         onClose={() => setShowPauseModal(false)}
@@ -251,7 +251,7 @@ const FocusButton = observer(() => {
         confirmText="确认结束"
         cancelText="继续专注"
         coinCost={stopCost}
-        coinBalance={BenefitStore.balance}
+        coinBalance={useBenefitStore().balance}
         extraWarning={
           pstore.cur_plan?.repeat !== 'once'
             ? '注意：停止后，今天该任务后续不会再触发'

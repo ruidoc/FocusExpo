@@ -1,15 +1,14 @@
 import { Page } from '@/components/business';
 import { ActionSheet, Divider, Flex } from '@/components/ui';
-import { UserStore } from '@/stores';
+import { useUserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const App = observer(() => {
-  const store = useLocalObservable(() => UserStore);
+const App = () => {
+  const store = useUserStore();
   const { colors, dark } = useTheme();
 
   const ItemDom = (label: string, opts: any) => (
@@ -117,6 +116,6 @@ const App = observer(() => {
       </Flex>
     </Page>
   );
-});
+};
 
 export default App;

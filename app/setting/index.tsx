@@ -1,14 +1,13 @@
 import { Page } from '@/components/business';
 import { ActionSheet, FieldGroup, FieldItem, Switch } from '@/components/ui';
-import { useHomeStore, UserStore } from '@/stores';
+import { useHomeStore, useUserStore } from '@/stores';
 import { toast } from '@/utils';
 import { useNavigation } from '@react-navigation/native';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
 import { Appearance, Linking, Platform, View } from 'react-native';
 
-const App = observer(() => {
-  const store = useLocalObservable(() => UserStore);
+const App = () => {
+  const store = useUserStore();
   const homeStore = useHomeStore();
   const navigation = useNavigation();
 
@@ -116,6 +115,6 @@ const App = observer(() => {
       </View>
     </Page>
   );
-});
+};
 
 export default App;

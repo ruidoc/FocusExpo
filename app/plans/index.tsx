@@ -2,12 +2,11 @@ import { AppToken, Page } from '@/components/business';
 import { Dialog, Flex } from '@/components/ui';
 import { buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
-import { AppStore, PlanStore } from '@/stores';
+import { useAppStore, usePlanStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { LinearGradient } from 'expo-linear-gradient';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Pressable,
@@ -21,9 +20,9 @@ import {
 
 type FilterType = 'today' | 'week' | 'all';
 
-const App = observer(() => {
-  const store = useLocalObservable(() => PlanStore);
-  const astore = useLocalObservable(() => AppStore);
+const App = () => {
+  const store = usePlanStore();
+  const astore = useAppStore();
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [filterType, setFilterType] = useState<FilterType>('today');
@@ -71,8 +70,13 @@ const App = observer(() => {
 
       const promises = [];
       let currentDate = monday;
-      while (currentDate.isBefore(sunday) || currentDate.isSame(sunday, 'day')) {
-        promises.push(store.getPlans({ date: currentDate.format('YYYY-MM-DD') }));
+      while (
+        currentDate.isBefore(sunday) ||
+        currentDate.isSame(sunday, 'day')
+      ) {
+        promises.push(
+          store.getPlans({ date: currentDate.format('YYYY-MM-DD') }),
+        );
         currentDate = currentDate.add(1, 'day');
       }
 
@@ -120,7 +124,7 @@ const App = observer(() => {
 
   // 根据筛选类型过滤任务
   const getFilteredPlans = () => {
-    const allPlans = store.all_plans;
+    const allPlans = store.all_plans();
 
     if (filterType === 'today') {
       // 今日：显示今天的任务
@@ -131,7 +135,10 @@ const App = observer(() => {
       return allPlans.filter(plan => {
         const repeat = Array.isArray(plan.repeat) ? plan.repeat : [];
         // 一次性任务或周期任务且今天在 repeat 中
-        return plan.repeat === 'once' || (repeat.length > 0 && repeat.includes(todayDay));
+        return (
+          plan.repeat === 'once' ||
+          (repeat.length > 0 && repeat.includes(todayDay))
+        );
       });
     } else if (filterType === 'week') {
       // 本周：显示本周的任务
@@ -140,7 +147,10 @@ const App = observer(() => {
       return allPlans.filter(plan => {
         const repeat = Array.isArray(plan.repeat) ? plan.repeat : [];
         // 一次性任务或周期任务且本周任意一天在 repeat 中
-        return plan.repeat === 'once' || (repeat.length > 0 && repeat.some(day => weekDays.includes(day)));
+        return (
+          plan.repeat === 'once' ||
+          (repeat.length > 0 && repeat.some(day => weekDays.includes(day)))
+        );
       });
     } else {
       // 全部：显示所有任务
@@ -185,7 +195,7 @@ const App = observer(() => {
   return (
     <Page>
       {/* 筛选选项区域 */}
-      <Flex className='px-4 py-3'>
+      <Flex className="px-4 py-3">
         {filterOptions.map((option, index) => {
           const active = filterType === option.key;
           return (
@@ -217,27 +227,25 @@ const App = observer(() => {
             plans={getFilteredPlans()}
             toRemove={toRemove}
             toEdit={toEdit}
-            astore={astore}
           />
         </ScrollView>
       </View>
     </Page>
   );
-});
+};
 
 // 任务区域组件
 const TaskArea = ({
   plans,
   toRemove,
   toEdit,
-  astore,
 }: {
   plans: any[];
   toRemove: (id: string) => void;
   toEdit: (task: any) => void;
-  astore: typeof AppStore;
 }) => {
   const { colors } = useCustomTheme();
+  const astore = useAppStore();
 
   if (plans.length === 0) {
     return (
@@ -263,7 +271,9 @@ const TaskArea = ({
   return (
     <View style={{ flex: 1, padding: 16 }}>
       {plans.map((task, index) => (
-        <View key={task.id} style={{ marginBottom: index < plans.length - 1 ? 12 : 0 }}>
+        <View
+          key={task.id}
+          style={{ marginBottom: index < plans.length - 1 ? 12 : 0 }}>
           <LinearGradient
             colors={['#5C24FC', '#9D7AFF']}
             start={{ x: -0.0042, y: 0.5 }}

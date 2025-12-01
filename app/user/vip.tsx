@@ -1,11 +1,10 @@
 import { Page } from '@/components/business';
 import { Toast } from '@/components/ui';
-import { vipStore } from '@/stores/vip';
+import { useVipStore } from '@/stores';
 import { fenToYuan } from '@/utils';
 import { useTheme } from '@react-navigation/native';
 import { Purchase, useIAP, validateReceipt } from 'expo-iap';
 import { LinearGradient } from 'expo-linear-gradient';
-import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useState } from 'react';
 import {
   Linking,
@@ -17,8 +16,8 @@ import {
 } from 'react-native';
 
 // 产品类型定义
-const VipPage = observer(() => {
-  const store = useLocalObservable(() => vipStore);
+const VipPage = () => {
+  const store = useVipStore();
   const { colors, dark } = useTheme();
   const [isAgreed, setIsAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -432,6 +431,6 @@ const VipPage = observer(() => {
       </View>
     </Page>
   );
-});
+};
 
 export default VipPage;

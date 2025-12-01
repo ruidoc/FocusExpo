@@ -1,13 +1,12 @@
 import { Page } from '@/components/business';
 import { Button, Checkbox, Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
-import ChallengeStore, { Challenge } from '@/stores/challenge';
-import PlanStore from '@/stores/plan';
+import { useChallengeStore, usePlanStore } from '@/stores';
+import { Challenge } from '@/stores/challenge';
 import { Card, Tag, Toast } from '@fruits-chain/react-native-xiaoshu';
 import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -19,10 +18,10 @@ import {
   View,
 } from 'react-native';
 
-const ChallengeDetailScreen = observer(() => {
+const ChallengeDetailScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const challengeStore = useLocalObservable(() => ChallengeStore);
-  const planStore = useLocalObservable(() => PlanStore);
+  const challengeStore = useChallengeStore();
+  const planStore = usePlanStore();
   const { colors } = useCustomTheme();
 
   const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -495,7 +494,7 @@ const ChallengeDetailScreen = observer(() => {
             <Text style={styles.modalSubtitle}>请选择要关联的专注计划：</Text>
 
             <ScrollView style={styles.planList}>
-              {planStore.all_plans.map(plan => (
+              {planStore.cus_plans.map(plan => (
                 <Pressable
                   key={plan.id}
                   style={[
@@ -545,6 +544,6 @@ const ChallengeDetailScreen = observer(() => {
       </Modal>
     </Page>
   );
-});
+};
 
 export default ChallengeDetailScreen;

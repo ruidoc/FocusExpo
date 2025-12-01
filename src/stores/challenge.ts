@@ -1,5 +1,6 @@
 import http from '@/utils/request';
-import { makeAutoObservable } from 'mobx';
+import { create } from 'zustand';
+import { combine } from 'zustand/middleware';
 
 export type Challenge = {
   id: string;
@@ -45,172 +46,175 @@ export type UserChallenge = {
   updated_at: string;
 };
 
-class ChallengeStore {
-  constructor() {
-    makeAutoObservable(this);
-  }
+const ChallengeStore = combine(
+  {
+    challenges: [] as Challenge[], // 所有挑战列表
+    my_challenges: [] as UserChallenge[], // 我的挑战列表
+  },
+  (set, get) => ({
+    setChallenges: (challenges: Challenge[]) => {
+      set({ challenges });
+    },
 
-  // 所有挑战列表
-  challenges: Challenge[] = [];
-  // 我的挑战列表
-  my_challenges: UserChallenge[] = [];
+    setMyChallenges: (challenges: UserChallenge[]) => {
+      set({ my_challenges: challenges });
+    },
 
-  setChallenges = (challenges: Challenge[]) => {
-    this.challenges = challenges;
-  };
+    // 获取挑战列表
+    fetchChallenges: async (is_active?: boolean, ongoing?: boolean) => {
+      try {
+        const params: any = {};
+        if (is_active !== undefined) params.is_active = is_active ? 1 : 0;
+        if (ongoing !== undefined) params.ongoing = ongoing ? 1 : 0;
 
-  setMyChallenges = (challenges: UserChallenge[]) => {
-    this.my_challenges = challenges;
-  };
-
-  // 获取挑战列表
-  fetchChallenges = async (is_active?: boolean, ongoing?: boolean) => {
-    try {
-      const params: any = {};
-      if (is_active !== undefined) params.is_active = is_active ? 1 : 0;
-      if (ongoing !== undefined) params.ongoing = ongoing ? 1 : 0;
-
-      const res: HttpRes = await http.get('/challenge/list', params);
-      if (res.statusCode === 200) {
-        this.setChallenges(res.data);
-      }
-      return res;
-    } catch (error) {
-      console.log('fetchChallenges error:', error);
-      throw error;
-    }
-  };
-
-  // 获取单个挑战详情
-  fetchChallengeById = async (id: string): Promise<Challenge | null> => {
-    try {
-      const res: HttpRes = await http.get(`/challenge/${id}`);
-      if (res.statusCode === 200) {
-        return res.data;
-      }
-      return null;
-    } catch (error) {
-      console.log('fetchChallengeById error:', error);
-      throw error;
-    }
-  };
-
-  // 领取挑战
-  claimChallenge = async (
-    id: string,
-    plan_ids: string[],
-  ): Promise<UserChallenge | null> => {
-    try {
-      const res: HttpRes = await http.post(`/challenge/claim/${id}`, {
-        plan_ids,
-      });
-      if (res.statusCode === 200) {
-        // 更新我的挑战列表
-        const existingIndex = this.my_challenges.findIndex(
-          uc => uc.challenge_id === id && uc.status === 'in_progress',
-        );
-        if (existingIndex >= 0) {
-          this.my_challenges[existingIndex] = res.data;
-        } else {
-          this.my_challenges.unshift(res.data);
+        const res: HttpRes = await http.get('/challenge/list', params);
+        if (res.statusCode === 200) {
+          (get() as any).setChallenges(res.data);
         }
-        return res.data;
+        return res;
+      } catch (error) {
+        console.log('fetchChallenges error:', error);
+        throw error;
       }
-      return null;
-    } catch (error) {
-      console.log('claimChallenge error:', error);
-      throw error;
-    }
-  };
+    },
 
-  // 更新挑战进度
-  updateChallengeProgress = async (
-    userChallengeId: string,
-    percent: number,
-  ): Promise<UserChallenge | null> => {
-    try {
-      const res: HttpRes = await http.put(
-        `/challenge/progress/${userChallengeId}`,
-        {
-          percent,
-        },
-      );
-      if (res.statusCode === 200) {
-        // 更新本地数据
-        const index = this.my_challenges.findIndex(
-          uc => uc.id === userChallengeId,
-        );
-        if (index >= 0) {
-          this.my_challenges[index] = res.data;
+    // 获取单个挑战详情
+    fetchChallengeById: async (id: string): Promise<Challenge | null> => {
+      try {
+        const res: HttpRes = await http.get(`/challenge/${id}`);
+        if (res.statusCode === 200) {
+          return res.data;
         }
-        return res.data;
+        return null;
+      } catch (error) {
+        console.log('fetchChallengeById error:', error);
+        throw error;
       }
-      return null;
-    } catch (error) {
-      console.log('updateChallengeProgress error:', error);
-      throw error;
-    }
-  };
+    },
 
-  // 完成挑战
-  finishChallenge = async (
-    userChallengeId: string,
-    status: 'succeeded' | 'failed' | 'cancelled',
-    reason?: string,
-  ): Promise<UserChallenge | null> => {
-    try {
-      const res: HttpRes = await http.put(
-        `/challenge/finish/${userChallengeId}`,
-        {
-          status,
-          reason,
-        },
-      );
-      if (res.statusCode === 200) {
-        // 更新本地数据
-        const index = this.my_challenges.findIndex(
-          uc => uc.id === userChallengeId,
-        );
-        if (index >= 0) {
-          this.my_challenges[index] = res.data;
+    // 领取挑战
+    claimChallenge: async (
+      id: string,
+      plan_ids: string[],
+    ): Promise<UserChallenge | null> => {
+      try {
+        const res: HttpRes = await http.post(`/challenge/claim/${id}`, {
+          plan_ids,
+        });
+        if (res.statusCode === 200) {
+          // 更新我的挑战列表
+          const my_challenges = [...get().my_challenges];
+          const existingIndex = my_challenges.findIndex(
+            uc => uc.challenge_id === id && uc.status === 'in_progress',
+          );
+          if (existingIndex >= 0) {
+            my_challenges[existingIndex] = res.data;
+          } else {
+            my_challenges.unshift(res.data);
+          }
+          set({ my_challenges });
+          return res.data;
         }
-        return res.data;
+        return null;
+      } catch (error) {
+        console.log('claimChallenge error:', error);
+        throw error;
       }
-      return null;
-    } catch (error) {
-      console.log('finishChallenge error:', error);
-      throw error;
-    }
-  };
+    },
 
-  // 获取用户挑战列表
-  fetchUserChallenges = async (status?: string) => {
-    try {
-      const params: any = {};
-      if (status) params.status = status;
-
-      const res: HttpRes = await http.get('/challenge/user/list', params);
-      if (res.statusCode === 200) {
-        this.setMyChallenges(res.data);
+    // 更新挑战进度
+    updateChallengeProgress: async (
+      userChallengeId: string,
+      percent: number,
+    ): Promise<UserChallenge | null> => {
+      try {
+        const res: HttpRes = await http.put(
+          `/challenge/progress/${userChallengeId}`,
+          {
+            percent,
+          },
+        );
+        if (res.statusCode === 200) {
+          // 更新本地数据
+          const my_challenges = [...get().my_challenges];
+          const index = my_challenges.findIndex(
+            uc => uc.id === userChallengeId,
+          );
+          if (index >= 0) {
+            my_challenges[index] = res.data;
+            set({ my_challenges });
+          }
+          return res.data;
+        }
+        return null;
+      } catch (error) {
+        console.log('updateChallengeProgress error:', error);
+        throw error;
       }
-      return res;
-    } catch (error) {
-      console.log('fetchUserChallenges error:', error);
-      throw error;
-    }
-  };
+    },
 
-  // 便捷方法：获取进行中的用户挑战
-  fetchInProgressChallenges = async () => {
-    return this.fetchUserChallenges('in_progress');
-  };
+    // 完成挑战
+    finishChallenge: async (
+      userChallengeId: string,
+      status: 'succeeded' | 'failed' | 'cancelled',
+      reason?: string,
+    ): Promise<UserChallenge | null> => {
+      try {
+        const res: HttpRes = await http.put(
+          `/challenge/finish/${userChallengeId}`,
+          {
+            status,
+            reason,
+          },
+        );
+        if (res.statusCode === 200) {
+          // 更新本地数据
+          const my_challenges = [...get().my_challenges];
+          const index = my_challenges.findIndex(
+            uc => uc.id === userChallengeId,
+          );
+          if (index >= 0) {
+            my_challenges[index] = res.data;
+            set({ my_challenges });
+          }
+          return res.data;
+        }
+        return null;
+      } catch (error) {
+        console.log('finishChallenge error:', error);
+        throw error;
+      }
+    },
 
-  // 便捷方法：获取活跃的挑战列表
-  fetchActiveChallenges = async () => {
-    return this.fetchChallenges(true, true);
-  };
-}
+    // 获取用户挑战列表
+    fetchUserChallenges: async (status?: string) => {
+      try {
+        const params: any = {};
+        if (status) params.status = status;
 
-const store = new ChallengeStore();
+        const res: HttpRes = await http.get('/challenge/user/list', params);
+        if (res.statusCode === 200) {
+          (get() as any).setMyChallenges(res.data);
+        }
+        return res;
+      } catch (error) {
+        console.log('fetchUserChallenges error:', error);
+        throw error;
+      }
+    },
+
+    // 便捷方法：获取进行中的用户挑战
+    fetchInProgressChallenges: async () => {
+      return (get() as any).fetchUserChallenges('in_progress');
+    },
+
+    // 便捷方法：获取活跃的挑战列表
+    fetchActiveChallenges: async () => {
+      return (get() as any).fetchChallenges(true, true);
+    },
+  }),
+);
+
+const store = create(ChallengeStore);
 
 export default store;

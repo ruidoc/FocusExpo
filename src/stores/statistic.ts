@@ -1,5 +1,6 @@
 import http from '@/utils/request';
-import { makeAutoObservable } from 'mobx';
+import { create } from 'zustand';
+import { combine } from 'zustand/middleware';
 
 export type Period = 'today' | 'week' | 'month';
 
@@ -22,31 +23,30 @@ export interface AppStatisResp {
   items: AppStatisItem[];
 }
 
-class StatisticStore {
-  constructor() {
-    makeAutoObservable(this);
-  }
+const StatisticStore = combine(
+  {
+    app_statis: null as AppStatisResp | null,
+  },
+  (set, get) => ({
+    setAppStatis: (statis: AppStatisResp) => {
+      set({ app_statis: statis });
+    },
 
-  app_statis: AppStatisResp = null;
-
-  setAppStatis = (statis: AppStatisResp) => {
-    this.app_statis = statis;
-  };
-
-  fetchAppStatis = async (period: Period = 'today') => {
-    try {
-      let res: HttpRes = await http.get('/record/statis/apps', {
-        params: { period },
-      });
-      if (res.statusCode === 200) {
-        this.setAppStatis(res.data);
+    fetchAppStatis: async (period: Period = 'today') => {
+      try {
+        let res: HttpRes = await http.get('/record/statis/apps', {
+          params: { period },
+        });
+        if (res.statusCode === 200) {
+          (get() as any).setAppStatis(res.data);
+        }
+      } catch (error) {
+        console.log(error);
       }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-}
+    },
+  }),
+);
 
-const store = new StatisticStore();
+const store = create(StatisticStore);
 
 export default store;

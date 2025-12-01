@@ -1,9 +1,13 @@
 import { Page } from '@/components/business';
 import { Flex } from '@/components/ui';
-import { AppStore, GuideStore, useHomeStore, UserStore } from '@/stores';
+import {
+  useAppStore,
+  useGuideStore,
+  useHomeStore,
+  useUserStore,
+} from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useNavigation, useRoute, useTheme } from '@react-navigation/native';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Image,
@@ -14,11 +18,11 @@ import {
   View,
 } from 'react-native';
 
-const App = observer(() => {
+const App = () => {
   const store = useHomeStore();
-  const astore = useLocalObservable(() => AppStore);
-  const ustore = useLocalObservable(() => UserStore);
-  const gstore = useLocalObservable(() => GuideStore);
+  const astore = useAppStore();
+  const ustore = useUserStore();
+  const gstore = useGuideStore();
   const { colors, dark } = useTheme();
 
   const navigation = useNavigation();
@@ -214,6 +218,6 @@ const App = observer(() => {
       </View>
     </Page>
   );
-});
+};
 
 export default App;

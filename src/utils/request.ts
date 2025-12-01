@@ -1,5 +1,5 @@
 import { Toast } from '@/components/ui';
-import { UserStore } from '@/stores';
+import { useUserStore } from '@/stores';
 import { storage } from '@/utils';
 import axios, { AxiosInstance } from 'axios';
 
@@ -40,7 +40,7 @@ instance.interceptors.response.use(
         Toast({ position: 'bottom', message: '登录已过期，请重新登录' });
         storage.delete('access_token');
         storage.delete('user_info');
-        UserStore.setUinfo(null);
+        useUserStore().setUinfo(null);
       } else {
         // console.log('错误信息：', response.data);
         Toast(response.data.message);

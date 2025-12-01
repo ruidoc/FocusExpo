@@ -1,9 +1,8 @@
 import { AppToken, Page } from '@/components/business';
 import { Flex } from '@/components/ui';
-import { AppStore, StatisticStore } from '@/stores';
+import { useAppStore, useStatisticStore } from '@/stores';
 import type { Period } from '@/stores/statistic';
 import { useTheme } from '@react-navigation/native';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   RefreshControl,
@@ -14,9 +13,9 @@ import {
   View,
 } from 'react-native';
 
-const App = observer(() => {
-  const sstore = useLocalObservable(() => StatisticStore);
-  const astore = useLocalObservable(() => AppStore);
+const App = () => {
+  const sstore = useStatisticStore();
+  const astore = useAppStore();
   const { colors } = useTheme();
   const [period, setPeriod] = useState<Period>('today');
   const [loading, setLoading] = useState(true);
@@ -319,6 +318,6 @@ const App = observer(() => {
       </ScrollView>
     </Page>
   );
-});
+};
 
 export default App;

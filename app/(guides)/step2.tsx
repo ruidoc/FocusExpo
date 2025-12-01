@@ -1,10 +1,9 @@
 import { Cascade, Typewriter } from '@/components/business';
 import { Button } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
-import { AppStore, GuideStore, useHomeStore } from '@/stores';
+import { useAppStore, useGuideStore, useHomeStore } from '@/stores';
 import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useState } from 'react';
 import {
   Animated,
@@ -16,10 +15,10 @@ import {
   View,
 } from 'react-native';
 
-const GuideStep2 = observer(() => {
+const GuideStep2 = () => {
   const store = useHomeStore();
-  const gstore = useLocalObservable(() => GuideStore);
-  const astore = useLocalObservable(() => AppStore);
+  const gstore = useGuideStore();
+  const astore = useAppStore();
 
   // 控制步骤卡片和按钮的动画显示
   const [typewriterDone, setTypewriterDone] = useState(false);
@@ -356,6 +355,6 @@ const GuideStep2 = observer(() => {
       {step2Completed && step1Completed && <Button onPress={handleNext} />}
     </View>
   );
-});
+};
 
 export default GuideStep2;

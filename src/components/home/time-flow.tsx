@@ -1,6 +1,6 @@
-import { BenefitStore, PlanStore } from '@/stores';
+import { useBenefitStore, usePlanStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import { observer, useLocalObservable } from 'mobx-react';
+import { observer } from 'mobx-react';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -12,8 +12,8 @@ import {
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 const TimeFlow = observer(() => {
-  const pstore = useLocalObservable(() => PlanStore);
-  const bstore = useLocalObservable(() => BenefitStore);
+  const pstore = usePlanStore();
+  const bstore = useBenefitStore();
 
   const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 

@@ -89,7 +89,7 @@ const HomeStore = combine(
     },
 
     stopVpn: () => {
-      PlanStore.clearPlans();
+      PlanStore.getState().clearPlans();
       // NativeClass.stopVpn();
     },
 

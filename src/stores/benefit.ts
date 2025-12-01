@@ -1,54 +1,47 @@
 import http from '@/utils/request';
-import { makeAutoObservable } from 'mobx';
+import { create } from 'zustand';
+import { combine } from 'zustand/middleware';
 
-export class BenefitStore {
-  constructor() {
-    makeAutoObservable(this);
-  }
+const BenefitStore = combine(
+  {
+    balance: 0 as number, // 自律币余额
+    rank: '' as string, // 当前段位
+    focus_duration: 0 as number, // 可专注时长（分钟）
+    app_count: 1 as number, // 可限制的应用数量
+    category_count: undefined as number | undefined, // 可限制的分类数量（IOS）
+  },
+  (set, get) => ({
+    setBalance: (balance: number) => {
+      set({ balance });
+    },
 
-  // 自律币余额
-  balance: number = 0;
+    // 扣除自律币
+    subBalance: (balance: number = 1) => {
+      set({ balance: get().balance - balance });
+    },
 
-  // 当前段位
-  rank: string = '';
-
-  // 可专注时长（分钟）
-  focus_duration: number = 0;
-
-  // 可限制的应用数量
-  app_count: number = 1;
-
-  // 可限制的分类数量（IOS）
-  category_count: number;
-
-  setBalance(balance: number) {
-    this.balance = balance;
-  }
-
-  // 扣除自律币
-  subBalance(balance: number = 1) {
-    this.balance -= balance;
-  }
-
-  async getBenefit() {
-    try {
-      const res: HttpRes = await http.get('/benefit');
-      if (res.statusCode === 200) {
-        let { balance, rank, focus_duration, app_count, category_count } =
-          res.data;
-        // console.log('获取权益', res.data);
-        this.setBalance(balance);
-        this.rank = rank;
-        this.focus_duration = focus_duration;
-        this.app_count = app_count;
-        this.category_count = category_count;
+    getBenefit: async () => {
+      try {
+        const res: HttpRes = await http.get('/benefit');
+        if (res.statusCode === 200) {
+          let { balance, rank, focus_duration, app_count, category_count } =
+            res.data;
+          // console.log('获取权益', res.data);
+          set({
+            balance,
+            rank,
+            focus_duration,
+            app_count,
+            category_count,
+          });
+        }
+      } catch (error) {
+        console.log('获取权益失败：', error);
       }
-    } catch (error) {
-      console.log('获取权益失败：', error);
-    }
-  }
-}
+    },
+  }),
+);
 
-const store = new BenefitStore();
+const store = create(BenefitStore);
 
 export default store;

@@ -1,5 +1,5 @@
 import { Button, Dialog, Flex } from '@/components/ui';
-import { useHomeStore, UserStore } from '@/stores';
+import { useHomeStore, useUserStore } from '@/stores';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   useFocusEffect,
@@ -9,14 +9,13 @@ import {
 // import * as Sentry from '@sentry/react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 const PRIVACY_KEY = 'privacy_readed';
 
-const App = observer(() => {
-  const store = useLocalObservable(() => UserStore);
+const App = () => {
+  const store = useUserStore();
   const hstore = useHomeStore();
   const { colors, dark } = useTheme();
   const [agree, setAgree] = useState(false);
@@ -177,6 +176,6 @@ const App = observer(() => {
       </Dialog>
     </LinearGradient>
   );
-});
+};
 
 export default App;

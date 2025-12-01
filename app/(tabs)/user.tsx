@@ -1,10 +1,9 @@
 import { FieldGroup, FieldItem, Flex } from '@/components/ui';
-import { UserStore } from '@/stores';
+import { useUserStore } from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect } from 'react';
 import {
   Image,
@@ -15,8 +14,8 @@ import {
   View,
 } from 'react-native';
 
-const App = observer(() => {
-  const store = useLocalObservable(() => UserStore);
+const App = () => {
+  const store = useUserStore();
   const { colors, dark } = useTheme();
 
   const toLogin = () => {
@@ -177,6 +176,6 @@ const App = observer(() => {
       </Flex>
     </ScrollView>
   );
-});
+};
 
 export default App;

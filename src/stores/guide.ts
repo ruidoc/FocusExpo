@@ -1,6 +1,7 @@
 import http from '@/utils/request';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { makeAutoObservable } from 'mobx';
+import { create } from 'zustand';
+import { combine } from 'zustand/middleware';
 
 interface OnboardingState {
   // 用户选择的问题类型
@@ -9,159 +10,155 @@ interface OnboardingState {
   // 后续可以添加更多引导页的状态
 }
 
-class GuideStore {
-  constructor() {
-    makeAutoObservable(this);
-    this.init();
-  }
-  // 用户选择的问题类型
-  problem: OnboardingState['problem'] = null;
-  // 用户设置的目标
-  selected_apps: string[] = [];
-  // 当前选中的应用名称（仅内存临时使用，不持久化不上传）
-  selectedAppName: string = '';
-  // 专注模式
-  mode: OnboardingState['mode'] = 'shield';
-  // 是否完成未登录引导
-  unloginComplete = false;
-  // 是否完成引导
-  isComplete = false;
-  // 用户id
-  user_id: string = '';
-  // 引导id
-  guide_id: string = '';
-  // 当前步骤
-  currentStep: string = 'step0';
-
-  getProblemLable = () => {
-    switch (this.problem) {
-      case 'short_video':
-        return '短视频';
-      case 'game':
-        return '游戏';
-      case 'study':
-        return '学习';
-    }
-  };
-
-  init = async () => {
-    try {
-      const state = await AsyncStorage.getItem('onboarding_state');
-      if (state) {
-        const parsed = JSON.parse(state);
-        this.guide_id = parsed.guide_id;
-        this.problem = parsed.problem;
-        this.selected_apps = parsed.selected_apps || [];
-        this.mode = parsed.mode || 'shield';
-        this.isComplete = parsed.isComplete;
-        this.unloginComplete = parsed.unloginComplete;
-        this.currentStep = parsed.currentStep || 'step1';
+const GuideStore = combine(
+  {
+    problem: null as OnboardingState['problem'] | null, // 用户选择的问题类型
+    selected_apps: [] as string[], // 用户设置的目标
+    selectedAppName: '' as string, // 当前选中的应用名称（仅内存临时使用，不持久化不上传）
+    mode: 'shield' as OnboardingState['mode'], // 专注模式
+    unloginComplete: false as boolean, // 是否完成未登录引导
+    isComplete: false as boolean, // 是否完成引导
+    user_id: '' as string, // 用户id
+    guide_id: '' as string, // 引导id
+    currentStep: 'step0' as string, // 当前步骤
+  },
+  (set, get) => ({
+    getProblemLable: () => {
+      switch (get().problem) {
+        case 'short_video':
+          return '短视频';
+        case 'game':
+          return '游戏';
+        case 'study':
+          return '学习';
       }
-    } catch (error) {
-      console.error('Failed to load onboarding state:', error);
-    }
-  };
+    },
 
-  get currentStepIndex() {
-    return parseInt(this.currentStep.slice(-1), 10);
-  }
+    // Getter 方法改为普通函数
+    currentStepIndex: () => {
+      return parseInt(get().currentStep.slice(-1), 10);
+    },
 
-  setProblem = (type: string) => {
-    this.problem = type as OnboardingState['problem'];
-    this.mode = this.problem === 'study' ? 'focus' : 'shield';
-    this.saveState();
-  };
+    init: async () => {
+      try {
+        const state = await AsyncStorage.getItem('onboarding_state');
+        if (state) {
+          const parsed = JSON.parse(state);
+          set({
+            guide_id: parsed.guide_id,
+            problem: parsed.problem,
+            selected_apps: parsed.selected_apps || [],
+            mode: parsed.mode || 'shield',
+            isComplete: parsed.isComplete,
+            unloginComplete: parsed.unloginComplete,
+            currentStep: parsed.currentStep || 'step1',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load onboarding state:', error);
+      }
+    },
 
-  setMode = (mode: OnboardingState['mode']) => {
-    this.mode = mode;
-    this.saveState();
-  };
+    setProblem: (type: string) => {
+      const problem = type as OnboardingState['problem'];
+      const mode = problem === 'study' ? 'focus' : 'shield';
+      set({ problem, mode });
+      (get() as any).saveState();
+    },
 
-  setGuideId = (id: string) => {
-    this.guide_id = id;
-    this.saveState();
-  };
+    setMode: (mode: OnboardingState['mode']) => {
+      set({ mode });
+      (get() as any).saveState();
+    },
 
-  setSelectedApps = (apps: string[]) => {
-    this.selected_apps = apps;
-    this.saveState();
-  };
+    setGuideId: (id: string) => {
+      set({ guide_id: id });
+      (get() as any).saveState();
+    },
 
-  // 只做内存赋值，不做持久化和上传
-  setSelectedAppName = (appName: string) => {
-    this.selectedAppName = appName;
-  };
+    setSelectedApps: (apps: string[]) => {
+      set({ selected_apps: apps });
+      (get() as any).saveState();
+    },
 
-  setCurrentStep = (step: string) => {
-    this.currentStep = step;
-    this.saveState();
-  };
+    // 只做内存赋值，不做持久化和上传
+    setSelectedAppName: (appName: string) => {
+      set({ selectedAppName: appName });
+    },
 
-  completeOnboarding = () => {
-    this.isComplete = true;
-    this.saveState();
-  };
+    setCurrentStep: (step: string) => {
+      set({ currentStep: step });
+      (get() as any).saveState();
+    },
 
-  completeUnlogin = () => {
-    this.unloginComplete = true;
-    this.saveState();
-  };
+    completeOnboarding: () => {
+      set({ isComplete: true });
+      (get() as any).saveState();
+    },
 
-  private saveState = async () => {
-    try {
-      await AsyncStorage.setItem(
-        'onboarding_state',
-        JSON.stringify({
-          guide_id: this.guide_id,
-          mode: this.mode,
-          problem: this.problem,
-          selected_apps: this.selected_apps,
-          isComplete: this.isComplete,
-          unloginComplete: this.unloginComplete,
-          currentStep: this.currentStep,
-        }),
-      );
-    } catch (error) {
-      console.error('Failed to save onboarding state:', error);
-    }
-  };
+    completeUnlogin: () => {
+      set({ unloginComplete: true });
+      (get() as any).saveState();
+    },
 
-  // 创建引导记录
-  createGuide = async (fun?: (data?: any) => void) => {
-    try {
-      const res: any = await http.post('/guide', {
-        id: this.guide_id,
-        problem: this.problem,
-        mode: this.mode,
-        selected_apps: this.selected_apps,
-        current_step: this.currentStep,
-      });
-      this.setGuideId(res.id);
-      if (fun) fun(res);
-    } catch (error) {
-      console.log(error);
-      if (fun) fun();
-    }
-  };
+    saveState: async () => {
+      try {
+        await AsyncStorage.setItem(
+          'onboarding_state',
+          JSON.stringify({
+            guide_id: get().guide_id,
+            mode: get().mode,
+            problem: get().problem,
+            selected_apps: get().selected_apps,
+            isComplete: get().isComplete,
+            unloginComplete: get().unloginComplete,
+            currentStep: get().currentStep,
+          }),
+        );
+      } catch (error) {
+        console.error('Failed to save onboarding state:', error);
+      }
+    },
 
-  // 更新引导记录
-  updateGuide = async (fun?: (data?: any) => void) => {
-    if (!this.guide_id) return;
-    try {
-      const res: any = await http.put(`/guide/${this.guide_id}`, {
-        problem: this.problem,
-        mode: this.mode,
-        selected_apps: this.selected_apps,
-        current_step: this.currentStep,
-      });
-      if (fun) fun(res);
-    } catch (error) {
-      console.log(error);
-      if (fun) fun();
-    }
-  };
-}
+    // 创建引导记录
+    createGuide: async (fun?: (data?: any) => void) => {
+      try {
+        const res: any = await http.post('/guide', {
+          id: get().guide_id,
+          problem: get().problem,
+          mode: get().mode,
+          selected_apps: get().selected_apps,
+          current_step: get().currentStep,
+        });
+        (get() as any).setGuideId(res.id);
+        if (fun) fun(res);
+      } catch (error) {
+        console.log(error);
+        if (fun) fun();
+      }
+    },
 
-const store = new GuideStore();
+    // 更新引导记录
+    updateGuide: async (fun?: (data?: any) => void) => {
+      if (!get().guide_id) return;
+      try {
+        const res: any = await http.put(`/guide/${get().guide_id}`, {
+          problem: get().problem,
+          mode: get().mode,
+          selected_apps: get().selected_apps,
+          current_step: get().currentStep,
+        });
+        if (fun) fun(res);
+      } catch (error) {
+        console.log(error);
+        if (fun) fun();
+      }
+    },
+  }),
+);
+
+const store = create(GuideStore);
+// 初始化 store
+store.getState().init();
 
 export default store;

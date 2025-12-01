@@ -1,21 +1,25 @@
 import { Page, SelectApps, SelectedApps } from '@/components/business';
 import { Button, FieldGroup, FieldItem } from '@/components/ui';
-import { AppStore, BenefitStore, PlanStore, RecordStore } from '@/stores';
+import {
+  useAppStore,
+  useBenefitStore,
+  usePlanStore,
+  useRecordStore,
+} from '@/stores';
 import { startAppLimits } from '@/utils/permission';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useLayoutEffect, useState } from 'react';
 import { View } from 'react-native';
 import TimeSlider from './time-slider';
 
-const QuickStartPage = observer(() => {
+const QuickStartPage = () => {
   const [minute, setMinute] = useState(15);
   const navigation = useNavigation();
-  const pstore = useLocalObservable(() => PlanStore);
-  const rstore = useLocalObservable(() => RecordStore);
-  const astore = useLocalObservable(() => AppStore);
-  const bstore = useLocalObservable(() => BenefitStore);
+  const pstore = usePlanStore();
+  const rstore = useRecordStore();
+  const astore = useAppStore();
+  const bstore = useBenefitStore();
 
   // 设置页面标题
   useLayoutEffect(() => {
@@ -84,7 +88,10 @@ const QuickStartPage = observer(() => {
             title="要屏蔽的应用"
             className="pt-3 pb-2"
             rightElement={
-              <SelectApps apps={astore.ios_selected_apps} onFinish={selectApps} />
+              <SelectApps
+                apps={astore.ios_selected_apps}
+                onFinish={selectApps}
+              />
             }
             showArrow={false}
           />
@@ -106,6 +113,6 @@ const QuickStartPage = observer(() => {
       </View>
     </Page>
   );
-});
+};
 
 export default QuickStartPage;

@@ -1,19 +1,18 @@
 import { Privicy, Typewriter, Wechat } from '@/components/business';
-import { GuideStore, useHomeStore, UserStore } from '@/stores';
+import { useGuideStore, useHomeStore, useUserStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react-lite';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
-export const GuideStep5 = observer(() => {
+export const GuideStep5 = () => {
   const navigation = useNavigation<NavigationProp>();
   const store = useHomeStore();
-  const gstore = useLocalObservable(() => GuideStore);
-  const ustore = useLocalObservable(() => UserStore);
+  const gstore = useGuideStore();
+  const ustore = useUserStore();
   const { colors, dark } = useTheme();
 
   const [typewriterDone, setTypewriterDone] = useState(false);
@@ -125,6 +124,6 @@ export const GuideStep5 = observer(() => {
       </View>
     </View>
   );
-});
+};
 
 export default GuideStep5;

@@ -1,15 +1,14 @@
 import { Privicy, Wechat } from '@/components/business';
 import { Button, Flex } from '@/components/ui';
-import { UserStore } from '@/stores';
+import { useUserStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-const App = observer(() => {
-  const store = useLocalObservable(() => UserStore);
+const App = () => {
+  const store = useUserStore();
   const { colors, dark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [agree, setAgree] = useState(false);
@@ -72,7 +71,10 @@ const App = observer(() => {
         <Flex
           className="flex-col justify-center flex-[2]"
           style={styles.logoBox}>
-          <Image source={require('@/assets/images/logo.png')} style={styles.avator} />
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.avator}
+          />
           <Text
             style={{
               fontSize: 24,
@@ -92,6 +94,6 @@ const App = observer(() => {
       <Privicy onChange={setAgree} />
     </LinearGradient>
   );
-});
+};
 
 export default App;

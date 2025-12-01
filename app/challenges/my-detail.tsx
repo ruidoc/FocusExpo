@@ -1,6 +1,7 @@
 import { Page } from '@/components/business';
 import { Flex } from '@/components/ui';
-import ChallengeStore, { UserChallenge } from '@/stores/challenge';
+import { useChallengeStore } from '@/stores';
+import { UserChallenge } from '@/stores/challenge';
 import {
   Button,
   Card,
@@ -9,10 +10,13 @@ import {
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
 import Slider from '@react-native-community/slider';
-import { useFocusEffect, useNavigation, useTheme } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useTheme,
+} from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { useLocalSearchParams } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -25,10 +29,10 @@ import {
   View,
 } from 'react-native';
 
-const MyChallengeDetailScreen = observer(() => {
+const MyChallengeDetailScreen = () => {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const store = useLocalObservable(() => ChallengeStore);
+  const store = useChallengeStore();
   const { colors, dark } = useTheme();
 
   const [userChallenge, setUserChallenge] = useState<UserChallenge | null>(
@@ -486,8 +490,9 @@ const MyChallengeDetailScreen = observer(() => {
                   style={styles.textInput}
                   value={finishReason}
                   onChangeText={setFinishReason}
-                  placeholder={`请简要说明${finishStatus === 'failed' ? '失败' : '放弃'
-                    }原因...`}
+                  placeholder={`请简要说明${
+                    finishStatus === 'failed' ? '失败' : '放弃'
+                  }原因...`}
                   maxLength={200}
                   multiline
                 />
@@ -513,7 +518,7 @@ const MyChallengeDetailScreen = observer(() => {
       </Modal>
     </Page>
   );
-});
+};
 
 const styles = StyleSheet.create({
   container: {

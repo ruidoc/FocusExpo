@@ -1,7 +1,8 @@
 import { Page } from '@/components/business';
 import { Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
-import ChallengeStore, { Challenge } from '@/stores/challenge';
+import { useChallengeStore } from '@/stores';
+import { Challenge } from '@/stores/challenge';
 import {
   Card,
   Space,
@@ -12,7 +13,6 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useState } from 'react';
 import {
   Pressable,
@@ -23,8 +23,8 @@ import {
   View,
 } from 'react-native';
 
-const ChallengeListScreen = observer(() => {
-  const store = useLocalObservable(() => ChallengeStore);
+const ChallengeListScreen = () => {
+  const store = useChallengeStore();
   const { colors } = useCustomTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [filters, setFilters] = useState({
@@ -177,9 +177,7 @@ const ChallengeListScreen = observer(() => {
         <View style={{ gap: 12 }}>
           {/* 标题和难度 */}
           <Flex className="justify-between">
-            <Text style={styles.challengeTitle}>
-              {challenge.title}
-            </Text>
+            <Text style={styles.challengeTitle}>{challenge.title}</Text>
             <Tag color={getDifficultyColor(challenge.difficulty)}>
               {getDifficultyText(challenge.difficulty)}
             </Tag>
@@ -283,9 +281,7 @@ const ChallengeListScreen = observer(() => {
             <Pressable
               onPress={() => router.push('/challenges/my-list' as any)}>
               <View style={{ alignItems: 'center', padding: 12 }}>
-                <Text style={styles.myChallengeBtnText}>
-                  查看我的挑战
-                </Text>
+                <Text style={styles.myChallengeBtnText}>查看我的挑战</Text>
               </View>
             </Pressable>
           </Card>
@@ -295,6 +291,6 @@ const ChallengeListScreen = observer(() => {
       </View>
     </Page>
   );
-});
+};
 
 export default ChallengeListScreen;

@@ -1,12 +1,11 @@
 import { AppToken, Page } from '@/components/business';
 import { Card, Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
-import { AppStore, useHomeStore } from '@/stores';
+import { useAppStore, useHomeStore } from '@/stores';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { NoticeBar } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 
 import {
@@ -20,9 +19,9 @@ import {
   View,
 } from 'react-native';
 
-const App = observer(() => {
+const App = () => {
   const store = useHomeStore();
-  const astore = useLocalObservable(() => AppStore);
+  const astore = useAppStore();
   const [refreshing, setRefreshing] = useState(false);
   const { colors } = useCustomTheme();
 
@@ -209,6 +208,6 @@ const App = observer(() => {
       </ScrollView>
     </Page>
   );
-});
+};
 
 export default App;

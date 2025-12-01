@@ -1,17 +1,17 @@
 import { Page } from '@/components/business';
 import { Card, Flex, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
-import ChallengeStore, { UserChallenge } from '@/stores/challenge';
+import { useChallengeStore } from '@/stores';
+import { UserChallenge } from '@/stores/challenge';
 import { Tag } from '@fruits-chain/react-native-xiaoshu';
 import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-const MyChallengesScreen = observer(() => {
-  const store = useLocalObservable(() => ChallengeStore);
+const MyChallengesScreen = () => {
+  const store = useChallengeStore();
   const { colors } = useCustomTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
@@ -364,6 +364,6 @@ const MyChallengesScreen = observer(() => {
       </ScrollView>
     </Page>
   );
-});
+};
 
 export default MyChallengesScreen;

@@ -9,19 +9,13 @@ import {
 } from '@/components/ui';
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
-import { AppStore, PlanStore } from '@/stores';
+import { useAppStore, usePlanStore } from '@/stores';
 import { parseRepeat, toast } from '@/utils';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
-import { observer, useLocalObservable } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
-import {
-  Platform,
-  ScrollView,
-  Text,
-  View
-} from 'react-native';
+import { Platform, ScrollView, Text, View } from 'react-native';
 
 type FormState = {
   name: string;
@@ -34,9 +28,9 @@ type FormState = {
   apps: string[];
 };
 
-const App = observer(() => {
-  const pstore = useLocalObservable(() => PlanStore);
-  const astore = useLocalObservable(() => AppStore);
+const App = () => {
+  const pstore = usePlanStore();
+  const astore = useAppStore();
   const { colors } = useCustomTheme();
   const navigation = useNavigation();
   const [title, setTitle] = useState(() => {
@@ -180,7 +174,8 @@ const App = observer(() => {
       }
       const newStart = start_day.hour() * 60 + start_day.minute();
       const newEnd = end_day.hour() * 60 + end_day.minute();
-      const overlap = pstore.all_plans
+      const overlap = pstore
+        .all_plans()
         .filter(r => Array.isArray(r.repeat))
         .filter(plan => {
           // 编辑模式下排除当前编辑的任务
@@ -447,6 +442,6 @@ const App = observer(() => {
       </View>
     </Page>
   );
-});
+};
 
 export default App;
