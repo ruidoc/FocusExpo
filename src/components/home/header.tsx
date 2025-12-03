@@ -3,7 +3,8 @@ import { minutesToHours } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Flex } from '../ui';
 
 const Header = () => {
   const ustore = useUserStore();
@@ -32,75 +33,26 @@ const Header = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-row justify-between items-center px-4 py-2">
       {/* 左侧问候语 */}
-      <View style={styles.greetingContainer}>
-        <Text style={styles.greetingText}>
+      <View className="flex-1">
+        <Text className="text-base font-medium text-[#858699] leading-6 tracking-tight mb-1">
           {getGreeting()}，{getUserName()}！
         </Text>
-        <Text style={styles.encouragementText}>
-          今日已专注 {minutesToHours(rstore.actual_mins)} 👍
+        <Text className="text-lg font-semibold text-white leading-7 tracking-tighter">
+          {rstore.actual_mins > 0 ? `今日已专注 ${minutesToHours(rstore.actual_mins)} 👍` : '今天还没开始，加油！💪'}
         </Text>
       </View>
 
       {/* 右侧计时器图标 */}
-      <TouchableOpacity
-        style={styles.timerContainer}
-        onPress={handleTimerPress}
-        activeOpacity={0.7}>
-        <View style={styles.timerIconWrapper}>
-          <Icon name="timer-outline" size={22} color="#FFFFFF" />
-          <View style={styles.timerGlow} />
-        </View>
-      </TouchableOpacity>
+      <Flex
+        className="ml-4 bg-white/5 rounded-full px-3 gap-1 py-1.5"
+        onPress={handleTimerPress}>
+        <Icon name="hourglass-outline" size={18} color="#FFFFFF" />
+        <Text className="text-white text-[16px]">10</Text>
+      </Flex>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  greetingContainer: {
-    flex: 1,
-  },
-  greetingText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#858699',
-    lineHeight: 24,
-    letterSpacing: -0.1,
-    marginBottom: 4,
-  },
-  encouragementText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    lineHeight: 28,
-    letterSpacing: -0.4,
-  },
-  timerContainer: {
-    marginLeft: 16,
-  },
-  timerIconWrapper: {
-    width: 40,
-    height: 41,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  timerGlow: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    top: 0.5,
-  },
-});
 
 export default Header;

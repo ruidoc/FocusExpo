@@ -58,7 +58,7 @@ const QuickStartPage = () => {
 
   // 开始一次性任务
   const handleStart = async () => {
-    if (pstore.cur_plan) {
+    if (pstore.active_plan) {
       return;
     }
 
@@ -72,7 +72,7 @@ const QuickStartPage = () => {
     const ok = await startAppLimits(minute, plan_id);
     if (ok) {
       setOncePlan(plan_id);
-      // 立刻刷新当前计划，避免等待 AppState/原生事件导致 cur_plan 为空
+      // 立刻刷新当前计划，避免等待 AppState/原生事件导致 active_plan 为空
       pstore.setCurPlanMinute(0);
       pstore.resetPlan();
     }

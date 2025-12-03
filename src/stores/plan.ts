@@ -13,7 +13,7 @@ const PlanStore = combine(
   {
     cus_plans: [] as CusPlan[], // 任务列表
     once_plans: [] as CusPlan[], // 一次性任务列表
-    cur_plan: null as CusPlan | null, // 当前任务
+    active_plan: null as CusPlan | null, // 当前任务
     next_plan: null as CusPlan | null, // 下一个
     editing_plan: null as CusPlan | null, // 当前编辑的任务
     paused_plan_id: '' as string, // 暂停中的任务
@@ -22,13 +22,13 @@ const PlanStore = combine(
   },
   (set, get) => ({
     is_focus_mode() {
-      return get().cur_plan && get().cur_plan.mode === 'focus';
+      return get().active_plan && get().active_plan.mode === 'focus';
     },
     all_plans() {
       return [...get().cus_plans, ...get().once_plans];
     },
     is_pause() {
-      return get().cur_plan && get().cur_plan.id === get().paused_plan_id;
+      return get().active_plan && get().active_plan.id === get().paused_plan_id;
     },
 
     setCusPlans: (plans: any[]) => {
@@ -84,9 +84,9 @@ const PlanStore = combine(
         benefit.getState().subBalance();
         await record.getState().pauseRecord(record_id);
       }
-      if (get().cur_plan) {
+      if (get().active_plan) {
         if (paused) {
-          (get() as any).setPaused(get().cur_plan.id);
+          (get() as any).setPaused(get().active_plan.id);
         } else {
           (get() as any).setPaused('');
         }
@@ -168,7 +168,7 @@ const PlanStore = combine(
       });
 
       // 查找当前正在进行中的计划
-      const cur_plan =
+      const active_plan =
         filteredPlans.find(
           (p: CusPlan) =>
             minutes >= p.start_min &&
@@ -182,7 +182,7 @@ const PlanStore = combine(
       const next_plan =
         filteredPlans.find((p: CusPlan) => minutes < p.start_min) || null;
 
-      set({ cur_plan, next_plan });
+      set({ active_plan, next_plan });
 
       // 清理已过期的一次性任务
       const finishedOnce = get().once_plans.find(

@@ -1,5 +1,6 @@
 import { Page } from '@/components/business';
-import FocusButton from '@/components/home/focus-button';
+import ActivePlan from '@/components/home/active-plan';
+import EmptyPlan from '@/components/home/empty-plan';
 import HomeHeader from '@/components/home/header';
 import ScreenTimePermissionPage from '@/components/home/screen-time';
 import {
@@ -107,7 +108,7 @@ const App = () => {
 
         {/* 中央时间流动组件 */}
         <View className="items-center mt-[60px] mb-[30px]">
-          <FocusButton />
+          {pstore.active_plan ? <ActivePlan /> : <EmptyPlan />}
         </View>
       </ScrollView>
       {/* 通知权限提醒 */}

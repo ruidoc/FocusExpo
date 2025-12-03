@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, View, ViewProps, ViewStyle } from 'react-native';
+import { TouchableOpacity, View, ViewProps, ViewStyle } from 'react-native';
 
 interface FlexProps extends Omit<ViewProps, 'style'> {
   children?: React.ReactNode;
@@ -7,6 +7,7 @@ interface FlexProps extends Omit<ViewProps, 'style'> {
   onLongPress?: () => void;
   className?: string;
   style?: ViewStyle;
+  activeOpacity?: number;
 }
 
 const Flex = ({
@@ -15,6 +16,7 @@ const Flex = ({
   onLongPress,
   className = '',
   style,
+  activeOpacity = 0.7,
   ...rest
 }: FlexProps) => {
   // 默认样式：横向布局，纵向居中
@@ -28,14 +30,15 @@ const Flex = ({
   // 如果有 onPress，使用 Pressable，否则使用 View
   if (onPress) {
     return (
-      <Pressable
+      <TouchableOpacity
         onPress={onPress}
+        activeOpacity={activeOpacity}
         className={combinedClassName}
         style={style}
         onLongPress={onLongPress}
         {...rest}>
         {children}
-      </Pressable>
+      </TouchableOpacity>
     );
   }
 

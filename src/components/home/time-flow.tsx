@@ -19,9 +19,9 @@ const TimeFlow = observer(() => {
 
   // 进度：以计划整体区间为基准，反映从 start 到当前的消耗占比
   const getProgress = () => {
-    if (!pstore.cur_plan) return 0;
+    if (!pstore.active_plan) return 0;
     const duration = Math.max(
-      pstore.cur_plan.end_min - pstore.cur_plan.start_min,
+      pstore.active_plan.end_min - pstore.active_plan.start_min,
       0,
     );
     if (duration <= 0) return 0;
@@ -30,14 +30,14 @@ const TimeFlow = observer(() => {
 
   // 获取剩余时间（分钟）
   const getRemainingMinutes = () => {
-    if (!pstore.cur_plan) return 0;
-    let total = pstore.cur_plan.end_min - pstore.cur_plan.start_min;
+    if (!pstore.active_plan) return 0;
+    let total = pstore.active_plan.end_min - pstore.active_plan.start_min;
     return Math.max(total - pstore.curplan_minute, 0);
   };
 
   // 获取显示的时间（显示剩余时间）
   const getDisplayTime = () => {
-    if (pstore.cur_plan) {
+    if (pstore.active_plan) {
       const remainingMinutes = getRemainingMinutes();
       const hours = Math.floor(remainingMinutes / 60);
       const mins = remainingMinutes % 60;
@@ -51,7 +51,7 @@ const TimeFlow = observer(() => {
 
   // 获取目标文本
   const getGoalText = () => {
-    if (pstore.cur_plan) {
+    if (pstore.active_plan) {
       return '剩余时间 (分钟)';
     }
     return '当前无任务';
@@ -61,7 +61,7 @@ const TimeFlow = observer(() => {
 
   const progress = getProgress();
   const circumference = 2 * Math.PI * 136; // 半径136的圆周长
-  const hasPlan = !!pstore.cur_plan;
+  const hasPlan = !!pstore.active_plan;
   const minVisibleArcLength = 10; // 0% 时最小可见弧长（仅在有任务时显示）
   const zeroProgressDashoffset = circumference - minVisibleArcLength;
   // 进度动画：首帧从0到当前值，之后每次变更平滑过渡
@@ -90,7 +90,7 @@ const TimeFlow = observer(() => {
   useEffect(() => {
     didInitAnimRef.current = false;
     progressAnim.setValue(0);
-  }, [pstore.cur_plan?.id, progressAnim]);
+  }, [pstore.active_plan?.id, progressAnim]);
   const animatedDashoffset = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [circumference, 0],

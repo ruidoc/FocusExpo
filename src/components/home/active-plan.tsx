@@ -10,7 +10,6 @@ import { getIOSFocusStatus, stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Theme } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
-import { observer } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import {
   NativeModules,
@@ -23,7 +22,7 @@ import {
 import ConfirmationModal from './confirm-modal';
 import TimeFlow from './time-flow';
 
-const FocusButton = observer(() => {
+const FocusButton = () => {
   const ustore = useUserStore();
   const pstore = usePlanStore();
   const store = useHomeStore();
@@ -60,7 +59,7 @@ const FocusButton = observer(() => {
   });
 
   let descDom: React.ReactNode;
-  if (!pstore.cur_plan) {
+  if (!pstore.active_plan) {
     if (pstore.next_plan) {
       descDom = (
         <Text style={styles.descFont}>
@@ -78,8 +77,8 @@ const FocusButton = observer(() => {
   } else {
     descDom = (
       <Text style={styles.descFont}>
-        {pstore.cur_plan.name || '一次性任务'}
-        {` · ${pstore.cur_plan.end} 结束`}
+        {pstore.active_plan.name || '一次性任务'}
+        {` · ${pstore.active_plan.end} 结束`}
       </Text>
     );
   }
@@ -92,7 +91,7 @@ const FocusButton = observer(() => {
   };
 
   const stopFocus = async () => {
-    if (!pstore.cur_plan) return;
+    if (!pstore.active_plan) return;
     try {
       if (Platform.OS === 'ios') {
         await stopAppLimits();
@@ -107,15 +106,15 @@ const FocusButton = observer(() => {
   };
 
   const pauseFocus = () => {
-    if (!pstore.cur_plan) return;
+    if (!pstore.active_plan) return;
     if (Platform.OS === 'ios') {
-      // console.log('暂停：', pstore.cur_plan);
+      // console.log('暂停：', pstore.active_plan);
       NativeModules.NativeModule.pauseAppLimits(3);
     }
   };
 
   const resumeFocus = () => {
-    if (!pstore.cur_plan) return;
+    if (!pstore.active_plan) return;
     if (Platform.OS === 'ios') {
       NativeModules.NativeModule.resumeAppLimits();
     }
@@ -177,7 +176,7 @@ const FocusButton = observer(() => {
       <Flex
         className="justify-center"
         style={{ marginTop: 0, marginBottom: 20, gap: 30 }}>
-        {!pstore.cur_plan && (
+        {!pstore.active_plan && (
           <TouchableOpacity
             onPress={quickStart}
             activeOpacity={0.8}
@@ -185,7 +184,7 @@ const FocusButton = observer(() => {
             <Icon name="play" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {pstore.cur_plan && !pstore.is_pause && (
+        {pstore.active_plan && !pstore.is_pause && (
           <TouchableOpacity
             onPress={() => setShowPauseModal(true)}
             activeOpacity={0.8}
@@ -201,7 +200,7 @@ const FocusButton = observer(() => {
             <Icon name="play" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {pstore.cur_plan && (
+        {pstore.active_plan && (
           <TouchableOpacity
             onPress={async () => {
               try {
@@ -253,7 +252,7 @@ const FocusButton = observer(() => {
         coinCost={stopCost}
         coinBalance={useBenefitStore().balance}
         extraWarning={
-          pstore.cur_plan?.repeat !== 'once'
+          pstore.active_plan?.repeat !== 'once'
             ? '注意：停止后，今天该任务后续不会再触发'
             : undefined
         }
@@ -263,6 +262,6 @@ const FocusButton = observer(() => {
       />
     </>
   );
-});
+};
 
 export default FocusButton;

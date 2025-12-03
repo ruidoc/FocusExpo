@@ -119,10 +119,10 @@ const RootLayout = () => {
         } else if (payload?.state === 'failed') {
           stopFocusTimer();
           // 清理本地的一次性任务
-          if (pstore.cur_plan?.repeat === 'once') {
-            pstore.rmOncePlan(pstore.cur_plan.id);
+          if (pstore.active_plan?.repeat === 'once') {
+            pstore.rmOncePlan(pstore.active_plan.id);
           } else {
-            pstore.addExitPlanIds(pstore.cur_plan.id);
+            pstore.addExitPlanIds(pstore.active_plan.id);
           }
           pstore.exitPlan();
           if (payload.reason === 'user_exit') {
@@ -154,13 +154,13 @@ const RootLayout = () => {
           }
           pstore.setCurPlanMinute(s.elapsedMinutes || 0);
           updateElapsedMinute(s.elapsedMinutes || 0);
-          if (!pstore.cur_plan) {
+          if (!pstore.active_plan) {
             pstore.resetPlan();
           }
-          if (pstore.cur_plan?.id === s.plan_id) {
+          if (pstore.active_plan?.id === s.plan_id) {
             pstore.pauseCurPlan(s.paused);
           }
-        } else if (pstore.cur_plan) {
+        } else if (pstore.active_plan) {
           console.log('【专注同步错误】');
         } else {
           // 专注已结束，停止定时器
