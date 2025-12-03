@@ -1,6 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Decoration from './decoration';
 import { PageProps } from './type';
 
 const Page = (props: PageProps) => {
@@ -10,6 +11,7 @@ const Page = (props: PageProps) => {
     <Wrapper
       className="flex-1 relative"
       style={props.bgcolor ? { backgroundColor: props.bgcolor } : undefined}>
+      {props.decoration && <Decoration />}
       {props.children}
     </Wrapper>
   );

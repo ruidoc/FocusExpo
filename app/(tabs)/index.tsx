@@ -1,6 +1,6 @@
-import BackgroundDecoration from '@/components/home/bg-decoration';
+import { Page } from '@/components/business';
 import FocusButton from '@/components/home/focus-button';
-import Header from '@/components/home/header';
+import HomeHeader from '@/components/home/header';
 import ScreenTimePermissionPage from '@/components/home/screen-time';
 import {
   useAppStore,
@@ -17,16 +17,11 @@ import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
   AppState,
-  NativeModules,
   Platform,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-const { NativeClass } = NativeModules;
 
 const App = () => {
   const store = useHomeStore();
@@ -36,7 +31,7 @@ const App = () => {
   const rstore = useRecordStore();
   const pmstore = usePermisStore();
   const bstore = useBenefitStore();
-  const { colors, dark } = useTheme();
+  const { colors } = useTheme();
   const xcolor = Theme.useThemeTokens();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -55,115 +50,6 @@ const App = () => {
       setRefreshing(false);
     });
   };
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#0D0D12',
-    },
-    scrollView: {
-      flex: 1,
-    },
-    timeFlowContainer: {
-      alignItems: 'center',
-      marginTop: 60,
-      marginBottom: 30,
-    },
-    playButtonContainer: {
-      alignItems: 'center',
-      marginBottom: 40,
-    },
-    appsContainer: {
-      marginTop: 30,
-      marginBottom: 20,
-      backgroundColor: 'transparent',
-    },
-    appsHeader: {
-      flexDirection: 'row',
-      marginBottom: 12,
-      gap: 12,
-    },
-    modeTag: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#303044',
-      borderRadius: 15,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      gap: 4,
-    },
-    modeText: {
-      fontSize: 13,
-      color: '#858699',
-      fontWeight: '500',
-    },
-    timeTag: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#303044',
-      borderRadius: 15,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      gap: 4,
-    },
-    timeText: {
-      fontSize: 13,
-      color: '#858699',
-      fontWeight: '500',
-    },
-    appsDescription: {
-      fontSize: 16,
-      color: '#858699',
-      textAlign: 'center',
-      marginBottom: 16,
-    },
-    appsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: 12,
-    },
-    appIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 8,
-    },
-    appIconWrapper: {
-      width: 40,
-      height: 40,
-      borderRadius: 8,
-      overflow: 'hidden',
-    },
-
-    bottomStatsContainer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-    },
-    notificationContainer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-    },
-    // 保留一些原有的样式以防出错
-    titleFont: {
-      fontSize: 16,
-      color: colors.text,
-    },
-    tagFont: {
-      fontSize: 13,
-      color: xcolor.gray_7,
-    },
-    descFont: {
-      fontSize: 16,
-      color: xcolor.gray_8,
-    },
-    lightFont: {
-      fontWeight: '600',
-    },
-  });
 
   const initapp = () => {
     pmstore.checkNotify();
@@ -209,26 +95,24 @@ const App = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* 背景装饰 */}
-      <BackgroundDecoration />
+    <Page safe decoration>
       <ScrollView
-        style={styles.scrollView}
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
         {/* 顶部Header */}
-        <Header />
+        <HomeHeader />
 
         {/* 中央时间流动组件 */}
-        <View style={styles.timeFlowContainer}>
+        <View className="items-center mt-[60px] mb-[30px]">
           <FocusButton />
         </View>
       </ScrollView>
       {/* 通知权限提醒 */}
       {!pmstore.pm_notify && (
-        <View style={styles.notificationContainer}>
+        <View className="absolute bottom-0 left-0 right-0">
           <NoticeBar
             message="请打开通知权限"
             mode="link"
@@ -237,7 +121,7 @@ const App = () => {
           />
         </View>
       )}
-    </SafeAreaView>
+    </Page>
   );
 };
 
