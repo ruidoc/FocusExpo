@@ -44,7 +44,7 @@ const App = () => {
   // 动态设置页面标题
   useEffect(() => {
     navigation.setOptions({
-      title: isEditing ? '编辑任务' : '添加任务',
+      title: isEditing ? '编辑专注计划' : '添加专注计划',
     });
   }, [isEditing, navigation]);
 
@@ -344,7 +344,7 @@ const App = () => {
         {Platform.OS === 'ios' && (
           <FieldGroup divider={false} className="rounded-xl mb-4">
             <FieldItem
-              title="要屏蔽的应用"
+              title="暂停这些应用"
               className="pb-2"
               rightElement={
                 <SelectApps apps={form.apps} onFinish={selectApps} />

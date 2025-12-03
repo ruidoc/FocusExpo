@@ -251,12 +251,15 @@ const RootLayout = () => {
           <Stack.Screen
             name="quick-start/index"
             options={{
-              title: '快速开始',
+              title: '开始专注',
               // animation: 'fade_from_bottom',
               // presentation: 'modal',
             }}
           />
-          <Stack.Screen name="plans/index" options={{ title: '任务面板' }} />
+          <Stack.Screen
+            name="plans/index"
+            options={{ title: '我的专注计划' }}
+          />
           <Stack.Screen name="plans/add" />
           <Stack.Screen name="apps/index" options={{ title: 'APP管理' }} />
           <Stack.Screen name="apps/add" options={{ title: '选择APP' }} />

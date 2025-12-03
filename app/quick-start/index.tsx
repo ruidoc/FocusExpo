@@ -85,7 +85,7 @@ const QuickStartPage = () => {
         {/* 选择APP */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
-            title="要屏蔽的应用"
+            title="暂停这些应用"
             className="pt-3 pb-2"
             rightElement={
               <SelectApps
@@ -109,7 +109,7 @@ const QuickStartPage = () => {
         </FieldGroup>
       </View>
       <View className="px-8">
-        <Button onPress={handleStart} text="开始屏蔽" />
+        <Button onPress={handleStart} text="开始专注" />
       </View>
     </Page>
   );
