@@ -40,7 +40,9 @@ const Header = () => {
           {getGreeting()}，{getUserName()}！
         </Text>
         <Text className="text-lg font-semibold text-white leading-7 tracking-tighter">
-          {rstore.actual_mins > 0 ? `今日已专注 ${minutesToHours(rstore.actual_mins)} 👍` : '今天还没开始，加油！💪'}
+          {rstore.actual_mins > 0
+            ? `今日已专注 ${minutesToHours(rstore.actual_mins)} 👍`
+            : '今天还没开始，加油！💪'}
         </Text>
       </View>
 
