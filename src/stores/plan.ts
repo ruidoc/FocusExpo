@@ -239,13 +239,8 @@ const PlanStore = combine(
       }
     },
 
-    getPlans: async (params: any = {}, fun?: (data?: HttpRes) => void) => {
+    getPlans: async (params = {}, fun?: (data?: HttpRes) => void) => {
       try {
-        if (!params || !params.date) {
-          params = {
-            date: dayjs().format('YYYY-MM-DD'),
-          };
-        }
         let res: HttpRes = await http.get('/plan/lists', { params });
         if (res.statusCode === 200) {
           (get() as any).setCusPlans(res.data);

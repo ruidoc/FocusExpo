@@ -1,4 +1,4 @@
-import { Flex, Toast } from '@/components/ui';
+import { Flex } from '@/components/ui';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import React from 'react';
@@ -24,9 +24,6 @@ const SelectApps: React.FC<SelectAppsProps> = ({
           onFinish(data.apps);
         }
       })
-      .catch(() => {
-        Toast('选择应用失败，请重试');
-      });
   };
 
   return (
