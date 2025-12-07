@@ -154,9 +154,9 @@ const PlanStore = combine(
     resetPlan: () => {
       // 获取当前时间的分钟数（当天从0点开始的总分钟数）
       const minutes = getCurrentMinute();
-      // 今天是周几（1=周一 ... 7=周日）
+      // 今天是周几（0=周日, 1=周一 ... 6=周六）
       const jsDay = new Date().getDay(); // 0=周日 ... 6=周六
-      const today = jsDay === 0 ? 7 : jsDay;
+      const today = jsDay; // 直接使用，0=周日, 1=周一 ... 6=周六
 
       // 仅保留：一次性任务，或周期任务且今天在 repeat 中
       const filteredPlans = (get() as any).all_plans().filter((p: CusPlan) => {

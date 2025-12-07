@@ -50,16 +50,16 @@ const App = () => {
   // 处理筛选类型切换
   const handleFilterChange = async (type: FilterType) => {
     setFilterType(type);
-    setRefreshing(true);
-    try {
-      await fetchPlans(type);
-    } finally {
-      setRefreshing(false);
-    }
+    // setRefreshing(true);
+    // try {
+    //   await fetchPlans(type);
+    // } finally {
+    //   setRefreshing(false);
+    // }
   };
 
   useEffect(() => {
-    fetchPlans('today');
+    fetchPlans('all');
   }, []);
 
   useEffect(() => {

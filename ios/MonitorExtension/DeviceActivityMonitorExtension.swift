@@ -443,8 +443,8 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         let comp = cal.dateComponents([.weekday, .hour, .minute], from: now)
         let weekdayApple = comp.weekday ?? 1 // 1=周日
         
-        // 将 Apple weekday 转换为我们 1=周一..7=周日
-        let mondayFirst = (weekdayApple == 1) ? 7 : (weekdayApple - 1)
+        // 将 Apple weekday 转换为我们 0=周日, 1=周一..6=周六
+        let mondayFirst = (weekdayApple == 1) ? 0 : (weekdayApple - 1)
         
         // 辅助函数：秒 → (小时, 分钟)
         func hm(_ sec: Int) -> (Int, Int) {
@@ -454,7 +454,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         // 遍历所有计划，查找匹配的
         for c in cfgs {
-            let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
+            let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [0,1,2,3,4,5,6]
             if !days.contains(mondayFirst) { continue }
             
             let (sh, sm) = hm(c.start)

@@ -24,128 +24,98 @@ const hasDateRangeOverlap = (
   );
 };
 
-// 根据筛选类型过滤任务
-export const getPlansByPeriod = (allPlans: CusPlan[], period: string) => {
+// 获取日期范围和需要检查的周几数组
+const getPeriodRange = (
+  period: string,
+): { start: dayjs.Dayjs; end: dayjs.Dayjs; days: number[] } | null => {
+  const today = dayjs();
+
   if (period === 'today') {
-    // 今日：显示今天的任务
-    const today = dayjs();
-    const jsDay = today.day(); // 0=周日 ... 6=周六
-    const todayDay = jsDay === 0 ? 7 : jsDay; // 转换为 1=周一 ... 7=周日
-    const todayStart = today.startOf('day');
-    const todayEnd = today.endOf('day');
+    const start = today.startOf('day');
+    const end = today.endOf('day');
+    return { start, end, days: [today.day()] };
+  }
 
-    return allPlans.filter(plan => {
-      // 检查日期范围是否包含今天
-      const hasDateMatch = hasDateRangeOverlap(
-        plan.start_date,
-        plan.end_date,
-        todayStart,
-        todayEnd,
-      );
+  if (period === 'week') {
+    const jsDay = today.day();
+    const mondayOffset = jsDay === 0 ? 6 : jsDay - 1;
+    const start = today.subtract(mondayOffset, 'day').startOf('day');
+    const end = start.add(6, 'day').endOf('day');
+    const days = Array.from({ length: 7 }, (_, i) => start.add(i, 'day').day());
+    return { start, end, days };
+  }
 
-      if (!hasDateMatch) {
-        return false;
-      }
+  if (period === 'month') {
+    return {
+      start: today.startOf('month'),
+      end: today.endOf('month'),
+      days: [], // 月份需要遍历所有日期，这里返回空数组
+    };
+  }
 
-      const repeat = Array.isArray(plan.repeat) ? plan.repeat : [];
+  return null;
+};
 
-      // 一次性任务：只要日期范围匹配就显示
-      if (plan.repeat === 'once') {
-        return true;
-      }
+// 检查周期任务是否在日期范围内有匹配的周几
+const hasRepeatMatch = (
+  repeat: number[],
+  periodStart: dayjs.Dayjs,
+  periodEnd: dayjs.Dayjs,
+  periodDays: number[],
+): boolean => {
+  if (repeat.length === 0) {
+    return false;
+  }
 
-      // 周期任务：需要今天在 repeat 中
-      return repeat.length > 0 && repeat.includes(todayDay);
-    });
-  } else if (period === 'week') {
-    // 本周：显示本周的任务（周一到周日）
-    const today = dayjs();
-    const jsDay = today.day(); // 0=周日 ... 6=周六
-    const mondayOffset = jsDay === 0 ? 6 : jsDay - 1; // 距离周一的天数
-    const weekStart = today.subtract(mondayOffset, 'day').startOf('day');
-    const weekEnd = weekStart.add(6, 'day').endOf('day');
+  // 如果提供了周几数组（today/week），直接检查交集
+  if (periodDays.length > 0) {
+    return repeat.some(day => periodDays.includes(day));
+  }
 
-    // 获取本周的所有周几（1=周一 ... 7=周日）
-    const weekDays: number[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = weekStart.add(i, 'day');
-      const jsDayNum = date.day();
-      const dayNum = jsDayNum === 0 ? 7 : jsDayNum;
-      weekDays.push(dayNum);
+  // 月份需要遍历所有日期
+  let currentDate = periodStart;
+  while (
+    currentDate.isBefore(periodEnd) ||
+    currentDate.isSame(periodEnd, 'day')
+  ) {
+    if (repeat.includes(currentDate.day())) {
+      return true;
     }
+    currentDate = currentDate.add(1, 'day');
+  }
 
-    return allPlans.filter(plan => {
-      // 检查日期范围是否与本周有交集
-      const hasDateMatch = hasDateRangeOverlap(
-        plan.start_date,
-        plan.end_date,
-        weekStart,
-        weekEnd,
-      );
+  return false;
+};
 
-      if (!hasDateMatch) {
-        return false;
-      }
+// 根据筛选类型过滤任务（只筛选周期任务，不考虑一次性任务）
+export const getPlansByPeriod = (allPlans: CusPlan[], period: string) => {
+  if (period === 'all') {
+    // 全部：只返回周期任务
+    return allPlans.filter(
+      plan => plan.repeat !== 'once' && Array.isArray(plan.repeat),
+    );
+  }
 
-      const repeat = Array.isArray(plan.repeat) ? plan.repeat : [];
-
-      // 一次性任务：只要日期范围有交集就显示
-      if (plan.repeat === 'once') {
-        return true;
-      }
-
-      // 周期任务：需要本周任意一天在 repeat 中
-      return repeat.length > 0 && repeat.some(day => weekDays.includes(day));
-    });
-  } else if (period === 'month') {
-    // 本月：显示本月的任务
-    const today = dayjs();
-    const monthStart = today.startOf('month');
-    const monthEnd = today.endOf('month');
-
-    return allPlans.filter(plan => {
-      // 检查日期范围是否与本月有交集
-      const hasDateMatch = hasDateRangeOverlap(
-        plan.start_date,
-        plan.end_date,
-        monthStart,
-        monthEnd,
-      );
-
-      if (!hasDateMatch) {
-        return false;
-      }
-
-      const repeat = Array.isArray(plan.repeat) ? plan.repeat : [];
-
-      // 一次性任务：只要日期范围有交集就显示
-      if (plan.repeat === 'once') {
-        return true;
-      }
-
-      // 周期任务：需要判断本月内是否有匹配的周几
-      // 遍历本月的每一天，检查是否有匹配的周几
-      if (repeat.length === 0) {
-        return false;
-      }
-
-      let currentDate = monthStart;
-      while (
-        currentDate.isBefore(monthEnd) ||
-        currentDate.isSame(monthEnd, 'day')
-      ) {
-        const jsDayNum = currentDate.day();
-        const dayNum = jsDayNum === 0 ? 7 : jsDayNum;
-        if (repeat.includes(dayNum)) {
-          return true;
-        }
-        currentDate = currentDate.add(1, 'day');
-      }
-
-      return false;
-    });
-  } else {
-    // 全部：显示所有任务
+  const periodRange = getPeriodRange(period);
+  if (!periodRange) {
     return allPlans;
   }
+
+  const { start, end, days } = periodRange;
+
+  return allPlans.filter(plan => {
+    // 只筛选周期任务，跳过一次性任务
+    if (plan.repeat === 'once') {
+      return false;
+    }
+
+    // 检查日期范围是否有交集
+    if (!hasDateRangeOverlap(plan.start_date, plan.end_date, start, end)) {
+      return false;
+    }
+
+    // 周期任务：检查是否有匹配的周几
+    const repeat = Array.isArray(plan.repeat) ? plan.repeat : [];
+    return hasRepeatMatch(repeat, start, end, days);
+  });
 };

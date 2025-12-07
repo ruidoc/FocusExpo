@@ -38,12 +38,13 @@ export const fenToYuan = (fen: number | string): string => {
 };
 
 // 解析 repeat 字段：支持 'once' | number[] | '1,2,3'
+// 周几约定：0=周日, 1=周一, 2=周二, ..., 6=周六
 export const parseRepeat = (repeat: any): 'once' | number[] => {
   if (repeat === 'once') return 'once';
   if (Array.isArray(repeat)) {
     return repeat
       .map((d: any) => Number(d))
-      .filter((d: number) => d >= 1 && d <= 7);
+      .filter((d: number) => d >= 0 && d <= 6);
   }
   if (typeof repeat === 'string') {
     const parts = repeat
@@ -51,7 +52,7 @@ export const parseRepeat = (repeat: any): 'once' | number[] => {
       .map(s => s.trim())
       .filter(Boolean)
       .map(n => Number(n))
-      .filter(n => !Number.isNaN(n) && n >= 1 && n <= 7);
+      .filter(n => !Number.isNaN(n) && n >= 0 && n <= 6);
     return parts.length > 0 ? parts : [];
   }
   return [];
@@ -134,7 +135,7 @@ export const getPlansByPeriod = (allPlans: CusPlan[], period: string) => {
     // 今日：显示今天的任务
     const today = dayjs();
     const jsDay = today.day(); // 0=周日 ... 6=周六
-    const todayDay = jsDay === 0 ? 7 : jsDay; // 转换为 1=周一 ... 7=周日
+    const todayDay = jsDay; // 转换为 0=周日, 1=周一 ... 6=周六
     const todayStart = today.startOf('day');
     const todayEnd = today.endOf('day');
 
@@ -169,12 +170,12 @@ export const getPlansByPeriod = (allPlans: CusPlan[], period: string) => {
     const weekStart = today.subtract(mondayOffset, 'day').startOf('day');
     const weekEnd = weekStart.add(6, 'day').endOf('day');
 
-    // 获取本周的所有周几（1=周一 ... 7=周日）
+    // 获取本周的所有周几（0=周日, 1=周一 ... 6=周六）
     const weekDays: number[] = [];
     for (let i = 0; i < 7; i++) {
       const date = weekStart.add(i, 'day');
-      const jsDayNum = date.day();
-      const dayNum = jsDayNum === 0 ? 7 : jsDayNum;
+      const jsDayNum = date.day(); // 0=周日 ... 6=周六
+      const dayNum = jsDayNum; // 直接使用，0=周日, 1=周一 ... 6=周六
       weekDays.push(dayNum);
     }
 
@@ -238,8 +239,8 @@ export const getPlansByPeriod = (allPlans: CusPlan[], period: string) => {
         currentDate.isBefore(monthEnd) ||
         currentDate.isSame(monthEnd, 'day')
       ) {
-        const jsDayNum = currentDate.day();
-        const dayNum = jsDayNum === 0 ? 7 : jsDayNum;
+        const jsDayNum = currentDate.day(); // 0=周日 ... 6=周六
+        const dayNum = jsDayNum; // 直接使用，0=周日, 1=周一 ... 6=周六
         if (repeat.includes(dayNum)) {
           return true;
         }

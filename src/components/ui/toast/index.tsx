@@ -209,8 +209,13 @@ const ToastGlobal: React.FC = () => {
 };
 
 // Toast 函数（兼容 xiaoshu Toast API）
-const Toast = (messageOrConfig: ToastMessage) => {
-  toastManager.show(messageOrConfig);
+const Toast = (messageOrConfig: ToastMessage, type: 'info' | 'error' | 'success' | 'loading' = 'info') => {
+  const config: ToastConfig =
+    typeof messageOrConfig === 'string'
+      ? { message: messageOrConfig, type }
+      : { ...messageOrConfig, type: messageOrConfig.type ?? type };
+
+  toastManager.show(config);
 };
 
 // Toast.loading 方法（返回 close 函数）

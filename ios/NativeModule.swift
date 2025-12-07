@@ -174,8 +174,8 @@ class NativeModule: RCTEventEmitter {
   }
   
   // MARK: - 批量配置按周几的定时屏蔽计划（与前端计划兼容）
-  // plansJSON: [{ id, start: 秒, end: 秒, repeatDays: [1..7], mode }]
-  // 说明：repeatDays 约定 1=周一 ... 7=周日；将转换为 iOS Calendar.weekday (1=周日 ... 7=周六)
+  // plansJSON: [{ id, start: 秒, end: 秒, repeatDays: [0..6], mode }]
+  // 说明：repeatDays 约定 0=周日, 1=周一 ... 6=周六；将转换为 iOS Calendar.weekday (1=周日 ... 7=周六)
   @objc
   func setSchedulePlans(_ plansJSON: NSString, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     struct PlanCfg: Codable {
@@ -184,11 +184,6 @@ class NativeModule: RCTEventEmitter {
       let end: Int
       let repeatDays: [Int]?
       let mode: String?
-    }
-    func mondayFirstToAppleWeekday(_ day: Int) -> Int {
-      // 输入：1..7 (周一..周日)  -> 输出：1..7 (周日..周六)
-      if day == 7 { return 1 }
-      return day + 1
     }
     func hourMinute(from seconds: Int) -> (Int, Int) {
       let m = max(0, seconds / 60)
@@ -220,9 +215,9 @@ class NativeModule: RCTEventEmitter {
     for (idx, p) in plans.enumerated() {
       let (sh, sm) = hourMinute(from: p.start)
       let (eh, em) = hourMinute(from: p.end)
-      let days = (p.repeatDays?.isEmpty == false) ? p.repeatDays! : [1,2,3,4,5,6,7]
+      let days = (p.repeatDays?.isEmpty == false) ? p.repeatDays! : [0,1,2,3,4,5,6]
       for d in days {
-        let wd = mondayFirstToAppleWeekday(d)
+        let wd = d + 1
         // 处理跨日：若 end <= start，兜底成 23:59（复杂跨日可拆分两段，这里先简化）
         let endH = (eh * 60 + em) <= (sh * 60 + sm) ? 23 : eh
         let endM = (eh * 60 + em) <= (sh * 60 + sm) ? 59 : em
@@ -596,7 +591,7 @@ class NativeModule: RCTEventEmitter {
       let eh = (endHM <= startHM) ? 23 : ehRaw
       let em = (endHM <= startHM) ? 59 : emRaw
 
-      let days = (p.repeatDays?.isEmpty == false) ? p.repeatDays! : [1,2,3,4,5,6,7]
+      let days = (p.repeatDays?.isEmpty == false) ? p.repeatDays! : [0,1,2,3,4,5,6]
       var expectedNames: [String] = []
       for d in days {
         // 与 setSchedulePlans 中的命名保持一致
@@ -686,11 +681,11 @@ class NativeModule: RCTEventEmitter {
         let cal = Calendar.current
         let comp = cal.dateComponents([.weekday, .hour, .minute], from: Date())
         let weekdayApple = comp.weekday ?? 1 // 1=周日
-        // 转换为 1=周一..7=周日
-        let mondayFirst = (weekdayApple == 1) ? 7 : (weekdayApple - 1)
+        // 转换为 0=周日, 1=周一..6=周六
+        let mondayFirst = (weekdayApple == 1) ? 0 : (weekdayApple - 1)
         func hm(_ sec: Int) -> (Int, Int) { let m = max(0, sec/60); return (m/60, m%60) }
         for c in cfgs {
-          let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
+          let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [0,1,2,3,4,5,6]
           if !days.contains(mondayFirst) { continue }
           let (sh, sm) = hm(c.start); let (eh, em) = hm(c.end)
           let endHM = eh*60 + em
@@ -869,11 +864,11 @@ class NativeModule: RCTEventEmitter {
     let cal = Calendar.current
     let comp = cal.dateComponents([.weekday, .hour, .minute], from: now)
     let weekdayApple = comp.weekday ?? 1 // 1=周日
-    // 转换为 1=周一..7=周日
-    let mondayFirst = (weekdayApple == 1) ? 7 : (weekdayApple - 1)
+    // 转换为 0=周日, 1=周一..6=周六
+    let mondayFirst = (weekdayApple == 1) ? 0 : (weekdayApple - 1)
     func hm(_ sec: Int) -> (Int, Int) { let m = max(0, sec/60); return (m/60, m%60) }
     for c in cfgs {
-      let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [1,2,3,4,5,6,7]
+      let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [0,1,2,3,4,5,6]
       if !days.contains(mondayFirst) { continue }
       let (sh, sm) = hm(c.start); let (eh, em) = hm(c.end)
       let endHM = eh*60 + em
