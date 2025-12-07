@@ -128,26 +128,19 @@ const PlanStore = combine(
       // NativeClass.setTimerange(JSON.stringify(plan_arrs));
     },
 
-    // iOS 定时屏蔽配置：与保存计划并行执行
-    setScheduleIOS: async () => {
-      try {
-        // 基于现有计划 + 当前即将新增的计划，组装下发的 iOS 周期任务
-        const existing = get()
-          .cus_plans.filter((p: any) => Array.isArray(p.repeat))
-          .map((p: any) => ({
-            id: p.id,
-            start: p.start_min * 60,
-            end: p.end_min * 60,
-            repeatDays: p.repeat,
-            mode: p.mode,
-          }));
-        const json = JSON.stringify(existing);
-        await NativeModule.setSchedulePlans(json);
-        return true;
-      } catch (e) {
-        console.log('IOS添加时间段失败：', e);
-        return false;
-      }
+    // 更新iOS专注计划
+    updateIOSPlan: async (plan: CusPlan) => {
+      const repeat = parseRepeat(plan.repeat);
+      const data = {
+        id: plan.id,
+        name: plan.name,
+        start: plan.start_min, // Minutes
+        end: plan.end_min, // Minutes
+        days: repeat,
+        apps: plan.apps || [],
+      };
+      console.log('同步计划到 IOS Native:', JSON.stringify(data));
+      await NativeModule.updatePlan(JSON.stringify(data));
     },
 
     // 重新获取当前任务
@@ -204,7 +197,8 @@ const PlanStore = combine(
         let res: HttpRes = await http.post('/plan/add', form_data);
         if (res.statusCode === 200) {
           fun(res);
-          (get() as any).getPlans(null, () => (get() as any).setScheduleIOS());
+          (get() as any).updateIOSPlan(form);
+          (get() as any).getPlans();
         } else {
           Toast(res.message);
           fun();
@@ -227,7 +221,8 @@ const PlanStore = combine(
         let res: HttpRes = await http.put(`/plan/edit/${id}`, form_data);
         if (res.statusCode === 200) {
           fun(res);
-          (get() as any).getPlans(null, () => (get() as any).setScheduleIOS());
+          (get() as any).updateIOSPlan(form);
+          (get() as any).getPlans();
           (get() as any).clearEditingPlan(); // 编辑成功后清除编辑状态
         } else {
           Toast(res.message);
@@ -256,26 +251,9 @@ const PlanStore = combine(
         let res: HttpRes = await http.delete('/plan/remove/' + id);
         if (res.statusCode === 200) {
           if (fun) fun(res);
-          await (get() as any).getPlans(null, () =>
-            (get() as any).setScheduleIOS(),
-          );
-          // iOS: 删除后需要重新同步周期任务至原生
-          try {
-            const plans = get()
-              .cus_plans.filter((p: any) => Array.isArray(p.repeat))
-              .map((p: any) => ({
-                id: p.id,
-                start: p.start_min * 60,
-                end: p.end_min * 60,
-                repeatDays: p.repeat as number[],
-                mode: p.mode,
-              }));
-            const json = JSON.stringify(plans);
-            const mod: any = (NativeModules as any).NativeModule;
-            if (mod?.setSchedulePlans) await mod.setSchedulePlans(json);
-          } catch (e) {
-            console.log('iOS 同步删除后计划失败', e);
-          }
+          // iOS: 立即删除原生端计划
+          await NativeModule.deletePlan(id);
+          await (get() as any).getPlans();
         }
       } catch (error) {
         console.log(error);

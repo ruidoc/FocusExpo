@@ -18,8 +18,11 @@ RCT_EXTERN_METHOD(pauseAppLimits:(nullable NSNumber *)durationMinutes resolver:(
 RCT_EXTERN_METHOD(resumeAppLimits:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 // 获取专注状态，返回当前屏蔽信息
 RCT_EXTERN_METHOD(getFocusStatus:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
-// 设置周期性任务列表
-RCT_EXTERN_METHOD(setSchedulePlans:(NSString *)plansJSON resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 // 获取周期性任务列表
 RCT_EXTERN_METHOD(getSchedulePlans:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+
+// 增量更新单个计划
+RCT_EXTERN_METHOD(updatePlan:(NSString *)planJSON resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+// 删除单个计划
+RCT_EXTERN_METHOD(deletePlan:(NSString *)planId resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 @end

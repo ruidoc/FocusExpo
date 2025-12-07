@@ -5,7 +5,7 @@ import axios, { AxiosInstance } from 'axios';
 
 const instance: AxiosInstance = axios.create({
   // baseURL: 'https://focus.ruidoc.cn/dev-api',
-  baseURL: 'http://192.168.0.6:8849',
+  baseURL: 'http://192.168.0.4:8849',
   // baseURL: 'http://192.168.110.111:8849',
   timeout: 6000,
   headers: {
@@ -29,7 +29,7 @@ instance.interceptors.request.use(async request => {
 // 响应拦截器，全局错误处理
 instance.interceptors.response.use(
   response => {
-    console.log('【响应结果】', response.data);
+    // console.log('【响应结果】', response.data);
     return response.data;
   },
   error => {

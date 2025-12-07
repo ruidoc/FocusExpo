@@ -94,23 +94,194 @@ class NativeModule: RCTEventEmitter {
   private var darwinObserverAdded: Bool = false
   private var endTimestamp: TimeInterval = 0
   private var totalMinutes: Int = 0
+  
+  // 核心存储 Key
+  private let kPlansMap = "FocusOne.PlansMap"
+  
+  // 计划配置结构 (增量更新用)
+  struct PlanConfig: Codable {
+    let id: String
+    let name: String? // 计划名称
+    let start: Int // 分钟数
+    let end: Int   // 分钟数
+    let days: [Int]
+    let apps: String // FamilyActivitySelection 的 JSON/Base64 字符串
+  }
+  
+  // 计划配置输入结构 (用于接收 JS 传递的原始数据)
+  struct PlanConfigInput: Decodable {
+    let id: String
+    let name: String?
+    let start: Int
+    let end: Int
+    let days: [Int]
+    let apps: [String] // JS 传来的 ID 数组
+  }
+  
   // C 回调：用于 Darwin 通知（不能捕获 self）
   private static let darwinCallback: CFNotificationCallback = { _, observer, name, _, _ in
     guard let observer = observer else { return }
     let instance = Unmanaged<NativeModule>.fromOpaque(observer).takeUnretainedValue()
+    
     DispatchQueue.main.async {
       if UIApplication.shared.applicationState == .active {
         let n = name?.rawValue as String?
         if n == "com.focusone.focus.ended" {
           instance.emitState("ended")
           instance.emitEnded()
-          } else if n == "com.focusone.focus.started" {
-            instance.emitState("started")
-          } else if n == "com.focusone.focus.resumed" {
-            instance.emitState("resumed")
+        } else if n == "com.focusone.focus.started" {
+          instance.emitState("started")
+        } else if n == "com.focusone.focus.resumed" {
+          instance.emitState("resumed")
+        }
+      }
+    }
+  }
+
+  // 1. 增量更新单个计划
+  @objc
+  func updatePlan(_ planJSON: String, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    guard let data = planJSON.data(using: .utf8) else {
+      reject("PARSE_ERROR", "无效的 JSON 数据", nil)
+      return
+    }
+
+    var finalPlan: PlanConfig?
+
+    // 尝试解析为标准 PlanConfig (apps 为 token string)
+    if let plan = try? JSONDecoder().decode(PlanConfig.self, from: data) {
+      finalPlan = plan
+    } 
+    // 尝试解析为 Input 格式 (apps 为 ID 数组)
+    else if let input = try? JSONDecoder().decode(PlanConfigInput.self, from: data) {
+        // 转换 ID 数组为 Token String
+        if let selection = Helper.buildSelectionFromApps(input.apps),
+           let selectionData = try? JSONEncoder().encode(selection) {
+            let token = selectionData.base64EncodedString()
+            finalPlan = PlanConfig(id: input.id, name: input.name, start: input.start, end: input.end, days: input.days, apps: token)
+        } else {
+            // 转换失败（可能是空数组），使用空 Token
+            finalPlan = PlanConfig(id: input.id, name: input.name, start: input.start, end: input.end, days: input.days, apps: "")
+        }
+    }
+
+    guard let plan = finalPlan else {
+      reject("PARSE_ERROR", "无法解析计划数据", nil)
+      return
+    }
+
+    // A. 更新本地存储 (Map)
+    var plansMap: [String: PlanConfig] = [:]
+    if let defaults = UserDefaults.groupUserDefaults(),
+       let storedData = defaults.data(forKey: kPlansMap),
+       let existing = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) {
+      plansMap = existing
+    }
+    
+    // 如果已存在，先停止旧的
+    if let oldPlan = plansMap[plan.id] {
+        stopMonitor(for: oldPlan)
+    }
+    
+    plansMap[plan.id] = plan
+    
+    if let defaults = UserDefaults.groupUserDefaults(),
+       let newData = try? JSONEncoder().encode(plansMap) {
+      defaults.set(newData, forKey: kPlansMap)
+    }
+
+    // B. 启动新监控
+    startMonitor(for: plan)
+    
+    resolve(true)
+  }
+
+  // 2. 删除单个计划
+  @objc
+  func deletePlan(_ planId: String, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    // A. 从存储移除
+    if let defaults = UserDefaults.groupUserDefaults(),
+       let storedData = defaults.data(forKey: kPlansMap),
+       var plansMap = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) {
+       
+      if let oldPlan = plansMap[planId] {
+          stopMonitor(for: oldPlan)
+          plansMap.removeValue(forKey: planId)
+          if let newData = try? JSONEncoder().encode(plansMap) {
+            defaults.set(newData, forKey: kPlansMap)
           }
       }
     }
+    resolve(true)
+  }
+
+  // 内部方法：启动监控（含跨日拆分逻辑）
+  private func startMonitor(for plan: PlanConfig) {
+    let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
+    let startH = plan.start / 60
+    let startM = plan.start % 60
+    let endH = plan.end / 60
+    let endM = plan.end % 60
+    
+    if plan.start > plan.end {
+      // 跨日拆分
+      for d in days {
+        let wd = d + 1
+        // Part 1: Start -> 23:59 (Day d)
+        let s1 = DeviceActivitySchedule(
+          intervalStart: DateComponents(hour: startH, minute: startM, weekday: wd),
+          intervalEnd: DateComponents(hour: 23, minute: 59, weekday: wd),
+          repeats: true
+        )
+        try? center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1_D\(d)"), during: s1)
+        
+        // Part 2: 00:00 -> End (Day d+1)
+        // 这里的逻辑是：如果用户设定周一执行，那么周一晚上跨到周二凌晨。
+        // iOS 的 weekday 是绝对的。周一的 00:00 是周一凌晨。
+        // 所以我们需要为 "Next Day" 注册 Part 2。
+        let nextWd = (d + 1) % 7 + 1 // 1=Sun, 2=Mon... 7=Sat. (d: 0=Sun..6=Sat)
+                                     // d=0(Sun) -> nextWd=2(Mon). Correct.
+                                     // d=6(Sat) -> nextWd=1(Sun). Correct.
+        
+        let s2 = DeviceActivitySchedule(
+          intervalStart: DateComponents(hour: 0, minute: 0, weekday: nextWd),
+          intervalEnd: DateComponents(hour: endH, minute: endM, weekday: nextWd),
+          repeats: true
+        )
+        // 命名: _P2_D{d} 代表 "这是 Day {d} 跨日产生的 Part 2"
+        try? center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2_D\(d)"), during: s2) 
+      }
+    } else {
+      // 非跨日
+      for d in days {
+        let wd = d + 1
+        let schedule = DeviceActivitySchedule(
+          intervalStart: DateComponents(hour: startH, minute: startM, weekday: wd),
+          intervalEnd: DateComponents(hour: endH, minute: endM, weekday: wd),
+          repeats: true
+        )
+        try? center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_D\(d)"), during: schedule)
+      }
+    }
+  }
+
+  // 内部方法：停止监控
+  private func stopMonitor(for plan: PlanConfig) {
+    var names: [DeviceActivityName] = []
+    let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
+    
+    if plan.start > plan.end {
+        // 跨日
+        for d in days {
+             names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1_D\(d)"))
+             names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2_D\(d)")) 
+        }
+    } else {
+        for d in days {
+            names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_D\(d)"))
+        }
+    }
+    center.stopMonitoring(names)
   }
   // Event Emitter
   override static func requiresMainQueueSetup() -> Bool { true }
@@ -171,77 +342,6 @@ class NativeModule: RCTEventEmitter {
     var body: [String: Any] = ["state": state]
     for (k, v) in extra { body[k] = v }
     sendEvent(withName: "focus-state", body: body)
-  }
-  
-  // MARK: - 批量配置按周几的定时屏蔽计划（与前端计划兼容）
-  // plansJSON: [{ id, start: 秒, end: 秒, repeatDays: [0..6], mode }]
-  // 说明：repeatDays 约定 0=周日, 1=周一 ... 6=周六；将转换为 iOS Calendar.weekday (1=周日 ... 7=周六)
-  @objc
-  func setSchedulePlans(_ plansJSON: NSString, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-    struct PlanCfg: Codable {
-      let id: String
-      let start: Int
-      let end: Int
-      let repeatDays: [Int]?
-      let mode: String?
-    }
-    func hourMinute(from seconds: Int) -> (Int, Int) {
-      let m = max(0, seconds / 60)
-      return (m / 60, m % 60)
-    }
-    guard let data = (plansJSON as String).data(using: .utf8) else {
-      reject("PARAM_ERROR", "参数解析失败", nil)
-      return
-    }
-    let decoder = JSONDecoder()
-    guard let plans = try? decoder.decode([PlanCfg].self, from: data) else {
-      reject("PARAM_ERROR", "JSON 解析失败", nil)
-      return
-    }
-    // 清理历史监控
-    if let defaults = UserDefaults.groupUserDefaults(),
-       let names = defaults.array(forKey: "FocusOne.ActiveScheduleNames") as? [String] {
-      for n in names {
-        center.stopMonitoring([DeviceActivityName(n)])
-      }
-    }
-    var newNames: [String] = []
-    // 保存前端下发的计划配置，供扩展计算 endAt 使用
-    if let defaults = UserDefaults.groupUserDefaults() {
-      defaults.set(plansJSON as String, forKey: "FocusOne.PlannedConfigs")
-    }
-    // 使用已保存的应用选择作为屏蔽对象
-    // 注意：这里不直接应用屏蔽，由扩展在 intervalDidStart 中应用
-    for (idx, p) in plans.enumerated() {
-      let (sh, sm) = hourMinute(from: p.start)
-      let (eh, em) = hourMinute(from: p.end)
-      let days = (p.repeatDays?.isEmpty == false) ? p.repeatDays! : [0,1,2,3,4,5,6]
-      for d in days {
-        let wd = d + 1
-        // 处理跨日：若 end <= start，兜底成 23:59（复杂跨日可拆分两段，这里先简化）
-        let endH = (eh * 60 + em) <= (sh * 60 + sm) ? 23 : eh
-        let endM = (eh * 60 + em) <= (sh * 60 + sm) ? 59 : em
-        // 【核心】创建屏蔽时间表
-        let schedule = DeviceActivitySchedule(
-          intervalStart: DateComponents(hour: sh, minute: sm, weekday: wd),
-          intervalEnd: DateComponents(hour: endH, minute: endM, weekday: wd),
-          repeats: true
-        )
-        let name = "FocusOne.Schedule_\(idx)_\(d)_\(sh)_\(sm)_\(eh)_\(em)"
-        do {
-          // 开始触发监控，扩展侧统一执行
-          try center.startMonitoring(DeviceActivityName(name), during: schedule)
-          newNames.append(name)
-        } catch {
-          // 某个计划失败不影响其它计划
-          continue
-        }
-      }
-    }
-    if let defaults = UserDefaults.groupUserDefaults() {
-      defaults.set(newNames, forKey: "FocusOne.ActiveScheduleNames")
-    }
-    resolve(true)
   }
 
   // 屏幕时间权限
@@ -337,10 +437,15 @@ class NativeModule: RCTEventEmitter {
                   self.saveSelection(selection: selection)
                   // 获取应用详细信息
                   let appDetails = self.getSelectedAppDetails(from: selection)
+                  // 序列化 Selection Token
+                  let selectionData = try? JSONEncoder().encode(selection)
+                  let selectionToken = selectionData?.base64EncodedString() ?? ""
+                  
                   // 返回选择结果
                   resolve([
                     "success": true,
-                    "apps": appDetails
+                    "apps": appDetails,
+                    "selectionToken": selectionToken
                   ])
                 } else {
                   // 用户取消选择
