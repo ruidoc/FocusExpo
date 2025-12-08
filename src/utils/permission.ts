@@ -123,17 +123,6 @@ export async function getIOSFocusStatus(): Promise<{
   }
 }
 
-// 获取周期性任务列表
-export async function getSchedulePlans(): Promise<any[]> {
-  if (Platform.OS !== 'ios') return [];
-  try {
-    let result = await NativeModules.NativeModule.getSchedulePlans();
-    return result as any[];
-  } catch (error) {
-    console.log('getSchedulePlans error', error);
-    return [];
-  }
-}
 
 export async function checkNotify() {
   try {

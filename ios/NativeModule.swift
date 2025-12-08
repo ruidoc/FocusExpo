@@ -659,65 +659,6 @@ class NativeModule: RCTEventEmitter {
     resolve(true)
   }
 
-  // 返回当前仍然有效（已注册且未被停用）的周期性定时计划
-  // 基于保存的 FocusOne.PlannedConfigs 与 FocusOne.ActiveScheduleNames 进行比对
-  @objc
-  func getSchedulePlans(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-    struct PlanCfg: Codable {
-      let id: String
-      let start: Int
-      let end: Int
-      let repeatDays: [Int]?
-      let mode: String?
-    }
-    func hourMinute(from seconds: Int) -> (Int, Int) {
-      let m = max(0, seconds / 60)
-      return (m / 60, m % 60)
-    }
-
-    guard let defaults = UserDefaults.groupUserDefaults() else {
-      resolve([])
-      return
-    }
-    guard let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"),
-          let cfgData = cfgStr.data(using: .utf8),
-          let plans = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) else {
-      resolve([])
-      return
-    }
-    let activeNames = (defaults.array(forKey: "FocusOne.ActiveScheduleNames") as? [String]) ?? []
-
-    var effective: [[String: Any]] = []
-    for (idx, p) in plans.enumerated() {
-      let (sh, sm) = hourMinute(from: p.start)
-      let (ehRaw, emRaw) = hourMinute(from: p.end)
-      let startHM = sh * 60 + sm
-      let endHM = ehRaw * 60 + emRaw
-      let eh = (endHM <= startHM) ? 23 : ehRaw
-      let em = (endHM <= startHM) ? 59 : emRaw
-
-      let days = (p.repeatDays?.isEmpty == false) ? p.repeatDays! : [0,1,2,3,4,5,6]
-      var expectedNames: [String] = []
-      for d in days {
-        // 与 setSchedulePlans 中的命名保持一致
-        let name = "FocusOne.Schedule_\(idx)_\(d)_\(sh)_\(sm)_\(eh)_\(em)"
-        expectedNames.append(name)
-      }
-      let isEffective = expectedNames.contains { activeNames.contains($0) }
-      if isEffective {
-        var item: [String: Any] = [
-          "id": p.id,
-          "start": p.start,
-          "end": p.end
-        ]
-        if let r = p.repeatDays { item["repeatDays"] = r }
-        if let m = p.mode { item["mode"] = m }
-        effective.append(item)
-      }
-    }
-    resolve(effective)
-  }
-
   // 查询当前屏蔽状态与进度
   @objc
   func getFocusStatus(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
@@ -778,32 +719,79 @@ class NativeModule: RCTEventEmitter {
     //   .sorted()
     //   .joined(separator: ",")
     // print("blockedAppsSerialized: \(blockedAppsSerialized)")
-    // 计算当前命中的周期计划的 plan_id
+    // 计算当前命中的周期计划的 plan_id（从增量更新的 kPlansMap 读取）
     var planId: String? = nil
-    if ftype == "periodic", let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"), let cfgData = cfgStr.data(using: .utf8) {
-      struct PlanCfg: Codable { let id: String; let start: Int; let end: Int; let repeatDays: [Int]? }
-      if let cfgs = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) {
+    if ftype == "periodic" {
+      // 从增量更新的 PlansMap 读取所有计划
+      if let storedData = defaults.data(forKey: kPlansMap),
+         let plansMap = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) {
         let cal = Calendar.current
         let comp = cal.dateComponents([.weekday, .hour, .minute], from: Date())
         let weekdayApple = comp.weekday ?? 1 // 1=周日
         // 转换为 0=周日, 1=周一..6=周六
         let mondayFirst = (weekdayApple == 1) ? 0 : (weekdayApple - 1)
-        func hm(_ sec: Int) -> (Int, Int) { let m = max(0, sec/60); return (m/60, m%60) }
-        for c in cfgs {
-          let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [0,1,2,3,4,5,6]
+        func hm(_ min: Int) -> (Int, Int) { return (min / 60, min % 60) }
+        
+        // 遍历所有计划，查找当前时间命中的计划
+        for (id, plan) in plansMap {
+          let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
           if !days.contains(mondayFirst) { continue }
-          let (sh, sm) = hm(c.start); let (eh, em) = hm(c.end)
-          let endHM = eh*60 + em
-          let startHM = sh*60 + sm
-          var eH = eh, eM = em
-          if endHM <= startHM { eH = 23; eM = 59 }
-          if let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: Date()),
-             let eDate = cal.date(bySettingHour: eH, minute: eM, second: 0, of: Date()) {
-            let sTs = sDate.timeIntervalSince1970
-            let eTs = eDate.timeIntervalSince1970
-            let nowTs = now
-            if nowTs >= sTs && nowTs < eTs {
-              planId = c.id
+          
+          let (sh, sm) = hm(plan.start)
+          let (eh, em) = hm(plan.end)
+          let endHM = eh * 60 + em
+          let startHM = sh * 60 + sm
+          
+          // 构建开始和结束时间
+          guard let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: Date()) else {
+            continue
+          }
+          let sTs = sDate.timeIntervalSince1970
+          
+          // 处理跨日和非跨日情况
+          let isCrossDay = endHM <= startHM
+          var eTs: TimeInterval
+          var finalSTs = sTs
+          
+          if isCrossDay {
+            // 跨日：结束时间在第二天
+            guard let eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: Date()) else {
+              continue
+            }
+            let eTsNextDay = eDate.addingTimeInterval(24 * 3600).timeIntervalSince1970
+            
+            // 对于跨日，需要判断当前时间是在当天的 start 之后，还是在第二天的 end 之前
+            // 如果当前时间 < end（第二天的），说明可能是从昨天的 start 开始的
+            if now < eTsNextDay {
+              // 检查是否在当天的 start 之后
+              if now >= sTs {
+                // 在当天的 start 之后，结束时间是第二天的 end
+                eTs = eTsNextDay
+                if now < eTs {
+                  planId = id
+                  break
+                }
+              } else {
+                // 在当天的 start 之前，可能是从昨天的 start 开始的
+                // 计算昨天的 start
+                if let yesterdayStart = cal.date(byAdding: .day, value: -1, to: sDate) {
+                  finalSTs = yesterdayStart.timeIntervalSince1970
+                  eTs = eTsNextDay
+                  if now >= finalSTs && now < eTs {
+                    planId = id
+                    break
+                  }
+                }
+              }
+            }
+          } else {
+            // 非跨日：正常判断
+            guard let eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: Date()) else {
+              continue
+            }
+            eTs = eDate.timeIntervalSince1970
+            if now >= sTs && now < eTs {
+              planId = id
               break
             }
           }
@@ -957,38 +945,87 @@ class NativeModule: RCTEventEmitter {
     resolve(true)
   }
 
-  // 计算“当前时刻”命中的周期计划窗口（若存在）
+  // 计算"当前时刻"命中的周期计划窗口（若存在）
   // 返回当日窗口的开始/结束时间戳（秒）
+  // 从增量更新的 kPlansMap 读取计划
   private func currentPlannedWindow() -> (start: TimeInterval, end: TimeInterval)? {
     guard let defaults = UserDefaults.groupUserDefaults(),
-          let cfgStr = defaults.string(forKey: "FocusOne.PlannedConfigs"),
-          let cfgData = cfgStr.data(using: .utf8) else { return nil }
-    struct PlanCfg: Codable { let start: Int; let end: Int; let repeatDays: [Int]? }
-    guard let cfgs = try? JSONDecoder().decode([PlanCfg].self, from: cfgData) else { return nil }
+          let storedData = defaults.data(forKey: kPlansMap),
+          let plansMap = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) else {
+      return nil
+    }
+    
     let now = Date()
     let cal = Calendar.current
     let comp = cal.dateComponents([.weekday, .hour, .minute], from: now)
     let weekdayApple = comp.weekday ?? 1 // 1=周日
     // 转换为 0=周日, 1=周一..6=周六
     let mondayFirst = (weekdayApple == 1) ? 0 : (weekdayApple - 1)
-    func hm(_ sec: Int) -> (Int, Int) { let m = max(0, sec/60); return (m/60, m%60) }
-    for c in cfgs {
-      let days = (c.repeatDays?.isEmpty == false) ? c.repeatDays! : [0,1,2,3,4,5,6]
+    func hm(_ min: Int) -> (Int, Int) { return (min / 60, min % 60) }
+    
+    // 遍历所有计划，查找当前时间命中的计划
+    for (_, plan) in plansMap {
+      let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
       if !days.contains(mondayFirst) { continue }
-      let (sh, sm) = hm(c.start); let (eh, em) = hm(c.end)
-      let endHM = eh*60 + em
-      let startHM = sh*60 + sm
-      var eH = eh, eM = em
-      if endHM <= startHM { eH = 23; eM = 59 }
-      guard let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: now),
-            let eDate = cal.date(bySettingHour: eH, minute: eM, second: 0, of: now) else { continue }
+      
+      let (sh, sm) = hm(plan.start)
+      let (eh, em) = hm(plan.end)
+      let endHM = eh * 60 + em
+      let startHM = sh * 60 + sm
+      
+      // 构建开始时间
+      guard let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: now) else {
+        continue
+      }
       let sTs = sDate.timeIntervalSince1970
-      let eTs = eDate.timeIntervalSince1970
+      
+      // 处理跨日和非跨日情况
+      let isCrossDay = endHM <= startHM
       let nowTs = now.timeIntervalSince1970
-      if nowTs >= sTs && nowTs < eTs {
-        return (start: sTs, end: eTs)
+      var eTs: TimeInterval
+      var finalSTs = sTs
+      
+      if isCrossDay {
+        // 跨日：结束时间在第二天
+        guard let eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: now) else {
+          continue
+        }
+        let eTsNextDay = eDate.addingTimeInterval(24 * 3600).timeIntervalSince1970
+        
+        // 对于跨日，需要判断当前时间是在当天的 start 之后，还是在第二天的 end 之前
+        // 如果当前时间 < end（第二天的），说明可能是从昨天的 start 开始的
+        if nowTs < eTsNextDay {
+          // 检查是否在当天的 start 之后
+          if nowTs >= sTs {
+            // 在当天的 start 之后，结束时间是第二天的 end
+            eTs = eTsNextDay
+            if nowTs < eTs {
+              return (start: sTs, end: eTs)
+            }
+          } else {
+            // 在当天的 start 之前，可能是从昨天的 start 开始的
+            // 计算昨天的 start
+            if let yesterdayStart = cal.date(byAdding: .day, value: -1, to: sDate) {
+              finalSTs = yesterdayStart.timeIntervalSince1970
+              eTs = eTsNextDay
+              if nowTs >= finalSTs && nowTs < eTs {
+                return (start: finalSTs, end: eTs)
+              }
+            }
+          }
+        }
+      } else {
+        // 非跨日：正常判断
+        guard let eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: now) else {
+          continue
+        }
+        eTs = eDate.timeIntervalSince1970
+        if nowTs >= sTs && nowTs < eTs {
+          return (start: sTs, end: eTs)
+        }
       }
     }
+    
     return nil
   }
   

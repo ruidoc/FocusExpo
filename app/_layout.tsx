@@ -86,11 +86,6 @@ const RootLayout = () => {
     }
   };
 
-  const getSchedulePlans = async () => {
-    const plans = await getSchedulePlans();
-    console.log('【周期性任务列表】', plans);
-  };
-
   // 提前在组件第一层定义副作用，避免条件调用 Hook 的告警
   useEffect(() => {
     const isIOS = Platform.OS === 'ios';
@@ -176,7 +171,6 @@ const RootLayout = () => {
     // 首次同步（仅 iOS 执行）
     if (isIOS) {
       syncIOSStatus();
-      getSchedulePlans();
     }
 
     return () => {
