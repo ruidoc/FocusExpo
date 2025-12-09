@@ -105,7 +105,8 @@ class NativeModule: RCTEventEmitter {
     let start: Int // 分钟数
     let end: Int   // 分钟数
     let days: [Int]
-    let apps: String // FamilyActivitySelection 的 JSON/Base64 字符串
+    let apps: [String] // 应用 ID 数组，格式为 ["stableId:type", ...]
+    let token: String // FamilyActivitySelection 的 JSON/Base64 字符串
   }
   
   // 计划配置输入结构 (用于接收 JS 传递的原始数据)
@@ -124,16 +125,23 @@ class NativeModule: RCTEventEmitter {
     let instance = Unmanaged<NativeModule>.fromOpaque(observer).takeUnretainedValue()
     
     DispatchQueue.main.async {
-      if UIApplication.shared.applicationState == .active {
-        let n = name?.rawValue as String?
-        if n == "com.focusone.focus.ended" {
+      let n = name?.rawValue as String?
+      if n == "com.focusone.focus.ended" {
+        if UIApplication.shared.applicationState == .active {
           instance.emitState("ended")
           instance.emitEnded()
-        } else if n == "com.focusone.focus.started" {
+        }
+      } else if n == "com.focusone.focus.started" {
+        if UIApplication.shared.applicationState == .active {
           instance.emitState("started")
-        } else if n == "com.focusone.focus.resumed" {
+        }
+      } else if n == "com.focusone.focus.resumed" {
+        if UIApplication.shared.applicationState == .active {
           instance.emitState("resumed")
         }
+      } else if n == "com.focusone.extension.log" {
+        // 日志处理不受前台状态限制，始终处理（因为日志已持久化）
+        instance.processExtensionLogs()
       }
     }
   }
@@ -148,21 +156,21 @@ class NativeModule: RCTEventEmitter {
 
     var finalPlan: PlanConfig?
 
-    // 尝试解析为标准 PlanConfig (apps 为 token string)
+    // 尝试解析为标准 PlanConfig (apps 为数组，token 为字符串)
     if let plan = try? JSONDecoder().decode(PlanConfig.self, from: data) {
       finalPlan = plan
     } 
     // 尝试解析为 Input 格式 (apps 为 ID 数组)
     else if let input = try? JSONDecoder().decode(PlanConfigInput.self, from: data) {
         // 转换 ID 数组为 Token String
+        var token = ""
         if let selection = Helper.buildSelectionFromApps(input.apps),
            let selectionData = try? JSONEncoder().encode(selection) {
-            let token = selectionData.base64EncodedString()
-            finalPlan = PlanConfig(id: input.id, name: input.name, start: input.start, end: input.end, days: input.days, apps: token)
-        } else {
-            // 转换失败（可能是空数组），使用空 Token
-            finalPlan = PlanConfig(id: input.id, name: input.name, start: input.start, end: input.end, days: input.days, apps: "")
+            token = selectionData.base64EncodedString()
         }
+        
+        // 创建 PlanConfig，apps 直接存储 ID 数组，token 存储 Token 字符串
+        finalPlan = PlanConfig(id: input.id, name: input.name, start: input.start, end: input.end, days: input.days, apps: input.apps, token: token)
     }
 
     guard let plan = finalPlan else {
@@ -286,7 +294,7 @@ class NativeModule: RCTEventEmitter {
   // Event Emitter
   override static func requiresMainQueueSetup() -> Bool { true }
   override func supportedEvents() -> [String]! {
-    return ["focus-state"]
+    return ["focus-state", "extension-log"]
   }
   override func startObserving() {
     hasListeners = true
@@ -312,10 +320,12 @@ class NativeModule: RCTEventEmitter {
       let endedName = "com.focusone.focus.ended" as CFString
       let startedName = "com.focusone.focus.started" as CFString
       let resumedName = "com.focusone.focus.resumed" as CFString
+      let logName = "com.focusone.extension.log" as CFString
       let observer = Unmanaged.passUnretained(self).toOpaque()
       CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, endedName, nil, .deliverImmediately)
       CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, startedName, nil, .deliverImmediately)
       CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, resumedName, nil, .deliverImmediately)
+      CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, logName, nil, .deliverImmediately)
   }
   private func removeDarwinObserverIfNeeded() {
     guard darwinObserverAdded else { return }
@@ -342,6 +352,22 @@ class NativeModule: RCTEventEmitter {
     var body: [String: Any] = ["state": state]
     for (k, v) in extra { body[k] = v }
     sendEvent(withName: "focus-state", body: body)
+  }
+  
+  /// 处理 Extension 发送的日志
+  private func processExtensionLogs() {
+    guard let defaults = UserDefaults(suiteName: UserDefaults.appGroup) else { return }
+    guard let logData = defaults.data(forKey: "FocusOne.ExtensionLogs"),
+          let logs = try? JSONSerialization.jsonObject(with: logData) as? [[String: Any]] else {
+      return
+    }
+    
+    // 发送日志到 JS（实时发送，不保存历史）
+    if !hasListeners { return }
+    sendEvent(withName: "extension-log", body: ["logs": logs])
+    
+    // 立即删除已发送的日志（不持久存储）
+    defaults.removeObject(forKey: "FocusOne.ExtensionLogs")
   }
 
   // 屏幕时间权限

@@ -1,7 +1,6 @@
 import { Toast } from '@/components/ui';
 import { storage } from '@/utils';
 import http from '@/utils/request';
-import { withRetry } from '@/utils/retry';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
 import { useBenefitStore } from '.';
@@ -99,24 +98,23 @@ const RecordStore = combine(
     updateActualMins: async (id: string, actual_min: number) => {
       try {
         if (!id) return;
-        await withRetry(
-          async () => {
-            let res: HttpRes = await http.post('/record/update/' + id, {
-              actual_min,
-            });
-            if (res.statusCode !== 200) {
-              throw new Error('更新失败');
-            }
-            return res;
-          },
+        let res: HttpRes = await http.post(
+          '/record/update/' + id,
           {
-            maxRetries: 2,
-            retryDelay: 500,
+            actual_min,
           },
+          // {
+          //   'axios-retry': {
+          //     retries: 2,
+          //   },
+          // },
         );
-        console.log('上报成功:', actual_min);
+        if (res.statusCode !== 200) {
+          throw new Error('更新失败');
+        }
+        return res;
       } catch (error) {
-        console.error('上报失败（已重试）:', error);
+        console.log('上报失败:', error);
         // 失败后本地缓存，下次补偿上报
         // TODO: 可以在下次成功时补偿上报缺失的分钟数
       }

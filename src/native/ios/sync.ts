@@ -5,8 +5,8 @@
 
 import { usePlanStore, useRecordStore } from '@/stores';
 import { AppState, Platform } from 'react-native';
-import type { FocusStateEvent } from '../type';
-import { createFocusStateListener } from './events';
+import type { ExtensionLogEvent, FocusStateEvent } from '../type';
+import { createExtensionLogListener, createFocusStateListener } from './events';
 import { getFocusStatus } from './methods';
 
 // 内部定时器引用
@@ -161,6 +161,21 @@ export function setupIOSFocusSync(): () => void {
     handleFocusStateChange,
   );
 
+  // 创建 Extension 日志监听器
+  const extensionLogSubscription = createExtensionLogListener(
+    (event: ExtensionLogEvent) => {
+      event.logs.forEach(log => {
+        const timestamp = new Date(log.timestamp * 1000).toLocaleString();
+        const level = log.level.toUpperCase();
+        console.log(
+          `[IOS扩展 ${level}] [${timestamp}]`,
+          log.message,
+          log.data || '',
+        );
+      });
+    },
+  );
+
   // 创建 AppState 监听器
   const appStateSubscription = AppState.addEventListener('change', state => {
     if (state === 'active') {
@@ -174,6 +189,7 @@ export function setupIOSFocusSync(): () => void {
   // 返回清理函数
   return () => {
     focusStateSubscription.remove();
+    extensionLogSubscription.remove();
     appStateSubscription?.remove?.();
     stopFocusTimer();
   };

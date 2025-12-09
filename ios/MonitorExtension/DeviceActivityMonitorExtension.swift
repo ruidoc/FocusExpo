@@ -18,7 +18,8 @@ struct PlanConfig: Codable {
     let start: Int // 分钟数
     let end: Int   // 分钟数
     let days: [Int]
-    let apps: String // FamilyActivitySelection 的 JSON/Base64 字符串
+    let apps: [String] // 应用 ID 数组，格式为 ["stableId:type", ...]
+    let token: String // FamilyActivitySelection 的 JSON/Base64 字符串
 }
 
 // Optionally override any of the functions below.
@@ -35,13 +36,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         // 1. 暂停恢复活动：不处理
         if activity.rawValue == "FocusOne.PauseResume" {
-            print("【Extension】暂停恢复活动开始，无需处理")
+            logToJS(level: "log", message: "暂停恢复活动开始，无需处理")
             return
         }
         
         // 2. 一次性任务：只发送通知，不做其他处理
         if activity.rawValue == "FocusOne.ScreenTime" {
-            print("【Extension】一次性任务开始，发送通知")
+            logToJS(level: "log", message: "一次性任务开始，发送通知")
             notifyStart()
             return
         }
@@ -92,11 +93,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 if let data = defaults.data(forKey: "FocusOne.CurrentShieldSelection"),
                    let currentSelection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
                     selection = currentSelection
-                    print("【Extension恢复】使用当前任务的屏蔽设置")
+                    logToJS(level: "log", message: "恢复：使用当前任务的屏蔽设置")
                 } else if let data = defaults.data(forKey: "FocusOne.AppSelection"),
                           let appSelection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
                     selection = appSelection
-                    print("【Extension恢复】使用历史应用选择数据")
+                    logToJS(level: "log", message: "恢复：使用历史应用选择数据")
                 }
                 
                 if let selection = selection {
@@ -107,12 +108,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                     
                     notifyResume()
                     
-                    print("【Extension恢复成功】屏蔽已恢复")
+                    logToJS(level: "log", message: "恢复成功：屏蔽已恢复")
                 } else {
-                    print("【Extension恢复失败】无法获取屏蔽设置数据")
+                    logToJS(level: "error", message: "恢复失败：无法获取屏蔽设置数据")
                 }
             } else {
-                print("【Extension】已手动恢复，跳过自动恢复")
+                logToJS(level: "log", message: "已手动恢复，跳过自动恢复")
             }
             
         } else {
@@ -140,21 +141,16 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // 更稳妥的方式：我们知道后缀格式是固定的 _D\d+ 或 _P\d+_D\d+
         // 假设 planId 不包含 "_D" 这种子串
         
-        let prefix = "FocusOne.Plan."
-        let suffixStart = raw.range(of: "_", options: .backwards)?.lowerBound
-        
-        // 这种解析策略：找到 "FocusOne.Plan." 之后，和 最后一个 "_" 之前的部分？不对，可能有 P1_D1
-        // 让我们遍历 maps 找 key
-        
+        // 使用 findPlan 方法查找对应的计划配置
         guard let plan = findPlan(by: raw, defaults: defaults) else {
-            print("【Extension】未找到对应的计划配置: \(raw)")
+            logToJS(level: "error", message: "未找到对应的计划配置", data: ["activityName": raw])
             return
         }
         
-        print("【Extension】找到计划: \(plan.id), 开始执行 shielding")
+        logToJS(level: "log", message: "找到计划: \(plan.id), 开始执行 shielding", data: ["planId": plan.id, "planName": plan.name ?? ""])
         
         // 2. 解析 Selection Token 并应用屏蔽
-        if let data = Data(base64Encoded: plan.apps),
+        if let data = Data(base64Encoded: plan.token),
            let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
             
             // 保存屏蔽设置到本地，供暂停恢复使用
@@ -167,9 +163,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
             store.shield.webDomains = selection.webDomainTokens
             
-            print("【Extension】屏蔽已应用")
+            logToJS(level: "log", message: "屏蔽已应用", data: ["planId": plan.id])
         } else {
-            print("【Extension】无法解析 apps selection token")
+            logToJS(level: "error", message: "无法解析 selection token", data: ["planId": plan.id])
         }
         
         // 3. 记录时间和状态
@@ -187,12 +183,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         // 重新计算当前段的结束时间
         var sessionEndTime: Date
-        let startH = plan.start / 60
-        let startM = plan.start % 60
-        let endH = plan.end / 60
-        let endM = plan.end % 60
         
-        let planStartTime = today.addingTimeInterval(TimeInterval(plan.start * 60))
         var planEndTime = today.addingTimeInterval(TimeInterval(plan.end * 60))
         if plan.end <= plan.start {
             planEndTime = planEndTime.addingTimeInterval(24 * 3600)
@@ -217,7 +208,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults.set(now.timeIntervalSince1970, forKey: "FocusOne.FocusStartAt")
         defaults.set(sessionEndTime.timeIntervalSince1970, forKey: "FocusOne.FocusEndAt")
         
-        let totalMin = max(1, Int(sessionEndTime.timeIntervalSince1970 - now.timeIntervalSince1970) / 60)
+        let totalMin = max(1, Int(ceil((sessionEndTime.timeIntervalSince1970 - now.timeIntervalSince1970) / 60)))
         defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
         defaults.set("periodic", forKey: "FocusOne.FocusType")
         defaults.set(plan.id, forKey: "FocusOne.CurrentPlanId")
@@ -261,18 +252,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         let requestBody: [String: Any] = [
             "plan_id": plan.id,
             "start_min": plan.start,
-            "total_min": totalMinutes, // 这里的 totalMin 是当前段的时长，后端可能需要总时长？
-            // 之前的逻辑是用 plan.start/end 计算总时长。
-            // 这里我们尽量保持一致。如果是分段的，记录可能会被切分，或者我们应该记录整个计划？
-            // 简单起见，传当前段的时长，或者传 0 让后端计算？
-            // 旧代码：let totalMin = max(1, Int((finalEndTime - startTime) / 60))
-            // 保持一致：传递当前 session 的时长。
+            "total_min": totalMinutes, // 总时长
             "title": plan.name ?? "专注计划",
-            "apps": [], // 传空数组，因为我们现在只存 token，没有 app bundle IDs
+            "apps": plan.apps, // apps 数组
             "mode": "shield"
         ]
         
-        print("【Extension】创建后端记录: \(requestBody)")
+        logToJS(level: "log", message: "创建后端记录", data: ["planId": plan.id, "totalMinutes": totalMinutes])
         
         NetworkManager.shared.post(path: "/record/add", body: requestBody) { result in
             switch result {
@@ -281,17 +267,50 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                    let data = json["data"] as? [String: Any],
                    let recordId = data["id"] as? String {
                     defaults.set(recordId, forKey: "record_id")
-                    print("【Extension】记录创建成功 ID: \(recordId)")
+                    self.logToJS(level: "log", message: "记录创建成功", data: ["recordId": recordId, "planId": plan.id])
+                } else {
+                    self.logToJS(level: "warn", message: "记录创建成功但无法解析 recordId", data: ["planId": plan.id])
                 }
             case .failure(let error):
-                print("【Extension】记录创建失败: \(error)")
                 let tempId = "pending_\(Int(Date().timeIntervalSince1970))"
                 defaults.set(tempId, forKey: "record_id")
+                self.logToJS(level: "error", message: "记录创建失败", data: ["error": "\(error)", "planId": plan.id, "tempId": tempId])
             }
         }
     }
 
     // MARK: - Helpers
+    
+    /// 将日志发送到 JS 侧（用于调试）
+    /// - Parameters:
+    ///   - level: 日志级别 (log, warn, error)
+    ///   - message: 日志消息
+    ///   - data: 可选的额外数据（会被序列化为 JSON）
+    private func logToJS(level: String = "log", message: String, data: [String: Any]? = nil) {
+        guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
+        
+        // 构建单条日志对象（不保存历史，只保存最新一条）
+        var logEntry: [String: Any] = [
+            "level": level,
+            "message": message,
+            "timestamp": Date().timeIntervalSince1970
+        ]
+        
+        if let data = data {
+            logEntry["data"] = data
+        }
+        
+        // 保存单条日志（覆盖，不累积）
+        // NativeModule 会读取后立即删除，实现实时传递
+        if let logData = try? JSONSerialization.data(withJSONObject: [logEntry]) {
+            defaults.set(logData, forKey: "FocusOne.ExtensionLogs")
+            
+            // 发送 Darwin 通知告知主 App 有新日志
+            let center = CFNotificationCenterGetDarwinNotifyCenter()
+            let name = CFNotificationName("com.focusone.extension.log" as CFString)
+            CFNotificationCenterPostNotification(center, name, nil, nil, true)
+        }
+    }
     
     private func notifyEnd() {
         let center = CFNotificationCenterGetDarwinNotifyCenter()

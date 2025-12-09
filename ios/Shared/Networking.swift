@@ -41,7 +41,7 @@ class NetworkManager {
   static let shared = NetworkManager()
   
   private let groupSuite = "group.com.focusone"
-  private let baseURLKey = "FocusOne.ApiBaseURL"
+  private let baseURLKey = "http_base_url"
   private let tokenKey = "access_token"
   private let defaultBaseURL = "https://focusone.ruidoc.cn/dev-api"
   private let session: URLSession
@@ -135,7 +135,7 @@ class NetworkManager {
     case 401:
       // 未授权 - 暂时只打印，不处理登录逻辑
       print("【请求错误】401 Unauthorized - 登录已过期")
-      if let data = data, let json = apiResponse.json() {
+      if let json = apiResponse.json() {
         print("【错误详情】\(json)")
       }
       completion(.failure(.unauthorized))
@@ -143,7 +143,7 @@ class NetworkManager {
     default:
       // 其他错误
       var errorMessage: String?
-      if let data = data, let json = apiResponse.json() {
+      if let json = apiResponse.json() {
         errorMessage = json["message"] as? String
         print("【请求错误】\(httpResponse.statusCode) \(json)")
       } else {
@@ -230,52 +230,4 @@ class NetworkManager {
 
 // MARK: - 全局实例（类似 JS 中的 instance）
 let instance = NetworkManager.shared
-
-// MARK: - 向后兼容的旧 API
-struct FocusNetworking {
-  static let groupSuite = "group.com.focusone"
-  static let baseURLKey = "FocusOne.ApiBaseURL"
-  static let tokenKey = "access_token"
-
-  static func request(
-    method: String,
-    path: String,
-    jsonBody: [String: Any]? = nil,
-    headers: [String: String]? = nil,
-    timeout: TimeInterval = 12,
-    completion: @escaping (Result<(Data?, HTTPURLResponse), Error>) -> Void
-  ) {
-    instance.request(method: method, path: path, jsonBody: jsonBody, headers: headers) { result in
-      switch result {
-      case .success(let apiResponse):
-        let httpResponse = HTTPURLResponse(
-          url: URL(string: "")!,
-          statusCode: apiResponse.statusCode,
-          httpVersion: nil,
-          headerFields: apiResponse.headers as? [String: String]
-        )!
-        completion(.success((apiResponse.data, httpResponse)))
-      case .failure(let error):
-        completion(.failure(error))
-      }
-    }
-  }
-
-  static func post(
-    path: String,
-    body: [String: Any]? = nil,
-    headers: [String: String]? = nil,
-    completion: @escaping (_ ok: Bool, _ status: Int?) -> Void
-  ) {
-    instance.post(path: path, body: body, headers: headers) { result in
-      switch result {
-      case .success(let response):
-        completion((200...299).contains(response.statusCode), response.statusCode)
-      case .failure:
-        completion(false, nil)
-      }
-    }
-  }
-}
-
 

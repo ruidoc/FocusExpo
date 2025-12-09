@@ -71,6 +71,23 @@ export interface FocusStateEvent {
 }
 
 /**
+ * Extension 日志条目
+ */
+export interface ExtensionLogEntry {
+  level: 'log' | 'warn' | 'error';
+  message: string;
+  timestamp: number;
+  data?: Record<string, any>;
+}
+
+/**
+ * Extension 日志事件
+ */
+export interface ExtensionLogEvent {
+  logs: ExtensionLogEntry[];
+}
+
+/**
  * NativeModule 接口定义
  */
 export interface NativeModuleInterface {
@@ -128,15 +145,24 @@ declare module 'react-native' {
  * NativeModule 事件发射器
  * 继承自 RCTEventEmitter，支持以下事件：
  * - 'focus-state': 专注状态变化事件
+ * - 'extension-log': Extension 日志事件
  */
 export interface NativeModuleEventEmitter extends NativeEventEmitter {
   addListener(
     eventType: 'focus-state',
     listener: (event: FocusStateEvent) => void,
   ): any;
+  addListener(
+    eventType: 'extension-log',
+    listener: (event: ExtensionLogEvent) => void,
+  ): any;
   removeListener(
     eventType: 'focus-state',
     listener: (event: FocusStateEvent) => void,
   ): void;
-  removeAllListeners(eventType?: 'focus-state'): void;
+  removeListener(
+    eventType: 'extension-log',
+    listener: (event: ExtensionLogEvent) => void,
+  ): void;
+  removeAllListeners(eventType?: 'focus-state' | 'extension-log'): void;
 }

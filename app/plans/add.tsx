@@ -6,7 +6,7 @@ import {
   FieldItem,
   Flex,
   TextInput,
-  Toast
+  Toast,
 } from '@/components/ui';
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
@@ -172,9 +172,9 @@ const App = () => {
       }
       let start_day = dayjs(start);
       let end_day = dayjs(end);
-      if (!end_day.isAfter(start_day)) {
-        return Toast('结束时间必须大于开始时间', 'error');
-      }
+      // if (!end_day.isAfter(start_day)) {
+      //   return Toast('结束时间必须大于开始时间', 'error');
+      // }
       if (end_day.diff(start_day, 'minute') < 20) {
         return Toast('时间间隔最少20分钟', 'error');
       }

@@ -113,20 +113,6 @@ const PlanStore = combine(
       }
     },
 
-    // 更新计划列表（Android原生占位，iOS不同步）
-    updatePlans: () => {
-      let plan_arrs = (get() as any).all_plans().map((plan: CusPlan) => ({
-        id: plan.id,
-        start: plan.repeat === 'once' ? plan.start_sec : plan.start_min * 60,
-        end: plan.repeat === 'once' ? plan.end_sec : plan.end_min * 60,
-        duration: plan.end_min - plan.start_min,
-        repeat: plan.repeat,
-        mode: plan.mode,
-      }));
-      console.log('计划列表：', plan_arrs);
-      // NativeClass.setTimerange(JSON.stringify(plan_arrs));
-    },
-
     // 更新iOS专注计划
     updateIOSPlan: async (plan: CusPlan) => {
       const repeat = parseRepeat(plan.repeat);
@@ -201,7 +187,7 @@ const PlanStore = combine(
         let res: HttpRes = await http.post('/plan/add', form_data);
         if (res.statusCode === 200) {
           fun(res);
-          (get() as any).updateIOSPlan(form);
+          (get() as any).updateIOSPlan(res.data);
           (get() as any).getPlans();
         } else {
           Toast(res.message);
@@ -221,11 +207,12 @@ const PlanStore = combine(
       try {
         console.log('编辑计划参数：', form);
         let form_data = JSON.parse(JSON.stringify(form));
+        form_data.id = id;
         form_data.repeat = form_data.repeat.join(',');
         let res: HttpRes = await http.put(`/plan/edit/${id}`, form_data);
         if (res.statusCode === 200) {
           fun(res);
-          (get() as any).updateIOSPlan(form);
+          (get() as any).updateIOSPlan(form_data);
           (get() as any).getPlans();
           (get() as any).clearEditingPlan(); // 编辑成功后清除编辑状态
         } else {
@@ -233,7 +220,7 @@ const PlanStore = combine(
           fun();
         }
       } catch (error) {
-        console.log(error);
+        console.log('编辑计划失败：', error);
         fun();
       }
     },
@@ -265,20 +252,17 @@ const PlanStore = combine(
     },
     clearPlans: () => {
       set({ once_plans: [], cus_plans: [] });
-      (get() as any).updatePlans();
     },
     addOncePlan: (form: CusPlan) => {
       const once_plans = [...get().once_plans, form];
       set({ once_plans });
       console.log('【添加一次性任务】', form);
       storage.set('once_plans', JSON.stringify(once_plans));
-      (get() as any).updatePlans();
     },
     rmOncePlan: (id: string) => {
       const once_plans = get().once_plans.filter(r => r.id !== id);
       set({ once_plans });
       storage.set('once_plans', JSON.stringify(once_plans));
-      (get() as any).updatePlans();
     },
   }),
 );
