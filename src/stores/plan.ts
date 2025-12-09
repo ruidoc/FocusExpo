@@ -1,13 +1,12 @@
 import { Toast } from '@/components/ui';
+import { deletePlan, updatePlan } from '@/native/ios';
+import type { PlanConfig } from '@/native/type';
 import { getCurrentMinute, parseRepeat, storage } from '@/utils';
 import http from '@/utils/request';
 import dayjs from 'dayjs';
-import { NativeModules } from 'react-native';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
 import { useBenefitStore as benefit, useRecordStore as record } from '.';
-
-const { NativeModule } = NativeModules;
 
 const PlanStore = combine(
   {
@@ -116,7 +115,7 @@ const PlanStore = combine(
 
     // 更新计划列表（Android原生占位，iOS不同步）
     updatePlans: () => {
-      let plan_arrs = (get() as any).all_plans.map((plan: CusPlan) => ({
+      let plan_arrs = (get() as any).all_plans().map((plan: CusPlan) => ({
         id: plan.id,
         start: plan.repeat === 'once' ? plan.start_sec : plan.start_min * 60,
         end: plan.repeat === 'once' ? plan.end_sec : plan.end_min * 60,
@@ -131,20 +130,24 @@ const PlanStore = combine(
     // 更新iOS专注计划
     updateIOSPlan: async (plan: CusPlan) => {
       const repeat = parseRepeat(plan.repeat);
-      const data = {
+      const data: PlanConfig = {
         id: plan.id,
         name: plan.name,
         start: plan.start_min, // Minutes
         end: plan.end_min, // Minutes
-        days: repeat,
+        days: repeat === 'once' ? [] : (repeat as number[]), // 一次性任务使用空数组
         apps: plan.apps || [],
       };
       console.log('同步计划到 IOS Native:', JSON.stringify(data));
-      await NativeModule.updatePlan(JSON.stringify(data));
+      await updatePlan(data);
     },
 
     // 重新获取当前任务
     resetPlan: () => {
+      // 防御性检查：确保 cus_plans 和 once_plans 已初始化
+      const cus_plans = get().cus_plans || [];
+      const once_plans = get().once_plans || [];
+
       // 获取当前时间的分钟数（当天从0点开始的总分钟数）
       const minutes = getCurrentMinute();
       // 今天是周几（0=周日, 1=周一 ... 6=周六）
@@ -152,7 +155,8 @@ const PlanStore = combine(
       const today = jsDay; // 直接使用，0=周日, 1=周一 ... 6=周六
 
       // 仅保留：一次性任务，或周期任务且今天在 repeat 中
-      const filteredPlans = (get() as any).all_plans().filter((p: CusPlan) => {
+      const allPlans = [...cus_plans, ...once_plans];
+      const filteredPlans = allPlans.filter((p: CusPlan) => {
         const r = parseRepeat((p as any).repeat);
         if (r === 'once') return true;
         // 若没有有效 repeat 数组，默认认为不匹配（避免误触发）
@@ -252,7 +256,7 @@ const PlanStore = combine(
         if (res.statusCode === 200) {
           if (fun) fun(res);
           // iOS: 立即删除原生端计划
-          await NativeModule.deletePlan(id);
+          await deletePlan(id);
           await (get() as any).getPlans();
         }
       } catch (error) {

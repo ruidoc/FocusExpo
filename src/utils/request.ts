@@ -4,8 +4,8 @@ import { storage } from '@/utils';
 import axios, { AxiosInstance } from 'axios';
 
 const instance: AxiosInstance = axios.create({
-  // baseURL: 'https://focus.ruidoc.cn/dev-api',
-  baseURL: 'http://192.168.0.4:8849',
+  baseURL: 'https://focus.ruidoc.cn/dev-api',
+  // baseURL: 'http://192.168.0.4:8849',
   // baseURL: 'http://192.168.110.111:8849',
   timeout: 6000,
   headers: {

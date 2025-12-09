@@ -257,3 +257,6 @@ export const getPlansByPeriod = (allPlans: CusPlan[], period: string) => {
 
 // 重新导出存储实例和相关工具
 export { storage } from './storage';
+
+// 导出应用初始化工具
+export { initAppData } from './app-init';

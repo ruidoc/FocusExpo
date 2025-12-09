@@ -1,4 +1,5 @@
 import { Flex } from '@/components/ui';
+import { pauseAppLimits, resumeAppLimits } from '@/native/ios';
 import {
   useBenefitStore,
   useHomeStore,
@@ -12,7 +13,6 @@ import { Theme } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  NativeModules,
   Platform,
   StyleSheet,
   Text,
@@ -109,20 +109,20 @@ const FocusButton = () => {
     if (!pstore.active_plan) return;
     if (Platform.OS === 'ios') {
       // console.log('暂停：', pstore.active_plan);
-      NativeModules.NativeModule.pauseAppLimits(3);
+      pauseAppLimits(3);
     }
   };
 
   const resumeFocus = () => {
     if (!pstore.active_plan) return;
     if (Platform.OS === 'ios') {
-      NativeModules.NativeModule.resumeAppLimits();
+      resumeAppLimits();
     }
   };
 
   // 暂停倒计时逻辑
   useEffect(() => {
-    if (!pstore.is_pause || Platform.OS !== 'ios') {
+    if (!pstore.is_pause() || Platform.OS !== 'ios') {
       setPauseRemaining(0);
       return;
     }
@@ -144,7 +144,7 @@ const FocusButton = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [pstore.is_pause]);
+  }, [pstore.paused_plan_id, pstore.active_plan?.id]);
 
   // 格式化倒计时显示
   const formatPauseTime = (seconds: number) => {
@@ -162,7 +162,7 @@ const FocusButton = () => {
         <View>
           {descDom}
           {/* 暂停倒计时显示 */}
-          {pstore.is_pause && pauseRemaining > 0 && (
+          {pstore.is_pause() && pauseRemaining > 0 && (
             <Text
               style={[
                 styles.descFont,
@@ -184,7 +184,7 @@ const FocusButton = () => {
             <Icon name="play" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {pstore.active_plan && !pstore.is_pause && (
+        {pstore.active_plan && !pstore.is_pause() && (
           <TouchableOpacity
             onPress={() => setShowPauseModal(true)}
             activeOpacity={0.8}

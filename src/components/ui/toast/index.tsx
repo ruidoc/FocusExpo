@@ -120,7 +120,6 @@ const ToastGlobal: React.FC = () => {
   const type = config.type || 'info';
 
   // 根据位置计算 translateY
-  const { height: screenHeight } = Dimensions.get('window');
   const translateY = slideAnim.interpolate({
     inputRange: [0, 1],
     outputRange:
@@ -165,7 +164,7 @@ const ToastGlobal: React.FC = () => {
     }
   };
 
-  const { icon, color, bgColor } = getIconAndColor();
+  const { icon, color } = getIconAndColor();
   const isLoading = type === 'loading';
 
   return (
@@ -198,8 +197,14 @@ const ToastGlobal: React.FC = () => {
             <Icon name={icon} size={20} color={color} />
           )}
           <Text
-            className="ml-2 flex-1 text-base"
-            style={{ color: colors.text }}>
+            className="ml-2 text-sm"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={{ 
+              color: colors.text,
+              flexShrink: 1,
+              maxWidth: Dimensions.get('window').width * 0.7,
+            }}>
             {config.message}
           </Text>
         </View>
