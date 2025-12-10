@@ -4,10 +4,12 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios --device",
-    "web": "expo start --web",
+    "build:preview": "eas build --local --platform ios --profile preview 2>&1 | tee build.log",
+    "build:preview:quiet": "eas build --local --platform ios --profile preview --non-interactive 2>&1 | grep -E '(error|Error|ERROR|failed|Failed|FAILED)' | head -50",
+    "build:prod": "eas build --local --platform ios --profile production",
+    "doctor": "npx expo-doctor",
     "prebuild": "expo prebuild",
     "lint": "expo lint"
   },

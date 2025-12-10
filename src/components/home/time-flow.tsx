@@ -1,17 +1,16 @@
 import { useBenefitStore, usePlanStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import { observer } from 'mobx-react';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Animated,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
-const TimeFlow = observer(() => {
+const TimeFlow = () => {
   const pstore = usePlanStore();
   const bstore = useBenefitStore();
 
@@ -159,7 +158,7 @@ const TimeFlow = observer(() => {
       </View>
     </View>
   );
-});
+};
 
 const styles = StyleSheet.create({
   container: {

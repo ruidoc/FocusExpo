@@ -139,3 +139,10 @@ expo run:android
 - 清华大学：`https://mirrors.tuna.tsinghua.edu.cn/android/`
 - 中科大：`https://mirrors.ustc.edu.cn/android/`
 - 东软信息学院：`https://mirrors.neusoft.edu.cn/android/`
+
+## IOS 账号信息
+
+- Cert ID: 636JT25974
+- Serial number: 5DF18E235752866614DF9C7A0A272641
+- Team ID: G497923Y9M
+- Team name: admin freeshore (Individual)

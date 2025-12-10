@@ -25,7 +25,13 @@
       "associatedDomains": [
         "applinks:(focusone.ruidoc.cn)"
       ],
-      "bundleIdentifier": "com.focusone"
+      "bundleIdentifier": "com.focusone",
+      "entitlements": {
+        "com.apple.developer.family-controls": true,
+        "com.apple.security.application-groups": [
+          "group.com.focusone"
+        ]
+      }
     },
     "android": {
       "package": "com.focusone",

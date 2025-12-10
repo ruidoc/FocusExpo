@@ -1,5 +1,6 @@
 import { Page } from '@/components/business';
 import { Flex } from '@/components/ui';
+import Slider from '@/components/ui/slider';
 import { useChallengeStore } from '@/stores';
 import { UserChallenge } from '@/stores/challenge';
 import {
@@ -9,7 +10,6 @@ import {
   Tag,
   Toast,
 } from '@fruits-chain/react-native-xiaoshu';
-import Slider from '@react-native-community/slider';
 import {
   useNavigation,
   useTheme
