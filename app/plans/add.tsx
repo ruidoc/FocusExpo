@@ -165,10 +165,12 @@ const App = () => {
       if (!dayjs(end_date).isAfter(dayjs(start_date), 'day')) {
         return Toast('结束日期必须大于开始日期', 'error');
       }
-
       // 验证应用选择（仅iOS）
-      if (Platform.OS === 'ios' && selectedApps.length === 0) {
+      if (selectedApps.length === 0) {
         return Toast('请先选择要限制的应用', 'error');
+      }
+      if (astore.ios_all_apps.length === 0) {
+        await astore.getIosApps();
       }
       let start_day = dayjs(start);
       let end_day = dayjs(end);

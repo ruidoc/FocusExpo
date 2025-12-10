@@ -6,7 +6,11 @@ import http from '@/utils/request';
 import dayjs from 'dayjs';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
-import { useBenefitStore as benefit, useRecordStore as record } from '.';
+import {
+  useBenefitStore as benefit,
+  useRecordStore as record,
+  useAppStore,
+} from '.';
 
 const PlanStore = combine(
   {
@@ -263,6 +267,37 @@ const PlanStore = combine(
       const once_plans = get().once_plans.filter(r => r.id !== id);
       set({ once_plans });
       storage.set('once_plans', JSON.stringify(once_plans));
+    },
+
+    // 全量同步计划到 iOS 原生侧
+    syncAllPlansToNative: async () => {
+      try {
+        // 1. 确保 ios_all_apps 数据已就绪
+        const astore = useAppStore.getState();
+        if (astore.ios_all_apps.length === 0) {
+          await astore.getIosApps();
+        }
+        // 2. 获取服务器端所有计划
+        const serverPlans = get().cus_plans;
+        // 3. 同步每个计划到原生侧
+        let successCount = 0;
+        for (const plan of serverPlans) {
+          try {
+            await (get() as any).updateIOSPlan(plan);
+            successCount++;
+          } catch (error) {
+            console.error(`同步计划失败: ${plan.id}`, error);
+          }
+        }
+        return {
+          success: true,
+          total: serverPlans.length,
+          successCount,
+        };
+      } catch (error) {
+        console.error('全量同步失败:', error);
+        throw error;
+      }
     },
   }),
 );

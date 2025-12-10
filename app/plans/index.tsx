@@ -1,5 +1,5 @@
 import { Page } from '@/components/business';
-import { Flex } from '@/components/ui';
+import { Flex, Toast } from '@/components/ui';
 import { buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { usePlanStore } from '@/stores';
@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -24,6 +25,7 @@ const App = () => {
   const store = usePlanStore();
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [filterType, setFilterType] = useState<FilterType>('today');
   const { colors } = useCustomTheme();
 
@@ -62,17 +64,46 @@ const App = () => {
     fetchPlans('all');
   }, []);
 
+  // 同步计划到 iOS 原生侧
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const result = await store.syncAllPlansToNative();
+      Toast(
+        `同步完成：成功 ${result.successCount}/${result.total}`,
+        result.successCount === result.total ? 'success' : 'info',
+      );
+    } catch (error) {
+      Toast('同步失败，请重试', 'error');
+      console.error('同步失败:', error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Pressable
-          android_ripple={buttonRipple}
-          onPress={() => toRoute('plans/add')}>
-          <Icon name="add" size={27} color={colors.text} />
-        </Pressable>
+        <Flex className="flex-row items-center gap-3">
+          <Pressable
+            android_ripple={buttonRipple}
+            onPress={handleSync}
+            disabled={syncing}>
+            {syncing ? (
+              <ActivityIndicator size="small" color={colors.text} />
+            ) : (
+              <Icon name="sync" size={24} color={colors.text} />
+            )}
+          </Pressable>
+          <Pressable
+            android_ripple={buttonRipple}
+            onPress={() => toRoute('plans/add')}>
+            <Icon name="add" size={27} color={colors.text} />
+          </Pressable>
+        </Flex>
       ),
     });
-  }, []);
+  }, [syncing, colors.text, handleSync, navigation]);
 
   // 根据筛选类型过滤任务
   const getFilteredPlans = () => {
@@ -97,14 +128,16 @@ const App = () => {
             <TouchableOpacity
               key={option.key}
               activeOpacity={0.7}
-              className={`px-3.5 py-1.5 rounded-2xl border ${active
-                ? 'bg-[#303044] border-[#45455C]'
-                : 'bg-card border-[#2E2E3A]'
-                } ${index > 0 ? 'ml-2' : ''}`}
+              className={`px-3.5 py-1.5 rounded-2xl border ${
+                active
+                  ? 'bg-[#303044] border-[#45455C]'
+                  : 'bg-card border-[#2E2E3A]'
+              } ${index > 0 ? 'ml-2' : ''}`}
               onPress={() => handleFilterChange(option.key)}>
               <Text
-                className={`text-[13px] ${active ? 'text-white font-semibold' : 'text-[#999]'
-                  }`}>
+                className={`text-[13px] ${
+                  active ? 'text-white font-semibold' : 'text-[#999]'
+                }`}>
                 {option.label}
               </Text>
             </TouchableOpacity>

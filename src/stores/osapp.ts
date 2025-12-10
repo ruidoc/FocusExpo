@@ -56,13 +56,16 @@ const AppStore = combine(
     // 添加iOS应用
     addIosApps: async (apps: Record<string, any>[]) => {
       try {
+        if (get().ios_all_apps.length === 0) {
+          await (get() as any).getIosApps();
+        }
         let final_apps = apps.filter(
           r => !(get() as any).ios_stableids().includes(r.stableId),
         );
         (get() as any).setIosSelectedApps(apps);
         if (final_apps.length === 0) return;
         let res: HttpRes = await http.post('/iosapp/add', final_apps);
-        if (res.statusCode == 200) {
+        if (res.statusCode === 200) {
           (get() as any).setIosAllApps([...get().ios_all_apps, ...res.data]);
         } else {
           Toast(res.message);
