@@ -41,11 +41,15 @@ const PlanStore = combine(
       }));
       set({ cus_plans: final_plans });
       storage.set('cus_plans', JSON.stringify(plans));
+      // 设置完数据后，重新计算当前任务
+      (get() as any).resetPlan();
     },
 
     setOncePlans: (plans: any[]) => {
       set({ once_plans: plans });
       storage.set('once_plans', JSON.stringify(plans));
+      // 设置完数据后，重新计算当前任务
+      (get() as any).resetPlan();
     },
 
     addExitPlanIds: (id: string) => {

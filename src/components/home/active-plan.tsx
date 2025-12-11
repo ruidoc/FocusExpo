@@ -63,7 +63,7 @@ const FocusButton = () => {
     if (pstore.next_plan) {
       descDom = (
         <Text style={styles.descFont}>
-          下一个任务{' '}
+          下一个计划{' '}
           <Text style={styles.lightFont}>{pstore.next_plan?.start}</Text> 开始
         </Text>
       );
@@ -238,7 +238,7 @@ const FocusButton = () => {
         coinCost={1}
         coinBalance={useBenefitStore().balance}
         onConfirm={pauseFocus}
-        onCancel={() => { }}
+        onCancel={() => {}}
         onClose={() => setShowPauseModal(false)}
       />
 
@@ -257,7 +257,7 @@ const FocusButton = () => {
             : undefined
         }
         onConfirm={stopFocus}
-        onCancel={() => { }}
+        onCancel={() => {}}
         onClose={() => setShowStopModal(false)}
       />
     </>

@@ -31,7 +31,7 @@ const EmptyPlan = () => {
     }
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return `${h}小时${m}分钟后开始`;
+    return `${h}小时${m}分后开始`;
   };
 
   // 格式化空闲时间文本
@@ -52,7 +52,7 @@ const EmptyPlan = () => {
         <View className="w-full bg-[#1C1C26] rounded-[20px] p-6 mb-6 border border-[#2C2C36]">
           <View className="flex-row justify-between items-start">
             <View>
-              <Text className="text-sm text-[#858699] mb-2">下一个任务</Text>
+              <Text className="text-sm text-[#858699] mb-2">下一个计划</Text>
               <Text className="text-2xl font-bold text-white mb-1">
                 {nextPlan.name}
               </Text>

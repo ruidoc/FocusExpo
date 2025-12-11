@@ -97,11 +97,11 @@ export const minutesToHours = (minutes: number): string => {
   const remainingMinutes = minutes % 60;
 
   if (hours === 0) {
-    return `${remainingMinutes}分钟`;
+    return `${remainingMinutes} 分钟`;
   } else if (remainingMinutes === 0) {
-    return `${hours}h`;
+    return `${hours} 小时`;
   } else {
-    return `${hours}h${remainingMinutes} 分钟`;
+    return `${hours} 小时 ${remainingMinutes} 分`;
   }
 };
 

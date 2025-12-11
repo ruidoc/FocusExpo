@@ -23,7 +23,7 @@ const RootLayout = () => {
   useEffect(() => {
     // 初始化应用数据（从存储恢复计划数据，获取 iOS 应用列表）
     initAppData();
-    
+
     // 设置 iOS 专注状态同步（内部处理事件监听、AppState 监听和状态同步）
     const cleanup = setupIOSFocusSync();
 
