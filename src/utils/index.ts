@@ -260,3 +260,6 @@ export { storage } from './storage';
 
 // 导出应用初始化工具
 export { initAppData } from './app-init';
+
+// 导出 Superwall 工具
+export { useSuperwallPaywall, useSuperwallUser } from './superwall';

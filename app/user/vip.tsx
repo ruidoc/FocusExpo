@@ -1,7 +1,7 @@
 import { Page } from '@/components/business';
 import { Toast } from '@/components/ui';
 import { useVipStore } from '@/stores';
-import { fenToYuan } from '@/utils';
+import { fenToYuan, useSuperwallPaywall } from '@/utils';
 import { useTheme } from '@react-navigation/native';
 import { Purchase, useIAP, validateReceipt } from 'expo-iap';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +21,20 @@ const VipPage = () => {
   const { colors, dark } = useTheme();
   const [isAgreed, setIsAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Superwall paywall 集成
+  const { registerPlacement } = useSuperwallPaywall({
+    onPresent: (info) => {
+      console.log('Paywall Presented:', info);
+    },
+    onDismiss: (info, result) => {
+      console.log('Paywall Dismissed:', info, 'Result:', result);
+    },
+    onError: (error) => {
+      console.error('Paywall Error:', error);
+      Toast({ message: `Paywall 错误: ${error}` });
+    },
+  });
   const {
     connected,
     purchaseHistories,
@@ -418,6 +432,13 @@ const VipPage = () => {
             <Text style={styles.smallButtonText}>管理订阅</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Superwall Paywall 测试按钮 */}
+        <TouchableOpacity
+          style={[styles.smallButton, { marginTop: 12, width: '100%' }]}
+          onPress={() => registerPlacement({ placement: 'campaign_trigger' })}>
+          <Text style={styles.smallButtonText}>测试 Superwall Paywall</Text>
+        </TouchableOpacity>
 
         {/* 协议与隐私链接 */}
         <View style={styles.linksRow}>

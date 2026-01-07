@@ -2445,6 +2445,12 @@ PODS:
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
   - SocketRocket (0.7.1)
+  - Superscript (1.0.10)
+  - SuperwallExpo (1.0.0):
+    - ExpoModulesCore
+    - SuperwallKit (= 4.10.6)
+  - SuperwallKit (4.10.6):
+    - Superscript (= 1.0.10)
   - WechatOpenSDK (2.0.4)
   - Yoga (0.0.0)
 
@@ -2560,6 +2566,7 @@ DEPENDENCIES:
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
+  - SuperwallExpo (from `../node_modules/expo-superwall/ios`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -2572,6 +2579,8 @@ SPEC REPOS:
     - SDWebImageSVGCoder
     - SDWebImageWebPCoder
     - SocketRocket
+    - Superscript
+    - SuperwallKit
     - WechatOpenSDK
 
 EXTERNAL SOURCES:
@@ -2794,6 +2803,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-screens"
   RNSVG:
     :path: "../node_modules/react-native-svg"
+  SuperwallExpo:
+    :path: "../node_modules/expo-superwall/ios"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2915,6 +2926,9 @@ SPEC CHECKSUMS:
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  Superscript: d29f20a8ff6e691b756b7f7454d76c5c00f68f36
+  SuperwallExpo: 1356d41fb7e71a800527a0e711b72eaf5a2860df
+  SuperwallKit: 57e16cfe95d8392abfd2c59ff8dd6864b080bde1
   WechatOpenSDK: 290989072e87b79d52225a01bb4e5e58f6f88593
   Yoga: c758bfb934100bb4bf9cbaccb52557cee35e8bdf
 
