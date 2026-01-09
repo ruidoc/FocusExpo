@@ -59,11 +59,13 @@
       <true/>
     </dict>
     <key>NSFamilyControlsUsageDescription</key>
-    <string>需要您的同意以访问屏幕使用时间权限，用于专注管理等功能。</string>
+    <string>FocusOne需要使用屏幕使用时间权限来帮助您在专注期间自动屏蔽指定的分心应用，提高专注效率。该权限仅用于执行您主动创建的专注计划，不会收集或分享您的应用使用数据。</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>此应用需要访问相册来保存截图</string>
+    <string>FocusOne需要访问相册权限以保存您的专注成就截图，方便您分享专注成果。</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>此应用需要访问相册来保存截图</string>
+    <string>FocusOne需要访问相册权限以保存您的专注成就截图，方便您分享专注成果。</string>
+    <key>NSUserTrackingUsageDescription</key>
+    <string>FocusOne不会追踪您的个人数据用于广告或营销目的。我们仅收集匿名的应用使用统计数据以改进产品体验。</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

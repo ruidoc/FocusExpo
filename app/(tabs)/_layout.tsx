@@ -93,7 +93,8 @@ const TabLayout = () => {
           headerRight: () => <RightDom colors={colors} toRoute={toRoute} />,
         }}
       />
-      <Tabs.Screen
+      {/* MVP阶段暂时隐藏挑战功能 */}
+      {/* <Tabs.Screen
         name="challenges"
         options={{
           title: '挑战',
@@ -106,7 +107,7 @@ const TabLayout = () => {
             />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="user"
         options={{

@@ -75,10 +75,10 @@ const EmptyPlan = () => {
         <View className="bg-[#2C2C36]/50 rounded-xl p-4 flex-row items-center justify-between border border-[#3C3C46]/50">
           <View className="flex-1 mr-2">
             <Text className="text-white text-sm font-medium mb-1">
-              今日专注时长不足
+              添加更多专注计划
             </Text>
             <Text className="text-[#858699] text-xs">
-              建议继续添加计划以达成目标
+              规律的专注安排能帮助你更高效地管理时间
             </Text>
           </View>
           <TouchableOpacity

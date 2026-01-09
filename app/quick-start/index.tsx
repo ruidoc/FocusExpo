@@ -6,6 +6,7 @@ import {
   usePlanStore,
   useRecordStore,
 } from '@/stores';
+import { toast, trackStartFocus } from '@/utils';
 import { startAppLimits } from '@/utils/permission';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
@@ -59,24 +60,37 @@ const QuickStartPage = () => {
   // 开始一次性任务
   const handleStart = async () => {
     if (pstore.active_plan) {
+      toast('已有专注任务正在进行中', 'info');
       return;
     }
 
     // iOS: 验证应用选择
     if (astore.ios_selected_apps.length === 0) {
+      toast('请先选择要屏蔽的应用', 'info');
       return;
     }
 
     let plan_id = `once_${Math.floor(Math.random() * 99999999)}`;
     // iOS: 使用屏幕时间限制开始屏蔽
-    const ok = await startAppLimits(minute, plan_id);
-    if (ok) {
-      setOncePlan(plan_id);
-      // 立刻刷新当前计划，避免等待 AppState/原生事件导致 active_plan 为空
-      pstore.setCurPlanMinute(0);
-      pstore.resetPlan();
+    try {
+      const ok = await startAppLimits(minute, plan_id);
+      if (ok) {
+        setOncePlan(plan_id);
+        // 立刻刷新当前计划，避免等待 AppState/原生事件导致 active_plan 为空
+        pstore.setCurPlanMinute(0);
+        pstore.resetPlan();
+
+        // PostHog埋点：记录专注开始
+        trackStartFocus(plan_id, minute);
+        toast('专注已开始', 'success');
+        navigation.goBack();
+      } else {
+        toast('启动专注失败，请重试', 'error');
+      }
+    } catch (error) {
+      console.error('启动专注失败:', error);
+      toast('启动专注失败，请检查权限设置', 'error');
     }
-    navigation.goBack();
   };
 
   return (

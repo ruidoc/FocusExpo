@@ -1,5 +1,12 @@
 import { Toast } from '@/components/ui';
-import { storage } from '@/utils';
+import {
+  identifyUser,
+  setUserProperties,
+  storage,
+  trackLogin,
+  trackLogout,
+  trackRegister,
+} from '@/utils';
 import http from '@/utils/request';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
@@ -57,13 +64,14 @@ const UserStore = combine(
     ) => {
       try {
         let res: any;
+        const loginMethod = form.token ? 'wechat' : 'phone';
         if (form.token) {
           res = form;
         } else {
           res = await http.post('/user/login', form);
         }
         if (res.statusCode === 200) {
-          (get() as any).loginSuccess(res);
+          (get() as any).loginSuccess(res, loginMethod);
           fun?.(res);
         } else {
           Toast(res.message);
@@ -83,6 +91,8 @@ const UserStore = combine(
       try {
         let res: HttpRes = await http.post('/user/register', form);
         if (res.statusCode === 200) {
+          // 记录注册事件
+          trackRegister('phone');
           let { phone, password } = form;
           (get() as any).login({ phone, password }, fun);
         } else {
@@ -109,13 +119,24 @@ const UserStore = combine(
     },
 
     // 登录成功后处理
-    loginSuccess: (res: any) => {
+    loginSuccess: (res: any, loginMethod: 'phone' | 'wechat' | 'apple' = 'phone') => {
       storage.set('access_token', res.token);
       storage.setGroup('access_token', res.token);
       useHomeStore.getState().loadApps();
       useAppStore.getState().getCurapp();
       usePlanStore.getState().getPlans();
       (get() as any).getInfo();
+
+      // PostHog埋点：记录登录事件
+      trackLogin(loginMethod);
+
+      // 如果有用户ID，识别用户
+      if (res.data?.id) {
+        identifyUser(res.data.id, {
+          username: res.data.username,
+          phone: res.data.phone,
+        });
+      }
     },
 
     // 退出登录后处理
@@ -127,6 +148,9 @@ const UserStore = combine(
       usePlanStore.getState().clearPlans();
       useHomeStore.getState().stopVpn();
       (get() as any).setUinfo(null);
+
+      // PostHog埋点：记录登出事件
+      trackLogout();
     },
   }),
 );
