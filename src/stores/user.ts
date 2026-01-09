@@ -83,6 +83,86 @@ const UserStore = combine(
       }
     },
 
+    // Apple 登录
+    appleLogin: async (
+      credential: {
+        identityToken: string;
+        user?: {
+          email?: string;
+          name?: {
+            firstName?: string;
+            lastName?: string;
+          };
+        };
+      },
+      fun?: (data?: HttpRes) => void,
+    ) => {
+      try {
+        const body: any = {
+          identityToken: credential.identityToken,
+        };
+
+        // 仅在首次授权时提供用户信息
+        if (credential.user) {
+          body.user = credential.user;
+        }
+
+        const res = (await http.post('/user/apple-login', body)) as HttpRes;
+        if (res.statusCode === 200) {
+          // 处理登录成功
+          const loginRes = {
+            token: res.data.token,
+            data: res.data.user,
+          };
+          (get() as any).loginSuccess(loginRes, 'apple');
+          fun?.(res);
+        } else {
+          Toast(res.message);
+          fun?.();
+        }
+      } catch (error) {
+        console.log('Apple 登录失败', error);
+        fun?.();
+      }
+    },
+
+    // Apple 账号绑定
+    appleBind: async (
+      credential: { identityToken: string },
+      merge: boolean = false,
+      fun?: (data?: HttpRes) => void,
+    ) => {
+      try {
+        const res = (await http.post('/user/apple-bind', {
+          identityToken: credential.identityToken,
+          merge,
+        })) as HttpRes;
+        if (res.statusCode === 200) {
+          // 如果账户合并，需要更新 token
+          if (res.data.merged && res.data.token) {
+            storage.set('access_token', res.data.token);
+            storage.setGroup('access_token', res.data.token);
+            // 重新获取用户信息
+            await (get() as any).getInfo();
+          }
+          Toast(res.data.message || '绑定成功');
+          fun?.(res);
+        } else {
+          Toast(res.message);
+          fun?.();
+        }
+      } catch (error: any) {
+        console.log('Apple 绑定失败', error);
+        // 如果是账户合并相关的错误，可能需要用户确认
+        if (error.response?.data?.message) {
+          Toast(error.response.data.message);
+        } else {
+          Toast('绑定失败，请重试');
+        }
+        fun?.();
+      }
+    },
+
     register: async (
       form: Record<string, string>,
       fun?: (data?: HttpRes) => void,

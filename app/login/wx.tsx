@@ -1,4 +1,4 @@
-import { Privicy, Wechat } from '@/components/business';
+import { Apple, Privicy, Wechat } from '@/components/business';
 import { Button, Flex } from '@/components/ui';
 import { useUserStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
@@ -32,6 +32,16 @@ const App = () => {
       setLoading(false);
       router.replace('/(tabs)');
     }
+  };
+
+  const appleLoginResult = (credential: any) => {
+    setLoading(true);
+    store.appleLogin(credential, res => {
+      setLoading(false);
+      if (res?.statusCode === 200) {
+        router.replace('/(tabs)');
+      }
+    });
   };
 
   const styles = StyleSheet.create({
@@ -86,6 +96,11 @@ const App = () => {
         </Flex>
         <View style={{ flex: 1 }}>
           <Wechat disabled={!agree} onSuccess={loginResult} />
+          <Apple
+            disabled={!agree}
+            onSuccess={appleLoginResult}
+            type="ghost"
+          />
           <Button type="ghost" style={styles.button} onPress={toRoute}>
             手机号登录
           </Button>

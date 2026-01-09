@@ -1,4 +1,4 @@
-import { Privicy, Wechat } from '@/components/business';
+import { Apple, Privicy, Wechat } from '@/components/business';
 import { Keyboard } from '@/components/system';
 import { Button, TextInput, Toast } from '@/components/ui';
 import { useUserStore } from '@/stores';
@@ -71,6 +71,16 @@ const App = () => {
     }
     store.login(result as Record<string, any>, val => {
       if (val) {
+        router.replace('/(tabs)');
+      }
+    });
+  };
+
+  const appleLoginResult = (credential: any) => {
+    setLoading(true);
+    store.appleLogin(credential, res => {
+      setLoading(false);
+      if (res?.statusCode === 200) {
         router.replace('/(tabs)');
       }
     });
@@ -200,12 +210,19 @@ const App = () => {
             {(!isbind && '登录') || '绑定'}
           </Button>
           {!isbind && (
-            <Wechat
-              type="ghost"
-              disabled={!agree}
-              color="#07C160"
-              onSuccess={loginResult}
-            />
+            <>
+              <Wechat
+                type="ghost"
+                disabled={!agree}
+                color="#07C160"
+                onSuccess={loginResult}
+              />
+              <Apple
+                type="ghost"
+                disabled={!agree}
+                onSuccess={appleLoginResult}
+              />
+            </>
           )}
           {/* <Flex justify="end">
             <TouchableOpacity activeOpacity={0.7} onPress={toRoute}>

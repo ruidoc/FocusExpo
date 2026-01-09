@@ -51,6 +51,8 @@ instance.interceptors.request.use(async request => {
   request.headers.Authorization = `Bearer ${
     storage.getString('access_token') || ''
   }`;
+  // 添加 project-tag header
+  request.headers['project-tag'] = 'focusone';
   return request;
 });
 
