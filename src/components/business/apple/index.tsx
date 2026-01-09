@@ -25,6 +25,13 @@ const App = (props: Props) => {
     }
 
     try {
+      // 检查 Apple 登录是否可用
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+      if (!isAvailable) {
+        Toast('当前设备不支持 Apple 登录');
+        return;
+      }
+
       setLoading(true);
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
@@ -56,11 +63,18 @@ const App = (props: Props) => {
     } catch (error: any) {
       setLoading(false);
       // 用户取消登录不显示错误
-      if (error.code === 'ERR_CANCELED') {
+      if (error.code === 'ERR_REQUEST_CANCELED') {
         return;
       }
       console.log('Apple 登录失败', error);
-      Toast('Apple 登录失败，请重试');
+      // 根据文档的错误代码提供更详细的错误信息
+      let errorMessage = 'Apple 登录失败，请重试';
+      if (error.code === 'ERR_REQUEST_UNKNOWN') {
+        errorMessage = 'Apple 登录失败，请检查设备设置';
+      } else if (error.code === 'ERR_REQUEST_FAILED') {
+        errorMessage = error.message || errorMessage;
+      }
+      Toast(errorMessage);
       props.onError?.(error);
     }
   };

@@ -1,3 +1,4 @@
+import { DebugBall } from '@/components/debug/debug-ball';
 import { PostHogProviderWrapper } from '@/components/providers/PostHogProvider';
 import { ActionSheet, Dialog, Flex, Toast } from '@/components/ui';
 import { ScreenOptions, buttonRipple } from '@/config/navigation';
@@ -14,7 +15,7 @@ import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SuperwallProvider, useSuperwall } from 'expo-superwall';
 import { useEffect } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 // Deep link 处理组件
 const DeepLinkHandler = (): null => {
@@ -93,97 +94,112 @@ const RootLayout = () => {
             <ActionSheet.Global />
             <Dialog.Global />
             <Toast.Global />
-            <Stack
-              screenOptions={{
-                ...ScreenOptions,
-                headerLeft: ({ canGoBack }) => (canGoBack ? <BackIcon /> : null),
-              }}>
-              <Stack.Screen
-                name="(tabs)"
-                options={{ headerShown: false, headerTitle: '' }}
-              />
-              <Stack.Screen name="(guides)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="login/index"
-                options={{
-                  title: '登录',
-                  headerTransparent: true,
-                }}
-              />
-              <Stack.Screen
-                name="login/wx"
-                options={{ title: '', headerTransparent: true }}
-              />
-              <Stack.Screen
-                name="login/start"
-                options={{ title: '', headerTransparent: true }}
-              />
-              <Stack.Screen
-                name="login/register"
-                options={{ title: '注册', headerTransparent: true }}
-              />
-              <Stack.Screen name="user/edit" options={{ title: '个人信息' }} />
-              <Stack.Screen name="user/vip" options={{ title: '会员中心' }} />
-              <Stack.Screen
-                name="user/coins"
-                options={{ title: '金币中心' }}
-              />
-              <Stack.Screen
-                name="setting/index"
-                options={{ title: '设置' }}
-              />
-              <Stack.Screen
-                name="setting/permission"
-                options={{ title: '权限管理' }}
-              />
-              <Stack.Screen
-                name="setting/feedback"
-                options={{ title: '意见反馈' }}
-              />
-              <Stack.Screen
-                name="setting/about"
-                options={{ title: '关于我们' }}
-              />
-              <Stack.Screen
-                name="quick-start/index"
-                options={{
-                  title: '开始专注',
-                  // animation: 'fade_from_bottom',
-                  // presentation: 'modal',
-                }}
-              />
-              <Stack.Screen
-                name="plans/index"
-                options={{ title: '我的专注计划' }}
-              />
-              <Stack.Screen name="plans/add" />
-              <Stack.Screen name="apps/index" options={{ title: 'APP管理' }} />
-              <Stack.Screen
-                name="apps/add"
-                options={{ title: '选择APP' }}
-              />
-              <Stack.Screen
-                name="others/webview"
-                options={{ title: '隐私政策' }}
-              />
-              {/* <Stack.Screen
-                name="challenges/index"
-                options={{ title: '挑战活动' }}
-              />
-              <Stack.Screen
-                name="challenges/detail"
-                options={{ title: '挑战活动详情' }}
-              />
-              <Stack.Screen
-                name="challenges/my-list"
-                options={{ title: '我的挑战' }}
-              />
-              <Stack.Screen
-                name="challenges/my-detail"
-                options={{ title: '挑战详情' }}
-              /> */}
-              <Stack.Screen name="+not-found" />
-            </Stack>
+            <View className="flex-1">
+              <Stack
+                screenOptions={{
+                  ...ScreenOptions,
+                  headerLeft: ({ canGoBack }) =>
+                    canGoBack ? <BackIcon /> : null,
+                }}>
+                <Stack.Screen
+                  name="(tabs)"
+                  options={{ headerShown: false, headerTitle: '' }}
+                />
+                <Stack.Screen
+                  name="(guides)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="login/index"
+                  options={{
+                    title: '登录',
+                    headerTransparent: true,
+                  }}
+                />
+                <Stack.Screen
+                  name="login/wx"
+                  options={{ title: '', headerTransparent: true }}
+                />
+                <Stack.Screen
+                  name="login/start"
+                  options={{ title: '', headerTransparent: true }}
+                />
+                <Stack.Screen
+                  name="login/register"
+                  options={{ title: '注册', headerTransparent: true }}
+                />
+                <Stack.Screen
+                  name="user/edit"
+                  options={{ title: '个人信息' }}
+                />
+                <Stack.Screen name="user/vip" options={{ title: '会员中心' }} />
+                <Stack.Screen
+                  name="user/coins"
+                  options={{ title: '金币中心' }}
+                />
+                <Stack.Screen
+                  name="setting/index"
+                  options={{ title: '设置' }}
+                />
+                <Stack.Screen
+                  name="setting/permission"
+                  options={{ title: '权限管理' }}
+                />
+                <Stack.Screen
+                  name="setting/feedback"
+                  options={{ title: '意见反馈' }}
+                />
+                <Stack.Screen
+                  name="setting/about"
+                  options={{ title: '关于我们' }}
+                />
+                <Stack.Screen
+                  name="quick-start/index"
+                  options={{
+                    title: '开始专注',
+                    // animation: 'fade_from_bottom',
+                    // presentation: 'modal',
+                  }}
+                />
+                <Stack.Screen
+                  name="plans/index"
+                  options={{ title: '我的专注计划' }}
+                />
+                <Stack.Screen name="plans/add" />
+                <Stack.Screen
+                  name="apps/index"
+                  options={{ title: 'APP管理' }}
+                />
+                <Stack.Screen name="apps/add" options={{ title: '选择APP' }} />
+                <Stack.Screen
+                  name="others/webview"
+                  options={{ title: '隐私政策' }}
+                />
+                <Stack.Screen
+                  name="challenges/index"
+                  options={{ title: '挑战活动' }}
+                />
+                <Stack.Screen
+                  name="challenges/detail"
+                  options={{ title: '挑战活动详情' }}
+                />
+                <Stack.Screen
+                  name="challenges/my-list"
+                  options={{ title: '我的挑战' }}
+                />
+                <Stack.Screen
+                  name="challenges/my-detail"
+                  options={{ title: '挑战详情' }}
+                />
+                {/* 调试页面 */}
+                <Stack.Screen
+                  name="debug/index"
+                  options={{ title: '调试面板', headerShown: false }}
+                />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <DebugBall />
+            </View>
           </Provider>
         </ThemeProvider>
       </SuperwallProvider>

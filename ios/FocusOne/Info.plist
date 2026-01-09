@@ -41,6 +41,8 @@
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>CFBundleAllowMixedLocalizations</key>
+    <true/>
     <key>LSApplicationQueriesSchemes</key>
     <array>
       <string>weixin</string>

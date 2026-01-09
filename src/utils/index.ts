@@ -269,3 +269,6 @@ export * from './analytics';
 
 // 导出用户激活状态工具
 export * from './user-activation';
+
+// 导出调试工具
+export { debugUtils } from './debug';
