@@ -1,7 +1,6 @@
 import { Toast } from '@/components/ui';
 import {
   identifyUser,
-  setUserProperties,
   storage,
   trackLogin,
   trackLogout,
@@ -119,7 +118,10 @@ const UserStore = combine(
     },
 
     // 登录成功后处理
-    loginSuccess: (res: any, loginMethod: 'phone' | 'wechat' | 'apple' = 'phone') => {
+    loginSuccess: (
+      res: any,
+      loginMethod: 'phone' | 'wechat' | 'apple' = 'phone',
+    ) => {
       storage.set('access_token', res.token);
       storage.setGroup('access_token', res.token);
       useHomeStore.getState().loadApps();

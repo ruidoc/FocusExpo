@@ -1,9 +1,10 @@
+import { PostHogProviderWrapper } from '@/components/providers/PostHogProvider';
 import { ActionSheet, Dialog, Flex, Toast } from '@/components/ui';
 import { ScreenOptions, buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { setupIOSFocusSync } from '@/native/ios';
 import '@/styles/global.css';
-import { initAppData, initPostHog, PostHogProvider } from '@/utils';
+import { initAppData } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Provider } from '@fruits-chain/react-native-xiaoshu';
 import { ThemeProvider } from '@react-navigation/native';
@@ -58,11 +59,6 @@ const RootLayout = () => {
 
   // 初始化数据并设置 iOS 专注状态同步
   useEffect(() => {
-    // 初始化PostHog埋点
-    initPostHog().catch(error => {
-      console.error('[PostHog] 初始化失败:', error);
-    });
-
     // 初始化应用数据（从存储恢复计划数据，获取 iOS 应用列表）
     initAppData();
 
@@ -88,11 +84,7 @@ const RootLayout = () => {
   );
 
   return (
-    <PostHogProvider
-      apiKey="phc_A4Pt2WQHEQLedNR9wyLMxSHrpdnOdUTCiR8LHNGT5QG"
-      options={{ host: 'https://us.i.posthog.com', enableSessionReplay: true }}
-      autocapture
-    >
+    <PostHogProviderWrapper>
       <SuperwallProvider apiKeys={{ ios: 'pk_R4c8ydWOKVO8ddmeHygsS' }}>
         <DeepLinkHandler />
         <ThemeProvider value={theme.navigation}>
@@ -195,7 +187,7 @@ const RootLayout = () => {
           </Provider>
         </ThemeProvider>
       </SuperwallProvider>
-    </PostHogProvider>
+    </PostHogProviderWrapper>
   );
 };
 
