@@ -174,7 +174,5 @@ const HomeStore = combine(
 );
 
 const store = create(HomeStore);
-// 初始化 store
-store.getState().init();
 
 export default store;

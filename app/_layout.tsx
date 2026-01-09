@@ -166,7 +166,7 @@ const RootLayout = () => {
                 name="others/webview"
                 options={{ title: '隐私政策' }}
               />
-              <Stack.Screen
+              {/* <Stack.Screen
                 name="challenges/index"
                 options={{ title: '挑战活动' }}
               />
@@ -181,7 +181,7 @@ const RootLayout = () => {
               <Stack.Screen
                 name="challenges/my-detail"
                 options={{ title: '挑战详情' }}
-              />
+              /> */}
               <Stack.Screen name="+not-found" />
             </Stack>
           </Provider>

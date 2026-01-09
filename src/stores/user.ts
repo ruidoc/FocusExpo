@@ -238,7 +238,5 @@ const UserStore = combine(
 );
 
 const store = create(UserStore);
-// 初始化 store
-store.getState().init();
 
 export default store;
