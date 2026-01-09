@@ -266,3 +266,6 @@ export { useSuperwallPaywall, useSuperwallUser } from './superwall';
 
 // 导出 PostHog Analytics 工具
 export * from './analytics';
+
+// 导出用户激活状态工具
+export * from './user-activation';

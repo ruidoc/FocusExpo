@@ -1,8 +1,11 @@
 import { Page } from '@/components/business';
 import ActivePlan from '@/components/home/active-plan';
 import EmptyPlan from '@/components/home/empty-plan';
+import FirstTimeGuidePlan from '@/components/home/first-time-guide-plan';
 import HomeHeader from '@/components/home/header';
 import ScreenTimePermissionPage from '@/components/home/screen-time';
+import TrialUserGuidePlan from '@/components/home/trial-user-guide-plan';
+import CelebrationModal from '@/components/modals/celebration-modal';
 import {
   useAppStore,
   useBenefitStore,
@@ -12,6 +15,7 @@ import {
   useRecordStore,
   useUserStore,
 } from '@/stores';
+import { getUserActivationState, shouldShowCelebration } from '@/utils';
 import { checkScreenTimePermission } from '@/utils/permission';
 import { NoticeBar, Theme } from '@fruits-chain/react-native-xiaoshu';
 import { useTheme } from '@react-navigation/native';
@@ -36,6 +40,7 @@ const App = () => {
   const xcolor = Theme.useThemeTokens();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // 如果没有屏幕时间权限，显示权限获取页面
   const shouldShowPermissionPage =
@@ -88,12 +93,47 @@ const App = () => {
     if (store.app_state === 'active') {
       pmstore.checkBattery();
       pmstore.checkNotify();
+
+      // 每次app回到前台时检查是否应该显示庆祝弹窗
+      if (shouldShowCelebration()) {
+        setTimeout(() => {
+          setShowCelebration(true);
+        }, 500);
+      }
     }
   }, [store.app_state]);
+
+  // 组件挂载时也检查一次
+  useEffect(() => {
+    if (shouldShowCelebration()) {
+      setTimeout(() => {
+        setShowCelebration(true);
+      }, 500);
+    }
+  }, []);
 
   if (shouldShowPermissionPage) {
     return <ScreenTimePermissionPage colors={colors} xcolor={xcolor} />;
   }
+
+  // 获取用户激活状态
+  const userState = getUserActivationState();
+
+  // 根据用户状态决定渲染哪个组件
+  const renderMainContent = () => {
+    // 首次用户（完成onboarding但0次专注）
+    if (userState.isFirstTimeUser) {
+      return <FirstTimeGuidePlan />;
+    }
+
+    // 体验用户（1-2次专注，无计划）
+    if (userState.isTrialUser) {
+      return <TrialUserGuidePlan />;
+    }
+
+    // 活跃用户或已有计划的用户
+    return pstore.active_plan ? <ActivePlan /> : <EmptyPlan />;
+  };
 
   return (
     <Page safe decoration>
@@ -108,7 +148,7 @@ const App = () => {
 
         {/* 中央时间流动组件 */}
         <View className="items-center mt-[60px] mb-[30px]">
-          {pstore.active_plan ? <ActivePlan /> : <EmptyPlan />}
+          {renderMainContent()}
         </View>
       </ScrollView>
       {/* 通知权限提醒 */}
@@ -122,6 +162,14 @@ const App = () => {
           />
         </View>
       )}
+
+      {/* 首次完成庆祝弹窗 */}
+      <CelebrationModal
+        visible={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        focusDuration={15}
+        coinsEarned={20}
+      />
     </Page>
   );
 };

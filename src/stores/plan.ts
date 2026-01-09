@@ -1,7 +1,13 @@
 import { Toast } from '@/components/ui';
 import { deletePlan, updatePlan } from '@/native/ios';
 import type { PlanConfig } from '@/native/type';
-import { getCurrentMinute, parseRepeat, storage } from '@/utils';
+import {
+  getCurrentMinute,
+  incrementFocusCount,
+  parseRepeat,
+  storage,
+  trackEvent,
+} from '@/utils';
 import http from '@/utils/request';
 import dayjs from 'dayjs';
 import { create } from 'zustand';
@@ -103,6 +109,10 @@ const PlanStore = combine(
     // 专注计划完成
     complatePlan: async () => {
       console.log('【专注计划完成】');
+      // 增加专注次数
+      const newCount = incrementFocusCount();
+      trackEvent('focus_completed', { focus_count: newCount });
+
       record.getState().removeRecordId();
       (get() as any).pauseCurPlan(false);
       (get() as any).setCurPlanMinute(0);

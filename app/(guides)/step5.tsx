@@ -1,10 +1,11 @@
 import { Privicy, Typewriter, Wechat } from '@/components/business';
 import { useGuideStore, useHomeStore, useUserStore } from '@/stores';
+import { markOnboardingCompleted, trackEvent } from '@/utils';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
@@ -27,9 +28,19 @@ export const GuideStep5 = () => {
     }
     ustore.login(result as Record<string, any>, val => {
       if (val) {
+        // 标记引导完成
+        markOnboardingCompleted();
+        trackEvent('onboarding_completed', { with_login: true });
         router.replace('/(tabs)');
       }
     });
+  };
+
+  const handleSkipLogin = () => {
+    // 标记引导完成但跳过登录
+    markOnboardingCompleted();
+    trackEvent('onboarding_completed', { with_login: false });
+    router.replace('/(tabs)');
   };
 
   const toRegister = (data: any) => {
@@ -97,6 +108,16 @@ export const GuideStep5 = () => {
       fontWeight: '700',
       letterSpacing: 0.5,
     },
+    skipButton: {
+      paddingVertical: 12,
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    skipButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      opacity: 0.6,
+    },
   });
 
   return (
@@ -117,7 +138,12 @@ export const GuideStep5 = () => {
         />
       </View>
       {buttonVisible && (
-        <Wechat type="custom" disabled={!agree} onSuccess={loginResult} />
+        <>
+          <Wechat type="custom" disabled={!agree} onSuccess={loginResult} />
+          <TouchableOpacity style={styles.skipButton} onPress={handleSkipLogin}>
+            <Text style={styles.skipButtonText}>稍后登录，立即体验</Text>
+          </TouchableOpacity>
+        </>
       )}
       <View style={{ marginTop: 30, paddingTop: 10 }}>
         {buttonVisible && <Privicy onChange={setAgree} />}
