@@ -85,8 +85,6 @@ export const DebugBall = () => {
         pan.setValue({ x: clampedDx, y: clampedDy });
       },
       onPanResponderRelease: (evt, gestureState) => {
-        pan.flattenOffset();
-
         const moveDistance = Math.sqrt(
           gestureState.dx * gestureState.dx + gestureState.dy * gestureState.dy,
         );
@@ -99,10 +97,15 @@ export const DebugBall = () => {
           moveTime < 300;
 
         if (isClick) {
-          // 点击事件
-          pan.setValue({ x: 0, y: 0 });
-          router.push('/debug');
+          // 点击事件：平滑恢复到原位置
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+            tension: 50,
+            friction: 7,
+          }).start();
           isDraggingRef.current = false;
+          router.push('/debug');
           return;
         }
 
@@ -128,17 +131,22 @@ export const DebugBall = () => {
           finalX = safeRight; // 吸附到右边
         }
 
-        const finalPosition = { x: finalX, y: finalY };
+        // 计算需要移动的距离（从当前位置到最终位置）
+        const deltaX = finalX - position.x;
+        const deltaY = finalY - position.y;
 
-        // 动画到最终位置
+        // 动画到最终位置（相对于起始position的偏移）
         Animated.spring(pan, {
-          toValue: { x: finalX - position.x, y: finalY - position.y },
+          toValue: { x: deltaX, y: deltaY },
           useNativeDriver: false,
           tension: 50,
           friction: 7,
         }).start(() => {
+          // 动画完成后，先重置pan，再更新position状态
+          // 这样可以避免渲染时position和pan不同步导致的跳动
+          pan.flattenOffset();
           pan.setValue({ x: 0, y: 0 });
-          setPosition(finalPosition);
+          setPosition({ x: finalX, y: finalY });
           isDraggingRef.current = false;
         });
       },

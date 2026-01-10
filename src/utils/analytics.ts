@@ -136,6 +136,78 @@ export const setUserProperties = (
   console.log('[PostHog] 用户属性更新:', properties);
 };
 
+// ============== Feature Flags ==============
+
+/**
+ * 已知的实验/Feature Flags列表
+ * 用于在Debug界面显示所有实验，即使当前用户未命中
+ */
+export const ExperimentKeys = {
+  USER_ONBOARDING: 'user_onboarding',
+} as const;
+
+export type ExperimentKey =
+  (typeof ExperimentKeys)[keyof typeof ExperimentKeys];
+
+/**
+ * 检查Feature Flag是否启用
+ * 支持两种调用方式：
+ * 1. 在组件中：传入 usePostHogClient() 返回的实例
+ * 2. 在非组件代码中：不传参数，自动获取全局实例
+ */
+export const isFeatureFlagEnabled = (
+  flagKey: string,
+  posthog?: PostHog | null,
+): boolean => {
+  const client = posthog || getPostHogClient();
+  if (!client) {
+    console.warn('[PostHog] 客户端未初始化，Feature Flag检查失败:', flagKey);
+    return false;
+  }
+
+  const isEnabled = client.isFeatureEnabled(flagKey);
+  console.log(`[PostHog] Feature Flag [${flagKey}]:`, isEnabled);
+  return isEnabled || false;
+};
+
+/**
+ * 获取Feature Flag的payload值
+ * 支持两种调用方式：
+ * 1. 在组件中：传入 usePostHogClient() 返回的实例
+ * 2. 在非组件代码中：不传参数，自动获取全局实例
+ */
+export const getFeatureFlagPayload = (
+  flagKey: string,
+  posthog?: PostHog | null,
+): any => {
+  const client = posthog || getPostHogClient();
+  if (!client) {
+    console.warn('[PostHog] 客户端未初始化，无法获取payload:', flagKey);
+    return null;
+  }
+
+  return client.getFeatureFlagPayload(flagKey);
+};
+
+/**
+ * 重载Feature Flags（用于调试）
+ * 支持两种调用方式：
+ * 1. 在组件中：传入 usePostHogClient() 返回的实例
+ * 2. 在非组件代码中：不传参数，自动获取全局实例
+ */
+export const reloadFeatureFlags = async (
+  posthog?: PostHog | null,
+): Promise<void> => {
+  const client = posthog || getPostHogClient();
+  if (!client) {
+    console.warn('[PostHog] 客户端未初始化，无法重载Feature Flags');
+    return;
+  }
+
+  await client.reloadFeatureFlags();
+  console.log('[PostHog] Feature Flags已重载');
+};
+
 // ============== 预定义事件 ==============
 // 注意：这些函数支持两种调用方式：
 // 1. 在组件中：传入 usePostHogClient() 返回的实例（可选）

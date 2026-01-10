@@ -7,6 +7,7 @@ import {
   trackRegister,
 } from '@/utils';
 import http from '@/utils/request';
+import * as Device from 'expo-device';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
 import {
@@ -33,6 +34,15 @@ const UserStore = combine(
     // 初始化方法：从AsyncStorage恢复登录状态
     init: async () => {
       try {
+        // 获取或生成 deviceId
+        let deviceId = storage.getString('device_id');
+        if (!deviceId) {
+          // 使用设备的唯一标识
+          deviceId = Device.osBuildId || Device.osInternalBuildId || `device_${Date.now()}`;
+          storage.set('device_id', deviceId);
+          console.log('[UserStore] 生成新的 deviceId:', deviceId);
+        }
+
         const token = storage.getString('access_token');
         const userInfoStr = storage.getString('user_info');
 
@@ -40,6 +50,15 @@ const UserStore = combine(
           // 如果有token和用户信息，尝试恢复状态
           const userInfo = JSON.parse(userInfoStr);
           (get() as any).setUinfo(userInfo);
+
+          // PostHog: 识别已登录用户
+          identifyUser(userInfo.id || deviceId, {
+            username: userInfo.username,
+            phone: userInfo.phone,
+            device_id: deviceId,
+          });
+          console.log('[UserStore] 识别已登录用户:', userInfo.id);
+
           // 验证token是否仍然有效
           try {
             await (get() as any).getInfo();
@@ -51,6 +70,13 @@ const UserStore = combine(
             console.log('Token验证失败，重新登录', error);
             (get() as any).logout();
           }
+        } else {
+          // PostHog: 未登录用户，使用 deviceId 识别
+          identifyUser(deviceId, {
+            device_id: deviceId,
+            is_anonymous: true,
+          });
+          console.log('[UserStore] 识别匿名用户，deviceId:', deviceId);
         }
       } catch (error) {
         console.log('初始化用户状态失败:', error);
@@ -191,6 +217,15 @@ const UserStore = combine(
         if (res.statusCode === 200) {
           (get() as any).setUinfo(res.data as UserInfo);
           storage.set('user_info', JSON.stringify(res.data));
+
+          // PostHog: 更新用户信息
+          const deviceId = storage.getString('device_id') || '';
+          identifyUser(res.data.id || deviceId, {
+            username: res.data.username,
+            phone: res.data.phone,
+            device_id: deviceId,
+          });
+          console.log('[UserStore] 更新用户信息并识别:', res.data.id);
         }
       } catch (error) {
         console.log(error);
@@ -212,12 +247,16 @@ const UserStore = combine(
       // PostHog埋点：记录登录事件
       trackLogin(loginMethod);
 
-      // 如果有用户ID，识别用户
+      // PostHog: 识别用户（包含deviceId）
+      const deviceId = storage.getString('device_id') || '';
       if (res.data?.id) {
         identifyUser(res.data.id, {
           username: res.data.username,
           phone: res.data.phone,
+          device_id: deviceId,
+          login_method: loginMethod,
         });
+        console.log('[UserStore] 登录成功，识别用户:', res.data.id);
       }
     },
 
@@ -233,6 +272,16 @@ const UserStore = combine(
 
       // PostHog埋点：记录登出事件
       trackLogout();
+
+      // PostHog: 退出登录后，切换回匿名用户（使用deviceId）
+      const deviceId = storage.getString('device_id') || '';
+      if (deviceId) {
+        identifyUser(deviceId, {
+          device_id: deviceId,
+          is_anonymous: true,
+        });
+        console.log('[UserStore] 退出登录，切换回匿名用户:', deviceId);
+      }
     },
   }),
 );
