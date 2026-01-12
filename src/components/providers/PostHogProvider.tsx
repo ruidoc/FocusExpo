@@ -3,6 +3,8 @@
  * 统一管理 PostHog 初始化配置
  */
 
+import { useExperimentStore } from '@/stores';
+import type { FeatureFlagState } from '@/stores/experiment';
 import { setGlobalPostHogInstance } from '@/utils/analytics';
 import { PostHogProvider, usePostHog } from 'posthog-react-native';
 import { ReactNode, useEffect } from 'react';
@@ -16,21 +18,68 @@ interface PostHogProviderWrapperProps {
 }
 
 /**
- * 内部组件：用于设置全局 PostHog 实例
+ * 内部组件：用于设置全局 PostHog 实例并监听 Feature Flags
  */
 const PostHogInstanceSetter = ({ children }: { children: ReactNode }) => {
   const posthog = usePostHog();
+  const setFeatureFlags = useExperimentStore(state => state.setFeatureFlags);
 
   useEffect(() => {
     // 设置全局实例，供非组件代码使用
     setGlobalPostHogInstance(posthog);
     console.log('[PostHog] 全局实例已设置');
 
+    // 监听 Feature Flags 加载完成
+    const unsubscribe = posthog.onFeatureFlags((flags) => {
+      console.log('[PostHog] ========== onFeatureFlags 触发 ==========');
+      console.log('[PostHog] 所有标记:', flags);
+
+      const flagStates: Record<string, FeatureFlagState> = {};
+
+      if (Array.isArray(flags)) {
+        // 如果返回数组 ['flag1', 'flag2']
+        for (const key of flags) {
+          const enabled = posthog.isFeatureEnabled(String(key)) || false;
+          const payload = posthog.getFeatureFlagPayload(String(key));
+
+          flagStates[String(key)] = {
+            key: String(key),
+            enabled,
+            variant: enabled,
+            payload,
+            serverValue: enabled, // 保存原始服务器值
+            isOverridden: false,
+          };
+        }
+      } else if (flags && typeof flags === 'object') {
+        // 如果返回对象 {flag1: true, flag2: 'variant'}
+        for (const [key, value] of Object.entries(flags)) {
+          const enabled = posthog.isFeatureEnabled(key) || false;
+          const payload = posthog.getFeatureFlagPayload(key);
+
+          flagStates[key] = {
+            key,
+            enabled,
+            variant: value,
+            payload,
+            serverValue: value, // 保存原始服务器值
+            isOverridden: false,
+          };
+        }
+      }
+
+      console.log('[PostHog] 解析出', Object.keys(flagStates).length, '个Feature Flags');
+      console.log('[PostHog] Feature Flags 详情:', flagStates);
+      console.log('[PostHog] ========== 同步到 ExperimentStore ==========');
+      setFeatureFlags(flagStates);
+    });
+
     return () => {
-      // 清理时移除全局实例
+      // 清理时移除全局实例和取消订阅
+      if (unsubscribe) unsubscribe();
       setGlobalPostHogInstance(null);
     };
-  }, [posthog]);
+  }, [posthog, setFeatureFlags]);
 
   return <>{children}</>;
 };

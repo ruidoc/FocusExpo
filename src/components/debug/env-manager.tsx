@@ -3,13 +3,13 @@
  */
 
 import { Flex } from '@/components/ui';
-import { useDebugStore } from '@/stores/debug';
+import { useDebugStore } from '@/stores';
 import { getPostHogClient } from '@/utils/analytics';
 import { storage } from '@/utils/storage';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform, Linking, Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import React, { useState } from 'react';
 import Icon from '@expo/vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState } from 'react';
+import { Alert, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 export const EnvironmentManager = () => {
   const debugStore = useDebugStore();

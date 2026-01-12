@@ -1,6 +1,7 @@
 export { default as useBenefitStore } from './benefit';
 export { default as useChallengeStore } from './challenge';
 export { default as useDebugStore } from './debug';
+export { default as useExperimentStore } from './experiment';
 export { default as useGuideStore } from './guide';
 export { default as useHomeStore } from './home';
 export { default as useAppStore } from './osapp';

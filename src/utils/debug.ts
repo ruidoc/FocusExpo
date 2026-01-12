@@ -3,7 +3,7 @@
  * 提供快捷的调试操作
  */
 
-import { useDebugStore } from '@/stores/debug';
+import { useDebugStore } from '@/stores';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPostHogClient } from './analytics';
 

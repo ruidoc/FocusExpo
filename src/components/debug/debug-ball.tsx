@@ -4,7 +4,7 @@
  * 支持拖拽和边缘吸附
  */
 
-import { useDebugStore } from '@/stores/debug';
+import { useDebugStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';

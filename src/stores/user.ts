@@ -38,7 +38,10 @@ const UserStore = combine(
         let deviceId = storage.getString('device_id');
         if (!deviceId) {
           // 使用设备的唯一标识
-          deviceId = Device.osBuildId || Device.osInternalBuildId || `device_${Date.now()}`;
+          deviceId =
+            Device.osBuildId ||
+            Device.osInternalBuildId ||
+            `device_${Date.now()}`;
           storage.set('device_id', deviceId);
           console.log('[UserStore] 生成新的 deviceId:', deviceId);
         }
@@ -46,6 +49,7 @@ const UserStore = combine(
         const token = storage.getString('access_token');
         const userInfoStr = storage.getString('user_info');
 
+        console.log('【用户信息】:', userInfoStr);
         if (token && userInfoStr) {
           // 如果有token和用户信息，尝试恢复状态
           const userInfo = JSON.parse(userInfoStr);
@@ -246,18 +250,6 @@ const UserStore = combine(
 
       // PostHog埋点：记录登录事件
       trackLogin(loginMethod);
-
-      // PostHog: 识别用户（包含deviceId）
-      const deviceId = storage.getString('device_id') || '';
-      if (res.data?.id) {
-        identifyUser(res.data.id, {
-          username: res.data.username,
-          phone: res.data.phone,
-          device_id: deviceId,
-          login_method: loginMethod,
-        });
-        console.log('[UserStore] 登录成功，识别用户:', res.data.id);
-      }
     },
 
     // 退出登录后处理

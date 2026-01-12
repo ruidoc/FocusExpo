@@ -1,10 +1,19 @@
 /**
  * PostHog 实验组管理界面
- * 从PostHog动态获取所有配置的Feature Flags
+ *
+ * 架构说明：
+ * 1. PostHog通过onFeatureFlags监听器自动将Feature Flags同步到ExperimentStore
+ * 2. 此组件从ExperimentStore读取Feature Flags并展示
+ * 3. 用户切换开关时，通过store方法同时更新store和PostHog的overrideFeatureFlags
+ * 4. Store更新会触发组件重新渲染，业务代码使用的计算属性也会自动更新
+ * 5. 重置功能可清除本地覆盖，恢复服务器原始值
  */
 
 import { Flex } from '@/components/ui';
-import { getPostHogClient, reloadFeatureFlags, ExperimentKeys } from '@/utils/analytics';
+import { useExperimentStore } from '@/stores';
+import type { FeatureFlagState } from '@/stores/experiment';
+import { reloadFeatureFlags } from '@/utils/analytics';
+import Icon from '@expo/vector-icons/Ionicons';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -14,134 +23,21 @@ import {
   Text,
   View,
 } from 'react-native';
-import Icon from '@expo/vector-icons/Ionicons';
-
-interface ExperimentState {
-  key: string; // Feature Flag key
-  serverValue: any; // PostHog服务器分配的值
-  localOverride: any; // 本地覆盖的值（undefined表示未覆盖）
-  isEnabled: boolean; // 最终生效的值（布尔类型）
-  hasOverride: boolean; // 是否被本地覆盖
-  payload: any; // Feature Flag的payload值
-}
 
 export const PostHogManager = () => {
-  const [experiments, setExperiments] = useState<ExperimentState[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'experiments' | 'properties'>(
     'experiments',
   );
   const [loading, setLoading] = useState(false);
 
-  // 从PostHog加载所有Feature Flags
-  const loadExperiments = async () => {
-    setLoading(true);
-    try {
-      const client = getPostHogClient();
-      if (!client) {
-        console.log('[PostHog] 客户端未初始化');
-        Alert.alert('提示', 'PostHog客户端未初始化\n请检查网络连接和配置');
-        setExperiments([]);
-        return;
-      }
+  // 从 ExperimentStore 读取 Feature Flags 和操作方法
+  const getFlags = useExperimentStore(state => state.getFlags);
+  const overrideFlag = useExperimentStore(state => state.overrideFlag);
+  const resetFlag = useExperimentStore(state => state.resetFlag);
+  const resetAllFlags = useExperimentStore(state => state.resetAllFlags);
 
-      console.log('[PostHog] 开始加载实验...');
-      console.log('[PostHog] Client:', client);
-
-      // 先重新加载Feature Flags（确保获取最新数据）
-      console.log('[PostHog] 正在从服务器重新加载Feature Flags...');
-      await client.reloadFeatureFlags();
-      console.log('[PostHog] 服务器加载完成');
-
-      // 获取本地覆盖
-      const localOverrides = (client as any)._featureFlagOverrides || {};
-      console.log('[PostHog] 本地覆盖:', localOverrides);
-
-      // 获取所有Feature Flags
-      const flagResult = client.getFeatureFlags();
-      console.log('[PostHog] getFeatureFlags() 返回类型:', typeof flagResult);
-      console.log('[PostHog] getFeatureFlags() 返回值:', JSON.stringify(flagResult, null, 2));
-
-      // 尝试访问内部状态
-      console.log('[PostHog] 内部状态 _featureFlags:', (client as any)._featureFlags);
-      console.log('[PostHog] 内部状态 featureFlags:', (client as any).featureFlags);
-
-      const experimentStates: ExperimentState[] = [];
-
-      if (Array.isArray(flagResult)) {
-        console.log('[PostHog] Feature Flags是数组格式，长度:', flagResult.length);
-        // 如果返回数组（flag key列表）
-        for (const key of flagResult) {
-          const isEnabled = client.isFeatureEnabled(String(key)) || false;
-          const payload = client.getFeatureFlagPayload(String(key));
-          const hasOverride = String(key) in localOverrides;
-
-          console.log(`[PostHog] Flag: ${key}, isEnabled: ${isEnabled}, payload:`, payload);
-
-          experimentStates.push({
-            key: String(key),
-            serverValue: hasOverride ? undefined : isEnabled,
-            localOverride: hasOverride ? localOverrides[String(key)] : undefined,
-            isEnabled,
-            hasOverride,
-            payload,
-          });
-        }
-      } else if (flagResult && typeof flagResult === 'object') {
-        console.log('[PostHog] Feature Flags是对象格式');
-        // 如果返回对象 {flagKey: value}
-        for (const [key, value] of Object.entries(flagResult)) {
-          const isEnabled = client.isFeatureEnabled(key) || false;
-          const payload = client.getFeatureFlagPayload(key);
-          const hasOverride = key in localOverrides;
-
-          console.log(`[PostHog] Flag: ${key}, value: ${value}, isEnabled: ${isEnabled}`);
-
-          experimentStates.push({
-            key,
-            serverValue: hasOverride ? undefined : value,
-            localOverride: hasOverride ? localOverrides[key] : undefined,
-            isEnabled,
-            hasOverride,
-            payload,
-          });
-        }
-      } else {
-        console.log('[PostHog] Feature Flags格式未知或为空');
-      }
-
-      // 添加本地覆盖但不在服务器flags中的（用户手动添加的）
-      for (const [key, value] of Object.entries(localOverrides)) {
-        if (!experimentStates.find(exp => exp.key === key)) {
-          console.log(`[PostHog] 添加仅本地存在的Flag: ${key}`);
-          experimentStates.push({
-            key,
-            serverValue: undefined,
-            localOverride: value,
-            isEnabled: Boolean(value),
-            hasOverride: true,
-            payload: null,
-          });
-        }
-      }
-
-      setExperiments(experimentStates);
-      console.log('[PostHog] 最终加载了', experimentStates.length, '个实验');
-
-      if (experimentStates.length === 0 && Object.keys(localOverrides).length === 0) {
-        Alert.alert(
-          '提示',
-          'PostHog未返回任何Feature Flags\n\n可能原因：\n1. PostHog后台未配置Feature Flags\n2. 当前用户不在任何实验中\n3. 需要先identify用户\n4. 网络连接问题\n\n请检查控制台日志了解详情',
-        );
-      }
-    } catch (error) {
-      console.error('[PostHog] 加载实验状态失败:', error);
-      Alert.alert('错误', `加载失败: ${error}`);
-      setExperiments([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const experiments = getFlags();
 
   // 加载用户属性
   const loadProperties = async () => {
@@ -150,73 +46,35 @@ export const PostHogManager = () => {
   };
 
   useEffect(() => {
-    loadExperiments();
     loadProperties();
   }, []);
 
-  // 切换实验开关
-  const handleToggleExperiment = async (
+  // 切换实验开关（通过 store 同时更新 store 和 PostHog）
+  const handleToggleExperiment = (
     experimentKey: string,
     currentEnabled: boolean,
   ) => {
     try {
-      const client = getPostHogClient();
-      if (!client) {
-        Alert.alert('错误', 'PostHog客户端未初始化');
-        return;
-      }
-
       const newValue = !currentEnabled;
-      const currentOverrides = (client as any)._featureFlagOverrides || {};
-
-      // 设置本地覆盖
-      if (client.featureFlags?.overrideFeatureFlags) {
-        client.featureFlags.overrideFeatureFlags({
-          ...currentOverrides,
-          [experimentKey]: newValue,
-        });
-      } else {
-        (client as any)._featureFlagOverrides = {
-          ...currentOverrides,
-          [experimentKey]: newValue,
-        };
-      }
-
-      console.log(`[实验] ${experimentKey} 已${newValue ? '开启' : '关闭'}`);
-
-      // 刷新实验状态（不需要reload flags，直接刷新UI）
-      await loadExperiments();
+      overrideFlag(experimentKey, newValue);
+      console.log(`[调试面板] ${experimentKey} 已${newValue ? '开启' : '关闭'}`);
     } catch (error) {
       console.error('切换实验失败:', error);
       Alert.alert('错误', '切换失败');
     }
   };
 
-  // 重置单个实验的本地覆盖
-  const handleResetExperiment = async (experimentKey: string) => {
+  // 重置单个实验的本地覆盖（通过 store 恢复服务器值）
+  const handleResetExperiment = (experimentKey: string) => {
     try {
-      const client = getPostHogClient();
-      if (!client) return;
-
-      const currentOverrides = { ...(client as any)._featureFlagOverrides };
-      delete currentOverrides[experimentKey];
-
-      if (client.featureFlags?.overrideFeatureFlags) {
-        client.featureFlags.overrideFeatureFlags(currentOverrides);
-      } else {
-        (client as any)._featureFlagOverrides = currentOverrides;
-      }
-
-      await reloadFeatureFlags();
-      await loadExperiments();
-
-      console.log(`[实验] ${experimentKey} 已重置为服务器值`);
+      resetFlag(experimentKey);
+      console.log(`[调试面板] ${experimentKey} 已重置为服务器值`);
     } catch (error) {
       console.error('重置实验失败:', error);
     }
   };
 
-  // 重置所有实验
+  // 重置所有实验（通过 store 清空所有本地覆盖）
   const handleResetAll = () => {
     Alert.alert(
       '重置所有实验',
@@ -226,21 +84,10 @@ export const PostHogManager = () => {
         {
           text: '重置',
           style: 'destructive',
-          onPress: async () => {
+          onPress: () => {
             try {
-              const client = getPostHogClient();
-              if (!client) return;
-
-              // 清空所有覆盖
-              if (client.featureFlags?.overrideFeatureFlags) {
-                client.featureFlags.overrideFeatureFlags({});
-              } else {
-                (client as any)._featureFlagOverrides = {};
-              }
-
-              await reloadFeatureFlags();
-              await loadExperiments();
-
+              resetAllFlags();
+              console.log('[调试面板] 所有实验已重置');
               Alert.alert('成功', '所有实验已重置');
             } catch (error) {
               console.error('重置所有实验失败:', error);
@@ -252,19 +99,23 @@ export const PostHogManager = () => {
     );
   };
 
-  // 刷新所有数据
+  // 刷新所有数据（从PostHog服务器重新加载）
   const handleRefresh = async () => {
+    setLoading(true);
     try {
+      // 重新加载Feature Flags（会触发onFeatureFlags监听器，自动更新ExperimentStore）
       await reloadFeatureFlags();
-      await loadExperiments();
+      console.log('[调试面板] 刷新完成，等待Feature Flags更新...');
       await loadProperties();
     } catch (error) {
       console.error('刷新失败:', error);
       Alert.alert('错误', '刷新失败');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const renderExperimentItem = ({ item }: { item: ExperimentState }) => {
+  const renderExperimentItem = ({ item }: { item: FeatureFlagState }) => {
     return (
       <View className="bg-gray-800/50 p-4 mb-3 rounded-lg border border-gray-700">
         <Flex className="flex-row justify-between items-start mb-3">
@@ -273,7 +124,7 @@ export const PostHogManager = () => {
               {item.key}
             </Text>
             <View className="flex-row items-center gap-2 mt-1">
-              {item.hasOverride && (
+              {item.isOverridden && (
                 <View className="bg-yellow-500/20 px-2 py-0.5 rounded">
                   <Text className="text-xs text-yellow-500">本地覆盖</Text>
                 </View>
@@ -286,12 +137,12 @@ export const PostHogManager = () => {
             </View>
           </View>
           <Switch
-            value={item.isEnabled}
+            value={item.enabled}
             onValueChange={() =>
-              handleToggleExperiment(item.key, item.isEnabled)
+              handleToggleExperiment(item.key, item.enabled)
             }
             trackColor={{ false: '#374151', true: '#6366f1' }}
-            thumbColor={item.isEnabled ? '#8b5cf6' : '#9ca3af'}
+            thumbColor={item.enabled ? '#8b5cf6' : '#9ca3af'}
           />
         </Flex>
 
@@ -300,7 +151,7 @@ export const PostHogManager = () => {
           <Flex className="flex-row justify-between items-center">
             <View>
               <Text className="text-xs text-gray-500">
-                当前状态: {item.isEnabled ? '✅ 开启' : '❌ 关闭'}
+                当前状态: {item.enabled ? '✅ 开启' : '❌ 关闭'}
               </Text>
               {item.serverValue !== undefined && (
                 <Text className="text-xs text-gray-500 mt-1">
@@ -316,7 +167,7 @@ export const PostHogManager = () => {
                 </Text>
               )}
             </View>
-            {item.hasOverride && (
+            {item.isOverridden && (
               <Pressable
                 onPress={() => handleResetExperiment(item.key)}
                 className="flex-row items-center gap-1 px-2 py-1 bg-gray-700/50 rounded active:opacity-70">
@@ -395,7 +246,7 @@ export const PostHogManager = () => {
                   className="px-3 py-1.5 bg-gray-800 rounded-lg active:opacity-70 flex-row items-center gap-1 border border-gray-700">
                   <Icon name="trash-outline" size={16} color="#ef4444" />
                   <Text className="text-red-400 text-sm font-medium">
-                    重置全部
+                    重置
                   </Text>
                 </Pressable>
               </Flex>

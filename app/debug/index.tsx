@@ -6,7 +6,7 @@ import { EnvironmentManager } from '@/components/debug/env-manager';
 import { PostHogManager } from '@/components/debug/posthog-manager';
 import { StorageManager } from '@/components/debug/storage-manager';
 import { Flex } from '@/components/ui';
-import { useDebugStore } from '@/stores/debug';
+import { useDebugStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
