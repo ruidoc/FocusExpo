@@ -15,14 +15,7 @@ import type { FeatureFlagState } from '@/stores/experiment';
 import { reloadFeatureFlags } from '@/utils/analytics';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useEffect, useState } from 'react';
-import {
-  Alert,
-  FlatList,
-  Pressable,
-  Switch,
-  Text,
-  View,
-} from 'react-native';
+import { Alert, FlatList, Pressable, Switch, Text, View } from 'react-native';
 
 export const PostHogManager = () => {
   const [properties, setProperties] = useState<any[]>([]);
@@ -32,12 +25,10 @@ export const PostHogManager = () => {
   const [loading, setLoading] = useState(false);
 
   // 从 ExperimentStore 读取 Feature Flags 和操作方法
-  const getFlags = useExperimentStore(state => state.getFlags);
-  const overrideFlag = useExperimentStore(state => state.overrideFlag);
-  const resetFlag = useExperimentStore(state => state.resetFlag);
-  const resetAllFlags = useExperimentStore(state => state.resetAllFlags);
-
-  const experiments = getFlags();
+  const experiment = useExperimentStore();
+  // const overrideFlag = useExperimentStore(state => state.overrideFlag);
+  // const resetFlag = useExperimentStore(state => state.resetFlag);
+  // const resetAllFlags = useExperimentStore(state => state.resetAllFlags);
 
   // 加载用户属性
   const loadProperties = async () => {
@@ -56,8 +47,14 @@ export const PostHogManager = () => {
   ) => {
     try {
       const newValue = !currentEnabled;
-      overrideFlag(experimentKey, newValue);
-      console.log(`[调试面板] ${experimentKey} 已${newValue ? '开启' : '关闭'}`);
+      // setLoading(true);
+      experiment.overrideFlag(experimentKey, newValue);
+      // setTimeout(() => {
+      //   setLoading(false);
+      // }, 100);
+      console.log(
+        `[调试面板] ${experimentKey} 已${newValue ? '开启' : '关闭'}`,
+      );
     } catch (error) {
       console.error('切换实验失败:', error);
       Alert.alert('错误', '切换失败');
@@ -67,7 +64,7 @@ export const PostHogManager = () => {
   // 重置单个实验的本地覆盖（通过 store 恢复服务器值）
   const handleResetExperiment = (experimentKey: string) => {
     try {
-      resetFlag(experimentKey);
+      experiment.resetFlag(experimentKey);
       console.log(`[调试面板] ${experimentKey} 已重置为服务器值`);
     } catch (error) {
       console.error('重置实验失败:', error);
@@ -86,7 +83,7 @@ export const PostHogManager = () => {
           style: 'destructive',
           onPress: () => {
             try {
-              resetAllFlags();
+              experiment.resetAllFlags();
               console.log('[调试面板] 所有实验已重置');
               Alert.alert('成功', '所有实验已重置');
             } catch (error) {
@@ -138,9 +135,7 @@ export const PostHogManager = () => {
           </View>
           <Switch
             value={item.enabled}
-            onValueChange={() =>
-              handleToggleExperiment(item.key, item.enabled)
-            }
+            onValueChange={() => handleToggleExperiment(item.key, item.enabled)}
             trackColor={{ false: '#374151', true: '#6366f1' }}
             thumbColor={item.enabled ? '#8b5cf6' : '#9ca3af'}
           />
@@ -151,7 +146,7 @@ export const PostHogManager = () => {
           <Flex className="flex-row justify-between items-center">
             <View>
               <Text className="text-xs text-gray-500">
-                当前状态: {item.enabled ? '✅ 开启' : '❌ 关闭'}
+                当前值: {item.enabled ? 'test' : 'control'}
               </Text>
               {item.serverValue !== undefined && (
                 <Text className="text-xs text-gray-500 mt-1">
@@ -205,7 +200,7 @@ export const PostHogManager = () => {
             className={`text-center font-semibold ${
               activeTab === 'experiments' ? 'text-gray-300' : 'text-gray-500'
             }`}>
-            实验配置 ({experiments.length})
+            实验配置 ({experiment.finalFlags.length})
           </Text>
         </Pressable>
         <Pressable
@@ -230,7 +225,7 @@ export const PostHogManager = () => {
           <View className="px-4 py-3 border-b border-gray-800 bg-gray-800/30">
             <Flex className="flex-row justify-between items-center mb-2">
               <Text className="text-base font-semibold text-gray-200">
-                实验开关
+                实验开关 {experiment.isOnboarding ? 'true' : 'false'}
               </Text>
               <Flex className="flex-row gap-2">
                 <Pressable
@@ -245,9 +240,7 @@ export const PostHogManager = () => {
                   onPress={handleResetAll}
                   className="px-3 py-1.5 bg-gray-800 rounded-lg active:opacity-70 flex-row items-center gap-1 border border-gray-700">
                   <Icon name="trash-outline" size={16} color="#ef4444" />
-                  <Text className="text-red-400 text-sm font-medium">
-                    重置
-                  </Text>
+                  <Text className="text-red-400 text-sm font-medium">重置</Text>
                 </Pressable>
               </Flex>
             </Flex>
@@ -258,7 +251,7 @@ export const PostHogManager = () => {
 
           {/* 实验列表 */}
           <FlatList
-            data={experiments}
+            data={experiment.finalFlags}
             renderItem={renderExperimentItem}
             keyExtractor={item => item.key}
             className="flex-1 px-3 pt-3"
@@ -302,4 +295,3 @@ export const PostHogManager = () => {
     </View>
   );
 };
-

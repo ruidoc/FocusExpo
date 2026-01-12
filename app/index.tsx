@@ -46,10 +46,10 @@ const Index = () => {
   let initialRoute: any = '/(tabs)';
 
   // 如果用户是新用户且命中onboarding实验，导航到引导页
-  if (userState.isNewUser && experiment.isOnboarding()) {
+  if (userState.isNewUser && experiment.isOnboarding) {
     initialRoute = '/(guides)/step1';
     console.log('[路由] 新用户命中onboarding实验，导航到引导页');
-  } else if (userState.isNewUser && !experiment.isOnboarding()) {
+  } else if (userState.isNewUser && !experiment.isOnboarding) {
     console.log('[路由] 新用户未命中onboarding实验，跳过引导直接进入首页');
   } else {
     console.log('[路由] 已有用户，直接进入首页');

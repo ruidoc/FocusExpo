@@ -30,7 +30,7 @@ const PostHogInstanceSetter = ({ children }: { children: ReactNode }) => {
     console.log('[PostHog] 全局实例已设置');
 
     // 监听 Feature Flags 加载完成
-    const unsubscribe = posthog.onFeatureFlags((flags) => {
+    const unsubscribe = posthog.onFeatureFlags(flags => {
       console.log('[PostHog] ========== onFeatureFlags 触发 ==========');
       console.log('[PostHog] 所有标记:', flags);
 
@@ -54,8 +54,21 @@ const PostHogInstanceSetter = ({ children }: { children: ReactNode }) => {
       } else if (flags && typeof flags === 'object') {
         // 如果返回对象 {flag1: true, flag2: 'variant'}
         for (const [key, value] of Object.entries(flags)) {
-          const enabled = posthog.isFeatureEnabled(key) || false;
           const payload = posthog.getFeatureFlagPayload(key);
+          // 根据 serverValue 决定 enabled 状态
+          // 如果 serverValue 是 "test"，enabled 为 true
+          // 如果 serverValue 是 "control"，enabled 为 false
+          // 否则使用 isFeatureEnabled 的结果
+          let enabled: boolean;
+          if (value === 'test') {
+            enabled = true;
+          } else if (value === 'control') {
+            enabled = false;
+          } else if (typeof value === 'boolean') {
+            enabled = value;
+          } else {
+            enabled = posthog.isFeatureEnabled(key) || false;
+          }
 
           flagStates[key] = {
             key,
@@ -68,7 +81,11 @@ const PostHogInstanceSetter = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      console.log('[PostHog] 解析出', Object.keys(flagStates).length, '个Feature Flags');
+      console.log(
+        '[PostHog] 解析出',
+        Object.keys(flagStates).length,
+        '个Feature Flags',
+      );
       console.log('[PostHog] Feature Flags 详情:', flagStates);
       console.log('[PostHog] ========== 同步到 ExperimentStore ==========');
       setFeatureFlags(flagStates);
@@ -88,7 +105,9 @@ const PostHogInstanceSetter = ({ children }: { children: ReactNode }) => {
  * PostHog Provider 封装组件
  * 在 SuperwallProvider 外层使用，确保 PostHog 先初始化
  */
-export const PostHogProviderWrapper = ({ children }: PostHogProviderWrapperProps) => {
+export const PostHogProviderWrapper = ({
+  children,
+}: PostHogProviderWrapperProps) => {
   return (
     <PostHogProvider
       apiKey={POSTHOG_API_KEY}
@@ -96,8 +115,7 @@ export const PostHogProviderWrapper = ({ children }: PostHogProviderWrapperProps
         host: POSTHOG_HOST,
         enableSessionReplay: true,
       }}
-      autocapture
-    >
+      autocapture>
       <PostHogInstanceSetter>{children}</PostHogInstanceSetter>
     </PostHogProvider>
   );
