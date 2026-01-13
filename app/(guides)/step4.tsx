@@ -1,258 +1,64 @@
-import { Typewriter } from '@/components/business';
 import { Button } from '@/components/ui';
 import { useGuideStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import {
-  RouteProp,
-  useNavigation,
-  useRoute,
-  useTheme,
-} from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
-
-type NavigationProp = NativeStackNavigationProp<any>;
-type Step4RouteProp = RouteProp<{ Step4: { selectedAppName?: string } }>;
+import { useRoute } from '@react-navigation/native';
+import React, { useEffect } from 'react';
+import { Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 const GuideStep4 = () => {
-  const navigation = useNavigation<NavigationProp>();
-  const route = useRoute<Step4RouteProp>();
+  const route = useRoute<any>();
   const gstore = useGuideStore();
-  const { colors, dark } = useTheme();
 
-  // 获取路由参数中的应用名称
   const selectedAppName = route.params?.selectedAppName || '';
-  // 存储选中的应用名称到本地状态
   const [appName] = React.useState(selectedAppName);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedAppName) {
       gstore.setSelectedAppName(selectedAppName);
     }
-  }, [selectedAppName]);
-
-  const [typewriterDone, setTypewriterDone] = React.useState(false);
-  const [buttonVisible, setButtonVisible] = React.useState(false);
-  const buttonOpacity = React.useRef(
-    new (require('react-native').Animated.Value)(0),
-  ).current;
-
-  // 图标弹跳动画
-  const scaleAnim = React.useRef(new Animated.Value(0.3)).current;
-  // 光晕扩散动画
-  const haloScale = React.useRef(new Animated.Value(0)).current;
-  const haloOpacity = React.useRef(new Animated.Value(0.5)).current;
-  // 文字动画
-  const textOpacity = React.useRef(new Animated.Value(0)).current;
-  const textTranslateY = React.useRef(new Animated.Value(10)).current;
-  // iconContainer marginTop动画
-  const marginTopAnim = React.useRef(new Animated.Value(30)).current;
+  }, [selectedAppName, gstore]);
 
   const isShield = gstore.mode === 'shield';
 
-  React.useEffect(() => {
-    // 光晕扩散
-    Animated.parallel([
-      Animated.timing(haloScale, {
-        toValue: 2.2,
-        duration: 700,
-        useNativeDriver: true,
-      }),
-      Animated.timing(haloOpacity, {
-        toValue: 0,
-        duration: 700,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    // 图标弹跳延迟
-    setTimeout(() => {
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 5,
-        useNativeDriver: true,
-      }).start();
-    }, 400);
-    // 文字渐现+上移，延迟100ms
-    setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(textOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(textTranslateY, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }, 900);
-    // 在动画展示后，延迟1.3秒将marginTop从30%过渡到20%
-    setTimeout(() => {
-      Animated.timing(marginTopAnim, {
-        toValue: 12,
-        duration: 300,
-        useNativeDriver: false, // marginTop不支持原生驱动
-      }).start();
-    }, 1300);
-  }, []);
-
-  React.useEffect(() => {
-    if (typewriterDone && !buttonVisible) {
-      setButtonVisible(true);
-      require('react-native')
-        .Animated.timing(buttonOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        })
-        .start();
-    }
-    if (!typewriterDone && buttonVisible) {
-      setButtonVisible(false);
-      buttonOpacity.setValue(0);
-    }
-  }, [typewriterDone]);
-
   const handleNext = () => {
-    navigation.navigate('step5');
+    router.push('/(guides)/step5');
   };
 
-  const descColor = dark ? '#aaa' : '#666';
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.card,
-      padding: 20,
-    },
-    content: {
-      flex: 1,
-      justifyContent: 'flex-start',
-      alignItems: 'stretch',
-    },
-    iconContainer: {
-      marginBottom: 30,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: colors.text,
-      marginBottom: 20,
-      marginTop: 8,
-    },
-    description: {
-      fontSize: 18,
-      color: colors.text,
-      marginBottom: 24,
-      textAlign: 'left',
-      lineHeight: 24,
-      fontWeight: '600',
-    },
-    tip: {
-      fontSize: 14,
-      color: descColor,
-      textAlign: 'center',
-      lineHeight: 20,
-    },
-    blockButton: {
-      backgroundColor: dark ? '#007AFF' : '#3478F6',
-      paddingVertical: 16,
-      borderRadius: 24,
-      alignItems: 'center',
-      marginTop: 20,
-      marginBottom: 32,
-      width: '88%',
-      alignSelf: 'center',
-      shadowColor: '#3478F6',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      elevation: 3,
-    },
-    blockButtonText: {
-      color: '#fff',
-      fontSize: 18,
-      fontWeight: '700',
-      letterSpacing: 0.5,
-    },
-  });
-
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Animated.View
-          style={[
-            styles.iconContainer,
-            {
-              marginTop: marginTopAnim.interpolate({
-                inputRange: [12, 30],
-                outputRange: ['12%', '30%'],
-              }),
-            },
-          ]}>
-          {/* 光晕动画层 */}
-          <Animated.View
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 0,
-              // 光晕大小和透明度
-              transform: [{ scale: haloScale }],
-              opacity: haloOpacity,
-            }}
-            pointerEvents="none">
-            <View
-              style={{
-                width: 110,
-                height: 110,
-                borderRadius: 55,
-                backgroundColor: '#34b54533',
-              }}
-            />
-          </Animated.View>
-          {/* 图标弹跳动画层 */}
-          <Animated.View
-            style={{
-              transform: [{ scale: scaleAnim }],
-              zIndex: 1,
-              alignItems: 'center',
-            }}>
-            <Icon name="checkmark-circle" size={110} color="#34b545" />
-            <Animated.Text
-              style={[
-                styles.title,
-                {
-                  opacity: textOpacity,
-                  transform: [{ translateY: textTranslateY }],
-                },
-              ]}>
-              {isShield ? '屏蔽成功' : '专注已生效'}
-            </Animated.Text>
-          </Animated.View>
-        </Animated.View>
-        <Typewriter
-          lines={[
-            isShield
-              ? `现在，“${appName}”的网络已被屏蔽`
-              : `现在，只有“${appName}”可以正常访问网络`,
-            '你可以切换APP检查验证',
-            '确认之后，我们进行下一步',
-          ]}
-          speed={22}
-          firstDelay={2000}
-          lineDelay={600}
-          lineStyle={styles.description}
-          onFinish={() => setTypewriterDone(true)}
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="flex-1 items-center justify-center px-8">
+        <View className="w-32 h-32 rounded-full bg-green-500/10 items-center justify-center mb-8 border-4 border-green-500/20">
+            <View className="w-24 h-24 rounded-full bg-green-500 items-center justify-center shadow-lg shadow-green-500/30">
+                <Icon name="checkmark" size={60} color="#FFF" />
+            </View>
+        </View>
+        
+        <Text className="text-3xl font-bold text-foreground mb-4 text-center tracking-tight">
+          {isShield ? '屏蔽生效中' : '专注模式已开启'}
+        </Text>
+        
+        <Text className="text-lg text-muted-foreground text-center leading-7">
+            现在，“{appName || '该应用'}”{isShield ? '已被屏蔽' : '可正常访问'}。
+        </Text>
+        
+        <View className="mt-8 bg-card px-6 py-4 rounded-xl border border-border flex-row items-center">
+            <Icon name="information-circle-outline" size={20} color="hsl(var(--muted-foreground))" style={{marginRight: 8}} />
+            <Text className="text-sm text-muted-foreground">您可以切换应用验证效果</Text>
+        </View>
+      </View>
+
+      <View className="px-6 pb-8">
+        <Button 
+            onPress={handleNext} 
+            text="下一步" 
+            type="ghost"
+            className="w-full rounded-2xl h-14 border-2"
+            textClassName="text-lg text-primary"
         />
       </View>
-      {buttonVisible && <Button onPress={handleNext} text="我已确认" />}
-    </View>
+    </SafeAreaView>
   );
 };
 

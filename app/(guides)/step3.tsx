@@ -1,5 +1,5 @@
-import { AppToken, Cascade, Typewriter } from '@/components/business';
-import { Button, Flex } from '@/components/ui';
+import { AppToken } from '@/components/business';
+import { Button } from '@/components/ui';
 import {
   useAppStore,
   useGuideStore,
@@ -7,121 +7,23 @@ import {
   usePlanStore,
 } from '@/stores';
 import { startAppLimits } from '@/utils/permission';
-import { useTheme } from '@react-navigation/native';
+import Icon from '@expo/vector-icons/Ionicons';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Image, Platform, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, Platform, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const GuideStep3 = () => {
   const store = useHomeStore();
   const gstore = useGuideStore();
   const pstore = usePlanStore();
   const astore = useAppStore();
-  const { colors, dark } = useTheme();
 
-  const descColor = dark ? '#aaa' : '#666';
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.card,
-      padding: 20,
-    },
-    content: {
-      flex: 1,
-      alignItems: 'flex-start',
-      justifyContent: 'flex-start',
-    },
-    description: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 24,
-      textAlign: 'left',
-    },
-    appsContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      marginBottom: 30,
-    },
-    appItem: {
-      width: 80,
-      marginBottom: 20,
-    },
-    appName: {
-      fontSize: 14,
-      color: descColor,
-      marginTop: 8,
-      textAlign: 'center',
-    },
-    blockButton: {
-      backgroundColor: dark ? '#007AFF' : '#3478F6',
-      paddingVertical: 16,
-      borderRadius: 24,
-      alignItems: 'center',
-      marginTop: 20,
-      marginBottom: 32,
-      width: '88%',
-      alignSelf: 'center',
-      shadowColor: '#3478F6',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      elevation: 3,
-    },
-    blockButtonText: {
-      color: '#fff',
-      fontSize: 18,
-      fontWeight: '700',
-      letterSpacing: 0.5,
-    },
-  });
+  const [loading, setLoading] = useState(false);
 
-  const [typewriter1Done, setTypewriter1Done] = useState(false);
-  const [appsVisible, setAppsVisible] = useState(false);
-  const [appsAllShown, setAppsAllShown] = useState(false);
-  const [typewriter2Visible, setTypewriter2Visible] = useState(false);
-  const [typewriter2Done, setTypewriter2Done] = useState(false);
-  const [buttonVisible, setButtonVisible] = useState(false);
-  const buttonOpacity = useRef(
-    new (require('react-native').Animated.Value)(0),
-  ).current;
-
-  // 1. 第一行打字机完成后显示app动画
-  useEffect(() => {
-    if (typewriter1Done) {
-      setTimeout(() => setAppsVisible(true), 200);
-    }
-  }, [typewriter1Done]);
-
-  // 2. app动画全部完成后显示第二行打字机
-  useEffect(() => {
-    if (appsAllShown) {
-      setTypewriter2Visible(true);
-    }
-  }, [appsAllShown]);
-
-  // 3. 第二行打字机完成后显示按钮
-  useEffect(() => {
-    if (typewriter2Done && !buttonVisible) {
-      setButtonVisible(true);
-      require('react-native')
-        .Animated.timing(buttonOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        })
-        .start();
-    }
-    if (!typewriter2Done && buttonVisible) {
-      setButtonVisible(false);
-      buttonOpacity.setValue(0);
-    }
-  }, [typewriter2Done]);
-
-  const handleBlock = () => {
-    // 创建一个5分钟的屏蔽计划
+  const handleBlock = async () => {
+    setLoading(true);
     let now = dayjs();
     let cur_minute = now.hour() * 60 + now.minute();
     let cur_secend = cur_minute * 60 + now.second();
@@ -139,21 +41,16 @@ const GuideStep3 = () => {
     });
 
     if (Platform.OS === 'ios') {
-      startAppLimits(5, newId);
+      await startAppLimits(5, newId);
     } else {
-      // 启动 VPN
       store.startVpn();
-
-      // 获取选中的应用名称
       const selectedApp =
         store.all_apps
           .filter(app => gstore.selected_apps.includes(app.packageName))
           .map(app => app.appName)[0] || '';
-
-      // 存储选中的应用名称到全局状态
       gstore.setSelectedAppName(selectedApp);
     }
-    // 跳转到成功页面，并传递选中的应用名称
+    setLoading(false);
     router.push({
       pathname: '/(guides)/step4',
       params: { selectedAppName: '' },
@@ -161,76 +58,67 @@ const GuideStep3 = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        {/* 1. 打字机第一行 */}
-        <Typewriter
-          lines={[`你已经选择了一款${gstore.getProblemLable()}APP`]}
-          speed={22}
-          lineDelay={600}
-          lineStyle={styles.description}
-          onFinish={() => setTypewriter1Done(true)}
-        />
-        {/* 2. app 动画 */}
-        {appsVisible && (
-          <Cascade
-            interval={120}
-            duration={300}
-            distance={32}
-            direction="bottom"
-            style={{ marginTop: 30, marginBottom: 10 }}
-            onFinish={() => setAppsAllShown(true)}>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
-              {astore.ios_selected_apps.map(item => (
-                <AppToken key={item.id} app={item} size={30} />
-              ))}
-            </View>
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="flex-1 px-6 pt-12 items-center">
+        <View className="w-20 h-20 bg-primary/10 rounded-full items-center justify-center mb-6">
+            <Icon name="flash" size={40} color="hsl(var(--primary))" />
+        </View>
+
+        <Text className="text-3xl font-bold text-foreground mb-3 text-center tracking-tight">
+          准备开启
+        </Text>
+        <Text className="text-lg text-muted-foreground text-center mb-12 px-4">
+          已准备好{gstore.mode === 'shield' ? '屏蔽' : '专注'}环境，{'\n'}
+          建议先从 <Text className="text-primary font-bold">5分钟</Text> 微习惯开始。
+        </Text>
+
+        <View className="bg-card w-full p-6 rounded-3xl border border-border shadow-sm items-center">
+             <Text className="text-sm font-medium text-muted-foreground mb-6 uppercase tracking-widest">
+                受限应用 ({astore.ios_selected_apps.length + store.all_apps.filter(app => gstore.selected_apps.includes(app.packageName)).length})
+             </Text>
+            
+            <View className="flex-row flex-wrap justify-center gap-4">
+            {astore.ios_selected_apps.slice(0, 9).map(item => (
+                <AppToken key={item.id} app={item} size={56} />
+            ))}
             {store.all_apps
-              .filter(app => gstore.selected_apps.includes(app.packageName))
-              .map(app => (
-                <Flex
-                  key={app.packageName}
-                  style={styles.appItem}
-                  className="flex-col items-center">
-                  <Image
+                .filter(app => gstore.selected_apps.includes(app.packageName))
+                .slice(0, 9)
+                .map(app => (
+                <View
+                    key={app.packageName}
+                    className="items-center w-16 mb-2">
+                    <Image
                     source={{
-                      uri: 'data:image/jpeg;base64,' + app.icon,
-                      width: 50,
-                      height: 50,
+                        uri: 'data:image/jpeg;base64,' + app.icon,
+                        width: 56,
+                        height: 56,
                     }}
-                  />
-                  <Text style={styles.appName}>{app.appName}</Text>
-                </Flex>
-              ))}
-          </Cascade>
-        )}
-        {/* 3. 打字机第二行 */}
-        {typewriter2Visible && (
-          <Typewriter
-            lines={[
-              `接下来，${
-                gstore.mode === 'shield'
-                  ? '屏蔽该APP的网络'
-                  : '只允许该APP访问网络'
-              }`,
-              `您将彻底隔绝任何打扰，专注学习`,
-              '时长：5分钟，现在开始吧～',
-            ]}
-            speed={22}
-            lineDelay={600}
-            lineStyle={styles.description}
-            onFinish={() => setTypewriter2Done(true)}
-          />
-        )}
+                    className="w-14 h-14 rounded-xl"
+                    />
+                </View>
+                ))}
+            {/* Show +N if more than 9 apps */}
+            {(astore.ios_selected_apps.length > 9) && (
+                <View className="w-14 h-14 rounded-xl bg-muted items-center justify-center">
+                    <Text className="text-muted-foreground font-bold">+{astore.ios_selected_apps.length - 9}</Text>
+                </View>
+            )}
+            </View>
+        </View>
       </View>
-      {/* 4. 按钮动画 */}
-      {buttonVisible && (
+
+      <View className="px-6 pb-8">
         <Button
-          text={gstore.mode === 'shield' ? '立刻屏蔽' : '开始专注学习'}
+          text="开始 5 分钟专注"
           onPress={handleBlock}
+          loading={loading}
+          className="w-full rounded-2xl h-14"
+          textClassName="text-lg"
+          style={{ shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 }}
         />
-      )}
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 

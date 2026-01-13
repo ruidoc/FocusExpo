@@ -1,6 +1,5 @@
 import { Page } from '@/components/business';
 import { Flex, Toast } from '@/components/ui';
-import { buttonRipple } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { usePlanStore } from '@/stores';
 import { getPlansByPeriod } from '@/utils/date';
