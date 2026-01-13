@@ -18,13 +18,13 @@ const VipPage = () => {
 
   // Superwall paywall 集成
   const { registerPlacement } = useSuperwallPaywall({
-    onPresent: (info) => {
+    onPresent: info => {
       console.log('Paywall Presented:', info);
     },
     onDismiss: (info, result) => {
       console.log('Paywall Dismissed:', info, 'Result:', result);
     },
-    onError: (error) => {
+    onError: error => {
       console.error('Paywall Error:', error);
       Toast({ message: `订阅加载失败，请稍后重试` });
     },
@@ -174,8 +174,8 @@ const VipPage = () => {
 
   // 打开Superwall购买页面
   const handleUpgrade = () => {
-    trackOpenPaywall('campaign_trigger');
-    registerPlacement({ placement: 'campaign_trigger' });
+    trackOpenPaywall('show_paywall');
+    registerPlacement({ placement: 'show_paywall' });
   };
 
   return (
@@ -230,7 +230,9 @@ const VipPage = () => {
 
         {/* 合规入口：恢复购买、管理订阅 */}
         <View style={styles.complianceRow}>
-          <TouchableOpacity style={styles.smallButton} onPress={onRestorePurchases}>
+          <TouchableOpacity
+            style={styles.smallButton}
+            onPress={onRestorePurchases}>
             <Text style={styles.smallButtonText}>恢复购买</Text>
           </TouchableOpacity>
           <TouchableOpacity

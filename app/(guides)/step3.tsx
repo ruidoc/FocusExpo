@@ -37,7 +37,7 @@ const GuideStep3 = () => {
       end_min: cur_minute + 5,
       end_sec: cur_secend + 5 * 60,
       repeat: 'once',
-      mode: gstore.mode,
+      mode: 'shield',
     });
 
     if (Platform.OS === 'ios') {
@@ -61,50 +61,56 @@ const GuideStep3 = () => {
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 px-6 pt-12 items-center">
         <View className="w-20 h-20 bg-primary/10 rounded-full items-center justify-center mb-6">
-            <Icon name="flash" size={40} color="hsl(var(--primary))" />
+          <Icon name="flash" size={40} color="hsl(var(--primary))" />
         </View>
 
         <Text className="text-3xl font-bold text-foreground mb-3 text-center tracking-tight">
           准备开启
         </Text>
         <Text className="text-lg text-muted-foreground text-center mb-12 px-4">
-          已准备好{gstore.mode === 'shield' ? '屏蔽' : '专注'}环境，{'\n'}
-          建议先从 <Text className="text-primary font-bold">5分钟</Text> 微习惯开始。
+          已准备好屏蔽环境，{'\n'}
+          建议先从 <Text className="text-primary font-bold">5分钟</Text>{' '}
+          微习惯开始。
         </Text>
 
         <View className="bg-card w-full p-6 rounded-3xl border border-border shadow-sm items-center">
-             <Text className="text-sm font-medium text-muted-foreground mb-6 uppercase tracking-widest">
-                受限应用 ({astore.ios_selected_apps.length + store.all_apps.filter(app => gstore.selected_apps.includes(app.packageName)).length})
-             </Text>
-            
-            <View className="flex-row flex-wrap justify-center gap-4">
+          <Text className="text-sm font-medium text-muted-foreground mb-6 uppercase tracking-widest">
+            受限应用 (
+            {astore.ios_selected_apps.length +
+              store.all_apps.filter(app =>
+                gstore.selected_apps.includes(app.packageName),
+              ).length}
+            )
+          </Text>
+
+          <View className="flex-row flex-wrap justify-center gap-4">
             {astore.ios_selected_apps.slice(0, 9).map(item => (
-                <AppToken key={item.id} app={item} size={56} />
+              <AppToken key={item.id} app={item} size={56} />
             ))}
             {store.all_apps
-                .filter(app => gstore.selected_apps.includes(app.packageName))
-                .slice(0, 9)
-                .map(app => (
-                <View
-                    key={app.packageName}
-                    className="items-center w-16 mb-2">
-                    <Image
+              .filter(app => gstore.selected_apps.includes(app.packageName))
+              .slice(0, 9)
+              .map(app => (
+                <View key={app.packageName} className="items-center w-16 mb-2">
+                  <Image
                     source={{
-                        uri: 'data:image/jpeg;base64,' + app.icon,
-                        width: 56,
-                        height: 56,
+                      uri: 'data:image/jpeg;base64,' + app.icon,
+                      width: 56,
+                      height: 56,
                     }}
                     className="w-14 h-14 rounded-xl"
-                    />
+                  />
                 </View>
-                ))}
+              ))}
             {/* Show +N if more than 9 apps */}
-            {(astore.ios_selected_apps.length > 9) && (
-                <View className="w-14 h-14 rounded-xl bg-muted items-center justify-center">
-                    <Text className="text-muted-foreground font-bold">+{astore.ios_selected_apps.length - 9}</Text>
-                </View>
+            {astore.ios_selected_apps.length > 9 && (
+              <View className="w-14 h-14 rounded-xl bg-muted items-center justify-center">
+                <Text className="text-muted-foreground font-bold">
+                  +{astore.ios_selected_apps.length - 9}
+                </Text>
+              </View>
             )}
-            </View>
+          </View>
         </View>
       </View>
 

@@ -5,8 +5,8 @@ import { combine } from 'zustand/middleware';
 
 interface OnboardingState {
   // 用户选择的问题类型
-  problem: 'short_video' | 'game' | 'study';
-  mode: 'shield' | 'focus';
+  problem: 'video' | 'game' | 'study';
+  // mode: 'shield' | 'focus';
   // 后续可以添加更多引导页的状态
 }
 
@@ -15,7 +15,7 @@ const GuideStore = combine(
     problem: null as OnboardingState['problem'] | null, // 用户选择的问题类型
     selected_apps: [] as string[], // 用户设置的目标
     selectedAppName: '' as string, // 当前选中的应用名称（仅内存临时使用，不持久化不上传）
-    mode: 'shield' as OnboardingState['mode'], // 专注模式
+    // mode: 'shield' as OnboardingState['mode'], // 专注模式
     unloginComplete: false as boolean, // 是否完成未登录引导
     isComplete: false as boolean, // 是否完成引导
     user_id: '' as string, // 用户id
@@ -25,7 +25,7 @@ const GuideStore = combine(
   (set, get) => ({
     getProblemLable: () => {
       switch (get().problem) {
-        case 'short_video':
+        case 'video':
           return '短视频';
         case 'game':
           return '游戏';
@@ -48,7 +48,7 @@ const GuideStore = combine(
             guide_id: parsed.guide_id,
             problem: parsed.problem,
             selected_apps: parsed.selected_apps || [],
-            mode: parsed.mode || 'shield',
+            // mode: parsed.mode || 'shield',
             isComplete: parsed.isComplete,
             unloginComplete: parsed.unloginComplete,
             currentStep: parsed.currentStep || 'step1',
@@ -61,24 +61,16 @@ const GuideStore = combine(
 
     setProblem: (type: string) => {
       const problem = type as OnboardingState['problem'];
-      const mode = problem === 'study' ? 'focus' : 'shield';
-      set({ problem, mode });
-      (get() as any).saveState();
-    },
-
-    setMode: (mode: OnboardingState['mode']) => {
-      set({ mode });
-      (get() as any).saveState();
+      // const mode = problem === 'study' ? 'focus' : 'shield';
+      set({ problem });
     },
 
     setGuideId: (id: string) => {
       set({ guide_id: id });
-      (get() as any).saveState();
     },
 
     setSelectedApps: (apps: string[]) => {
       set({ selected_apps: apps });
-      (get() as any).saveState();
     },
 
     // 只做内存赋值，不做持久化和上传
@@ -88,17 +80,14 @@ const GuideStore = combine(
 
     setCurrentStep: (step: string) => {
       set({ currentStep: step });
-      (get() as any).saveState();
     },
 
     completeOnboarding: () => {
       set({ isComplete: true });
-      (get() as any).saveState();
     },
 
     completeUnlogin: () => {
       set({ unloginComplete: true });
-      (get() as any).saveState();
     },
 
     saveState: async () => {
@@ -107,7 +96,6 @@ const GuideStore = combine(
           'onboarding_state',
           JSON.stringify({
             guide_id: get().guide_id,
-            mode: get().mode,
             problem: get().problem,
             selected_apps: get().selected_apps,
             isComplete: get().isComplete,
@@ -126,7 +114,6 @@ const GuideStore = combine(
         const res: any = await http.post('/guide', {
           id: get().guide_id,
           problem: get().problem,
-          mode: get().mode,
           selected_apps: get().selected_apps,
           current_step: get().currentStep,
         });
@@ -144,7 +131,6 @@ const GuideStore = combine(
       try {
         const res: any = await http.put(`/guide/${get().guide_id}`, {
           problem: get().problem,
-          mode: get().mode,
           selected_apps: get().selected_apps,
           current_step: get().currentStep,
         });

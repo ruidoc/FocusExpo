@@ -1,7 +1,7 @@
 import { DebugBall } from '@/components/debug/debug-ball';
 import { PostHogProviderWrapper } from '@/components/providers/PostHogProvider';
 import { ActionSheet, Dialog, Flex, Toast } from '@/components/ui';
-import { ScreenOptions, buttonRipple } from '@/config/navigation';
+import { ScreenOptions } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { setupIOSFocusSync } from '@/native/ios';
 import '@/styles/global.css';
@@ -190,6 +190,10 @@ const RootLayout = () => {
                 <Stack.Screen
                   name="challenges/my-detail"
                   options={{ title: '挑战详情' }}
+                />
+                <Stack.Screen
+                  name="others/welcome"
+                  options={{ headerShown: false }}
                 />
                 {/* 调试页面 */}
                 <Stack.Screen

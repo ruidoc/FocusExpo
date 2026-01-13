@@ -1,12 +1,12 @@
 import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useRef } from 'react';
 import {
-    ActivityIndicator,
-    Animated,
-    Text,
-    TextStyle,
-    TouchableOpacity,
-    ViewStyle,
+  ActivityIndicator,
+  Animated,
+  Text,
+  TextStyle,
+  TouchableOpacity,
+  ViewStyle,
 } from 'react-native';
 
 interface ButtonProps {
@@ -47,14 +47,13 @@ const Button = ({
       duration: 200,
       useNativeDriver: true,
     }).start();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isDisabled = disabled || loading;
 
   // 根据 size 设置高度和字体大小
   const sizeStyles = {
-    xl: { height: 52, fontSize: 17, paddingVertical: 16 },
+    xl: { height: 58, fontSize: 18, paddingVertical: 16 },
     l: { height: 48, fontSize: 16, paddingVertical: 14 },
     m: { height: 44, fontSize: 15, paddingVertical: 12 },
     s: { height: 36, fontSize: 14, paddingVertical: 8 },
@@ -92,7 +91,7 @@ const Button = ({
 
   // 合并按钮的 className
   const buttonClassName =
-    `flex-row justify-center items-center rounded-[24px] ${className}`.trim();
+    `flex-row justify-center items-center rounded-[30px] ${className}`.trim();
 
   // 合并文字的 className
   const combinedTextClassName =

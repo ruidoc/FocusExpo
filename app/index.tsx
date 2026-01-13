@@ -3,7 +3,7 @@ import { getUserActivationState } from '@/utils';
 import { checkScreenTimePermission } from '@/utils/permission';
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 const Index = () => {
   const hstore = useHomeStore();
@@ -13,15 +13,13 @@ const Index = () => {
 
   useEffect(() => {
     const initAction = async () => {
-      if (Platform.OS === 'ios') {
-        try {
-          const screenTimeStatus = await checkScreenTimePermission();
-          const isApproved = screenTimeStatus === 'approved';
-          hstore.setIOSScreenTimePermission(isApproved);
-          await pmstore.checkNotify();
-        } catch (error) {
-          console.log('Index组件：iOS全局初始化失败:', error);
-        }
+      try {
+        const screenTimeStatus = await checkScreenTimePermission();
+        const isApproved = screenTimeStatus === 'approved';
+        hstore.setIOSScreenTimePermission(isApproved);
+        await pmstore.checkNotify();
+      } catch (error) {
+        console.log('Index组件：iOS全局初始化失败:', error);
       }
     };
     // 异步初始化
@@ -47,7 +45,7 @@ const Index = () => {
 
   // 如果用户是新用户且命中onboarding实验，导航到引导页
   if (userState.isNewUser && experiment.isOnboarding) {
-    initialRoute = '/(guides)/step1';
+    initialRoute = '/others/welcome';
     console.log('[路由] 新用户命中onboarding实验，导航到引导页');
   } else if (userState.isNewUser && !experiment.isOnboarding) {
     console.log('[路由] 新用户未命中onboarding实验，跳过引导直接进入首页');

@@ -1,5 +1,5 @@
 import { Flex } from '@/components/ui';
-import { BottomTabOptions, buttonRipple } from '@/config/navigation';
+import { BottomTabOptions } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';

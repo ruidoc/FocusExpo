@@ -1,9 +1,9 @@
-import { useCustomTheme } from '@/config/theme';
+import { Page } from '@/components/business';
+import { Process } from '@/components/ui';
 import { useGuideStore } from '@/stores';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
-import { Animated, SafeAreaView, StyleSheet, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { View } from 'react-native';
 
 export type OnboardingStackParamList = {
   step1: undefined;
@@ -15,20 +15,7 @@ export type OnboardingStackParamList = {
 
 const ProgressBar = () => {
   const store = useGuideStore();
-  const { colors, isDark: dark } = useCustomTheme();
-  const progress = (store.currentStepIndex() / 5) * 100;
-
-  // 创建动画值
-  const progressAnim = useRef(new Animated.Value(progress)).current;
-
-  // 当进度变化时执行动画
-  useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue: progress,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  }, [progress]);
+  const progress = store.currentStepIndex() / 5;
 
   useEffect(() => {
     store.setCurrentStep('step1');
@@ -38,30 +25,8 @@ const ProgressBar = () => {
   }, []);
 
   return (
-    <View style={[styles.progressContainer, { backgroundColor: colors.card }]}>
-      <View
-        style={[
-          styles.progressBackground,
-          { backgroundColor: dark ? '#2A2A2A' : '#E6E6E6' },
-        ]}>
-        <Animated.View
-          style={[
-            styles.progressFill,
-            {
-              width: progressAnim.interpolate({
-                inputRange: [0, 100],
-                outputRange: ['0%', '100%'],
-              }),
-            },
-          ]}>
-          <LinearGradient
-            colors={!dark ? ['#6366F1', '#8B5CF6'] : ['#A5B4FC', '#C7D2FE']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradient}
-          />
-        </Animated.View>
-      </View>
+    <View className="pt-10 pb-[30px] px-5">
+      <Process value={progress} />
     </View>
   );
 };
@@ -78,10 +43,10 @@ const OnboardingNavigator = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <Page safe decoration>
       <ProgressBar />
       <Stack
-        initialRouteName="step1"
+        // initialRouteName="step1"
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
@@ -97,31 +62,8 @@ const OnboardingNavigator = () => {
         <Stack.Screen name="step4" />
         <Stack.Screen name="step5" />
       </Stack>
-    </SafeAreaView>
+    </Page>
   );
 };
-
-const styles = StyleSheet.create({
-  progressContainer: {
-    paddingTop: 40,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
-    backgroundColor: '#121212',
-  },
-  progressBackground: {
-    height: 11,
-    backgroundColor: '#2A2A2A',
-    borderRadius: 5.5,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 5.5,
-  },
-  gradient: {
-    flex: 1,
-    borderRadius: 5.5,
-  },
-});
 
 export default OnboardingNavigator;

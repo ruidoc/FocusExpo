@@ -66,7 +66,7 @@ const GuideStep2 = () => {
 
   const getProblemLabel = () => {
     switch (gstore.problem) {
-      case 'short_video':
+      case 'video':
         return '短视频';
       case 'game':
         return '游戏';
@@ -77,55 +77,63 @@ const GuideStep2 = () => {
     }
   };
 
-  const StepCard = ({ 
-    step, 
-    title, 
-    desc, 
-    isCompleted, 
-    onPress, 
+  const StepCard = ({
+    step,
+    title,
+    desc,
+    isCompleted,
+    onPress,
     disabled,
-    icon 
-  }: { 
-    step: number, 
-    title: string, 
-    desc: string, 
-    isCompleted: boolean, 
-    onPress: () => void,
-    disabled: boolean,
-    icon: string
+    icon,
+  }: {
+    step: number;
+    title: string;
+    desc: string;
+    isCompleted: boolean;
+    onPress: () => void;
+    disabled: boolean;
+    icon: string;
   }) => (
     <TouchableOpacity
-        onPress={onPress}
-        disabled={disabled}
-        activeOpacity={0.8}
-        className={`w-full p-5 rounded-2xl border mb-4 flex-row items-center transition-all ${
-            isCompleted 
-                ? 'bg-primary/5 border-primary/20' 
-                : 'bg-card border-border'
-        }`}
-    >
-        <View className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${
-            isCompleted ? 'bg-primary' : 'bg-muted/20'
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.8}
+      className={`w-full p-5 rounded-2xl border mb-4 flex-row items-center transition-all ${
+        isCompleted ? 'bg-primary/5 border-primary/20' : 'bg-card border-border'
+      }`}>
+      <View
+        className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${
+          isCompleted ? 'bg-primary' : 'bg-muted/20'
         }`}>
-            {isCompleted ? (
-                <Icon name="checkmark" size={24} color="#FFF" />
-            ) : (
-                <Text className="text-xl font-bold text-muted-foreground">{step}</Text>
-            )}
-        </View>
-        
-        <View className="flex-1">
-            <Text className={`text-lg font-semibold mb-1 ${
-                isCompleted ? 'text-primary' : 'text-foreground'
-            }`}>
-                {title}
-            </Text>
-            <Text className="text-sm text-muted-foreground">
-                {isCompleted ? '已完成' : desc}
-            </Text>
-        </View>
+        {isCompleted ? (
+          <Icon name="checkmark" size={24} color="#FFF" />
+        ) : (
+          <Text className="text-xl font-bold text-muted-foreground">
+            {step}
+          </Text>
+        )}
+      </View>
 
-        <Icon name={icon as any} size={20} color={isCompleted ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'} style={{opacity: 0.5}} />
+      <View className="flex-1">
+        <Text
+          className={`text-lg font-semibold mb-1 ${
+            isCompleted ? 'text-primary' : 'text-foreground'
+          }`}>
+          {title}
+        </Text>
+        <Text className="text-sm text-muted-foreground">
+          {isCompleted ? '已完成' : desc}
+        </Text>
+      </View>
+
+      <Icon
+        name={icon as any}
+        size={20}
+        color={
+          isCompleted ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'
+        }
+        style={{ opacity: 0.5 }}
+      />
     </TouchableOpacity>
   );
 
@@ -133,35 +141,37 @@ const GuideStep2 = () => {
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 px-6 pt-12">
         <View className="mb-10">
-            <Text className="text-3xl font-bold text-foreground mb-3 tracking-tight">
+          <Text className="text-3xl font-bold text-foreground mb-3 tracking-tight">
             屏蔽设置
-            </Text>
-            <Text className="text-lg text-muted-foreground leading-6">
-             {gstore.problem === 'study' ? '建立纯净学习环境' : `戒除${getProblemLabel()}依赖`}，
-             只需简单两步。
-            </Text>
+          </Text>
+          <Text className="text-lg text-muted-foreground leading-6">
+            {gstore.problem === 'study'
+              ? '建立纯净学习环境'
+              : `戒除${getProblemLabel()}依赖`}
+            ， 只需简单两步。
+          </Text>
         </View>
 
         <View>
-            <StepCard 
-                step={1}
-                title="授权屏幕时间权限"
-                desc="用于检测和屏蔽应用"
-                isCompleted={!!step1Completed}
-                onPress={handleStep1}
-                disabled={!!step1Completed}
-                icon="shield-checkmark-outline"
-            />
-            
-            <StepCard 
-                step={2}
-                title={`选择${getProblemLabel()}应用`}
-                desc="选择您想要屏蔽的APP"
-                isCompleted={step2Completed}
-                onPress={handleStep2}
-                disabled={step2Completed}
-                icon="apps-outline"
-            />
+          <StepCard
+            step={1}
+            title="授权屏幕时间权限"
+            desc="用于检测和屏蔽应用"
+            isCompleted={!!step1Completed}
+            onPress={handleStep1}
+            disabled={!!step1Completed}
+            icon="shield-checkmark-outline"
+          />
+
+          <StepCard
+            step={2}
+            title={`选择${getProblemLabel()}应用`}
+            desc="选择您想要屏蔽的APP"
+            isCompleted={step2Completed}
+            onPress={handleStep2}
+            disabled={step2Completed}
+            icon="apps-outline"
+          />
         </View>
       </View>
 
