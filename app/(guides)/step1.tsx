@@ -1,16 +1,12 @@
 import { Button } from '@/components/ui';
 import { useGuideStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { router } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type NavigationProp = NativeStackNavigationProp<any>;
-
 export const GuideStep1 = () => {
-  const navigation = useNavigation<NavigationProp>();
   const store = useGuideStore();
 
   const addictionOptions = [
@@ -40,7 +36,7 @@ export const GuideStep1 = () => {
   const handleNext = () => {
     store.setCurrentStep('step2');
     store.setSelectedApps([]);
-    navigation.navigate('step2');
+    router.push('/(guides)/step2');
     store.createGuide();
   };
 

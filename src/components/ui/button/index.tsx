@@ -1,12 +1,12 @@
 import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useRef } from 'react';
 import {
-  ActivityIndicator,
-  Animated,
-  Text,
-  TextStyle,
-  TouchableOpacity,
-  ViewStyle,
+    ActivityIndicator,
+    Animated,
+    Text,
+    TextStyle,
+    TouchableOpacity,
+    ViewStyle,
 } from 'react-native';
 
 interface ButtonProps {

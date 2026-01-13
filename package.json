@@ -11,7 +11,12 @@
     "build:prod": "eas build --local --platform ios --profile production",
     "doctor": "npx expo-doctor",
     "prebuild": "expo prebuild",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "docs": "bash docs/docs.sh",
+    "docs:quick": "bash docs/docs.sh quick",
+    "docs:examples": "bash docs/docs.sh examples",
+    "docs:arch": "bash docs/docs.sh arch",
+    "docs:list": "bash docs/docs.sh list"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

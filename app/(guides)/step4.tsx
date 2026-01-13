@@ -1,17 +1,16 @@
 import { Button } from '@/components/ui';
 import { useGuideStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useRoute } from '@react-navigation/native';
+import { useLocalSearchParams, router } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 
 const GuideStep4 = () => {
-  const route = useRoute<any>();
+  const params = useLocalSearchParams<{ selectedAppName?: string }>();
   const gstore = useGuideStore();
 
-  const selectedAppName = route.params?.selectedAppName || '';
+  const selectedAppName = params?.selectedAppName || '';
   const [appName] = React.useState(selectedAppName);
 
   useEffect(() => {

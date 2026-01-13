@@ -1,5 +1,5 @@
+import { useCustomTheme } from '@/config/theme';
 import { useGuideStore } from '@/stores';
-import { useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
@@ -15,7 +15,7 @@ export type OnboardingStackParamList = {
 
 const ProgressBar = () => {
   const store = useGuideStore();
-  const { colors, dark } = useTheme();
+  const { colors, isDark: dark } = useCustomTheme();
   const progress = (store.currentStepIndex() / 5) * 100;
 
   // 创建动画值
