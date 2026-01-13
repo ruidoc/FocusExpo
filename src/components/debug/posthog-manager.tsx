@@ -9,13 +9,13 @@
  * 5. 重置功能可清除本地覆盖，恢复服务器原始值
  */
 
-import { Flex } from '@/components/ui';
-import { useExperimentStore } from '@/stores';
+import { Flex, Switch } from '@/components/ui';
+import { useDebugStore, useExperimentStore } from '@/stores';
 import type { FeatureFlagState } from '@/stores/experiment';
 import { reloadFeatureFlags } from '@/utils/analytics';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useEffect, useState } from 'react';
-import { Alert, FlatList, Pressable, Switch, Text, View } from 'react-native';
+import { Alert, Button, Pressable, ScrollView, Text, View } from 'react-native';
 
 export const PostHogManager = () => {
   const [properties, setProperties] = useState<any[]>([]);
@@ -26,6 +26,7 @@ export const PostHogManager = () => {
 
   // 从 ExperimentStore 读取 Feature Flags 和操作方法
   const experiment = useExperimentStore();
+  const debug = useDebugStore();
   // const overrideFlag = useExperimentStore(state => state.overrideFlag);
   // const resetFlag = useExperimentStore(state => state.resetFlag);
   // const resetAllFlags = useExperimentStore(state => state.resetAllFlags);
@@ -43,28 +44,17 @@ export const PostHogManager = () => {
   // 切换实验开关（通过 store 同时更新 store 和 PostHog）
   const handleToggleExperiment = (
     experimentKey: string,
-    currentEnabled: boolean,
+    newValue: boolean,
   ) => {
-    try {
-      const newValue = !currentEnabled;
-      // setLoading(true);
-      experiment.overrideFlag(experimentKey, newValue);
-      // setTimeout(() => {
-      //   setLoading(false);
-      // }, 100);
-      console.log(
-        `[调试面板] ${experimentKey} 已${newValue ? '开启' : '关闭'}`,
-      );
-    } catch (error) {
-      console.error('切换实验失败:', error);
-      Alert.alert('错误', '切换失败');
-    }
+    experiment.overrideFlag(experimentKey, newValue);
+    debug.setShowDebugBall(false);
   };
 
   // 重置单个实验的本地覆盖（通过 store 恢复服务器值）
   const handleResetExperiment = (experimentKey: string) => {
     try {
       experiment.resetFlag(experimentKey);
+      debug.setShowDebugBall(false);
       console.log(`[调试面板] ${experimentKey} 已重置为服务器值`);
     } catch (error) {
       console.error('重置实验失败:', error);
@@ -135,9 +125,7 @@ export const PostHogManager = () => {
           </View>
           <Switch
             value={item.enabled}
-            onValueChange={() => handleToggleExperiment(item.key, item.enabled)}
-            trackColor={{ false: '#374151', true: '#6366f1' }}
-            thumbColor={item.enabled ? '#8b5cf6' : '#9ca3af'}
+            onChange={() => handleToggleExperiment(item.key, !item.enabled)}
           />
         </Flex>
 
@@ -225,7 +213,7 @@ export const PostHogManager = () => {
           <View className="px-4 py-3 border-b border-gray-800 bg-gray-800/30">
             <Flex className="flex-row justify-between items-center mb-2">
               <Text className="text-base font-semibold text-gray-200">
-                实验开关 {experiment.isOnboarding ? 'true' : 'false'}
+                实验开关
               </Text>
               <Flex className="flex-row gap-2">
                 <Pressable
@@ -250,15 +238,14 @@ export const PostHogManager = () => {
           </View>
 
           {/* 实验列表 */}
-          <FlatList
-            data={experiment.finalFlags}
-            renderItem={renderExperimentItem}
-            keyExtractor={item => item.key}
+          <ScrollView
             className="flex-1 px-3 pt-3"
-            showsVerticalScrollIndicator={false}
-            refreshing={loading}
-            onRefresh={handleRefresh}
-            ListEmptyComponent={
+            showsVerticalScrollIndicator={false}>
+            {experiment.finalFlags.length > 0 ? (
+              experiment.finalFlags.map(item => (
+                <View key={item.key}>{renderExperimentItem({ item })}</View>
+              ))
+            ) : (
               <View className="flex-1 justify-center items-center py-12">
                 <Icon name="flask-outline" size={48} color="#6b7280" />
                 <Text className="text-gray-500 mt-3">
@@ -268,7 +255,18 @@ export const PostHogManager = () => {
                   在PostHog后台创建Feature Flags
                 </Text>
               </View>
-            }
+            )}
+          </ScrollView>
+
+          <Button
+            title="切换环境"
+            onPress={() => {
+              // debug.setEnvironment('production');
+              experiment.overrideFlag('user_onboarding', true);
+              // handleToggleExperiment('user_onboarding', true);
+              // experiment.overrideFlag('key3', false);
+              experiment.setTestVal({ key4: 'test4' });
+            }}
           />
         </>
       ) : (
@@ -278,18 +276,20 @@ export const PostHogManager = () => {
               用户属性列表
             </Text>
           </View>
-          <FlatList
-            data={properties}
-            renderItem={renderPropertyItem}
-            keyExtractor={(item, index) => `${item.key}-${index}`}
-            className="flex-1 px-3 pt-2"
-            ListEmptyComponent={
+          <ScrollView className="flex-1 px-3 pt-2">
+            {properties.length > 0 ? (
+              properties.map((item, index) => (
+                <View key={`${item.key}-${index}`}>
+                  {renderPropertyItem({ item })}
+                </View>
+              ))
+            ) : (
               <View className="flex-1 justify-center items-center py-12">
                 <Icon name="person-outline" size={48} color="#6b7280" />
                 <Text className="text-gray-500 mt-3">暂无用户属性</Text>
               </View>
-            }
-          />
+            )}
+          </ScrollView>
         </>
       )}
     </View>

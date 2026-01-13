@@ -6,7 +6,7 @@ import { EnvironmentManager } from '@/components/debug/env-manager';
 import { PostHogManager } from '@/components/debug/posthog-manager';
 import { StorageManager } from '@/components/debug/storage-manager';
 import { Flex } from '@/components/ui';
-import { useDebugStore } from '@/stores';
+import { useDebugStore, useExperimentStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -17,7 +17,7 @@ type Tab = 'storage' | 'posthog' | 'environment';
 const DebugPage = () => {
   const [activeTab, setActiveTab] = useState<Tab>('storage');
   const setShowDebugBall = useDebugStore(state => state.setShowDebugBall);
-
+  useExperimentStore();
   const tabs = [
     { id: 'storage' as Tab, label: 'AsyncStorage', icon: 'folder-outline' },
     { id: 'posthog' as Tab, label: 'PostHog', icon: 'flask-outline' },
