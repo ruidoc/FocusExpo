@@ -4,8 +4,6 @@ import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useHomeStore } from '@/stores';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { NoticeBar } from '@fruits-chain/react-native-xiaoshu';
-import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 
 import {
@@ -77,13 +75,6 @@ const App = () => {
       selectAppsToLimit().then(data => {
         astore.addIosApps(data.apps);
       });
-    } else {
-      router.push({
-        pathname: '/apps/add',
-        params: {
-          mode,
-        },
-      });
     }
   };
 
@@ -109,50 +100,12 @@ const App = () => {
 
   return (
     <Page>
-      {Platform.OS !== 'ios' && (
-        <NoticeBar
-          wrapable
-          message="开始专注时，会对下方选择的APP生效"
-          status="primary"
-        />
-      )}
       <ScrollView
         style={{ padding: 15 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
         <Flex className="flex-col" style={{ gap: 20 }}>
-          {Platform.OS !== 'ios' && (
-            <Card
-              title="专注的APP"
-              desc="推荐添加学习相关的应用"
-              action={
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={styles.addBtn}
-                  onPress={() => toAddApp('focus')}>
-                  <Icon name="add" size={20} color={colors.primary} />
-                  <Text style={styles.addIcon}>添加</Text>
-                </TouchableOpacity>
-              }>
-              {store.all_apps.filter(r =>
-                astore.focus_apps.includes(r.packageName),
-              ).length === 0 ? (
-                <View style={{ alignItems: 'center', padding: 24 }}>
-                  <Icon name="ban-outline" size={30} color="#ccc" />
-                  <Text style={{ color: '#aaa', marginTop: 8, fontSize: 14 }}>
-                    还没有添加APP哦
-                  </Text>
-                </View>
-              ) : (
-                <Flex className="flex-wrap justify-start">
-                  {store.all_apps
-                    .filter(r => astore.focus_apps.includes(r.packageName))
-                    .map(app => AppItem(app))}
-                </Flex>
-              )}
-            </Card>
-          )}
           <Card
             title="屏蔽的APP"
             desc="推荐添加游戏、短视频、社交类应用"
@@ -165,26 +118,6 @@ const App = () => {
                 <Text style={styles.addIcon}>添加</Text>
               </TouchableOpacity>
             }>
-            {Platform.OS === 'android' && (
-              <View style={{ padding: 10 }}>
-                {store.all_apps.filter(r =>
-                  astore.shield_apps.includes(r.packageName),
-                ).length === 0 ? (
-                  <View style={{ alignItems: 'center', padding: 24 }}>
-                    <Icon name="ban-outline" size={30} color="#ccc" />
-                    <Text style={{ color: '#aaa', marginTop: 8, fontSize: 14 }}>
-                      还没有添加APP哦
-                    </Text>
-                  </View>
-                ) : (
-                  <Flex className="flex-wrap justify-start">
-                    {store.all_apps
-                      .filter(r => astore.shield_apps.includes(r.packageName))
-                      .map(app => AppItem(app))}
-                  </Flex>
-                )}
-              </View>
-            )}
             {Platform.OS === 'ios' && (
               <View style={{ padding: 10 }}>
                 {astore.ios_selected_apps.length === 0 ? (

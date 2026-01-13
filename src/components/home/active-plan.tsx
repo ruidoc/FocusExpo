@@ -95,10 +95,6 @@ const FocusButton = () => {
     try {
       if (Platform.OS === 'ios') {
         await stopAppLimits();
-      } else {
-        // Android 维持原有逻辑
-        store.stopVpn();
-        store.setVpnState('close');
       }
     } catch (error) {
       console.log('stopFocus error', error);

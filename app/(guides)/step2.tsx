@@ -30,13 +30,9 @@ const GuideStep2 = () => {
 
   const { colors } = useCustomTheme();
 
-  // iOS下检查屏幕时间权限，Android下检查VPN权限
-  const step1Completed =
-    Platform.OS === 'ios' ? store.ios_screen_time_permission : store.vpn_init;
-  const step2Completed =
-    Platform.OS === 'ios'
-      ? astore.ios_selected_apps.length > 0
-      : gstore.selected_apps.length > 0;
+  // iOS下检查屏幕时间权限
+  const step1Completed = store.ios_screen_time_permission;
+  const step2Completed = astore.ios_selected_apps.length > 0;
 
   // 打字机完成后再显示步骤卡片
   useEffect(() => {
@@ -96,8 +92,6 @@ const GuideStep2 = () => {
   const handleStep1 = () => {
     if (Platform.OS === 'ios') {
       checkIOSPermission();
-    } else {
-      store.startVpn(true);
     }
   };
 
@@ -106,13 +100,6 @@ const GuideStep2 = () => {
       selectAppsToLimit().then(data => {
         // console.log('获取数据：', data);
         astore.addIosApps(data.apps);
-      });
-    } else {
-      router.push({
-        pathname: '/apps/add',
-        params: {
-          mode: gstore.problem === 'study' ? 'focus' : 'shield',
-        },
       });
     }
   };
@@ -327,9 +314,7 @@ const GuideStep2 = () => {
                 </Text>
               </View>
               <Text style={styles.stepText}>
-                {Platform.OS === 'ios'
-                  ? '获取屏幕时间权限'
-                  : '获取网络屏蔽权限'}
+                {'获取屏幕时间权限'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity

@@ -65,7 +65,7 @@ const App = () => {
 
   // 编辑模式下初始化选中的应用
   useEffect(() => {
-    if (Platform.OS === 'ios' && pstore.editing_plan) {
+    if (pstore.editing_plan) {
       const plan = pstore.editing_plan;
       if (
         plan.apps &&
@@ -348,22 +348,20 @@ const App = () => {
           />
         </FieldGroup>
 
-        {/* 应用选择（仅 iOS） */}
-        {Platform.OS === 'ios' && (
-          <FieldGroup divider={false} className="rounded-xl mb-4">
-            <FieldItem
-              title="暂停这些应用"
-              className="pb-2"
-              rightElement={
-                <SelectApps apps={form.apps} onFinish={selectApps} />
-              }
-              showArrow={false}
-            />
-            <View className="px-4 pb-4">
-              <SelectedApps apps={selectedApps} />
-            </View>
-          </FieldGroup>
-        )}
+        {/* 应用选择 */}
+        <FieldGroup divider={false} className="rounded-xl mb-4">
+          <FieldItem
+            title="暂停这些应用"
+            className="pb-2"
+            rightElement={
+              <SelectApps apps={form.apps} onFinish={selectApps} />
+            }
+            showArrow={false}
+          />
+          <View className="px-4 pb-4">
+            <SelectedApps apps={selectedApps} />
+          </View>
+        </FieldGroup>
 
         {/* 时间选择组 */}
         <FieldGroup className="rounded-xl mb-4">

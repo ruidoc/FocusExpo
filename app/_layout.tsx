@@ -78,7 +78,7 @@ const RootLayout = () => {
 
   const BackIcon = () => (
     <Flex className="items-center gap-4">
-      <Pressable android_ripple={buttonRipple} onPress={() => router.back()}>
+      <Pressable onPress={() => router.back()}>
         <Icon name="chevron-back" size={24} color="#fff" />
       </Pressable>
     </Flex>

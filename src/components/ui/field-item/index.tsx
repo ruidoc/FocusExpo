@@ -233,7 +233,6 @@ const FieldItem: React.FC<FieldItemProps> = ({
     return (
       <Pressable
         onPress={onPress}
-        android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
         style={({ pressed }) => [
           {
             opacity: pressed ? 0.7 : 1,

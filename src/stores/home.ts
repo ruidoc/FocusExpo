@@ -13,8 +13,6 @@ const HomeStore = combine(
     them: 'light' as 'dark' | 'light', // 主题
     followSystem: true, // 是否跟随系统主题
 
-    vpn_state: 'close' as VpnState, // VPN 状态
-    vpn_init: false, // VPN 是否初始化
     ios_screen_time_permission: true, // iOS 屏幕时间权限状态
 
     app_state: 'unknown' as AppStateStatus, // 应用的状态
@@ -22,15 +20,11 @@ const HomeStore = combine(
   (set, get) => ({
     // Getter 方法改为普通函数
     is_vpnstart: () => {
-      return get().vpn_state === 'start';
+      return false;
     },
 
     not_vpnopen: () => {
-      return ['close', 'refuse'].includes(get().vpn_state);
-    },
-
-    setVpnInit: (init: boolean) => {
-      set({ vpn_init: init });
+      return true;
     },
 
     setIOSScreenTimePermission: (granted: boolean) => {
@@ -46,16 +40,6 @@ const HomeStore = combine(
       if (Platform.OS === 'ios') {
         (get() as any).checkIOSScreenTimePermission();
       }
-      // NativeClass.isVpnInit()
-      //   .then((init: boolean) => {
-      //     get().setVpnInit(init);
-      //     if (init && start) {
-      //       get().startVpn();
-      //     }
-      //   })
-      //   .catch((error: any) => {
-      //     console.log(error);
-      //   });
     },
 
     // 检查iOS屏幕时间权限
@@ -74,23 +58,10 @@ const HomeStore = combine(
     },
 
     startVpn: (onlyInit: boolean = false) => {
-      // if (get().vpn_init) {
-      // NativeClass.startVpn(onlyInit);
-      // } else {
-      //   Dialog({
-      //     title: '使用声明',
-      //     message: `专注一点使用 VPN 技术屏蔽娱乐应用，帮助您隔绝干扰、全神贯注地工作或学习。完全保障您的隐私安全，无需担心任何隐私泄露的风险。\n \n请在接下来的提示中允许使用 VPN 连接。当您不再需要此功能时，可随时关闭连接。`,
-      //   }).then(action => {
-      //     if (action === 'confirm') {
-      //       NativeClass.startVpn();
-      //     }
-      //   });
-      // }
     },
 
     stopVpn: () => {
       PlanStore.getState().clearPlans();
-      // NativeClass.stopVpn();
     },
 
     // 监听系统主题变化
@@ -125,9 +96,6 @@ const HomeStore = combine(
     },
 
     loadApps: () => {
-      // NativeClass.getApps().then((list: any) => {
-      //   get().setApps(JSON.parse(list));
-      // });
     },
 
     setApps: (apps: any[]) => {
@@ -135,7 +103,6 @@ const HomeStore = combine(
     },
 
     setVpnState: (state: VpnState) => {
-      set({ vpn_state: state });
     },
 
     // 初始化主题

@@ -17,7 +17,7 @@ const LeftDom = ({
   toRoute: (path: string) => void;
 }) => (
   <Flex className="flex-row items-center" style={{ gap: 16, paddingLeft: 16 }}>
-    <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Guide')}>
+    <Pressable onPress={() => toRoute('Guide')}>
       <Icon name="help-circle-outline" size={23} color={colors.text} />
     </Pressable>
   </Flex>
@@ -32,10 +32,10 @@ const RightDom = ({
   toRoute: (path: string) => void;
 }) => (
   <Flex className="flex-row items-center" style={{ gap: 16, paddingRight: 16 }}>
-    <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Apps')}>
+    <Pressable onPress={() => toRoute('Apps')}>
       <Icon name="grid-outline" size={19} color={colors.text} />
     </Pressable>
-    <Pressable android_ripple={buttonRipple} onPress={() => toRoute('Plans')}>
+    <Pressable onPress={() => toRoute('Plans')}>
       <Icon name="time-outline" size={22} color={colors.text} />
     </Pressable>
   </Flex>

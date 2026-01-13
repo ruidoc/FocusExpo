@@ -4,7 +4,7 @@ import { useHomeStore, useUserStore } from '@/stores';
 import { toast } from '@/utils';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react';
-import { Appearance, Linking, Platform, View } from 'react-native';
+import { Appearance, Linking, View } from 'react-native';
 
 const App = () => {
   const store = useUserStore();
@@ -27,10 +27,7 @@ const App = () => {
   };
 
   const openStore = () => {
-    let storeUrl = Platform.select({
-      ios: 'itms-apps://itunes.apple.com/app/com.focusone.app',
-      android: 'market://details?id=com.focusone',
-    });
+    let storeUrl = 'itms-apps://itunes.apple.com/app/com.focusone.app';
     Linking.canOpenURL(storeUrl!)
       .then(supported => {
         if (supported) {

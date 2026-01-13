@@ -86,7 +86,6 @@ const App = () => {
       headerRight: () => (
         <Flex className="flex-row items-center gap-3">
           <Pressable
-            android_ripple={buttonRipple}
             onPress={handleSync}
             disabled={syncing}>
             {syncing ? (
@@ -96,7 +95,6 @@ const App = () => {
             )}
           </Pressable>
           <Pressable
-            android_ripple={buttonRipple}
             onPress={() => toRoute('plans/add')}>
             <Icon name="add" size={27} color={colors.text} />
           </Pressable>
