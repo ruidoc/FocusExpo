@@ -1,5 +1,6 @@
 import { DebugBall } from '@/components/debug/debug-ball';
 import { PostHogProviderWrapper } from '@/components/providers/PostHogProvider';
+import { SuperwallProviderWrapper } from '@/components/providers/SuperwallProvider';
 import { ActionSheet, Dialog, Flex, Toast } from '@/components/ui';
 import { ScreenOptions } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
@@ -10,47 +11,10 @@ import Icon from '@expo/vector-icons/Ionicons';
 import { Provider } from '@fruits-chain/react-native-xiaoshu';
 import { ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import * as Linking from 'expo-linking';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { SuperwallProvider, useSuperwall } from 'expo-superwall';
 import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
-
-// Deep link 处理组件
-const DeepLinkHandler = (): null => {
-  const superwall = useSuperwall();
-
-  useEffect(() => {
-    // 处理应用启动时的 deep link
-    const handleInitialURL = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        try {
-          // Superwall SDK 会自动处理 deep links
-          // 这里我们只需要确保 URL 被传递
-          console.log('Initial deep link:', initialUrl);
-        } catch (error) {
-          console.error('Error handling initial deep link:', error);
-        }
-      }
-    };
-
-    handleInitialURL();
-
-    // 监听 deep link 事件
-    const subscription = Linking.addEventListener('url', ({ url }) => {
-      console.log('Deep link received:', url);
-      // Superwall SDK 会自动处理 deep links
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [superwall]);
-
-  return null;
-};
 
 const RootLayout = () => {
   const [loaded] = useFonts({
@@ -83,11 +47,9 @@ const RootLayout = () => {
       </Pressable>
     </Flex>
   );
-
   return (
     <PostHogProviderWrapper>
-      <SuperwallProvider apiKeys={{ ios: 'pk_R4c8ydWOKVO8ddmeHygsS' }}>
-        <DeepLinkHandler />
+      <SuperwallProviderWrapper>
         <ThemeProvider value={theme.navigation}>
           <Provider theme={theme.xiaoshu}>
             <StatusBar style={theme.isDark ? 'light' : 'dark'} />
@@ -206,7 +168,7 @@ const RootLayout = () => {
             </View>
           </Provider>
         </ThemeProvider>
-      </SuperwallProvider>
+      </SuperwallProviderWrapper>
     </PostHogProviderWrapper>
   );
 };

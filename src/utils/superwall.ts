@@ -19,17 +19,20 @@ import { usePlacement, useUser } from 'expo-superwall';
  * <Button onPress={() => registerPlacement({ placement: 'campaign_trigger' })} title="显示 Paywall" />
  * ```
  */
-export function useSuperwallPaywall(options?: {
-  onPresent?: (info: any) => void;
-  onDismiss?: (info: any, result: any) => void;
-  onSkip?: (reason: any) => void;
-  onError?: (error: string) => void;
-}) {
+export function useSuperwall() {
   const { registerPlacement, state } = usePlacement({
-    onPresent: options?.onPresent,
-    onDismiss: options?.onDismiss,
-    onSkip: options?.onSkip,
-    onError: options?.onError,
+    onPresent: info => {
+      console.log('[Paywall Presented]', info);
+    },
+    onDismiss: (info, result) => {
+      console.log('[Paywall Dismissed]', info, 'Result:', result);
+    },
+    onSkip: reason => {
+      console.log('[Paywall Skipped]', reason);
+    },
+    onError: error => {
+      console.log('[Paywall Error]', error);
+    },
   });
 
   return {

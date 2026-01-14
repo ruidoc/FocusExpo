@@ -262,7 +262,7 @@ export { storage } from './storage';
 export { initAppData } from './app-init';
 
 // 导出 Superwall 工具
-export { useSuperwallPaywall, useSuperwallUser } from './superwall';
+export { useSuperwall, useSuperwallUser } from './superwall';
 
 // 导出 PostHog Analytics 工具
 export * from './analytics';

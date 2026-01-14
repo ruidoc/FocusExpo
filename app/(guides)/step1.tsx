@@ -4,7 +4,8 @@ import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 export const GuideStep1 = () => {
-  const store = useGuideStore();
+  const problem = useGuideStore(state => state.problem);
+  const setProblem = useGuideStore(state => state.setProblem);
 
   const addictionOptions = [
     {
@@ -43,11 +44,11 @@ export const GuideStep1 = () => {
 
       <View className="gap-y-4">
         {addictionOptions.map(option => {
-          const isSelected = store.problem === option.id;
+          const isSelected = problem === option.id;
           return (
             <TouchableOpacity
               key={option.id}
-              onPress={() => store.setProblem(option.id)}
+              onPress={() => setProblem(option.id)}
               activeOpacity={0.9}
               className={`w-full p-4 rounded-2xl border transition-all ${
                 isSelected

@@ -46,7 +46,7 @@ const OnboardingNavigator = () => {
     <Page safe decoration>
       <ProgressBar />
       <Stack
-        // initialRouteName="step1"
+        initialRouteName="step1"
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',

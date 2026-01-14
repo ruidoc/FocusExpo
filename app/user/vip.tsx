@@ -1,6 +1,6 @@
 import { Page } from '@/components/business';
 import { Toast } from '@/components/ui';
-import { trackOpenPaywall, useSuperwallPaywall } from '@/utils';
+import { trackOpenPaywall, useSuperwall } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import React from 'react';
@@ -17,18 +17,7 @@ const VipPage = () => {
   const { colors, dark } = useTheme();
 
   // Superwall paywall 集成
-  const { registerPlacement } = useSuperwallPaywall({
-    onPresent: info => {
-      console.log('Paywall Presented:', info);
-    },
-    onDismiss: (info, result) => {
-      console.log('Paywall Dismissed:', info, 'Result:', result);
-    },
-    onError: error => {
-      console.error('Paywall Error:', error);
-      Toast({ message: `订阅加载失败，请稍后重试` });
-    },
-  });
+  const { registerPlacement } = useSuperwall();
 
   // 设计常量
   const THEME_COLOR = colors.primary;

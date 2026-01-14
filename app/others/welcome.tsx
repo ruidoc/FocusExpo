@@ -1,17 +1,19 @@
 import { Button } from '@/components/ui';
-import { useSuperwallPaywall } from '@/utils';
+// import { useSuperwall } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const GuideWelcome = () => {
-  const { registerPlacement } = useSuperwallPaywall();
+  // const { registerPlacement } = useSuperwall();
 
   const handleNext = () => {
-    registerPlacement({
-      placement: 'start_onboarding',
-    });
+    // registerPlacement({
+    //   placement: 'start_onboarding',
+    // });
+    router.push('/(guides)/step1');
   };
 
   return (
