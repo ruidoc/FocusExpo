@@ -1,7 +1,7 @@
 import { Page } from '@/components/business';
 import { Process } from '@/components/ui';
-import { useGuideStore } from '@/stores';
-import { Stack } from 'expo-router';
+// import { useGuideStore } from '@/stores';
+import { Stack, usePathname } from 'expo-router';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 
@@ -13,40 +13,33 @@ export type OnboardingStackParamList = {
   step5: undefined;
 };
 
-const ProgressBar = () => {
-  const store = useGuideStore();
-  const progress = store.currentStepIndex() / 5;
+const OnboardingNavigator = () => {
+  // const setCurrentStep = useGuideStore(state => state.setCurrentStep);
+  const pathname = usePathname();
 
   useEffect(() => {
-    store.setCurrentStep('step1');
-    return () => {
-      store.setCurrentStep('step0');
-    };
-  }, []);
+    // pathname format might be "/(guides)/step1"
+    const match = pathname.match(/step(\d+)/);
+    if (match) {
+      // setCurrentStep(`step${match[1]}`);
+      console.log('match', match);
+    }
+  }, [pathname]);
 
-  return (
-    <View className="pt-10 pb-[30px] px-5">
-      <Process value={progress} />
-    </View>
-  );
-};
-
-const OnboardingNavigator = () => {
-  const store = useGuideStore();
-
-  const screenListeners = {
-    state: (e: any) => {
-      // 获取当前路由名称
-      const currentRoute = e.data.state.routes[e.data.state.index].name;
-      store.setCurrentStep(currentRoute);
-    },
-  };
+  // useEffect(() => {
+  //   setCurrentStep('step1');
+  //   return () => {
+  //     setCurrentStep('step0');
+  //   };
+  // }, [setCurrentStep]);
 
   return (
     <Page safe decoration>
-      <ProgressBar />
+      <View className="pt-10 pb-[30px] px-5">
+        <Process value={0.5} />
+      </View>
       <Stack
-        initialRouteName="step1"
+        // initialRouteName="step1"
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
@@ -54,8 +47,7 @@ const OnboardingNavigator = () => {
           gestureEnabled: true,
           gestureDirection: 'horizontal',
           fullScreenGestureEnabled: true,
-        }}
-        screenListeners={screenListeners}>
+        }}>
         <Stack.Screen name="step1" />
         <Stack.Screen name="step2" />
         <Stack.Screen name="step3" />
