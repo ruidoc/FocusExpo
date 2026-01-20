@@ -1,4 +1,4 @@
-import { useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
 import React, { useEffect, useState } from 'react';
 import {
   Modal,
@@ -66,7 +66,7 @@ const dialogManager = new DialogManager();
 
 // Dialog 全局组件（用于静态方法）
 const DialogGlobal: React.FC = () => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const [visible, setVisible] = useState(false);
   const [config, setConfig] = useState<DialogConfirmConfig | null>(null);
 

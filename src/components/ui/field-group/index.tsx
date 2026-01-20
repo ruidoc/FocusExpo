@@ -1,4 +1,4 @@
-import { useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
 
@@ -31,7 +31,7 @@ const FieldGroup: React.FC<FieldGroupProps> = ({
   style,
   className,
 }) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const dividerCol = dividerColor || colors.border;
 
   // 默认 className，如果没有提供则使用默认值

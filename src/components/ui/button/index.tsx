@@ -1,4 +1,4 @@
-import { useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
 import React, { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
@@ -38,7 +38,7 @@ const Button = ({
   textStyle,
   textClassName = '',
 }: ButtonProps) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

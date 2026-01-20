@@ -1,11 +1,11 @@
 import { Privicy, Wechat } from '@/components/business';
 import { useGuideStore, useHomeStore, useUserStore } from '@/stores';
 import { markOnboardingCompleted, trackEvent } from '@/utils';
+import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from '@expo/vector-icons/Ionicons';
 
 export const GuideStep5 = () => {
   const store = useHomeStore();
@@ -67,7 +67,7 @@ export const GuideStep5 = () => {
           登录解锁完整功能
         </Text>
 
-        <View className="bg-card rounded-3xl p-6 border border-border shadow-sm">
+        <View className="bg-card rounded-3xl p-6 border border-border ">
             <FeatureItem icon="time-outline" title="自定义专注时长" desc="不再局限于5分钟，自由设定" />
             <FeatureItem icon="apps-outline" title="无限应用数量" desc="添加任意数量的受限应用" />
             <FeatureItem icon="calendar-outline" title="自动化计划" desc="创建定时任务，自动执行" />

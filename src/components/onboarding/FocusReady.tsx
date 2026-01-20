@@ -66,7 +66,7 @@ const FocusReady = ({ onNext, setSelectedAppName }: FocusReadyProps) => {
           微习惯开始。
         </Text>
 
-        <View className="bg-card w-full p-6 rounded-3xl border border-border shadow-sm items-center">
+        <View className="bg-card w-full p-6 rounded-3xl border border-border  items-center">
           <Text className="text-sm font-medium text-muted-foreground mb-6 uppercase tracking-widest">
             受限应用 ({astore.ios_selected_apps.length})
           </Text>

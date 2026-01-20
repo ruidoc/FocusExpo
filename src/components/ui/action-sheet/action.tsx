@@ -1,5 +1,5 @@
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useTheme } from '@react-navigation/native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -45,7 +45,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   backdropColor = 'rgba(0, 0, 0, 0.6)',
   backdropOpacity = 0.6,
 }) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const slideAnim = useRef(new Animated.Value(screenHeight)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [mounted, setMounted] = useState<boolean>(visible);

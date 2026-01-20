@@ -1,5 +1,5 @@
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useTheme } from '@react-navigation/native';
 import React, { useState } from 'react';
 import {
   TextInput as RNTextInput,
@@ -34,7 +34,7 @@ const TextInput = ({
   onChange,
   ...rest
 }: TextInputProps) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const [isFocused, setIsFocused] = useState(false);
   const isTextarea = type === 'textarea';
 

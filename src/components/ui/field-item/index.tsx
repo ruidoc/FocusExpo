@@ -1,5 +1,5 @@
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useTheme } from '@react-navigation/native';
 import React from 'react';
 import {
   Image,
@@ -135,7 +135,7 @@ const FieldItem: React.FC<FieldItemProps> = ({
   style,
   className,
 }) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const iconCol = iconColor || colors.text;
   const arrowCol = arrowColor || colors.text;
   const dividerCol = dividerColor || colors.border;

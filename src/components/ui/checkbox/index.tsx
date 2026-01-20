@@ -1,5 +1,5 @@
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useTheme } from '@react-navigation/native';
 import React from 'react';
 import { Pressable, Text, TextStyle, View } from 'react-native';
 
@@ -16,7 +16,7 @@ const CheckboxIcon = ({
   onPress,
   activeColor,
 }: CheckboxIconProps) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const iconColor = activeColor || colors.primary;
 
   return (
@@ -81,7 +81,7 @@ const CheckboxGroup = ({
   options,
   onChange,
 }: CheckboxGroupProps) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
 
   const handlePress = (optionValue: string) => {
     onChange?.(optionValue);

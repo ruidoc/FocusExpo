@@ -1,9 +1,9 @@
+import { useCustomTheme } from '@/config/theme';
 import React from 'react';
 import { View, ViewProps } from 'react-native';
-import { useTheme } from '@react-navigation/native';
 
 const Divider = (props: ViewProps) => {
-  const { dark } = useTheme();
+  const { isDark: dark } = useCustomTheme();
   const dividerColor = dark ? '#232323' : '#E0E3E8';
   return (
     <View

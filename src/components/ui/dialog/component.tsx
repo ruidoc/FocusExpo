@@ -1,4 +1,4 @@
-import { useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
 import React from 'react';
 import {
   Modal,
@@ -32,7 +32,7 @@ const DialogComponent = ({
   children,
   style,
 }: DialogComponentProps) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
 
   const handleConfirm = () => {
     onPressConfirm?.();

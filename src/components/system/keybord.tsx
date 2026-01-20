@@ -1,4 +1,4 @@
-import { useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
 import { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
@@ -7,7 +7,7 @@ interface Props {
 }
 
 const Keyboard = (props: Props) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
 
   return (
     <KeyboardAvoidingView

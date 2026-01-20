@@ -1,7 +1,7 @@
 import { Flex } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { useAppStore, usePlanStore, useUserStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import React from 'react';
 import { Platform, Text, View } from 'react-native';
@@ -10,7 +10,7 @@ const ManageEntry = () => {
   const ustore = useUserStore();
   const pstore = usePlanStore();
   const astore = useAppStore();
-  const { colors, dark } = useTheme();
+  const { colors, isDark: dark } = useCustomTheme();
 
   const plan_count = pstore.cus_plans.length;
   const app_count =

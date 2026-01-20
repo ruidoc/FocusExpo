@@ -1,7 +1,8 @@
 import { Checkbox, Flex } from '@/components/ui';
-import { Link, useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text } from 'react-native';
+import { Pressable, Text } from 'react-native';
 
 interface Props {
   agree?: boolean;
@@ -9,7 +10,7 @@ interface Props {
 }
 
 const Privicy = (props: Props) => {
-  const { colors, dark } = useTheme();
+  const { isDark, colors } = useCustomTheme();
   const [agree, setAgree] = useState(false);
 
   const changeStage = (val: boolean) => {
@@ -21,6 +22,10 @@ const Privicy = (props: Props) => {
     setAgree(props.agree || false);
   }, [props.agree]);
 
+  const handleLinkPress = () => {
+    router.push('/others/webview');
+  };
+
   return (
     <Flex className="justify-center absolute bottom-5 left-0 right-0 px-7.5">
       <Checkbox.Icon
@@ -29,15 +34,12 @@ const Privicy = (props: Props) => {
         onPress={() => changeStage(!agree)}
         activeColor={colors.primary}
       />
-      <Text className="ml-0.5" style={{ color: dark ? '#fff' : '#333' }}>
+      <Text className="ml-0.5" style={{ color: isDark ? '#fff' : '#333' }}>
         已阅读并同意
       </Text>
-      <Link
-        href="/WebView"
-        style={{ color: colors.primary }}
-        action={{ type: 'push' }}>
-        《隐私政策》
-      </Link>
+      <Pressable onPress={handleLinkPress}>
+        <Text style={{ color: colors.primary }}>《隐私政策》</Text>
+      </Pressable>
     </Flex>
   );
 };

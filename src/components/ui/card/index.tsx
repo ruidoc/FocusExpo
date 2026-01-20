@@ -1,10 +1,10 @@
-import { useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { PageProps } from './type';
 
 const Card = (props: PageProps) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const cardClassName =
     `rounded-lg overflow-hidden ${props.className || ''}`.trim();
 

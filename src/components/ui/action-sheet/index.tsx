@@ -1,4 +1,4 @@
-import { useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { BottomSheet } from './action';
@@ -135,7 +135,7 @@ const ActionSheetModal: React.FC<{
   onCancel: () => void;
   onModalHide?: () => void;
 }> = ({ visible, config, onActionPress, onCancel, onModalHide }) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
 
   return (
     <BottomSheet

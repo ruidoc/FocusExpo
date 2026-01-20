@@ -1,5 +1,5 @@
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Text, View } from 'react-native';
 
@@ -66,7 +66,7 @@ const toastManager = new ToastManager();
 
 // Toast 全局组件
 const ToastGlobal: React.FC = () => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const [visible, setVisible] = useState(false);
   const [config, setConfig] = useState<ToastConfig | null>(null);
   const slideAnim = useRef(new Animated.Value(0)).current;

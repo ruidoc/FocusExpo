@@ -1,4 +1,4 @@
-import { useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
 import React from 'react';
 import { Switch as RNSwitch } from 'react-native';
 
@@ -15,7 +15,7 @@ const Switch = ({
   size = 20,
   onChange,
 }: SwitchProps) => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
 
   // React Native Switch 的 trackColor 和 thumbColor 配置
   // iOS 和 Android 的样式配置不同

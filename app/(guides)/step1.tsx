@@ -1,11 +1,11 @@
 import { useGuideStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 export const GuideStep1 = () => {
-  const problem = useGuideStore(state => state.problem);
-  const setProblem = useGuideStore(state => state.setProblem);
+  const store = useGuideStore();
 
   const addictionOptions = [
     {
@@ -44,15 +44,19 @@ export const GuideStep1 = () => {
 
       <View className="gap-y-4">
         {addictionOptions.map(option => {
-          const isSelected = problem === option.id;
+          const isSelected = store.problem === option.id;
           return (
             <TouchableOpacity
               key={option.id}
-              onPress={() => setProblem(option.id)}
+              onPress={() => {
+                store.setProblem(option.id)
+                store.setCurrentStep('step2')
+                router.push('/step2');
+              }}
               activeOpacity={0.9}
               className={`w-full p-4 rounded-2xl border transition-all ${
                 isSelected
-                  ? 'border-primary bg-primary/5 shadow-sm'
+                  ? 'border-primary bg-primary/5 '
                   : 'border-border bg-card'
               }`}>
               <View className="flex-row items-center">

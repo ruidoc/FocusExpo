@@ -1,5 +1,5 @@
+import { useCustomTheme } from '@/config/theme';
 import { Slider } from '@miblanchard/react-native-slider';
-import { useTheme } from '@react-navigation/native';
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
 
@@ -46,7 +46,7 @@ const CustomSlider: React.FC<SliderProps> = ({
   trackHeight = 4,
   thumbSize = 20,
 }) => {
-  const { dark, colors } = useTheme();
+  const { isDark: dark, colors } = useCustomTheme();
 
   // 根据主题和配置决定颜色
   const getMinimumTrackColor = () => {

@@ -79,7 +79,7 @@ const LoginPrompt = ({ onComplete }: LoginPromptProps) => {
           登录解锁完整功能
         </Text>
 
-        <View className="bg-card rounded-3xl p-6 border border-border shadow-sm">
+        <View className="bg-card rounded-3xl p-6 border border-border ">
           <FeatureItem
             icon="time-outline"
             title="自定义专注时长"

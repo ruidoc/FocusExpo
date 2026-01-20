@@ -58,7 +58,7 @@ const GoalSelect = ({ problem, setProblem, onNext }: GoalSelectProps) => {
               onPress={() => handleSelect(option.id)}
               activeOpacity={0.9}
               className={`w-full p-4 rounded-2xl border transition-all ${isSelected
-                  ? 'border-primary bg-primary/5 shadow-sm'
+                  ? 'border-primary bg-primary/5 '
                   : 'border-border bg-card'
                 }`}>
               <View className="flex-row items-center">
