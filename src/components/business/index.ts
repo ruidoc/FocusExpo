@@ -1,6 +1,7 @@
 export { default as AppToken } from './app-token/index';
 export { default as Apple } from './apple/index';
 export { default as Cascade } from './cascade/index';
+export { default as GuidePage } from './guide-page/index';
 export { default as Lottie } from './lottie/index';
 export { default as Page } from './page/index';
 export { default as Privicy } from './privicy/index';
