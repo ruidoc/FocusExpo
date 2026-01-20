@@ -1,24 +1,19 @@
 import { AppToken } from '@/components/business';
 import { Button } from '@/components/ui';
-import {
-  useAppStore,
-  useGuideStore,
-  useHomeStore,
-  usePlanStore,
-} from '@/stores';
+import { useAppStore, useHomeStore, usePlanStore } from '@/stores';
 import { startAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-import { Image, Platform, Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 interface FocusReadyProps {
   onNext: () => void;
+  setSelectedAppName: (name: string) => void;
 }
 
-const FocusReady = ({ onNext }: FocusReadyProps) => {
+const FocusReady = ({ onNext, setSelectedAppName }: FocusReadyProps) => {
   const store = useHomeStore();
-  const gstore = useGuideStore();
   const pstore = usePlanStore();
   const astore = useAppStore();
 
@@ -44,13 +39,12 @@ const FocusReady = ({ onNext }: FocusReadyProps) => {
 
     if (Platform.OS === 'ios') {
       await startAppLimits(5, newId);
+      // Set first selected app name for display
+      if (astore.ios_selected_apps.length > 0) {
+        setSelectedAppName(astore.ios_selected_apps[0].name || '');
+      }
     } else {
       store.startVpn();
-      const selectedApp =
-        store.all_apps
-          .filter(app => gstore.selected_apps.includes(app.packageName))
-          .map(app => app.appName)[0] || '';
-      gstore.setSelectedAppName(selectedApp);
     }
     setLoading(false);
     onNext();
@@ -74,33 +68,13 @@ const FocusReady = ({ onNext }: FocusReadyProps) => {
 
         <View className="bg-card w-full p-6 rounded-3xl border border-border shadow-sm items-center">
           <Text className="text-sm font-medium text-muted-foreground mb-6 uppercase tracking-widest">
-            受限应用 (
-            {astore.ios_selected_apps.length +
-              store.all_apps.filter(app =>
-                gstore.selected_apps.includes(app.packageName),
-              ).length}
-            )
+            受限应用 ({astore.ios_selected_apps.length})
           </Text>
 
           <View className="flex-row flex-wrap justify-center gap-4">
             {astore.ios_selected_apps.slice(0, 9).map(item => (
               <AppToken key={item.id} app={item} size={56} />
             ))}
-            {store.all_apps
-              .filter(app => gstore.selected_apps.includes(app.packageName))
-              .slice(0, 9)
-              .map(app => (
-                <View key={app.packageName} className="items-center w-16 mb-2">
-                  <Image
-                    source={{
-                      uri: 'data:image/jpeg;base64,' + app.icon,
-                      width: 56,
-                      height: 56,
-                    }}
-                    className="w-14 h-14 rounded-xl"
-                  />
-                </View>
-              ))}
             {astore.ios_selected_apps.length > 9 && (
               <View className="w-14 h-14 rounded-xl bg-muted items-center justify-center">
                 <Text className="text-muted-foreground font-bold">

@@ -13,7 +13,7 @@ export const GuideWelcome = () => {
     // registerPlacement({
     //   placement: 'start_onboarding',
     // });
-    router.push('/step1');
+    router.push('/onboarding');
   };
 
   return (

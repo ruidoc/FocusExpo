@@ -1,5 +1,5 @@
 import { Privicy, Wechat } from '@/components/business';
-import { useGuideStore, useHomeStore, useUserStore } from '@/stores';
+import { useHomeStore, useUserStore } from '@/stores';
 import { markOnboardingCompleted, trackEvent } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
@@ -12,14 +12,12 @@ interface LoginPromptProps {
 
 const LoginPrompt = ({ onComplete }: LoginPromptProps) => {
   const store = useHomeStore();
-  const gstore = useGuideStore();
   const ustore = useUserStore();
 
   const [agree, setAgree] = useState(false);
 
   useEffect(() => {
     store.stopVpn();
-    gstore.completeUnlogin();
   }, []);
 
   const loginResult = (result: any) => {

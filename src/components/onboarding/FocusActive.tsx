@@ -1,21 +1,15 @@
 import { Button } from '@/components/ui';
-import { useGuideStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import { Text, View } from 'react-native';
 
 interface FocusActiveProps {
+  selectedAppName: string;
   onNext: () => void;
 }
 
-const FocusActive = ({ onNext }: FocusActiveProps) => {
-  const gstore = useGuideStore();
-  const appName = gstore.selectedAppName || '';
+const FocusActive = ({ selectedAppName, onNext }: FocusActiveProps) => {
   const isShield = true; // Always shield mode in onboarding
-
-  const handleNext = () => {
-    onNext();
-  };
 
   return (
     <View className="flex-1">
@@ -31,7 +25,8 @@ const FocusActive = ({ onNext }: FocusActiveProps) => {
         </Text>
 
         <Text className="text-lg text-muted-foreground text-center leading-7">
-          现在，&ldquo;{appName || '该应用'}&rdquo;{isShield ? '已被屏蔽' : '可正常访问'}。
+          现在，&ldquo;{selectedAppName || '该应用'}&rdquo;
+          {isShield ? '已被屏蔽' : '可正常访问'}。
         </Text>
 
         <View className="mt-8 bg-card px-6 py-4 rounded-xl border border-border flex-row items-center">
@@ -49,7 +44,7 @@ const FocusActive = ({ onNext }: FocusActiveProps) => {
 
       <View className="px-6 pb-8">
         <Button
-          onPress={handleNext}
+          onPress={onNext}
           text="下一步"
           type="ghost"
           className="w-full rounded-2xl h-14 border-2"

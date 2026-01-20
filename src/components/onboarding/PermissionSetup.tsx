@@ -1,17 +1,24 @@
+import type { ProblemType } from '@/app/onboarding';
 import { Button } from '@/components/ui';
-import { useAppStore, useGuideStore, useHomeStore } from '@/stores';
+import { useAppStore, useHomeStore } from '@/stores';
 import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useEffect } from 'react';
-import { InteractionManager, Platform, Text, TouchableOpacity, View } from 'react-native';
+import {
+  InteractionManager,
+  Platform,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 interface PermissionSetupProps {
+  problem: ProblemType;
   onNext: () => void;
 }
 
-const PermissionSetup = ({ onNext }: PermissionSetupProps) => {
+const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
   const store = useHomeStore();
-  const gstore = useGuideStore();
   const astore = useAppStore();
 
   const step1Completed = store.ios_screen_time_permission;
@@ -54,14 +61,12 @@ const PermissionSetup = ({ onNext }: PermissionSetupProps) => {
 
   const handleNext = () => {
     if (step1Completed && step2Completed) {
-      gstore.setCurrentStep('step3');
-      gstore.updateGuide();
       onNext();
     }
   };
 
   const getProblemLabel = () => {
-    switch (gstore.problem) {
+    switch (problem) {
       case 'video':
         return '短视频';
       case 'game':
@@ -104,9 +109,7 @@ const PermissionSetup = ({ onNext }: PermissionSetupProps) => {
         {isCompleted ? (
           <Icon name="checkmark" size={24} color="#FFF" />
         ) : (
-          <Text className="text-xl font-bold text-muted-foreground">
-            {step}
-          </Text>
+          <Text className="text-xl font-bold text-muted-foreground">{step}</Text>
         )}
       </View>
 
@@ -141,7 +144,7 @@ const PermissionSetup = ({ onNext }: PermissionSetupProps) => {
             屏蔽设置
           </Text>
           <Text className="text-lg text-muted-foreground leading-6">
-            {gstore.problem === 'study'
+            {problem === 'study'
               ? '建立纯净学习环境'
               : `戒除${getProblemLabel()}依赖`}
             ， 只需简单两步。

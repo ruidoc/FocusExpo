@@ -9,18 +9,17 @@ import {
 import { Process } from '@/components/ui';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useRef, useState } from 'react';
-import {
-  Animated,
-  Dimensions,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Animated, Dimensions, TouchableOpacity, View } from 'react-native';
+
+export type ProblemType = 'video' | 'game' | 'study' | null;
 
 const TOTAL_STEPS = 5;
 const screenWidth = Dimensions.get('window').width;
 
 const OnboardingScreen = () => {
   const [step, setStep] = useState(1);
+  const [problem, setProblem] = useState<ProblemType>(null);
+  const [selectedAppName, setSelectedAppName] = useState('');
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   const goNext = () => {
@@ -66,13 +65,21 @@ const OnboardingScreen = () => {
   const renderStep = () => {
     switch (step) {
       case 1:
-        return <GoalSelect onNext={goNext} />;
+        return (
+          <GoalSelect
+            problem={problem}
+            setProblem={setProblem}
+            onNext={goNext}
+          />
+        );
       case 2:
-        return <PermissionSetup onNext={goNext} />;
+        return <PermissionSetup problem={problem} onNext={goNext} />;
       case 3:
-        return <FocusReady onNext={goNext} />;
+        return (
+          <FocusReady onNext={goNext} setSelectedAppName={setSelectedAppName} />
+        );
       case 4:
-        return <FocusActive onNext={goNext} />;
+        return <FocusActive selectedAppName={selectedAppName} onNext={goNext} />;
       case 5:
         return <LoginPrompt onComplete={handleComplete} />;
       default:

@@ -1,38 +1,37 @@
-import { useGuideStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
+import type { ProblemType } from 'app/onboarding';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 interface GoalSelectProps {
+  problem: ProblemType;
+  setProblem: (problem: ProblemType) => void;
   onNext: () => void;
 }
 
-const GoalSelect = ({ onNext }: GoalSelectProps) => {
-  const problem = useGuideStore(state => state.problem);
-  const setProblem = useGuideStore(state => state.setProblem);
-
+const GoalSelect = ({ problem, setProblem, onNext }: GoalSelectProps) => {
   const addictionOptions = [
     {
-      id: 'video',
+      id: 'video' as const,
       title: '短视频上瘾',
       desc: '刷到停不下来',
       icon: 'logo-tiktok',
     },
     {
-      id: 'game',
+      id: 'game' as const,
       title: '沉迷游戏',
       desc: '难以控制时间',
       icon: 'game-controller',
     },
     {
-      id: 'study',
+      id: 'study' as const,
       title: '学习分心',
       desc: '玩手机影响效率',
       icon: 'book',
     },
   ];
 
-  const handleSelect = (id: string) => {
+  const handleSelect = (id: ProblemType) => {
     setProblem(id);
     setTimeout(() => {
       onNext();
@@ -58,11 +57,10 @@ const GoalSelect = ({ onNext }: GoalSelectProps) => {
               key={option.id}
               onPress={() => handleSelect(option.id)}
               activeOpacity={0.9}
-              className={`w-full p-4 rounded-2xl border transition-all ${
-                isSelected
+              className={`w-full p-4 rounded-2xl border transition-all ${isSelected
                   ? 'border-primary bg-primary/5 shadow-sm'
                   : 'border-border bg-card'
-              }`}>
+                }`}>
               <View className="flex-row items-center">
                 <View
                   className={`w-12 h-12 rounded-xl items-center justify-center mr-4 ${isSelected ? 'bg-primary/10' : 'bg-muted/30'}`}>
@@ -78,9 +76,8 @@ const GoalSelect = ({ onNext }: GoalSelectProps) => {
                 </View>
                 <View className="flex-1">
                   <Text
-                    className={`text-lg font-semibold mb-1 ${
-                      isSelected ? 'text-primary' : 'text-foreground'
-                    }`}>
+                    className={`text-lg font-semibold mb-1 ${isSelected ? 'text-primary' : 'text-foreground'
+                      }`}>
                     {option.title}
                   </Text>
                   <Text className="text-sm text-muted-foreground">
