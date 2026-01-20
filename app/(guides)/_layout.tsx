@@ -1,8 +1,8 @@
 import { Page } from '@/components/business';
 import { Process } from '@/components/ui';
 // import { useGuideStore } from '@/stores';
-import { Stack, usePathname } from 'expo-router';
-import React, { useEffect } from 'react';
+import { Stack } from 'expo-router';
+import React from 'react';
 import { View } from 'react-native';
 
 export type OnboardingStackParamList = {
@@ -15,16 +15,16 @@ export type OnboardingStackParamList = {
 
 const OnboardingNavigator = () => {
   // const setCurrentStep = useGuideStore(state => state.setCurrentStep);
-  const pathname = usePathname();
+  // const pathname = usePathname();
 
-  useEffect(() => {
-    // pathname format might be "/(guides)/step1"
-    const match = pathname.match(/step(\d+)/);
-    if (match) {
-      // setCurrentStep(`step${match[1]}`);
-      console.log('match', match);
-    }
-  }, [pathname]);
+  // useEffect(() => {
+  //   // pathname format might be "/(guides)/step1"
+  //   const match = pathname.match(/step(\d+)/);
+  //   if (match) {
+  //     // setCurrentStep(`step${match[1]}`);
+  //     console.log('match', match);
+  //   }
+  // }, [pathname]);
 
   // useEffect(() => {
   //   setCurrentStep('step1');

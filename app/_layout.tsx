@@ -72,6 +72,13 @@ const RootLayout = () => {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                  name="onboarding/index"
+                  options={{
+                    headerShown: false,
+                    gestureEnabled: false,
+                  }}
+                />
+                <Stack.Screen
                   name="login/index"
                   options={{
                     title: '登录',

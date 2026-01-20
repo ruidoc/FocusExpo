@@ -1,0 +1,63 @@
+import { Button } from '@/components/ui';
+import { useGuideStore } from '@/stores';
+import Icon from '@expo/vector-icons/Ionicons';
+import React from 'react';
+import { Text, View } from 'react-native';
+
+interface FocusActiveProps {
+  onNext: () => void;
+}
+
+const FocusActive = ({ onNext }: FocusActiveProps) => {
+  const gstore = useGuideStore();
+  const appName = gstore.selectedAppName || '';
+  const isShield = true; // Always shield mode in onboarding
+
+  const handleNext = () => {
+    onNext();
+  };
+
+  return (
+    <View className="flex-1">
+      <View className="flex-1 items-center justify-center px-8">
+        <View className="w-32 h-32 rounded-full bg-green-500/10 items-center justify-center mb-8 border-4 border-green-500/20">
+          <View className="w-24 h-24 rounded-full bg-green-500 items-center justify-center shadow-lg shadow-green-500/30">
+            <Icon name="checkmark" size={60} color="#FFF" />
+          </View>
+        </View>
+
+        <Text className="text-3xl font-bold text-foreground mb-4 text-center tracking-tight">
+          {isShield ? '屏蔽生效中' : '专注模式已开启'}
+        </Text>
+
+        <Text className="text-lg text-muted-foreground text-center leading-7">
+          现在，&ldquo;{appName || '该应用'}&rdquo;{isShield ? '已被屏蔽' : '可正常访问'}。
+        </Text>
+
+        <View className="mt-8 bg-card px-6 py-4 rounded-xl border border-border flex-row items-center">
+          <Icon
+            name="information-circle-outline"
+            size={20}
+            color="hsl(var(--muted-foreground))"
+            style={{ marginRight: 8 }}
+          />
+          <Text className="text-sm text-muted-foreground">
+            您可以切换应用验证效果
+          </Text>
+        </View>
+      </View>
+
+      <View className="px-6 pb-8">
+        <Button
+          onPress={handleNext}
+          text="下一步"
+          type="ghost"
+          className="w-full rounded-2xl h-14 border-2"
+          textClassName="text-lg text-primary"
+        />
+      </View>
+    </View>
+  );
+};
+
+export default FocusActive;
