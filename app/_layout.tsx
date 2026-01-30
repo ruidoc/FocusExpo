@@ -1,5 +1,6 @@
 import { DebugBall } from '@/components/debug/debug-ball';
 import { PostHogProviderWrapper } from '@/components/providers/PostHogProvider';
+import { StripeProviderWrapper } from '@/components/providers/StripeProvider';
 import { SuperwallProviderWrapper } from '@/components/providers/SuperwallProvider';
 import { ActionSheet, Dialog, Flex, Toast } from '@/components/ui';
 import { ScreenOptions } from '@/config/navigation';
@@ -50,8 +51,9 @@ const RootLayout = () => {
   return (
     <PostHogProviderWrapper>
       <SuperwallProviderWrapper>
-        <ThemeProvider value={theme.navigation}>
-          <Provider theme={theme.xiaoshu}>
+        <StripeProviderWrapper>
+          <ThemeProvider value={theme.navigation}>
+            <Provider theme={theme.xiaoshu}>
             <StatusBar style={theme.isDark ? 'light' : 'dark'} />
             <ActionSheet.Global />
             <Dialog.Global />
@@ -164,6 +166,11 @@ const RootLayout = () => {
                   name="others/welcome"
                   options={{ headerShown: false }}
                 />
+                {/* 支付页面 */}
+                <Stack.Screen
+                  name="checkout/index"
+                  options={{ title: 'Stripe 支付' }}
+                />
                 {/* 调试页面 */}
                 <Stack.Screen
                   name="debug/index"
@@ -173,8 +180,9 @@ const RootLayout = () => {
               </Stack>
               <DebugBall />
             </View>
-          </Provider>
-        </ThemeProvider>
+            </Provider>
+          </ThemeProvider>
+        </StripeProviderWrapper>
       </SuperwallProviderWrapper>
     </PostHogProviderWrapper>
   );
