@@ -39,6 +39,7 @@ const Index = () => {
 
   // 根据用户激活状态和实验状态决定路由
   const userState = getUserActivationState();
+  console.log('userState', userState);
 
   // 决定初始路由
   let initialRoute: any = '/(tabs)';

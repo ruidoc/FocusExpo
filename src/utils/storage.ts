@@ -84,6 +84,44 @@ class StorageManager {
     this.mmkv.clearAll();
   }
 
+  /**
+   * 获取所有键名（用于调试）
+   */
+  getAllKeys(): string[] {
+    return this.mmkv.getAllKeys();
+  }
+
+  /**
+   * 获取原始值（用于调试，自动检测类型）
+   */
+  getRawValue(key: string): { value: any; type: string } {
+    // 尝试获取字符串
+    const strValue = this.mmkv.getString(key);
+    if (strValue !== undefined) {
+      // 尝试解析为 JSON
+      try {
+        const parsed = JSON.parse(strValue);
+        return { value: parsed, type: 'object' };
+      } catch {
+        return { value: strValue, type: 'string' };
+      }
+    }
+
+    // 尝试获取数字
+    const numValue = this.mmkv.getNumber(key);
+    if (numValue !== undefined) {
+      return { value: numValue, type: 'number' };
+    }
+
+    // 尝试获取布尔值
+    const boolValue = this.mmkv.getBoolean(key);
+    if (boolValue !== undefined) {
+      return { value: boolValue, type: 'boolean' };
+    }
+
+    return { value: undefined, type: 'unknown' };
+  }
+
   // 设置组共享数据
   async setGroup(key: string, data: string) {
     try {

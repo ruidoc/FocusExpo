@@ -3,6 +3,7 @@
  */
 
 import { EnvironmentManager } from '@/components/debug/env-manager';
+import { MMKVManager } from '@/components/debug/mmkv-manager';
 import { PostHogManager } from '@/components/debug/posthog-manager';
 import { StorageManager } from '@/components/debug/storage-manager';
 import { Flex } from '@/components/ui';
@@ -12,14 +13,15 @@ import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Pressable, SafeAreaView, Text, View } from 'react-native';
 
-type Tab = 'storage' | 'posthog' | 'environment';
+type Tab = 'storage' | 'mmkv' | 'posthog' | 'environment';
 
 const DebugPage = () => {
   const [activeTab, setActiveTab] = useState<Tab>('storage');
   const setShowDebugBall = useDebugStore(state => state.setShowDebugBall);
   useExperimentStore();
   const tabs = [
-    { id: 'storage' as Tab, label: 'AsyncStorage', icon: 'folder-outline' },
+    { id: 'storage' as Tab, label: 'Async', icon: 'folder-outline' },
+    { id: 'mmkv' as Tab, label: 'MMKV', icon: 'server-outline' },
     { id: 'posthog' as Tab, label: 'PostHog', icon: 'flask-outline' },
     { id: 'environment' as Tab, label: '环境', icon: 'settings-outline' },
   ] as const;
@@ -105,6 +107,7 @@ const DebugPage = () => {
       {/* 内容区域 */}
       <View className="flex-1">
         {activeTab === 'storage' && <StorageManager />}
+        {activeTab === 'mmkv' && <MMKVManager />}
         {activeTab === 'posthog' && <PostHogManager />}
         {activeTab === 'environment' && <EnvironmentManager />}
       </View>
