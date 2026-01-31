@@ -4,8 +4,8 @@ import { storage } from '@/utils';
 import axios, { AxiosInstance } from 'axios';
 import axiosRetry, { exponentialDelay } from 'axios-retry';
 
-const baseURL = 'https://focus.ruidoc.cn/dev-api';
-// const baseURL = 'http://192.168.0.4:8849';
+// const baseURL = 'https://focus.ruidoc.cn/dev-api';
+const baseURL = 'http://192.168.109.92:8849';
 
 const instance: AxiosInstance = axios.create({
   baseURL,

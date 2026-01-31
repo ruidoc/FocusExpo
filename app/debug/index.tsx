@@ -54,6 +54,23 @@ const DebugPage = () => {
         </Flex>
       </View>
 
+      {/* 快捷入口 */}
+      <View className="px-4 py-3 border-b border-gray-800">
+        <Pressable
+          onPress={() => router.push('/test' as any)}
+          className="flex-row items-center justify-between bg-gray-800 rounded-lg px-4 py-3 active:opacity-70 border border-gray-700">
+          <Flex className="flex-row items-center gap-3">
+            <View className="w-8 h-8 rounded-lg bg-gray-700 justify-center items-center">
+              <Icon name="flask" size={18} color="#3B82F6" />
+            </View>
+            <Text className="text-base font-medium text-gray-100">
+              功能测试
+            </Text>
+          </Flex>
+          <Icon name="chevron-forward" size={20} color="#6b7280" />
+        </Pressable>
+      </View>
+
       {/* 选项卡 */}
       <View className="bg-gray-800/50 border-b border-gray-800">
         <Flex className="flex-row">

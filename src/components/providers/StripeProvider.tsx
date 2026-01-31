@@ -1,10 +1,11 @@
 import { StripeProvider } from '@stripe/stripe-react-native';
 import * as Linking from 'expo-linking';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, type ReactElement } from 'react';
 
 // Stripe 可发布密钥（测试环境）
 // TODO: 替换为你的 Stripe publishable key
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_your_publishable_key_here';
+const STRIPE_PUBLISHABLE_KEY =
+  'pk_test_51PP0XS1n1QMvNfT8hAF8yllFt8BYJhzFdOteg8sBwbEgbJnn42T86fu7TY4FD0pGLBvLKAYm7S6oPIiCtedvemPL00KKNl2DOX';
 
 // 商户标识符（Apple Pay 需要）
 const MERCHANT_IDENTIFIER = 'merchant.com.focusone';
@@ -13,12 +14,12 @@ const MERCHANT_IDENTIFIER = 'merchant.com.focusone';
 const URL_SCHEME = 'focusone';
 
 interface StripeProviderWrapperProps {
-  children: React.ReactNode;
+  children: ReactElement;
 }
 
 /**
  * Stripe 支付 Provider 包装组件
- * 
+ *
  * 功能：
  * 1. 初始化 Stripe SDK
  * 2. 处理 Deep Link 回调（3D Secure、银行重定向等）
@@ -27,8 +28,6 @@ interface StripeProviderWrapperProps {
 export const StripeProviderWrapper = ({
   children,
 }: StripeProviderWrapperProps) => {
-  const [publishableKey, setPublishableKey] = useState(STRIPE_PUBLISHABLE_KEY);
-
   // 处理 Stripe 相关的 Deep Link 回调
   const handleDeepLink = useCallback(async (url: string | null) => {
     if (url && url.includes('stripe-redirect')) {
@@ -58,14 +57,17 @@ export const StripeProviderWrapper = ({
   }, [handleDeepLink]);
 
   // 如果没有配置 publishable key，不渲染 StripeProvider
-  if (!publishableKey || publishableKey.includes('your_publishable_key')) {
+  if (
+    !STRIPE_PUBLISHABLE_KEY ||
+    STRIPE_PUBLISHABLE_KEY.includes('your_publishable_key')
+  ) {
     console.warn('【Stripe】请配置 STRIPE_PUBLISHABLE_KEY');
-    return <>{children}</>;
+    return children;
   }
 
   return (
     <StripeProvider
-      publishableKey={publishableKey}
+      publishableKey={STRIPE_PUBLISHABLE_KEY}
       merchantIdentifier={MERCHANT_IDENTIFIER}
       urlScheme={URL_SCHEME}
     >

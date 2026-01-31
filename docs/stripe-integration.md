@@ -9,7 +9,7 @@
 | 支付方式       | 用途           | 端点                                 |
 | -------------- | -------------- | ------------------------------------ |
 | Stripe Web     | Web 端支付     | `/stripe/webhook` (Checkout Session) |
-| **Stripe iOS** | iOS App 支付   | `/stripe/ios/create-payment-sheet`   |
+| **Stripe iOS** | iOS App 支付   | `/stripe/ios/create-payment`         |
 | 微信支付       | APP/扫码支付   | `/payment/wechat/*`                  |
 | 支付宝         | APP/PC 支付    | `/payment/alipay/*`                  |
 | IAP            | App Store 内购 | Superwall 管理                       |
@@ -21,7 +21,7 @@
    │                              │                              │
    │──1. 请求创建支付 ──────────>│                              │
    │   POST /stripe/ios/          │──2. 创建 Customer ────────>│
-   │   create-payment-sheet       │<─── Customer ID ───────────│
+   │   create-payment       │<─── Customer ID ───────────│
    │                              │──3. 创建 CustomerSession ─>│
    │                              │<── CustomerSession Secret ─│
    │                              │──4. 创建 PaymentIntent ───>│
@@ -85,7 +85,7 @@ const MyComponent = () => {
 
 ### API 端点
 
-#### POST `/stripe/ios/create-payment-sheet`
+#### POST `/stripe/ios/create-payment`
 
 创建 iOS PaymentSheet 所需参数。
 
@@ -204,10 +204,10 @@ Webhook 处理失败，检查：
 
 ### 服务端 (FocusApi)
 
-| 文件                                             | 说明                                         |
-| ------------------------------------------------ | -------------------------------------------- |
-| `src/shared/payment/stripe/stripe.service.ts`    | 新增 iOS PaymentSheet 方法                   |
-| `src/shared/payment/stripe/stripe.controller.ts` | 新增 `/stripe/ios/create-payment-sheet` 端点 |
-| `src/shared/payment/stripe/stripe.dto.ts`        | 新增请求/响应 DTO                            |
-| `src/shared/payment/stripe/stripe.module.ts`     | 导入 UserModule, SubscriptionModule          |
-| `src/shared/database/entities/user.entity.ts`    | 新增 `stripe_id` 字段                        |
+| 文件                                             | 说明                                   |
+| ------------------------------------------------ | -------------------------------------- |
+| `src/shared/payment/stripe/stripe.service.ts`    | 新增 iOS PaymentSheet 方法             |
+| `src/shared/payment/stripe/stripe.controller.ts` | 新增 `/stripe/ios/create-payment` 端点 |
+| `src/shared/payment/stripe/stripe.dto.ts`        | 新增请求/响应 DTO                      |
+| `src/shared/payment/stripe/stripe.module.ts`     | 导入 UserModule, SubscriptionModule    |
+| `src/shared/database/entities/user.entity.ts`    | 新增 `stripe_id` 字段                  |
