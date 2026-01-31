@@ -1,25 +1,32 @@
 import { Page } from '@/components/business';
 import {
-  FocusActive,
-  FocusReady,
   GoalSelect,
-  LoginPrompt,
   PermissionSetup,
+  QuickExperience,
+  ValueGuide,
 } from '@/components/onboarding';
 import { Process } from '@/components/ui';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useRef, useState } from 'react';
 import { Animated, Dimensions, TouchableOpacity, View } from 'react-native';
 
-export type ProblemType = 'video' | 'game' | 'study' | null;
+export type ProblemType = 'video' | 'game' | 'study' | 'other' | null;
 
-const TOTAL_STEPS = 5;
+/**
+ * Plan B+ Onboarding 流程（4步）
+ * 1. GoalSelect - 用户画像收集
+ * 2. PermissionSetup - 权限授权 + 选择应用
+ * 3. QuickExperience - 5分钟专注体验
+ * 4. ValueGuide - 价值引导 + 登录
+ */
+const TOTAL_STEPS = 4;
 const screenWidth = Dimensions.get('window').width;
 
 const OnboardingScreen = () => {
   const [step, setStep] = useState(1);
   const [problem, setProblem] = useState<ProblemType>(null);
   const [selectedAppName, setSelectedAppName] = useState('');
+  const [isFocusActive, setIsFocusActive] = useState(false); // 是否处于专注生效阶段
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   const goNext = () => {
@@ -59,7 +66,11 @@ const OnboardingScreen = () => {
   };
 
   const handleComplete = () => {
-    // Navigation to tabs is handled in LoginPrompt
+    // Navigation is handled in ValueGuide
+  };
+
+  const handlePhaseChange = (phase: 'ready' | 'active') => {
+    setIsFocusActive(phase === 'active');
   };
 
   const renderStep = () => {
@@ -76,12 +87,14 @@ const OnboardingScreen = () => {
         return <PermissionSetup problem={problem} onNext={goNext} />;
       case 3:
         return (
-          <FocusReady onNext={goNext} setSelectedAppName={setSelectedAppName} />
+          <QuickExperience
+            onNext={goNext}
+            setSelectedAppName={setSelectedAppName}
+            onPhaseChange={handlePhaseChange}
+          />
         );
       case 4:
-        return <FocusActive selectedAppName={selectedAppName} onNext={goNext} />;
-      case 5:
-        return <LoginPrompt onComplete={handleComplete} />;
+        return <ValueGuide onComplete={handleComplete} />;
       default:
         return null;
     }
@@ -92,20 +105,23 @@ const OnboardingScreen = () => {
     outputRange: [-screenWidth, 0, screenWidth],
   });
 
+  // 第一步不显示返回按钮，专注生效阶段也不显示返回按钮
+  const showBackButton = step > 1 && !isFocusActive;
+
   return (
     <Page safe decoration>
-      <View className="flex-row items-center pt-10 pb-[30px] px-5">
-        {step > 1 ? (
-          <TouchableOpacity onPress={goBack} className="mr-3">
-            <Icon
-              name="chevron-back"
-              size={24}
-              color="hsl(var(--foreground))"
-            />
-          </TouchableOpacity>
-        ) : (
-          <View className="w-6 mr-3" />
-        )}
+      <View className="flex-row items-center h-[60px] px-5">
+        {/* 返回按钮区域 - 固定宽度确保布局稳定 */}
+        <View className="w-8 h-8 mr-3 items-center justify-center">
+          {showBackButton && (
+            <TouchableOpacity
+              onPress={goBack}
+              className="w-8 h-8 items-center justify-center"
+              activeOpacity={0.7}>
+              <Icon name="chevron-back" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          )}
+        </View>
         <View className="flex-1">
           <Process value={step / TOTAL_STEPS} />
         </View>

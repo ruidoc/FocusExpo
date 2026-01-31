@@ -29,6 +29,12 @@ const GoalSelect = ({ problem, setProblem, onNext }: GoalSelectProps) => {
       desc: '玩手机影响效率',
       icon: 'book',
     },
+    {
+      id: 'other' as const,
+      title: '其他',
+      desc: '我只是想专注',
+      icon: 'ellipsis-horizontal',
+    },
   ];
 
   const handleSelect = (id: ProblemType) => {
@@ -39,17 +45,17 @@ const GoalSelect = ({ problem, setProblem, onNext }: GoalSelectProps) => {
   };
 
   return (
-    <View className="flex-1 px-6 pt-12">
-      <View className="mb-10">
-        <Text className="text-3xl font-bold text-foreground mb-3 tracking-tight">
+    <View className="flex-1 px-6">
+      <View className="mb-6">
+        <Text className="text-2xl font-bold text-foreground mb-2 tracking-tight">
           目标设定
         </Text>
-        <Text className="text-lg text-muted-foreground leading-6">
-          告诉我您目前遇到的最大困扰，{'\n'}为您量身定制专注方案。
+        <Text className="text-base text-muted-foreground leading-6">
+          告诉我您目前遇到的最大困扰，为您量身定制专注方案。
         </Text>
       </View>
 
-      <View className="gap-y-4">
+      <View className="gap-y-3">
         {addictionOptions.map(option => {
           const isSelected = problem === option.id;
           return (

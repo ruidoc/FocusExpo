@@ -51,12 +51,12 @@ const Button = ({
 
   const isDisabled = disabled || loading;
 
-  // 根据 size 设置高度和字体大小
+  // 根据 size 设置高度和字体大小（移除 paddingVertical，使用 flex 居中）
   const sizeStyles = {
-    xl: { height: 58, fontSize: 18, paddingVertical: 16 },
-    l: { height: 48, fontSize: 16, paddingVertical: 14 },
-    m: { height: 44, fontSize: 15, paddingVertical: 12 },
-    s: { height: 36, fontSize: 14, paddingVertical: 8 },
+    xl: { height: 58, fontSize: 18, lineHeight: 24 },
+    l: { height: 48, fontSize: 16, lineHeight: 22 },
+    m: { height: 44, fontSize: 15, lineHeight: 20 },
+    s: { height: 36, fontSize: 14, lineHeight: 18 },
   };
 
   const currentSizeStyle = sizeStyles[size];
@@ -93,9 +93,9 @@ const Button = ({
   const buttonClassName =
     `flex-row justify-center items-center rounded-[30px] ${className}`.trim();
 
-  // 合并文字的 className
+  // 合并文字的 className（不应包含按钮的 className）
   const combinedTextClassName =
-    `font-bold tracking-[0.5px] bg-transparent ${className} ${textClassName}`.trim();
+    `font-bold tracking-[0.5px] bg-transparent ${textClassName}`.trim();
 
   return (
     <Animated.View style={[{ opacity }, style]}>
@@ -126,7 +126,11 @@ const Button = ({
             <Text
               className={combinedTextClassName}
               style={[
-                { fontSize: currentSizeStyle.fontSize },
+                {
+                  fontSize: currentSizeStyle.fontSize,
+                  lineHeight: currentSizeStyle.lineHeight,
+                  textAlignVertical: 'center',
+                },
                 getTextStyle(),
                 textStyle,
               ]}>
@@ -137,7 +141,11 @@ const Button = ({
           <Text
             className={combinedTextClassName}
             style={[
-              { fontSize: currentSizeStyle.fontSize },
+              {
+                fontSize: currentSizeStyle.fontSize,
+                lineHeight: currentSizeStyle.lineHeight,
+                textAlignVertical: 'center',
+              },
               getTextStyle(),
               textStyle,
             ]}>

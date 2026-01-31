@@ -54,7 +54,9 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
   const handleStep2 = () => {
     if (Platform.OS === 'ios') {
       selectAppsToLimit().then(data => {
-        astore.addIosApps(data.apps);
+        // 在 onboarding 期间只本地保存，不调用接口
+        // 登录后再上报到服务器
+        astore.setIosSelectedApps(data.apps);
       });
     }
   };
@@ -73,8 +75,21 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
         return '游戏';
       case 'study':
         return '学习';
+      case 'other':
+        return '分心';
       default:
-        return '';
+        return '分心';
+    }
+  };
+
+  const getSubtitle = () => {
+    switch (problem) {
+      case 'study':
+        return '建立纯净学习环境';
+      case 'other':
+        return '建立专注环境';
+      default:
+        return `戒除${getProblemLabel()}依赖`;
     }
   };
 
@@ -138,20 +153,17 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
 
   return (
     <View className="flex-1">
-      <View className="flex-1 px-6 pt-12">
-        <View className="mb-10">
-          <Text className="text-3xl font-bold text-foreground mb-3 tracking-tight">
+      <View className="flex-1 px-6">
+        <View className="mb-6">
+          <Text className="text-2xl font-bold text-foreground mb-2 tracking-tight">
             屏蔽设置
           </Text>
-          <Text className="text-lg text-muted-foreground leading-6">
-            {problem === 'study'
-              ? '建立纯净学习环境'
-              : `戒除${getProblemLabel()}依赖`}
-            ， 只需简单两步。
+          <Text className="text-base text-muted-foreground leading-6">
+            {getSubtitle()}，只需简单两步。
           </Text>
         </View>
 
-        <View>
+        <View className="mb-6">
           <StepCard
             step={1}
             title="授权屏幕时间权限"
@@ -168,9 +180,28 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
             desc="选择您想要屏蔽的APP"
             isCompleted={step2Completed}
             onPress={handleStep2}
-            disabled={step2Completed}
+            disabled={false}
             icon="apps-outline"
           />
+        </View>
+
+        {/* 隐私说明 */}
+        <View className="bg-muted/30 rounded-xl p-4">
+          <View className="flex-row items-center mb-2">
+            <Icon
+              name="shield-checkmark"
+              size={16}
+              color="hsl(var(--primary))"
+            />
+            <Text className="text-sm font-medium text-foreground ml-2">
+              隐私保护承诺
+            </Text>
+          </View>
+          <Text className="text-xs text-muted-foreground leading-5">
+            • 仅在本地运行，不上传任何数据{'\n'}
+            • 无法查看您的聊天记录或隐私{'\n'}
+            • 符合 Apple 隐私政策
+          </Text>
         </View>
       </View>
 
