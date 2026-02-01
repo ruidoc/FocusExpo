@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { Platform, Text, View } from 'react-native';
 
 interface QuickExperienceProps {
+  problem: 'video' | 'game' | 'study' | 'other' | null;
   onNext: () => void;
   setSelectedAppName: (name: string) => void;
   onPhaseChange?: (phase: 'ready' | 'active') => void;
@@ -15,7 +16,11 @@ interface QuickExperienceProps {
 
 type Phase = 'ready' | 'active';
 
+// 专注时长（分钟）
+const FOCUS_DURATION = 2;
+
 const QuickExperience = ({
+  problem,
   onNext,
   setSelectedAppName,
   onPhaseChange,
@@ -26,7 +31,39 @@ const QuickExperience = ({
 
   const [phase, setPhase] = useState<Phase>('ready');
   const [loading, setLoading] = useState(false);
-  const [remaining, setRemaining] = useState(5 * 60); // 5分钟倒计时（秒）
+  const [remaining, setRemaining] = useState(FOCUS_DURATION * 60); // 倒计时（秒）
+
+  // 根据 problem 获取个性化文案
+  const getPersonalizedCopy = () => {
+    switch (problem) {
+      case 'video':
+        return {
+          readySubtitle: '接下来 2 分钟，短视频将无法打开',
+          activeHint: '现在去试试打开抖音',
+          activeHintSub: '它已经被限制了 ✓',
+        };
+      case 'game':
+        return {
+          readySubtitle: '接下来 2 分钟，游戏将无法打开',
+          activeHint: '现在去试试打开你的游戏',
+          activeHintSub: '它已经被限制了 ✓',
+        };
+      case 'study':
+        return {
+          readySubtitle: '接下来 2 分钟，干扰应用将被限制',
+          activeHint: '现在去试试打开那些分心的 App',
+          activeHintSub: '它们已经被限制了 ✓',
+        };
+      default:
+        return {
+          readySubtitle: '接下来 2 分钟，这些应用将被限制',
+          activeHint: '现在去试试打开上面的应用',
+          activeHintSub: '它们已经被限制了 ✓',
+        };
+    }
+  };
+
+  const copy = getPersonalizedCopy();
 
   // 倒计时逻辑
   useEffect(() => {
@@ -64,15 +101,15 @@ const QuickExperience = ({
       start: now.format('HH:mm'),
       start_min: cur_minute,
       start_sec: cur_secend,
-      end: now.add(5, 'minute').format('HH:mm'),
-      end_min: cur_minute + 5,
-      end_sec: cur_secend + 5 * 60,
+      end: now.add(FOCUS_DURATION, 'minute').format('HH:mm'),
+      end_min: cur_minute + FOCUS_DURATION,
+      end_sec: cur_secend + FOCUS_DURATION * 60,
       repeat: 'once',
       mode: 'shield',
     });
 
     if (Platform.OS === 'ios') {
-      await startAppLimits(5, newId);
+      await startAppLimits(FOCUS_DURATION, newId);
       // 设置应用名称供后续使用
       if (astore.ios_selected_apps.length > 0) {
         setSelectedAppName(astore.ios_selected_apps[0].name || '');
@@ -91,21 +128,24 @@ const QuickExperience = ({
   if (phase === 'ready') {
     return (
       <View className="flex-1">
-        <View className="flex-1 px-6 items-center">
-          <View className="w-16 h-16 bg-primary/10 rounded-full items-center justify-center mb-4">
-            <Icon name="flash" size={36} color="hsl(var(--primary))" />
+        <View className="flex-1 px-6 items-center justify-center">
+          <View className="mb-9">
+            <Text className="text-2xl font-bold text-white mb-2 text-center tracking-tight">
+              体验一下
+            </Text>
+            <Text className="text-base text-white/60 text-center">
+              {copy.readySubtitle}
+            </Text>
           </View>
 
-          <Text className="text-2xl font-bold text-foreground mb-2 text-center tracking-tight">
-            准备开启
-          </Text>
-          <Text className="text-base text-muted-foreground text-center mb-8 px-4">
-            已准备好屏蔽环境，建议先从{' '}
-            <Text className="text-primary font-bold">5分钟</Text> 微习惯开始。
-          </Text>
-
-          <View className="bg-card w-full p-5 rounded-2xl border border-border items-center">
-            <Text className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-widest">
+          <View
+            className="w-full p-5 rounded-3xl items-center"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              borderWidth: 2,
+              borderColor: 'transparent',
+            }}>
+            <Text className="text-sm font-medium text-white/50 mb-4 uppercase tracking-widest">
               受限应用 ({astore.ios_selected_apps.length})
             </Text>
 
@@ -114,8 +154,10 @@ const QuickExperience = ({
                 <AppToken key={item.id || item.stableId || index} app={item} size={50} />
               ))}
               {astore.ios_selected_apps.length > 9 && (
-                <View className="w-[50px] h-[50px] rounded-xl bg-muted items-center justify-center">
-                  <Text className="text-muted-foreground font-bold text-sm">
+                <View
+                  className="w-[50px] h-[50px] rounded-xl items-center justify-center"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}>
+                  <Text className="text-white/60 font-bold text-sm">
                     +{astore.ios_selected_apps.length - 9}
                   </Text>
                 </View>
@@ -126,12 +168,11 @@ const QuickExperience = ({
 
         <View className="px-6 pb-8">
           <Button
-            text="开始 5 分钟专注"
+            text={`开始 ${FOCUS_DURATION} 分钟专注`}
             onPress={handleStart}
             loading={loading}
-            className="w-full rounded-2xl h-14"
+            className="w-full rounded-3xl h-14"
             textClassName="text-lg"
-            style={{ shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 }}
           />
         </View>
       </View>
@@ -141,32 +182,41 @@ const QuickExperience = ({
   // 生效阶段
   return (
     <View className="flex-1">
-      <View className="flex-1 px-6 items-center">
+      <View className="flex-1 px-6 items-center justify-center">
         {/* 倒计时圆环 */}
-        <View className="w-28 h-28 rounded-full bg-green-500/10 items-center justify-center mb-5 border-4 border-green-500/20">
-          <View className="w-20 h-20 rounded-full bg-green-500 items-center justify-center">
+        <View
+          className="w-28 h-28 rounded-full items-center justify-center mb-5"
+          style={{
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 4,
+            borderColor: 'rgba(16, 185, 129, 0.2)',
+          }}>
+          <View className="w-20 h-20 rounded-full bg-emerald-500 items-center justify-center">
             <Text className="text-white text-2xl font-bold">
               {formatTime(remaining)}
             </Text>
           </View>
         </View>
 
-        <Text className="text-2xl font-bold text-foreground mb-2 text-center tracking-tight">
-          屏蔽生效中
-        </Text>
+        <View className="mb-6">
+          <Text className="text-2xl font-bold text-white mb-2 text-center tracking-tight">
+            限制生效中
+          </Text>
+          <Text className="text-base text-white/60 text-center">
+            以下应用已被限制
+          </Text>
+        </View>
 
-        <Text className="text-base text-muted-foreground text-center leading-6 mb-4">
-          以下应用已被屏蔽
-        </Text>
-
-        {/* 显示被屏蔽的应用图标 */}
+        {/* 显示被限制的应用图标 */}
         <View className="flex-row flex-wrap justify-center gap-3 mb-6">
           {astore.ios_selected_apps.slice(0, 6).map((item, index) => (
             <AppToken key={item.id || item.stableId || index} app={item} size={44} />
           ))}
           {astore.ios_selected_apps.length > 6 && (
-            <View className="w-11 h-11 rounded-xl bg-muted items-center justify-center">
-              <Text className="text-muted-foreground font-bold text-xs">
+            <View
+              className="w-11 h-11 rounded-xl items-center justify-center"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}>
+              <Text className="text-white/60 font-bold text-xs">
                 +{astore.ios_selected_apps.length - 6}
               </Text>
             </View>
@@ -174,20 +224,26 @@ const QuickExperience = ({
         </View>
 
         {/* 提示用户去验证 */}
-        <View className="bg-card px-5 py-4 rounded-xl border border-border w-full">
+        <View
+          className="px-5 py-4 rounded-2xl w-full"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+          }}>
           <View className="flex-row items-center">
             <Icon
               name="bulb-outline"
               size={20}
-              color="hsl(var(--primary))"
+              color="#7A5AF8"
               style={{ marginRight: 8 }}
             />
-            <Text className="text-sm text-foreground font-medium flex-1">
-              试试返回桌面，打开上面的应用
+            <Text className="text-sm text-white font-medium flex-1">
+              {copy.activeHint}
             </Text>
           </View>
-          <Text className="text-xs text-muted-foreground mt-2 ml-7">
-            看看屏蔽效果是否生效
+          <Text className="text-xs text-white/40 mt-2 ml-7">
+            {copy.activeHintSub}
           </Text>
         </View>
       </View>
@@ -197,7 +253,7 @@ const QuickExperience = ({
           onPress={onNext}
           text="已查看，下一步"
           type="ghost"
-          className="w-full rounded-2xl h-14 border-2"
+          className="w-full rounded-3xl h-14 border-2"
           textClassName="text-lg"
         />
       </View>

@@ -193,7 +193,7 @@ const VipPage = () => {
             <View style={styles.benefitIconBox}>
               <Icon name="apps" size={18} color={THEME_COLOR} />
             </View>
-            <Text style={styles.benefitText}>解锁更多屏蔽应用位</Text>
+            <Text style={styles.benefitText}>解锁更多限制应用位</Text>
           </View>
           <View style={styles.benefitItem}>
             <View style={styles.benefitIconBox}>

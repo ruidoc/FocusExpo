@@ -66,7 +66,7 @@ const QuickStartPage = () => {
 
     // iOS: 验证应用选择
     if (astore.ios_selected_apps.length === 0) {
-      toast('请先选择要屏蔽的应用', 'info');
+      toast('请先选择要限制的应用', 'info');
       return;
     }
 

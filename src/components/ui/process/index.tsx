@@ -38,12 +38,12 @@ const Process: React.FC<ProcessProps> = ({
   value,
   style,
   className = '',
-  height = 11,
+  height = 9,
   animated = true,
   animationDuration = 300,
 }) => {
   const { isDark } = useCustomTheme();
-  
+
   // 确保 value 在 0-1 之间
   const clampedValue = Math.max(0, Math.min(1, value));
   const progress = clampedValue * 100;
@@ -85,7 +85,7 @@ const Process: React.FC<ProcessProps> = ({
             }),
           }}>
           <LinearGradient
-            colors={!isDark ? ['#6366F1', '#8B5CF6'] : ['#A5B4FC', '#C7D2FE']}
+            colors={['#9B7BFA', '#7A5AF8']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={{

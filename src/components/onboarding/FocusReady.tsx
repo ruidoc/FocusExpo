@@ -61,9 +61,8 @@ const FocusReady = ({ onNext, setSelectedAppName }: FocusReadyProps) => {
           准备开启
         </Text>
         <Text className="text-lg text-muted-foreground text-center mb-12 px-4">
-          已准备好屏蔽环境，{'\n'}
-          建议先从 <Text className="text-primary font-bold">5分钟</Text>{' '}
-          微习惯开始。
+          接下来 <Text className="text-primary font-bold">5 分钟</Text>，{'\n'}
+          这些应用将被限制使用
         </Text>
 
         <View className="bg-card w-full p-6 rounded-3xl border border-border  items-center">

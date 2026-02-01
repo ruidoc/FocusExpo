@@ -1,41 +1,48 @@
-import { Button } from '@/components/ui';
-// import { useSuperwall } from '@/utils';
-import Icon from '@expo/vector-icons/Ionicons';
+import { Button, GradientText } from '@/components/ui';
 import { router } from 'expo-router';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const GuideWelcome = () => {
-  // const { registerPlacement } = useSuperwall();
-
   const handleNext = () => {
-    // registerPlacement({
-    //   placement: 'start_onboarding',
-    // });
     router.push('/onboarding');
   };
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-1 px-8 pt-10 justify-center">
-        {/* Header / Hero Section */}
-        <View className="items-center mb-12">
-          <View className="w-20 h-20 rounded-3xl bg-primary items-center justify-center mb-6 shadow-lg shadow-primary/30">
-            <Icon name="hourglass-outline" size={40} color="#FFF" />
-          </View>
-          <Text className="text-3xl font-extrabold text-foreground text-center tracking-tight leading-10">
-            “重新掌控你的时间”
-          </Text>
-          <Text className="text-lg text-muted-foreground text-center mt-4 leading-7">
-            别让屏幕偷走你的生活{'\n'}建立健康的数字习惯
+      <View className="flex-1 px-6 justify-center">
+        {/* Hero Section */}
+        <View className="items-center">
+          {/* Logo */}
+          <Image
+            source={require('@/assets/images/logo.png')}
+            className="w-24 h-24 mb-8"
+            resizeMode="contain"
+          />
+
+          {/* 渐变主文案 */}
+          <GradientText
+            colors={['#7A5AF8', '#9B7BFA', '#B794F6']}
+            className="text-3xl font-extrabold text-center tracking-tight">
+            重新掌控你的时间
+          </GradientText>
+
+          {/* 副标题 */}
+          <Text className="text-base text-white/60 text-center mt-4">
+            别让屏幕偷走你的生活
           </Text>
         </View>
       </View>
 
-      {/* Footer Action */}
-      <View className="px-8 pb-12">
-        <Button onPress={handleNext} size="xl" text="开启专注之旅" />
+      {/* CTA */}
+      <View className="px-6 pb-10">
+        <Button
+          onPress={handleNext}
+          text="开启专注之旅"
+          className="w-full rounded-3xl h-14"
+          textClassName="text-lg"
+        />
       </View>
     </SafeAreaView>
   );

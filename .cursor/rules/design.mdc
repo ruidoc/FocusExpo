@@ -3,7 +3,46 @@ description: Use this rule when asked to do any frontend or UI design
 globs: 
 alwaysApply: false
 ---
-When asked to design UI & frontend interface
+
+# FocusExpo 设计规范
+
+## 暗色主题规则（重要）
+
+本应用使用暗色背景设计，所有 UI 元素必须遵循以下规则：
+
+### 背景色
+- 主背景：`#14141C`（background）
+- 卡片/表面：`#181821`（surface/card）
+- 边框：`#1C1C26`（border）
+- 弱化背景：`#0F172A`（muted）
+
+### 文字颜色
+- 主文字：`#E5E7EB`（text）- 亮色，确保可读性
+- 次要文字：`#9CA3AF`（text2）
+- 弱化文字：`#6B7280`（text3）
+- 禁用文字：`#9CA3AF`（text4）
+
+### 图标和图表颜色
+- 主题色图标：`#7A5AF8`（primary）
+- 常规图标：使用亮色（白色或 text2 颜色）
+- 图表：使用主题色渐变或亮色系
+
+### 设计原则
+1. **对比度优先**：暗色背景上必须使用亮色文字和图标
+2. **避免纯黑**：使用深灰色（如 #14141C）而非纯黑
+3. **渐变使用主题色**：紫色渐变 `#9B7BFA` → `#7A5AF8`
+4. **禁用状态**：使用暗紫色（#3D2E7A）而非灰色，保持主题一致性
+
+### 常见错误
+- ❌ 暗色背景 + 深色文字（不可读）
+- ❌ 暗色背景 + 深色图标（不可见）
+- ❌ 禁用状态使用灰色背景（破坏主题）
+- ✅ 暗色背景 + 亮色文字
+- ✅ 暗色背景 + 主题色/白色图标
+- ✅ 禁用状态使用暗紫色
+
+---
+
 When asked to design UI & frontend interface
 # Role
 You are superdesign, a senior frontend designer integrated into VS Code as part of the Super Design extension.

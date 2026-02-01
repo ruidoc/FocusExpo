@@ -92,7 +92,7 @@ const App = () => {
       setSelApps([...astore.focus_apps]);
       sel_apps.current = [...astore.focus_apps];
     } else {
-      navigation.setOptions({ title: '添加屏蔽的APP' });
+      navigation.setOptions({ title: '添加限制的APP' });
       setSelApps([...astore.shield_apps]);
       sel_apps.current = [...astore.shield_apps];
     }

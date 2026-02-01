@@ -88,13 +88,14 @@ const OnboardingScreen = () => {
       case 3:
         return (
           <QuickExperience
+            problem={problem}
             onNext={goNext}
             setSelectedAppName={setSelectedAppName}
             onPhaseChange={handlePhaseChange}
           />
         );
       case 4:
-        return <ValueGuide onComplete={handleComplete} />;
+        return <ValueGuide problem={problem} onComplete={handleComplete} />;
       default:
         return null;
     }
@@ -110,20 +111,23 @@ const OnboardingScreen = () => {
 
   return (
     <Page safe decoration>
-      <View className="flex-row items-center h-[60px] px-5">
-        {/* 返回按钮区域 - 固定宽度确保布局稳定 */}
-        <View className="w-8 h-8 mr-3 items-center justify-center">
-          {showBackButton && (
-            <TouchableOpacity
-              onPress={goBack}
-              className="w-8 h-8 items-center justify-center"
-              activeOpacity={0.7}>
-              <Icon name="chevron-back" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-          )}
-        </View>
-        <View className="flex-1">
-          <Process value={step / TOTAL_STEPS} />
+      <View className="pt-1 pb-8 px-4">
+        <View className="flex-row items-center">
+          {/* 返回按钮区域 - 固定宽度确保布局稳定 */}
+          <View className="w-10 h-10 items-center justify-center">
+            {showBackButton && (
+              <TouchableOpacity
+                onPress={goBack}
+                className="w-7 h-7 rounded-full bg-white/5 items-center justify-center"
+                activeOpacity={0.7}>
+                <Icon name="chevron-back" size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+          </View>
+          <View className="flex-1 px-1">
+            <Process value={step / TOTAL_STEPS} />
+          </View>
+          <View className="w-10 h-10" />
         </View>
       </View>
 

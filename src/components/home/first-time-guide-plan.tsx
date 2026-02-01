@@ -44,7 +44,7 @@ const FirstTimeGuidePlan = () => {
           <View className="flex-row items-start mb-3">
             <Icon name="checkmark-circle" size={20} color="#7A5AF8" />
             <Text className="text-sm text-[#B3B3BA] ml-2 flex-1">
-              您已选择要屏蔽的应用
+              您已选择要限制的应用
             </Text>
           </View>
           <View className="flex-row items-start mb-3">

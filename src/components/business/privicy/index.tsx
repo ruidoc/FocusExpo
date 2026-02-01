@@ -27,18 +27,18 @@ const Privicy = (props: Props) => {
   };
 
   return (
-    <Flex className="justify-center absolute bottom-5 left-0 right-0 px-7.5">
+    <Flex className="justify-center items-center">
       <Checkbox.Icon
         active={agree}
         size={17}
         onPress={() => changeStage(!agree)}
         activeColor={colors.primary}
       />
-      <Text className="ml-0.5" style={{ color: isDark ? '#fff' : '#333' }}>
-        已阅读并同意
-      </Text>
+      <Text className="ml-1.5 text-white/70 text-sm">已阅读并同意</Text>
       <Pressable onPress={handleLinkPress}>
-        <Text style={{ color: colors.primary }}>《隐私政策》</Text>
+        <Text style={{ color: colors.primary }} className="text-sm">
+          《隐私政策》
+        </Text>
       </Pressable>
     </Flex>
   );

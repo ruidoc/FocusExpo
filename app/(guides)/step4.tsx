@@ -35,11 +35,11 @@ const GuideStep4 = () => {
         </View>
         
         <Text className="text-3xl font-bold text-foreground mb-4 text-center tracking-tight">
-          {isShield ? '屏蔽生效中' : '专注模式已开启'}
+          {isShield ? '限制生效中' : '专注模式已开启'}
         </Text>
         
         <Text className="text-lg text-muted-foreground text-center leading-7">
-            现在，“{appName || '该应用'}”{isShield ? '已被屏蔽' : '可正常访问'}。
+            现在，“{appName || '该应用'}”{isShield ? '已被限制' : '可正常访问'}。
         </Text>
         
         <View className="mt-8 bg-card px-6 py-4 rounded-xl border border-border flex-row items-center">

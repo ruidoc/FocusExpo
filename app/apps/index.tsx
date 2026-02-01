@@ -107,7 +107,7 @@ const App = () => {
         }>
         <Flex className="flex-col" style={{ gap: 20 }}>
           <Card
-            title="屏蔽的APP"
+            title="限制的APP"
             desc="推荐添加游戏、短视频、社交类应用"
             action={
               <TouchableOpacity

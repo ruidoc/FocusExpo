@@ -18,15 +18,23 @@ const App = (props: Props) => {
       return Toast('请阅读并勾选下方隐私政策');
     }
     try {
-      let {
-        data: { code },
-      } = await sendAuthRequest();
+      const authResult = await sendAuthRequest();
+      const code = authResult?.data?.code;
+      
+      if (!code) {
+        console.log('微信授权取消或失败', authResult);
+        return;
+      }
+      
       setLoading(true);
       let result: any = await http.post('/user/wechat-app', { code });
+      setLoading(false);
+      
       if (result?.statusCode) {
         props.onSuccess(result);
       }
     } catch (error) {
+      setLoading(false);
       console.log('微信登录失败', error);
     }
   };

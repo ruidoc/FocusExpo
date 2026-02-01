@@ -67,22 +67,22 @@ const Button = ({
       return {
         backgroundColor: 'transparent',
         borderWidth: 1,
-        borderColor: colors.primary || '#7A5AF8',
+        borderColor: isDisabled ? '#5B4A9E' : colors.primary || '#7A5AF8',
       };
     }
     return {
-      backgroundColor: isDisabled ? '#E5E6EB' : colors.primary || '#53389E',
+      backgroundColor: isDisabled ? '#3D2E7A' : colors.primary || '#7A5AF8',
     };
   };
 
   const getTextStyle = () => {
     if (type === 'ghost') {
       return {
-        color: colors.primary || '#7A5AF8',
+        color: isDisabled ? '#5B4A9E' : colors.primary || '#7A5AF8',
       };
     }
     return {
-      color: '#FFFFFF',
+      color: isDisabled ? 'rgba(255, 255, 255, 0.5)' : '#FFFFFF',
     };
   };
 

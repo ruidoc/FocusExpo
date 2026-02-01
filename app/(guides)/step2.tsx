@@ -142,13 +142,17 @@ const GuideStep2 = () => {
       <View className="flex-1 px-6 pt-12">
         <View className="mb-10">
           <Text className="text-3xl font-bold text-foreground mb-3 tracking-tight">
-            屏蔽设置
+            开启专注保护
           </Text>
           <Text className="text-lg text-muted-foreground leading-6">
             {gstore.problem === 'study'
-              ? '建立纯净学习环境'
-              : `戒除${getProblemLabel()}依赖`}
-            ， 只需简单两步。
+              ? '创建无干扰学习环境'
+              : gstore.problem === 'video'
+                ? '远离短视频干扰'
+                : gstore.problem === 'game'
+                  ? '控制游戏时间'
+                  : '开启专注模式'}
+            ，只需两步
           </Text>
         </View>
 
@@ -156,7 +160,7 @@ const GuideStep2 = () => {
           <StepCard
             step={1}
             title="授权屏幕时间权限"
-            desc="用于检测和屏蔽应用"
+            desc="用于检测和限制应用"
             isCompleted={!!step1Completed}
             onPress={handleStep1}
             disabled={!!step1Completed}
@@ -166,7 +170,7 @@ const GuideStep2 = () => {
           <StepCard
             step={2}
             title={`选择${getProblemLabel()}应用`}
-            desc="选择您想要屏蔽的APP"
+            desc="选择您想要限制的APP"
             isCompleted={step2Completed}
             onPress={handleStep2}
             disabled={step2Completed}

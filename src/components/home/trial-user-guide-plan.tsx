@@ -54,7 +54,7 @@ const TrialUserGuidePlan = () => {
           <View className="flex-row items-start mb-2">
             <Text className="text-[#B3B3BA] mr-2">•</Text>
             <Text className="text-sm text-[#B3B3BA] flex-1">
-              自动屏蔽应用，无需手动操作
+              自动限制应用，无需手动操作
             </Text>
           </View>
           <View className="flex-row items-start">

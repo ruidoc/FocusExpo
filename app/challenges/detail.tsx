@@ -387,9 +387,9 @@ const ChallengeDetailScreen = () => {
           </Flex>
         </Card>
 
-        {/* 必屏蔽应用 */}
+        {/* 必限制应用 */}
         {challenge.required_apps && challenge.required_apps.length > 0 && (
-          <Card title="必须屏蔽的应用">
+          <Card title="必须限制的应用">
             <Flex className="flex-wrap gap-2">
               {challenge.required_apps.map((bundleId, index) => (
                 <Tag key={index} color="#FF4D4F">
@@ -454,7 +454,7 @@ const ChallengeDetailScreen = () => {
                         {dayjs(plan.end, 'HH:mm').format('HH:mm')}
                       </Text>
                       <Text style={styles.planDetail}>
-                        {plan.mode === 'focus' ? '专注模式' : '屏蔽模式'} •{' '}
+                        {plan.mode === 'focus' ? '专注模式' : '限制模式'} •{' '}
                         {Array.isArray(plan.repeat)
                           ? `周${plan.repeat.join(',')}`
                           : '一次性'}

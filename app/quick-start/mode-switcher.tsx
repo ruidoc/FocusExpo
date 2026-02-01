@@ -86,7 +86,7 @@ const ModeSwitcher: React.FC<Props> = ({
               { color: '#fff', fontWeight: 'bold', fontSize: 15, opacity: 0.8 },
               mode === 'shield' && { color: MODE_COLORS.shield, opacity: 1 },
             ]}>
-            屏蔽模式
+            限制模式
           </Text>
         </Pressable>
       </View>

@@ -259,7 +259,7 @@ const App = () => {
               </Text>
             </View>
             <View style={styles.sumBlock}>
-              <Text style={styles.sumLabel}>屏蔽时长</Text>
+              <Text style={styles.sumLabel}>限制时长</Text>
               <Text style={styles.sumValue}>
                 {formatMins(total?.total_blocked_mins || 0)}
               </Text>
@@ -307,7 +307,7 @@ const App = () => {
                         专注 {formatMins(item.actual_mins)}
                       </Text>
                       <Text style={styles.metaText}>
-                        屏蔽 {formatMins(item.blocked_mins)}
+                        限制 {formatMins(item.blocked_mins)}
                       </Text>
                       <Text style={styles.metaText}>
                         任务 {item.success_count}/{item.task_count}
