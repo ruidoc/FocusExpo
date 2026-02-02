@@ -1,3 +1,4 @@
+import { Page } from '@/components/business';
 import { Button, Flex } from '@/components/ui';
 import { trackEvent } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -184,7 +185,7 @@ const PresetsPage = () => {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <Page>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 pt-6 pb-4">
           <Text className="text-2xl font-bold text-white mb-2">
@@ -253,7 +254,7 @@ const PresetsPage = () => {
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </Page>
   );
 };
 

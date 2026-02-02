@@ -103,29 +103,6 @@ const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pstore.editing_plan?.id]); // 只在编辑计划 ID 变化时执行
 
-  // 计算重复次数的函数
-  const calculateRepeatCount = (
-    startDate: Date,
-    endDate: Date,
-    repeatDays: number[],
-  ) => {
-    if (!startDate || !endDate || !repeatDays.length) return 0;
-
-    let count = 0;
-    let current = dayjs(startDate);
-    const end = dayjs(endDate);
-
-    while (current.isSame(end, 'day') || current.isBefore(end, 'day')) {
-      const dayOfWeek = current.day(); // 0=周日 ... 6=周六，直接使用
-      if (repeatDays.includes(dayOfWeek)) {
-        count++;
-      }
-      current = current.add(1, 'day');
-    }
-
-    return count;
-  };
-
   // 单独管理选择的应用状态
   const [selectedApps, setSelectedApps] = useState<any[]>([]);
 

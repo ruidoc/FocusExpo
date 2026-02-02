@@ -68,7 +68,7 @@ const TrialUserGuidePlan = () => {
 
       {/* 按钮组 */}
       <View className="w-full gap-4">
-        <Button text="创建计划任务" onPress={handleCreatePlan} />
+        <Button text="创建专注计划" onPress={handleCreatePlan} />
 
         <TouchableOpacity
           className="flex-row items-center justify-center py-3 gap-2"

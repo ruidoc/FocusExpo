@@ -129,7 +129,7 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
 
           {/* 引导文案 */}
           <Text className="text-[#B3B3BA] text-center mb-6">
-            💪 创建计划任务，让专注成为习惯
+            💪 创建专注计划，让专注成为习惯
           </Text>
 
           {/* 按钮组 */}

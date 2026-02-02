@@ -143,8 +143,11 @@ const EmptyPlan = () => {
       </View>
 
       <View className="w-full gap-4">
-        {/* 主引导：创建计划任务 */}
-        <Button text="创建计划任务" onPress={() => router.push('/plans/add')} />
+        {/* 主引导：创建专注计划 */}
+        <Button
+          text="创建专注计划"
+          onPress={() => router.push('/plans/presets')}
+        />
 
         {/* 次引导：创建一次性任务 */}
         <TouchableOpacity
