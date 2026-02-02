@@ -6,7 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const GuideWelcome = () => {
   const handleNext = () => {
-    router.push('/onboarding');
+    // 使用 replace 清除 welcome 页面，防止从首页返回到 welcome
+    router.replace('/onboarding');
   };
 
   return (

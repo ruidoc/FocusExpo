@@ -128,7 +128,7 @@ const QuickExperience = ({
   if (phase === 'ready') {
     return (
       <View className="flex-1">
-        <View className="flex-1 px-6 items-center justify-center">
+        <View className="flex-1 px-6 items-center pt-12">
           {/* 标题区 */}
           <View className="mb-9">
             <Text className="text-2xl font-bold text-white mb-2 text-center tracking-tight">
@@ -148,7 +148,7 @@ const QuickExperience = ({
               borderColor: 'rgba(255, 255, 255, 0.08)',
             }}>
             <Text className="text-sm font-medium text-white/70 mb-4">
-              即将锁定
+              即将锁定的应用
             </Text>
 
             <View className="flex-row flex-wrap justify-center gap-3 mb-4">
@@ -156,7 +156,7 @@ const QuickExperience = ({
                 <AppToken
                   key={item.id || item.stableId || index}
                   app={item}
-                  size={50}
+                  size={33}
                 />
               ))}
               {astore.ios_selected_apps.length > 9 && (
@@ -235,7 +235,7 @@ const QuickExperience = ({
             <AppToken
               key={item.id || item.stableId || index}
               app={item}
-              size={44}
+              size={28}
             />
           ))}
           {astore.ios_selected_apps.length > 6 && (
@@ -265,24 +265,20 @@ const QuickExperience = ({
               style={{ marginRight: 8 }}
             />
             <Text className="text-sm text-white font-medium">
-              💡 想确认锁定效果？
+              如何验证锁定效果？
             </Text>
           </View>
 
-          <Text className="text-xs text-white/60 mb-2">现在可以：</Text>
-          
-          <View className="gap-y-1.5 mb-3">
+          <View className="gap-y-1.5 pl-5">
             <Text className="text-xs text-white/60">1. 退出这个页面</Text>
             <Text className="text-xs text-white/60">
-              2. 尝试打开{copy.activeAppHint}
+              2. 找到被锁定的应用，尝试打开
             </Text>
-            <Text className="text-xs text-white/60">3. 看看是否能够打开</Text>
           </View>
-
-          <Text className="text-xs text-white/40">
-            提示：锁定期间无法打开
-          </Text>
         </View>
+        <Text className="text-xs text-center mt-3 text-white/40">
+          提示：非紧急时刻，不允许解除锁定
+        </Text>
       </View>
 
       {/* 底部按钮 */}

@@ -58,8 +58,9 @@ const App = () => {
 
     // 从 onboarding 进入时，禁止返回
     if (fromOnboarding && !isEditing) {
-      options.headerLeft = () => null; // 隐藏返回按钮
+      options.headerLeft = () => <View />; // 显式返回空组件，完全隐藏返回按钮
       options.gestureEnabled = false; // 禁用手势返回
+      options.headerBackVisible = false; // 明确禁用返回按钮
     }
 
     navigation.setOptions(options);

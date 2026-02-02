@@ -1,5 +1,4 @@
 import { Privicy, Wechat } from '@/components/business';
-import { Flex } from '@/components/ui';
 import { useHomeStore, useUserStore } from '@/stores';
 import { markOnboardingCompleted, trackEvent } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -59,16 +58,17 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
       // 需要绑定手机号
       return toRegister(result.data);
     }
-    ustore.login(result as Record<string, any>, val => {
-      if (val) {
-        completeWithLogin();
-      }
-    });
+    // 参考 wx.tsx 的做法：直接调用 loginSuccess，传入 result.data
+    ustore.loginSuccess(result.data, 'wechat');
+    completeWithLogin();
   };
 
   const completeWithLogin = () => {
     markOnboardingCompleted();
-    trackEvent('onboarding_completed', { with_login: true, step: 'value_guide' });
+    trackEvent('onboarding_completed', {
+      with_login: true,
+      step: 'value_guide',
+    });
     // 登录成功后跳转到创建计划页面
     router.replace('/plans/add?from=onboarding');
     onComplete();
@@ -96,12 +96,9 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
 
         {/* 问题区 */}
         <View className="mb-6">
-          <Text className="text-base text-white/70 mb-2">
-            但每次都要手动开启
-          </Text>
+          <Text className="text-base text-white/70 mb-2">然而，</Text>
           <Text className="text-sm text-white/50 leading-6">
-            每次问自己"要不要开始专注？"{'\n'}
-            这个决定本身就在消耗意志力
+            你依然需要消耗意志力，主动开始专注
           </Text>
         </View>
 
