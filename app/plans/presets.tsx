@@ -1,4 +1,5 @@
 import { Button, Flex } from '@/components/ui';
+import { trackEvent } from '@/utils';
 import { router, useLocalSearchParams } from 'expo-router';
 import Icon from '@expo/vector-icons/Ionicons';
 import React from 'react';
@@ -125,6 +126,13 @@ const PresetsPage = () => {
   const fromOnboarding = params.from === 'onboarding';
 
   const handleSelectPreset = (preset: PresetPlan) => {
+    // 埋点：记录用户选择的预设
+    trackEvent('preset_selected', { 
+      preset_id: preset.id,
+      preset_name: preset.name,
+      from: fromOnboarding ? 'onboarding' : 'normal',
+    });
+
     // 构建时间参数
     const today = dayjs();
     const startTime = dayjs(preset.startTime, 'HH:mm').toDate();
@@ -144,6 +152,7 @@ const PresetsPage = () => {
   };
 
   const handleCustomPlan = () => {
+    trackEvent('custom_plan_clicked', { from: fromOnboarding ? 'onboarding' : 'normal' });
     router.push({
       pathname: '/plans/add',
       params: {
@@ -153,6 +162,7 @@ const PresetsPage = () => {
   };
 
   const handleSkip = () => {
+    trackEvent('plan_creation_skipped', { from: 'presets', step: 'preset_selection' });
     router.replace('/(tabs)');
   };
 

@@ -358,11 +358,6 @@ const App = () => {
     });
   };
 
-  // 稍后创建（仅从 onboarding 进入时可用）
-  const handleSkipPlanCreation = () => {
-    trackEvent('plan_creation_skipped', { from: 'onboarding' });
-    router.replace('/(tabs)');
-  };
 
   return (
     <Page>
@@ -511,16 +506,6 @@ const App = () => {
       </ScrollView>
       <View className="px-5 pb-10">
         <Button onPress={submit} text={isEditing ? '保存修改' : '创建计划'} />
-        
-        {/* 仅在从 onboarding 进入时显示"稍后创建"按钮 */}
-        {!isEditing && fromOnboarding && (
-          <TouchableOpacity
-            onPress={handleSkipPlanCreation}
-            activeOpacity={0.6}
-            className="py-3 items-center justify-center mt-2">
-            <Text className="text-white/50 text-sm">稍后创建</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </Page>
   );
