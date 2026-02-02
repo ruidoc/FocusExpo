@@ -35,16 +35,26 @@ const App = () => {
   const { colors } = useCustomTheme();
   const navigation = useNavigation();
   const params = useLocalSearchParams();
+  
+  // 解析预设参数
+  const presetName = params.presetName as string | undefined;
+  const presetStart = params.presetStart as string | undefined;
+  const presetEnd = params.presetEnd as string | undefined;
+  const presetRepeat = params.presetRepeat as string | undefined;
+  
   const [title, setTitle] = useState(() => {
-    // 编辑模式下初始化标题
+    // 预设模式：使用预设名称
+    if (presetName) return presetName;
+    // 编辑模式：使用编辑计划名称
     return pstore.editing_plan?.name || '';
   });
 
   // 判断是否为编辑模式
   const isEditing = !!pstore.editing_plan;
   
-  // 检测是否从 onboarding 进入
+  // 检测是否从 onboarding 或 presets 进入
   const fromOnboarding = params.from === 'onboarding';
+  const fromPresets = params.from === 'presets';
 
   // 使用 ref 保存清理函数，避免依赖项导致的循环更新
   const clearEditingPlanRef = useRef(pstore.clearEditingPlan);
@@ -57,6 +67,7 @@ const App = () => {
     };
 
     // 从 onboarding 进入时，禁止返回
+    // 从 presets 进入时，允许返回
     if (fromOnboarding && !isEditing) {
       options.headerLeft = () => <View />; // 显式返回空组件，完全隐藏返回按钮
       options.gestureEnabled = false; // 禁用手势返回
@@ -145,6 +156,32 @@ const App = () => {
           ? plan.repeat
           : (parseRepeat(plan.repeat) as number[]),
         mode: plan.mode || 'shield',
+      };
+    }
+
+    // 预设模式：使用预设参数初始化
+    if (presetStart && presetEnd && presetRepeat) {
+      const start = dayjs(presetStart, 'HH:mm').toDate();
+      const end = dayjs(presetEnd, 'HH:mm').toDate();
+      const today = new Date();
+      const nextMonth = dayjs(today).add(30, 'day').toDate();
+      
+      let repeat: number[] | 'once' = [1, 2, 3, 4, 5];
+      try {
+        repeat = JSON.parse(presetRepeat);
+      } catch (e) {
+        console.log('解析预设重复参数失败:', e);
+      }
+      
+      return {
+        name: presetName || '',
+        start,
+        end,
+        start_date: today,
+        end_date: nextMonth,
+        repeat,
+        mode: 'shield',
+        apps: [],
       };
     }
 
@@ -240,11 +277,13 @@ const App = () => {
         pstore.addPlan(subinfo, async res => {
           if (res) {
             Toast('添加任务成功', 'success');
-            trackEvent('plan_created', { from: fromOnboarding ? 'onboarding' : 'normal' });
+            trackEvent('plan_created', { 
+              from: fromOnboarding ? 'onboarding' : fromPresets ? 'presets' : 'normal' 
+            });
             
-            // 从 onboarding 进入：清空路由栈，直接进入首页
+            // 从 onboarding 或 presets 进入：清空路由栈，直接进入首页
             // 正常进入：返回上一页
-            if (fromOnboarding) {
+            if (fromOnboarding || fromPresets) {
               router.replace('/(tabs)');
             } else {
               router.back();

@@ -69,8 +69,8 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
       with_login: true,
       step: 'value_guide',
     });
-    // 登录成功后跳转到创建计划页面
-    router.replace('/plans/add?from=onboarding');
+    // 登录成功后跳转到预设计划选择页面
+    router.replace('/plans/presets?from=onboarding');
     onComplete();
   };
 
