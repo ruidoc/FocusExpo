@@ -53,10 +53,10 @@ const GoalSelect = ({ problem, setProblem, onNext }: GoalSelectProps) => {
     <View className="flex-1 px-6">
       <View className="mb-9">
         <Text className="text-2xl font-bold text-white mb-2 tracking-tight text-center">
-          为什么无法专注？
+          你最常在什么场景分心？
         </Text>
         <Text className="text-base text-white/60 leading-6 text-center">
-          选择一个场景，我们帮你应对
+          选择一个，为你定制专注方案
         </Text>
       </View>
 

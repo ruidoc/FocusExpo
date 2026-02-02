@@ -11,12 +11,12 @@ import {
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { useAppStore, usePlanStore } from '@/stores';
-import { parseRepeat } from '@/utils';
+import { parseRepeat, trackEvent } from '@/utils';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, ScrollView, Text, View } from 'react-native';
+import { Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 type FormState = {
   name: string;
@@ -34,6 +34,7 @@ const App = () => {
   const astore = useAppStore();
   const { colors } = useCustomTheme();
   const navigation = useNavigation();
+  const params = useLocalSearchParams();
   const [title, setTitle] = useState(() => {
     // 编辑模式下初始化标题
     return pstore.editing_plan?.name || '';
@@ -41,17 +42,28 @@ const App = () => {
 
   // 判断是否为编辑模式
   const isEditing = !!pstore.editing_plan;
+  
+  // 检测是否从 onboarding 进入
+  const fromOnboarding = params.from === 'onboarding';
 
   // 使用 ref 保存清理函数，避免依赖项导致的循环更新
   const clearEditingPlanRef = useRef(pstore.clearEditingPlan);
   clearEditingPlanRef.current = pstore.clearEditingPlan;
 
-  // 动态设置页面标题
+  // 动态设置页面标题和导航选项
   useEffect(() => {
-    navigation.setOptions({
-      title: isEditing ? '编辑专注计划' : '添加专注计划',
-    });
-  }, [isEditing, navigation]);
+    const options: any = {
+      title: isEditing ? '编辑专注计划' : '创建专注计划',
+    };
+
+    // 从 onboarding 进入时，禁止返回
+    if (fromOnboarding && !isEditing) {
+      options.headerLeft = () => null; // 隐藏返回按钮
+      options.gestureEnabled = false; // 禁用手势返回
+    }
+
+    navigation.setOptions(options);
+  }, [isEditing, fromOnboarding, navigation]);
 
   // 页面失去焦点时清理编辑状态
   useFocusEffect(
@@ -227,7 +239,15 @@ const App = () => {
         pstore.addPlan(subinfo, async res => {
           if (res) {
             Toast('添加任务成功', 'success');
-            router.back();
+            trackEvent('plan_created', { from: fromOnboarding ? 'onboarding' : 'normal' });
+            
+            // 从 onboarding 进入：清空路由栈，直接进入首页
+            // 正常进入：返回上一页
+            if (fromOnboarding) {
+              router.replace('/(tabs)');
+            } else {
+              router.back();
+            }
           } else {
             Toast('添加任务失败', 'error');
           }
@@ -296,6 +316,12 @@ const App = () => {
       ...form,
       apps: apps.map(r => `${r.stableId}:${r.type}`),
     });
+  };
+
+  // 稍后创建（仅从 onboarding 进入时可用）
+  const handleSkipPlanCreation = () => {
+    trackEvent('plan_creation_skipped', { from: 'onboarding' });
+    router.replace('/(tabs)');
   };
 
   return (
@@ -444,7 +470,17 @@ const App = () => {
         </FieldGroup>
       </ScrollView>
       <View className="px-5 pb-10">
-        <Button onPress={submit} text={isEditing ? '保存修改' : '确认'} />
+        <Button onPress={submit} text={isEditing ? '保存修改' : '创建计划'} />
+        
+        {/* 仅在从 onboarding 进入时显示"稍后创建"按钮 */}
+        {!isEditing && fromOnboarding && (
+          <TouchableOpacity
+            onPress={handleSkipPlanCreation}
+            activeOpacity={0.6}
+            className="py-3 items-center justify-center mt-2">
+            <Text className="text-white/50 text-sm">稍后创建</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </Page>
   );

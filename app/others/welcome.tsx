@@ -11,27 +11,37 @@ export const GuideWelcome = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-1 px-6 justify-center">
-        {/* Hero Section */}
-        <View className="items-center">
-          {/* Logo */}
-          <Image
-            source={require('@/assets/images/logo.png')}
-            className="w-24 h-24 mb-8"
-            resizeMode="contain"
-          />
-
-          {/* 渐变主文案 */}
+      <View className="flex-1 px-6 pt-[26%] items-center">
+        {/* Logo */}
+        <Image
+          source={require('@/assets/images/logo.png')}
+          className="w-[100px] h-[100px] mb-16"
+          resizeMode="contain"
+        />
+        <View className="items-center gap-2">
+          {/* 主标题 - 价值定位 */}
           <GradientText
             colors={['#7A5AF8', '#9B7BFA', '#B794F6']}
-            className="text-3xl font-extrabold text-center tracking-tight">
-            重新掌控你的时间
+            style={{
+              fontSize: 32,
+              fontWeight: '700',
+              textAlign: 'center',
+              lineHeight: 40,
+              letterSpacing: -0.5,
+              marginBottom: 12,
+            }}>
+            专注，不再需要意志力
           </GradientText>
 
-          {/* 副标题 */}
-          <Text className="text-base text-white/60 text-center mt-4">
-            别让屏幕偷走你的生活
-          </Text>
+          {/* 副标题 - 实现方式 */}
+          <View className="mb-10">
+            <Text className="text-base text-[#8892b0] text-center leading-relaxed">
+              定时自动屏蔽分心应用
+            </Text>
+            <Text className="text-base text-[#8892b0] text-center leading-relaxed mt-1">
+              系统级强制执行
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -39,9 +49,9 @@ export const GuideWelcome = () => {
       <View className="px-6 pb-10">
         <Button
           onPress={handleNext}
-          text="开启专注之旅"
+          text="开始使用"
           className="w-full rounded-3xl h-14"
-          textClassName="text-lg"
+          textClassName="text-lg font-semibold"
         />
       </View>
     </SafeAreaView>
