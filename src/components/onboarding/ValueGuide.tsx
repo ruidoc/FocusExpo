@@ -96,9 +96,8 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
 
         {/* 问题区 */}
         <View className="mb-6">
-          <Text className="text-base text-white/70 mb-2">然而，</Text>
-          <Text className="text-sm text-white/50 leading-6">
-            你依然需要消耗意志力，主动开始专注
+          <Text className="text-base text-white/70 mb-2">
+            然而，每次主动专注，都需要意志力
           </Text>
         </View>
 
@@ -200,7 +199,7 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
       </View>
 
       {/* 底部操作区 */}
-      <View className="px-6 pb-6">
+      <View className="flex px-6 gap-0">
         <Wechat
           type="custom"
           disabled={!agree}
@@ -208,10 +207,9 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
           label="登录后创建计划"
         />
 
-        <Text className="text-center text-white/40 text-xs mt-3">
+        {/* <Text className="text-center text-white/40 text-xs">
           设置一次，每天生效
-        </Text>
-
+        </Text> */}
         <View className="flex-row items-center justify-center mt-4">
           <Privicy onChange={setAgree} />
         </View>

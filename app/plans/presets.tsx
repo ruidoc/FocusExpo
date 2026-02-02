@@ -1,11 +1,11 @@
 import { Button, Flex } from '@/components/ui';
 import { trackEvent } from '@/utils';
-import { router, useLocalSearchParams } from 'expo-router';
 import Icon from '@expo/vector-icons/Ionicons';
-import React from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect } from 'react';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 interface PresetPlan {
   id: string;
@@ -123,11 +123,23 @@ const PRESET_PLANS: PresetPlan[] = [
 
 const PresetsPage = () => {
   const params = useLocalSearchParams();
+  const navigation = useNavigation();
   const fromOnboarding = params.from === 'onboarding';
+
+  // 从 onboarding 进入时，禁止返回
+  useEffect(() => {
+    if (fromOnboarding) {
+      navigation.setOptions({
+        headerLeft: () => <View />, // 显式返回空组件，完全隐藏返回按钮
+        gestureEnabled: false, // 禁用手势返回
+        headerBackVisible: false, // 明确禁用返回按钮
+      });
+    }
+  }, [fromOnboarding, navigation]);
 
   const handleSelectPreset = (preset: PresetPlan) => {
     // 埋点：记录用户选择的预设
-    trackEvent('preset_selected', { 
+    trackEvent('preset_selected', {
       preset_id: preset.id,
       preset_name: preset.name,
       from: fromOnboarding ? 'onboarding' : 'normal',
@@ -152,7 +164,9 @@ const PresetsPage = () => {
   };
 
   const handleCustomPlan = () => {
-    trackEvent('custom_plan_clicked', { from: fromOnboarding ? 'onboarding' : 'normal' });
+    trackEvent('custom_plan_clicked', {
+      from: fromOnboarding ? 'onboarding' : 'normal',
+    });
     router.push({
       pathname: '/plans/add',
       params: {
@@ -162,13 +176,16 @@ const PresetsPage = () => {
   };
 
   const handleSkip = () => {
-    trackEvent('plan_creation_skipped', { from: 'presets', step: 'preset_selection' });
+    trackEvent('plan_creation_skipped', {
+      from: 'presets',
+      step: 'preset_selection',
+    });
     router.replace('/(tabs)');
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView className="flex-1">
+    <View className="flex-1 bg-background">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 pt-6 pb-4">
           <Text className="text-2xl font-bold text-white mb-2">
             选择专注计划
@@ -190,8 +207,8 @@ const PresetsPage = () => {
                 borderWidth: 1,
                 borderColor: 'rgba(255, 255, 255, 0.08)',
               }}>
-              <Flex justify="between" align="start" className="mb-2">
-                <Flex align="center" className="gap-x-2">
+              <Flex className="justify-between items-start mb-2">
+                <Flex className="items-center gap-x-2">
                   <Text className="text-2xl">{preset.icon}</Text>
                   <Text className="text-base font-semibold text-white">
                     {preset.name}
@@ -218,7 +235,9 @@ const PresetsPage = () => {
       </ScrollView>
 
       {/* 底部按钮区 */}
-      <View className="px-6 pb-6 pt-4 border-t border-white/5">
+      <View
+        className="px-6 pb-2 pt-4 border-t border-white/5"
+        style={{ paddingBottom: 24 }}>
         <Button
           type="ghost"
           onPress={handleCustomPlan}
@@ -234,7 +253,7 @@ const PresetsPage = () => {
           </TouchableOpacity>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

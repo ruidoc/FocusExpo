@@ -16,7 +16,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 type FormState = {
   name: string;
@@ -35,13 +35,13 @@ const App = () => {
   const { colors } = useCustomTheme();
   const navigation = useNavigation();
   const params = useLocalSearchParams();
-  
+
   // 解析预设参数
   const presetName = params.presetName as string | undefined;
   const presetStart = params.presetStart as string | undefined;
   const presetEnd = params.presetEnd as string | undefined;
   const presetRepeat = params.presetRepeat as string | undefined;
-  
+
   const [title, setTitle] = useState(() => {
     // 预设模式：使用预设名称
     if (presetName) return presetName;
@@ -51,7 +51,7 @@ const App = () => {
 
   // 判断是否为编辑模式
   const isEditing = !!pstore.editing_plan;
-  
+
   // 检测是否从 onboarding 或 presets 进入
   const fromOnboarding = params.from === 'onboarding';
   const fromPresets = params.from === 'presets';
@@ -60,22 +60,12 @@ const App = () => {
   const clearEditingPlanRef = useRef(pstore.clearEditingPlan);
   clearEditingPlanRef.current = pstore.clearEditingPlan;
 
-  // 动态设置页面标题和导航选项
+  // 动态设置页面标题
   useEffect(() => {
-    const options: any = {
+    navigation.setOptions({
       title: isEditing ? '编辑专注计划' : '创建专注计划',
-    };
-
-    // 从 onboarding 进入时，禁止返回
-    // 从 presets 进入时，允许返回
-    if (fromOnboarding && !isEditing) {
-      options.headerLeft = () => <View />; // 显式返回空组件，完全隐藏返回按钮
-      options.gestureEnabled = false; // 禁用手势返回
-      options.headerBackVisible = false; // 明确禁用返回按钮
-    }
-
-    navigation.setOptions(options);
-  }, [isEditing, fromOnboarding, navigation]);
+    });
+  }, [isEditing, navigation]);
 
   // 页面失去焦点时清理编辑状态
   useFocusEffect(
@@ -87,10 +77,12 @@ const App = () => {
     }, []), // 使用 ref，不需要依赖项
   );
 
-  // 编辑模式下初始化选中的应用
+  // 编辑模式下初始化选中的应用和时长模式
   useEffect(() => {
     if (pstore.editing_plan) {
       const plan = pstore.editing_plan;
+
+      // 初始化应用选择
       if (
         plan.apps &&
         Array.isArray(plan.apps) &&
@@ -101,6 +93,12 @@ const App = () => {
         );
         setSelectedApps(apps);
       }
+
+      // 检测是否为长期有效（结束日期大于 5 年后）
+      const endDate = dayjs(plan.end_date);
+      const fiveYearsLater = dayjs().add(5, 'year');
+      const isLong = endDate.isAfter(fiveYearsLater);
+      setIsLongTerm(isLong);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pstore.editing_plan?.id]); // 只在编辑计划 ID 变化时执行
@@ -130,6 +128,9 @@ const App = () => {
 
   // 单独管理选择的应用状态
   const [selectedApps, setSelectedApps] = useState<any[]>([]);
+
+  // 时长模式：true = 长期有效，false = 自定义时长
+  const [isLongTerm, setIsLongTerm] = useState(true);
   const [form, setForm] = useState<FormState>(() => {
     // 编辑模式：使用编辑任务的数据初始化
     if (pstore.editing_plan) {
@@ -161,24 +162,41 @@ const App = () => {
 
     // 预设模式：使用预设参数初始化
     if (presetStart && presetEnd && presetRepeat) {
-      const start = dayjs(presetStart, 'HH:mm').toDate();
-      const end = dayjs(presetEnd, 'HH:mm').toDate();
+      // 解析时间字符串 "06:30" -> Date 对象（只保留时间部分）
+      const [startHour, startMin] = presetStart.split(':').map(Number);
+      const [endHour, endMin] = presetEnd.split(':').map(Number);
+
+      const start = dayjs()
+        .hour(startHour)
+        .minute(startMin)
+        .second(0)
+        .millisecond(0)
+        .toDate();
+
+      const end = dayjs()
+        .hour(endHour)
+        .minute(endMin)
+        .second(0)
+        .millisecond(0)
+        .toDate();
+
       const today = new Date();
-      const nextMonth = dayjs(today).add(30, 'day').toDate();
-      
+      // 默认长期有效（10年后）
+      const longTermDate = dayjs(today).add(10, 'year').toDate();
+
       let repeat: number[] | 'once' = [1, 2, 3, 4, 5];
       try {
         repeat = JSON.parse(presetRepeat);
       } catch (e) {
         console.log('解析预设重复参数失败:', e);
       }
-      
+
       return {
         name: presetName || '',
         start,
         end,
         start_date: today,
-        end_date: nextMonth,
+        end_date: longTermDate,
         repeat,
         mode: 'shield',
         apps: [],
@@ -189,13 +207,14 @@ const App = () => {
     const start = new Date();
     const end = dayjs(start).add(20, 'minute').toDate();
     const today = new Date();
-    const tomorrow = dayjs(today).add(1, 'day').toDate();
+    // 默认长期有效（10年后）
+    const longTermDate = dayjs(today).add(10, 'year').toDate();
     return {
       name: '',
       start,
       end,
       start_date: today,
-      end_date: tomorrow,
+      end_date: longTermDate,
       repeat: [1, 2, 3, 4, 5],
       mode: 'shield',
       apps: [],
@@ -211,8 +230,8 @@ const App = () => {
         return Toast('请输入计划名称', 'error');
       }
 
-      // 验证日期范围
-      if (!dayjs(end_date).isAfter(dayjs(start_date), 'day')) {
+      // 验证日期范围（仅在自定义时长模式下验证）
+      if (!isLongTerm && !dayjs(end_date).isAfter(dayjs(start_date), 'day')) {
         return Toast('结束日期必须大于开始日期', 'error');
       }
       // 验证应用选择（仅iOS）
@@ -277,10 +296,14 @@ const App = () => {
         pstore.addPlan(subinfo, async res => {
           if (res) {
             Toast('添加任务成功', 'success');
-            trackEvent('plan_created', { 
-              from: fromOnboarding ? 'onboarding' : fromPresets ? 'presets' : 'normal' 
+            trackEvent('plan_created', {
+              from: fromOnboarding
+                ? 'onboarding'
+                : fromPresets
+                  ? 'presets'
+                  : 'normal',
             });
-            
+
             // 从 onboarding 或 presets 进入：清空路由栈，直接进入首页
             // 正常进入：返回上一页
             if (fromOnboarding || fromPresets) {
@@ -358,11 +381,10 @@ const App = () => {
     });
   };
 
-
   return (
     <Page>
       <ScrollView style={{ padding: 15 }}>
-        {/* 任务名称输入框 */}
+        {/* 1. 任务名称输入框 */}
         <FieldGroup className="rounded-xl mb-4 p-4">
           <Flex className="flex-row items-center gap-2">
             <Text>{isEditing ? '✏️' : '🏆'}</Text>
@@ -375,56 +397,7 @@ const App = () => {
           </Flex>
         </FieldGroup>
 
-        {/* 日期选择组 */}
-        <FieldGroup className="rounded-xl mb-4">
-          <FieldItem
-            title="哪天开始"
-            rightText={dayjs(form.start_date).format('M-D')}
-            onPress={() => {
-              DatePicker({
-                defaultValue: form.start_date,
-                title: '开始日期',
-                mode: 'M-D',
-              }).then(({ action, value }) => {
-                if (action === 'confirm') {
-                  setInfo(value, 'start_date');
-                }
-              });
-            }}
-          />
-          <FieldItem
-            title="哪天结束"
-            rightText={dayjs(form.end_date).format('M-D')}
-            onPress={() => {
-              DatePicker({
-                defaultValue: form.end_date,
-                title: '结束日期',
-                mode: 'M-D',
-              }).then(({ action, value }) => {
-                if (action === 'confirm') {
-                  setInfo(value, 'end_date');
-                }
-              });
-            }}
-          />
-        </FieldGroup>
-
-        {/* 应用选择 */}
-        <FieldGroup divider={false} className="rounded-xl mb-4">
-          <FieldItem
-            title="暂停这些应用"
-            className="pb-2"
-            rightElement={
-              <SelectApps apps={form.apps} onFinish={selectApps} />
-            }
-            showArrow={false}
-          />
-          <View className="px-4 pb-4">
-            <SelectedApps apps={selectedApps} />
-          </View>
-        </FieldGroup>
-
-        {/* 时间选择组 */}
+        {/* 2. 时间选择组 */}
         <FieldGroup className="rounded-xl mb-4">
           <FieldItem
             title="几点开始"
@@ -458,11 +431,74 @@ const App = () => {
           />
         </FieldGroup>
 
-        {/* 周几选择 */}
+        {/* 3. 应用选择 */}
+        <FieldGroup divider={false} className="rounded-xl mb-4">
+          <FieldItem
+            title="要锁定的应用"
+            className="pb-2"
+            rightElement={<SelectApps apps={form.apps} onFinish={selectApps} />}
+            showArrow={false}
+          />
+          <View className="px-4 pb-4">
+            <SelectedApps apps={selectedApps} />
+          </View>
+        </FieldGroup>
+
+        {/* 4. 有效时长（长期模式1个item，自定义模式3个item） */}
+        <FieldGroup className="rounded-xl mb-4">
+          <FieldItem
+            title="有效时长"
+            rightText={isLongTerm ? '长期有效' : '自定义'}
+            onPress={() => {
+              setIsLongTerm(!isLongTerm);
+              // 切换到长期有效时，自动设置结束日期为10年后
+              if (!isLongTerm) {
+                const longTermDate = dayjs().add(10, 'year').toDate();
+                setInfo(longTermDate, 'end_date');
+              }
+            }}
+          />
+          {!isLongTerm && (
+            <>
+              <FieldItem
+                title="哪天开始"
+                rightText={dayjs(form.start_date).format('M-D')}
+                onPress={() => {
+                  DatePicker({
+                    defaultValue: form.start_date,
+                    title: '开始日期',
+                    mode: 'M-D',
+                  }).then(({ action, value }) => {
+                    if (action === 'confirm') {
+                      setInfo(value, 'start_date');
+                    }
+                  });
+                }}
+              />
+              <FieldItem
+                title="哪天结束"
+                rightText={dayjs(form.end_date).format('M-D')}
+                onPress={() => {
+                  DatePicker({
+                    defaultValue: form.end_date,
+                    title: '结束日期',
+                    mode: 'M-D',
+                  }).then(({ action, value }) => {
+                    if (action === 'confirm') {
+                      setInfo(value, 'end_date');
+                    }
+                  });
+                }}
+              />
+            </>
+          )}
+        </FieldGroup>
+
+        {/* 5. 重复规则 */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
             className="pb-2"
-            title="每周几生效"
+            title="每周几重复"
             rightText={`已选${Array.isArray(form.repeat) ? form.repeat.length : 0}天`}
             rightTextStyle={{ fontSize: 14 }}
             showArrow={false}
