@@ -6,7 +6,7 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios --device",
-    "build:preview": "eas build --local --platform ios --profile preview 2>&1 | tee build.log",
+    "build:preview": "eas build --local --platform ios --profile preview --non-interactive 2>&1 | tee build.log",
     "build:preview:quiet": "eas build --local --platform ios --profile preview --non-interactive 2>&1 | grep -E '(error|Error|ERROR|failed|Failed|FAILED)' | head -50",
     "build:prod": "eas build --local --platform ios --profile production",
     "doctor": "npx expo-doctor",
