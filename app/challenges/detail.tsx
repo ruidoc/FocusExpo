@@ -1,9 +1,8 @@
 import { Page } from '@/components/business';
-import { Button, Card, Checkbox, Flex, Toast } from '@/components/ui';
+import { Button, Card, Checkbox, Flex, Tag, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useChallengeStore, usePlanStore } from '@/stores';
 import { Challenge } from '@/stores/challenge';
-import { Tag } from '@fruits-chain/react-native-xiaoshu';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';

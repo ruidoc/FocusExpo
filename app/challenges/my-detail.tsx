@@ -1,19 +1,10 @@
 import { Page } from '@/components/business';
-import { Flex } from '@/components/ui';
+import { Button, Card, Flex, Tag, Toast } from '@/components/ui';
 import Slider from '@/components/ui/slider';
+import { useCustomTheme } from '@/config/theme';
 import { useChallengeStore } from '@/stores';
 import { UserChallenge } from '@/stores/challenge';
-import {
-  Button,
-  Card,
-  Space,
-  Tag,
-  Toast,
-} from '@fruits-chain/react-native-xiaoshu';
-import {
-  useNavigation,
-  useTheme
-} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -32,7 +23,7 @@ const MyChallengeDetailScreen = () => {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const store = useChallengeStore();
-  const { colors, dark } = useTheme();
+  const { colors, isDark } = useCustomTheme();
 
   const [userChallenge, setUserChallenge] = useState<UserChallenge | null>(
     null,
@@ -209,7 +200,7 @@ const MyChallengeDetailScreen = () => {
 
   if (loading) {
     return (
-      <Page safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+      <Page safe bgcolor={colors.background}>
         <Flex className="justify-center flex-1">
           <ActivityIndicator size="large" />
         </Flex>
@@ -219,7 +210,7 @@ const MyChallengeDetailScreen = () => {
 
   if (!userChallenge) {
     return (
-      <Page safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+      <Page safe bgcolor={colors.background}>
         <Flex className="justify-center flex-1">
           <Text style={styles.errorText}>挑战不存在</Text>
         </Flex>
@@ -231,7 +222,7 @@ const MyChallengeDetailScreen = () => {
   const isInProgress = userChallenge.status === 'in_progress';
 
   return (
-    <Page safe bgcolor={dark ? '#0D0D12' : '#F8F9FA'}>
+    <Page safe bgcolor={colors.background}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -289,9 +280,9 @@ const MyChallengeDetailScreen = () => {
                 <Button
                   type="primary"
                   size="s"
-                  onPress={() => setShowProgressModal(true)}>
-                  更新进度
-                </Button>
+                  onPress={() => setShowProgressModal(true)}
+                  text="更新进度"
+                />
               </Flex>
             )}
           </Flex>
@@ -380,13 +371,14 @@ const MyChallengeDetailScreen = () => {
           </View>
         </Card>
 
-        <Space />
+        <View className="h-4" />
 
         {/* 操作按钮 */}
         {isInProgress && (
           <Flex style={{ gap: 12 }}>
             <Button
               style={styles.actionButton}
+              type="ghost"
               onPress={() => {
                 setFinishStatus('cancelled');
                 setShowFinishModal(true);
@@ -405,7 +397,7 @@ const MyChallengeDetailScreen = () => {
           </Flex>
         )}
 
-        <Space />
+        <View className="h-6" />
       </ScrollView>
 
       {/* 进度更新弹框 */}
@@ -440,20 +432,21 @@ const MyChallengeDetailScreen = () => {
               </Text>
             </View>
 
-            <View style={styles.modalButtons}>
+            <Flex style={styles.modalButtons}>
               <Button
                 style={styles.modalButton}
-                onPress={() => setShowProgressModal(false)}>
-                取消
-              </Button>
+                type="ghost"
+                onPress={() => setShowProgressModal(false)}
+                text="取消"
+              />
               <Button
                 type="primary"
                 style={styles.modalButton}
                 loading={updating}
-                onPress={handleUpdateProgress}>
-                确认更新
-              </Button>
-            </View>
+                onPress={handleUpdateProgress}
+                text="确认更新"
+              />
+            </Flex>
           </View>
         </View>
       </Modal>
@@ -495,20 +488,21 @@ const MyChallengeDetailScreen = () => {
               </View>
             )}
 
-            <View style={styles.modalButtons}>
+            <Flex style={styles.modalButtons}>
               <Button
                 style={styles.modalButton}
-                onPress={() => setShowFinishModal(false)}>
-                取消
-              </Button>
+                type="ghost"
+                onPress={() => setShowFinishModal(false)}
+                text="取消"
+              />
               <Button
                 type="primary"
                 style={styles.modalButton}
                 loading={finishing}
-                onPress={handleFinishChallenge}>
-                {finishStatus === 'succeeded' ? '确认完成' : '确认放弃'}
-              </Button>
-            </View>
+                onPress={handleFinishChallenge}
+                text={finishStatus === 'succeeded' ? '确认完成' : '确认放弃'}
+              />
+            </Flex>
           </View>
         </View>
       </Modal>

@@ -1,15 +1,8 @@
 import { Page } from '@/components/business';
-import { Flex } from '@/components/ui';
+import { Card, Flex, Switch, Tag, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useChallengeStore } from '@/stores';
 import { Challenge } from '@/stores/challenge';
-import {
-  Card,
-  Space,
-  Switch,
-  Tag,
-  Toast,
-} from '@fruits-chain/react-native-xiaoshu';
 import dayjs from 'dayjs';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -277,7 +270,7 @@ const ChallengeListScreen = () => {
             </Pressable>
           </Card>
 
-          <Space />
+          <View className="h-6" />
         </ScrollView>
       </View>
     </Page>

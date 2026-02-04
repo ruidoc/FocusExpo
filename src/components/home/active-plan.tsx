@@ -1,4 +1,5 @@
 import { Flex } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { pauseAppLimits, resumeAppLimits } from '@/native/ios';
 import {
   useBenefitStore,
@@ -9,7 +10,6 @@ import {
 } from '@/stores';
 import { getIOSFocusStatus, stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Theme } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -27,7 +27,7 @@ const FocusButton = () => {
   const pstore = usePlanStore();
   const store = useHomeStore();
   const rstore = useRecordStore();
-  const xcolor = Theme.useThemeTokens();
+  const { colors } = useCustomTheme();
 
   // 弹窗状态
   const [showPauseModal, setShowPauseModal] = useState(false);
@@ -43,7 +43,7 @@ const FocusButton = () => {
     },
     descFont: {
       fontSize: 16,
-      color: xcolor.gray_3,
+      color: colors.text2,
     },
     lightFont: {
       fontWeight: '600',

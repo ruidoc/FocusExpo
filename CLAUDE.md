@@ -187,7 +187,7 @@ interface FocusStatus {
 ### 主题系统
 
 - **NativeWind**（Tailwind for React Native）
-- **小书 UI 组件库**（@fruits-chain/react-native-xiaoshu）
+- **自有 UI 组件库**（src/components/ui/）
 - **CSS 变量**（light/dark 主题自动切换）
 
 ### 颜色变量

@@ -2,14 +2,12 @@ import { Button } from '@/components/ui';
 import { usePlanStore } from '@/stores';
 import { getCurrentMinute } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import { Theme } from '@fruits-chain/react-native-xiaoshu';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 const EmptyPlan = () => {
   const pstore = usePlanStore();
-  const xcolor = Theme.useThemeTokens();
   const [nowMinute, setNowMinute] = useState(getCurrentMinute());
 
   // 每分钟更新一次当前时间，用于计算倒计时

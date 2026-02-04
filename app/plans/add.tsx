@@ -1,7 +1,7 @@
 import { Page, SelectApps, SelectedApps } from '@/components/business';
 import {
   Button,
-  DatePicker,
+  DateTimePicker,
   FieldGroup,
   FieldItem,
   Flex,
@@ -380,10 +380,10 @@ const App = () => {
             title="几点开始"
             rightText={dayjs(form.start).format('HH:mm')}
             onPress={() => {
-              DatePicker({
-                defaultValue: form.start,
+              DateTimePicker.show({
+                value: form.start,
                 title: '开始时间',
-                mode: 'h-m',
+                mode: 'time',
               }).then(({ action, value }) => {
                 if (action === 'confirm') {
                   setInfo(value, 'start');
@@ -395,11 +395,12 @@ const App = () => {
             title="几点结束"
             rightText={dayjs(form.end).format('HH:mm')}
             onPress={() => {
-              DatePicker({
-                defaultValue: form.end,
+              DateTimePicker.show({
+                value: form.end,
                 title: '结束时间',
-                mode: 'h-m',
+                mode: 'time',
               }).then(({ action, value }) => {
+                console.log('action：', action, value);
                 if (action === 'confirm') {
                   setInfo(value, 'end');
                 }
@@ -439,12 +440,12 @@ const App = () => {
             <>
               <FieldItem
                 title="哪天开始"
-                rightText={dayjs(form.start_date).format('M-D')}
+                rightText={dayjs(form.start_date).format('YYYY-MM-DD')}
                 onPress={() => {
-                  DatePicker({
-                    defaultValue: form.start_date,
+                  DateTimePicker.show({
+                    value: form.start_date,
                     title: '开始日期',
-                    mode: 'M-D',
+                    mode: 'date',
                   }).then(({ action, value }) => {
                     if (action === 'confirm') {
                       setInfo(value, 'start_date');
@@ -454,12 +455,13 @@ const App = () => {
               />
               <FieldItem
                 title="哪天结束"
-                rightText={dayjs(form.end_date).format('M-D')}
+                rightText={dayjs(form.end_date).format('YYYY-MM-DD')}
                 onPress={() => {
-                  DatePicker({
-                    defaultValue: form.end_date,
+                  DateTimePicker.show({
+                    value: form.end_date,
                     title: '结束日期',
-                    mode: 'M-D',
+                    mode: 'date',
+                    minimumDate: form.start_date,
                   }).then(({ action, value }) => {
                     if (action === 'confirm') {
                       setInfo(value, 'end_date');

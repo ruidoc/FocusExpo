@@ -6,6 +6,8 @@ import HomeHeader from '@/components/home/header';
 import ScreenTimePermissionPage from '@/components/home/screen-time';
 import TrialUserGuidePlan from '@/components/home/trial-user-guide-plan';
 import CelebrationModal from '@/components/modals/celebration-modal';
+import { NoticeBar } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import {
   useAppStore,
   useBenefitStore,
@@ -17,8 +19,6 @@ import {
 } from '@/stores';
 import { getUserActivationState, shouldShowCelebration } from '@/utils';
 import { checkScreenTimePermission } from '@/utils/permission';
-import { NoticeBar, Theme } from '@fruits-chain/react-native-xiaoshu';
-import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
   AppState,
@@ -36,8 +36,7 @@ const App = () => {
   const rstore = useRecordStore();
   const pmstore = usePermisStore();
   const bstore = useBenefitStore();
-  const { colors } = useTheme();
-  const xcolor = Theme.useThemeTokens();
+  const { colors } = useCustomTheme();
 
   const [refreshing, setRefreshing] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -113,7 +112,7 @@ const App = () => {
   }, []);
 
   if (shouldShowPermissionPage) {
-    return <ScreenTimePermissionPage colors={colors} xcolor={xcolor} />;
+    return <ScreenTimePermissionPage colors={colors} />;
   }
 
   // 获取用户激活状态

@@ -1,19 +1,20 @@
 // 屏幕时间权限获取页面组件
 
 import { Button } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { useHomeStore } from '@/stores';
 import { getScreenTimePermission } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
-const ScreenTimePermissionPage = ({
-  colors,
-  xcolor,
-}: {
-  colors: any;
-  xcolor: any;
-}) => {
+interface ScreenTimePermissionPageProps {
+  colors?: any; // 兼容旧调用方式，但内部使用 useCustomTheme
+}
+
+const ScreenTimePermissionPage = (_props: ScreenTimePermissionPageProps) => {
   const store = useHomeStore();
+  const { colors } = useCustomTheme();
+
   const handleRequestPermission = async () => {
     const granted = await getScreenTimePermission();
     if (granted) {
@@ -34,7 +35,7 @@ const ScreenTimePermissionPage = ({
     },
     icon: {
       fontSize: 80,
-      color: xcolor.brand_6,
+      color: colors.primary,
       marginBottom: 30,
     },
     title: {
@@ -46,13 +47,13 @@ const ScreenTimePermissionPage = ({
     },
     description: {
       fontSize: 16,
-      color: xcolor.gray_8,
+      color: colors.text2,
       textAlign: 'center',
       lineHeight: 24,
       marginBottom: 40,
     },
     button: {
-      backgroundColor: xcolor.brand_6,
+      backgroundColor: colors.primary,
       paddingHorizontal: 40,
       borderRadius: 25,
     },

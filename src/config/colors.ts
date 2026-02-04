@@ -87,29 +87,3 @@ export const NavThemes = {
     },
   },
 };
-
-// 导出 Xiaoshu 主题覆盖项，保持与 Lumina 色板一致
-export const XiaoShuThemeOverrides = {
-  light: {
-    brand_6: baseLight.primary,
-    primary_color: baseLight.primary,
-    text_title_color: baseLight.text,
-    text_body_color: baseLight.text2,
-    divider_color: baseLight.border,
-    background_color: baseLight.background,
-    card_background_color: baseLight.surface,
-    notice_bar_background_color_lightness: 96,
-  },
-  dark: {
-    brand_6: baseDark.primary,
-    primary_color: baseDark.primary,
-    text_title_color: baseDark.text,
-    text_body_color: baseDark.text2,
-    divider_color: baseDark.border,
-    background_color: baseDark.background,
-    card_background_color: baseDark.surface,
-    steps_background_color: 'transparent',
-    notice_bar_background_color_lightness: 10,
-    divider_color_light: 'transparent',
-  },
-};
