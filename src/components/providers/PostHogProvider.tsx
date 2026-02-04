@@ -114,6 +114,11 @@ export const PostHogProviderWrapper = ({
       options={{
         host: POSTHOG_HOST,
         enableSessionReplay: true,
+        // 增加 flush 间隔，减少网络请求频率
+        flushInterval: 30000, // 30秒（默认 10-15秒）
+        flushAt: 20, // 累积 20 个事件才 flush（默认 20）
+        // 网络错误时静默处理，不阻塞 SDK 运行
+        captureMode: 'json', // 使用 JSON 模式，更稳定
       }}
       autocapture>
       <PostHogInstanceSetter>{children}</PostHogInstanceSetter>

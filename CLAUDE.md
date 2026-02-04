@@ -9,6 +9,7 @@
 **请不要自动创建新的 Markdown 文档。**
 
 本项目的文档组织如下：
+
 - 📌 **此文件（CLAUDE.md）** - 自动读取，不要修改其结构
 - 📌 **.cursor/rules** - Cursor IDE 自动应用，不要修改其结构
 - 📂 **docs/** 目录 - 其他所有文档都放在这里
@@ -22,6 +23,7 @@
 **FocusExpo** 是一个生产级别的 React Native 应用（仅支持 iOS），帮助用户管理专注时间并屏蔽分心应用。
 
 ### 核心功能
+
 - 🎯 **专注计时**：支持一次性、定时、重复模式的计划
 - 🚫 **应用屏蔽**：使用 iOS Screen Time + Shield Extension 强制屏蔽应用
 - 📊 **数据统计**：专注时长、成功率、退出次数等多维度分析
@@ -29,6 +31,7 @@
 - 🧪 **A/B 实验**：基于 PostHog 的灰度发布控制
 
 ### 项目规模
+
 - ~10,000+ 行代码
 - 30+ 屏幕
 - 13 个 Zustand Store（1896 行）
@@ -40,21 +43,21 @@
 ## 🚀 必需命令
 
 ```bash
-# 依赖安装（使用 Bun 包管理器，不是 npm/yarn）
-bun install
+# 依赖安装（使用 pnpm 包管理器）
+pnpm install
 
 # 开发
-expo start              # 启动开发服务器
-expo start -c           # 清除缓存后启动
-expo run:ios            # 在 iOS 设备上运行
+pnpm start              # 启动开发服务器
+pnpm start -c           # 清除缓存后启动
+pnpm ios                # 在 iOS 设备上运行
 
 # 代码质量
-expo lint              # 运行 ESLint
+pnpm lint               # 运行 ESLint
 
 # Metro 卡死时
 watchman watch-del-all
 rm -rf node_modules/.cache
-expo start -c
+pnpm start -c
 ```
 
 ---
@@ -86,23 +89,24 @@ app/
 
 **13 个独立 Store，按功能划分：**
 
-| Store | 职责 |
-|-------|------|
-| **usePlanStore** | 专注计划 CRUD、活跃计划、暂停/恢复 |
-| **useUserStore** | 登录认证、用户信息、Token 管理 |
-| **useRecordStore** | 专注记录、统计数据 |
-| **useChallengeStore** | 挑战系统 |
-| **useAppStore** | iOS App 列表、屏蔽应用管理 |
-| **useHomeStore** | 首页 UI 状态、权限状态 |
-| **useGuideStore** | 新手引导进度 |
-| **useExperimentStore** | A/B 实验分组 |
-| **useVipStore** | VIP 会员权限 |
-| **useBenefitStore** | 积分奖励系统 |
-| **usePermisStore** | 权限管理 |
-| **useDebugStore** | 调试工具 |
-| **useStatisticStore** | 统计数据聚合 |
+| Store                  | 职责                               |
+| ---------------------- | ---------------------------------- |
+| **usePlanStore**       | 专注计划 CRUD、活跃计划、暂停/恢复 |
+| **useUserStore**       | 登录认证、用户信息、Token 管理     |
+| **useRecordStore**     | 专注记录、统计数据                 |
+| **useChallengeStore**  | 挑战系统                           |
+| **useAppStore**        | iOS App 列表、屏蔽应用管理         |
+| **useHomeStore**       | 首页 UI 状态、权限状态             |
+| **useGuideStore**      | 新手引导进度                       |
+| **useExperimentStore** | A/B 实验分组                       |
+| **useVipStore**        | VIP 会员权限                       |
+| **useBenefitStore**    | 积分奖励系统                       |
+| **usePermisStore**     | 权限管理                           |
+| **useDebugStore**      | 调试工具                           |
+| **useStatisticStore**  | 统计数据聚合                       |
 
 **Store 通信模式：**
+
 ```typescript
 // 跨 Store 访问（通过 getState）
 const pauseCurPlan = async () => {
@@ -114,17 +118,18 @@ const pauseCurPlan = async () => {
 
 ### 存储三层架构
 
-| 层级 | 库 | 用途 | 例子 |
-|------|---|------|------|
-| **L1：高性能缓存** | MMKV | 计划、记录、权限 | `storage.set('cus_plans', JSON.stringify(plans))` |
-| **L2：用户偏好** | AsyncStorage | 用户信息、Token | `AsyncStorage.setItem('user_info', JSON.stringify())` |
-| **L3：跨应用同享** | SharedGroupPreferences | iOS App Groups | `storage.setGroup('key', value)` |
+| 层级               | 库                     | 用途             | 例子                                                  |
+| ------------------ | ---------------------- | ---------------- | ----------------------------------------------------- |
+| **L1：高性能缓存** | MMKV                   | 计划、记录、权限 | `storage.set('cus_plans', JSON.stringify(plans))`     |
+| **L2：用户偏好**   | AsyncStorage           | 用户信息、Token  | `AsyncStorage.setItem('user_info', JSON.stringify())` |
+| **L3：跨应用同享** | SharedGroupPreferences | iOS App Groups   | `storage.setGroup('key', value)`                      |
 
 ---
 
 ## 📱 iOS 原生集成
 
 ### 架构
+
 ```
 JS Layer (React Native)
     ↓
@@ -140,6 +145,7 @@ iOS Native Layer
 ### 关键接口
 
 **发送方法（JS → Native）:**
+
 ```typescript
 // src/native/ios/methods.ts
 checkScreenTimePermission()        // 检查权限
@@ -152,23 +158,25 @@ getFocusStatus(): FocusStatus      // 获取专注状态
 ```
 
 **监听事件（Native → JS）:**
+
 ```typescript
 // src/native/ios/events.ts
-focus-state      // 专注状态变化
-extension-log    // Extension 日志
+focus - state; // 专注状态变化
+extension - log; // Extension 日志
 ```
 
 ### 类型定义
+
 ```typescript
 interface FocusStatus {
-  active: boolean;              // 是否运行中
-  paused?: boolean;             // 是否暂停
-  failed?: boolean;             // 是否失败
-  plan_id?: string;             // 计划 ID
-  record_id?: string;           // 记录 ID
-  startAt?: number;             // 开始时间戳
-  elapsedMinutes?: number;      // 已运行分钟数
-  pausedUntil?: number;         // 暂停结束时间戳
+  active: boolean; // 是否运行中
+  paused?: boolean; // 是否暂停
+  failed?: boolean; // 是否失败
+  plan_id?: string; // 计划 ID
+  record_id?: string; // 记录 ID
+  startAt?: number; // 开始时间戳
+  elapsedMinutes?: number; // 已运行分钟数
+  pausedUntil?: number; // 暂停结束时间戳
 }
 ```
 
@@ -177,11 +185,13 @@ interface FocusStatus {
 ## 🎨 UI 系统
 
 ### 主题系统
+
 - **NativeWind**（Tailwind for React Native）
 - **小书 UI 组件库**（@fruits-chain/react-native-xiaoshu）
 - **CSS 变量**（light/dark 主题自动切换）
 
 ### 颜色变量
+
 ```css
 --primary          --secondary        --destructive
 --muted            --accent           --background
@@ -189,6 +199,7 @@ interface FocusStatus {
 ```
 
 使用方式：
+
 ```jsx
 <View className="flex-1 bg-primary text-foreground" />
 ```
@@ -198,6 +209,7 @@ interface FocusStatus {
 ## 📡 API 和网络
 
 ### 基础配置
+
 ```typescript
 // src/utils/request.ts
 const baseURL = 'https://focus.ruidoc.cn/dev-api'
@@ -207,6 +219,7 @@ timeout = 6000
 ```
 
 ### 主要端点
+
 - `/plan/*` - 计划管理
 - `/record/*` - 记录管理
 - `/osapp/*` - App 管理
@@ -215,6 +228,7 @@ timeout = 6000
 - `/experiment/assign` - 实验分配
 
 ### 重试机制
+
 - 使用 `axios-retry`
 - 指数退避算法
 - 非 2xx 状态码自动重试
@@ -246,8 +260,8 @@ const usePlanStore = combine(
     async pausePlan() {
       const record = useRecordStore.getState();
       await record.pauseRecord(get().activePlan?.record_id);
-    }
-  })
+    },
+  }),
 );
 ```
 
@@ -262,7 +276,7 @@ function startElapsedTimer(elapsedMinutes: number) {
     // 在下一个整分时更新，防止时间漂移
     timerRef = setTimeout(() => {
       elapsedMinutes += 1;
-      schedule();  // 递归调用
+      schedule(); // 递归调用
     }, remainSeconds * 1000);
   };
   schedule();
@@ -290,7 +304,7 @@ switch (status) {
 
 ```typescript
 const response = await request.get('/plan/lists', {
-  params: { page: 1, limit: 10 }
+  params: { page: 1, limit: 10 },
 });
 // 自动处理错误和 Token 刷新
 // 自动显示 Toast 提示
@@ -301,16 +315,19 @@ const response = await request.get('/plan/lists', {
 ## 📝 代码风格和最佳实践
 
 ### TypeScript
+
 - 严格模式启用
 - 路径别名：`@/*` → `./src/*`
 - 所有 Store 和 utils 都有类型定义
 
 ### React Hooks
+
 - ❌ **避免** `useEffect + useCallback` 组合（易导致死循环）
 - ✅ **推荐** 内联事件处理器或 `useMemo`
 - 明确声明依赖数组
 
 ### 组件文件组织
+
 ```
 src/components/
 ├── ui/               # 基础 UI 组件库
@@ -322,6 +339,7 @@ src/components/
 ```
 
 ### 编码原则
+
 - **简洁优先**：避免过度设计，直接的解决方案比复杂的模式好
 - **一处设定**：配置集中在 `src/config/`
 - **延迟初始化**：懒加载数据，按需请求
@@ -333,24 +351,28 @@ src/components/
 ## 🔍 常见开发任务
 
 ### 添加新屏幕
+
 1. 在 `app/` 对应目录创建 `xxx.tsx`
 2. 使用 Expo Router 文件基础路由（自动生成路由）
 3. 导入现有 UI 组件：`src/components/ui/`
 4. 连接到 Store：`const { data } = useXxxStore()`
 
 ### 修改专注计时逻辑
+
 1. 编辑 `src/stores/plan.ts`（Store 逻辑）
 2. 修改 `src/native/ios/sync.ts`（同步逻辑）
 3. 更新 iOS 原生方法（如需要）
 4. 测试暂停/恢复场景
 
 ### 处理应用屏蔽
+
 1. 确保已请求 iOS 权限
 2. 通过 `useAppStore` 选择要屏蔽的应用
 3. 调用 `startAppLimits()` 启动屏蔽
 4. 监听 `focus-state` 事件处理结果
 
 ### 集成新的第三方 API
+
 1. 在 `src/utils/request.ts` 配置请求拦截器
 2. 创建 Store 管理数据
 3. 使用 PostHog 追踪用户行为
@@ -361,11 +383,13 @@ src/components/
 ## 🛠️ 调试工具
 
 ### 调试页面
+
 访问 `app/debug/index.tsx`（开发环境可见）
 
 ### 扩展日志
+
 ```typescript
-createExtensionLogListener((event) => {
+createExtensionLogListener(event => {
   event.logs.forEach(log => {
     console.log(`[Extension ${log.level}]`, log.message);
   });
@@ -373,6 +397,7 @@ createExtensionLogListener((event) => {
 ```
 
 ### 原生状态查询
+
 ```typescript
 const status = await getFocusStatus();
 console.log('当前专注状态:', status);
@@ -392,16 +417,16 @@ console.log('当前专注状态:', status);
 
 ## 📚 关键文件速查
 
-| 文件 | 说明 |
-|------|------|
-| `app/_layout.tsx` | 全局根布局、提供商初始化 |
-| `src/stores/` | 所有状态管理 Store |
-| `src/native/ios/` | iOS 原生集成层 |
-| `src/components/ui/` | 基础 UI 组件库 |
-| `src/utils/request.ts` | HTTP 请求配置 |
-| `src/utils/permission.ts` | 权限管理工具 |
-| `src/config/theme.ts` | 主题系统 |
-| `ios/NativeModule.swift` | iOS 核心原生代码 |
+| 文件                      | 说明                     |
+| ------------------------- | ------------------------ |
+| `app/_layout.tsx`         | 全局根布局、提供商初始化 |
+| `src/stores/`             | 所有状态管理 Store       |
+| `src/native/ios/`         | iOS 原生集成层           |
+| `src/components/ui/`      | 基础 UI 组件库           |
+| `src/utils/request.ts`    | HTTP 请求配置            |
+| `src/utils/permission.ts` | 权限管理工具             |
+| `src/config/theme.ts`     | 主题系统                 |
+| `ios/NativeModule.swift`  | iOS 核心原生代码         |
 
 ---
 
@@ -461,29 +486,32 @@ FocusExpo/
 
 ### 三个文档的职责分工
 
-| 文件 | 大小 | 何时读 | 主要内容 |
-|------|------|-------|---------|
-| **CLAUDE.md** | 9.5K | 每次启动 | 快速参考、日常开发 |
-| **CODE_EXAMPLES.md** | 18K | 开始编码前 | 代码规范、详细示例 |
-| **ARCHITECTURE.md** | 20K | 深度理解时 | 系统设计、算法、扩展 |
-| **.cursor/rules/** | 6.8K | 自动应用 | Cursor IDE 规则 |
+| 文件                 | 大小 | 何时读     | 主要内容             |
+| -------------------- | ---- | ---------- | -------------------- |
+| **CLAUDE.md**        | 9.5K | 每次启动   | 快速参考、日常开发   |
+| **CODE_EXAMPLES.md** | 18K  | 开始编码前 | 代码规范、详细示例   |
+| **ARCHITECTURE.md**  | 20K  | 深度理解时 | 系统设计、算法、扩展 |
+| **.cursor/rules/**   | 6.8K | 自动应用   | Cursor IDE 规则      |
 
 ---
 
 ## 📞 快速参考
 
 **问题排查：**
+
 - Metro 卡死？→ `watchman watch-del-all && expo start -c`
 - 类型错误？→ `expo lint` 检查
 - 构建失败？→ 清除 `node_modules/.cache`
 - iOS 权限不工作？→ 检查 Xcode 配置和 Entitlements
 
 **性能优化：**
+
 - 使用 MMKV 替代 AsyncStorage（高频读写）
 - 在 list 中使用 `useMemo` 避免重渲染
 - 定期监听 AppState 同步状态
 
 **发布流程：**
+
 ```bash
 eas build --platform ios --profile production
 ```

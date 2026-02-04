@@ -1,21 +1,20 @@
 /**
  * Stripe 支付示例页面
  *
- * 这是一个展示如何使用 Stripe PaymentSheet 的示例页面。
- * 你可以参考这个示例将 Stripe 支付集成到你的业务流程中。
+ * 使用 Stripe Checkout Session + WebView 完成支付
  *
  * 使用流程：
- * 1. 配置 StripeProvider 的 publishableKey
- * 2. 实现服务端 API 接口（创建 PaymentIntent）
- * 3. 调用 checkout 或 initializePayment + presentPayment
+ * 1. 后端创建 Checkout Session，返回 checkoutUrl
+ * 2. 前端用 WebView 打开 checkoutUrl
+ * 3. 监听 URL 变化判断支付结果
  */
-import { Page } from '@/components/business';
+import { Page, StripeWebView } from '@/components/business';
 import { Button, Flex, Toast } from '@/components/ui';
 import { useStripePayment } from '@/utils/stripe';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 // 示例商品
 const PRODUCTS = [
@@ -41,7 +40,8 @@ const PRODUCTS = [
 
 const CheckoutPage = () => {
   const { colors, dark } = useTheme();
-  const { checkout, loading } = useStripePayment();
+  const { checkout, loading, visible, checkoutUrl, handleClose } =
+    useStripePayment();
   const [selectedProduct, setSelectedProduct] = useState(PRODUCTS[0]);
   const [paymentStatus, setPaymentStatus] = useState<
     'idle' | 'processing' | 'success' | 'failed'
@@ -172,29 +172,31 @@ const CheckoutPage = () => {
   const handleCheckout = async () => {
     setPaymentStatus('processing');
 
-    try {
-      const result = await checkout({
+    const success = await checkout(
+      {
         amount: selectedProduct.price,
         currency: 'cny',
         productId: selectedProduct.id,
         productName: selectedProduct.name,
-        merchantDisplayName: 'FocusOne',
-      });
+      },
+      result => {
+        // 支付完成回调
+        if (result.success) {
+          setPaymentStatus('success');
+          Toast({ message: '支付成功！感谢您的购买' });
+          // TODO: 更新用户 VIP 状态
+        } else if (result.canceled) {
+          setPaymentStatus('idle');
+          // 用户取消，不做任何提示
+        } else {
+          setPaymentStatus('failed');
+          Toast({ message: result.error || '支付失败' });
+        }
+      },
+    );
 
-      if (result.success) {
-        setPaymentStatus('success');
-        Toast({ message: '支付成功！感谢您的购买' });
-        // TODO: 这里可以跳转到成功页面或更新用户 VIP 状态
-      } else if (result.canceled) {
-        setPaymentStatus('idle');
-        // 用户取消，不做任何提示
-      } else {
-        setPaymentStatus('failed');
-        // 错误已在 checkout 内部显示
-      }
-    } catch (error) {
-      setPaymentStatus('failed');
-      console.error('支付异常:', error);
+    if (!success) {
+      setPaymentStatus('idle');
     }
   };
 
@@ -202,9 +204,7 @@ const CheckoutPage = () => {
     <Page>
       <View style={styles.container}>
         <Text style={styles.title}>选择会员方案</Text>
-        <Text style={styles.subtitle}>
-          选择适合您的方案，解锁专业版功能
-        </Text>
+        <Text style={styles.subtitle}>选择适合您的方案，解锁专业版功能</Text>
 
         {/* 商品列表 */}
         {PRODUCTS.map(product => {
@@ -273,13 +273,6 @@ const CheckoutPage = () => {
         </View>
 
         {/* 支付状态 */}
-        {paymentStatus === 'processing' && (
-          <View style={styles.statusContainer}>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={styles.statusText}>正在处理支付请求...</Text>
-          </View>
-        )}
-
         {paymentStatus === 'success' && (
           <View style={styles.statusContainer}>
             <Icon name="checkmark-circle" size={32} color="#22C55E" />
@@ -290,9 +283,16 @@ const CheckoutPage = () => {
         {/* 说明文字 */}
         <Text style={styles.noteText}>
           支付由 Stripe 安全处理{'\n'}
-          支持信用卡、借记卡、Apple Pay 等多种支付方式
+          支持信用卡、借记卡等多种支付方式
         </Text>
       </View>
+
+      {/* Stripe WebView 弹窗 */}
+      <StripeWebView
+        visible={visible}
+        checkoutUrl={checkoutUrl}
+        onClose={handleClose}
+      />
     </Page>
   );
 };

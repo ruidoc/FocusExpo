@@ -7,5 +7,7 @@ export { default as Page } from './page/index';
 export { default as Privicy } from './privicy/index';
 export { default as SelectApps } from './select-apps/index';
 export { default as SelectedApps } from './selected-apps/index';
+export { default as StripeWebView } from './stripe-webview/index';
+export type { StripePaymentResult } from './stripe-webview/index';
 export { default as Typewriter } from './type-writer/index';
 export { default as Wechat } from './wechat/index';

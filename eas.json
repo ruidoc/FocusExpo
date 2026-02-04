@@ -16,6 +16,9 @@
       "ios": {
         "buildConfiguration": "Release",
         "simulator": false
+      },
+      "env": {
+        "APP_VARIANT": "preview"
       }
     },
     "production": {
@@ -23,7 +26,10 @@
         "buildConfiguration": "Release",
         "simulator": false
       },
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "APP_VARIANT": "production"
+      }
     }
   },
   "submit": {

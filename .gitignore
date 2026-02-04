@@ -31,6 +31,7 @@ build.log
 # macOS
 .DS_Store
 *.pem
+*.ipa
 
 # local env files
 .env*.local

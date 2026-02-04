@@ -1,12 +1,12 @@
 /**
  * Stripe 订阅测试页面
  *
- * 用于测试 Stripe Subscription 订阅支付流程
+ * 用于测试 Stripe Subscription 订阅支付流程（WebView 方式）
  */
-import { Page } from '@/components/business';
+import { Page, StripeWebView } from '@/components/business';
 import { Button, Flex } from '@/components/ui';
 import request from '@/utils/request';
-import { PaymentResult, useStripePayment } from '@/utils/stripe';
+import { useStripePayment } from '@/utils/stripe';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import { Stack } from 'expo-router';
@@ -18,28 +18,6 @@ import {
   Text,
   View,
 } from 'react-native';
-
-// 失败结果类型
-type FailedResult = Extract<PaymentResult, { success: false }>;
-
-// 处理支付结果的辅助函数
-const handlePaymentResult = (
-  result: PaymentResult,
-  onSuccess: () => void,
-  onCancel: () => void,
-  onError: (message: string) => void,
-) => {
-  if (result.success) {
-    onSuccess();
-  } else {
-    const failed = result as FailedResult;
-    if (failed.canceled) {
-      onCancel();
-    } else {
-      onError(failed.error.message);
-    }
-  }
-};
 
 // 产品类型
 interface Product {
@@ -68,7 +46,8 @@ type PaymentLog = {
 
 const StripeTestPage = () => {
   const { colors, dark } = useTheme();
-  const { subscribe, loading } = useStripePayment();
+  const { subscribe, loading, visible, checkoutUrl, handleClose } =
+    useStripePayment();
 
   // 状态
   const [products, setProducts] = useState<Product[]>([]);
@@ -141,20 +120,28 @@ const StripeTestPage = () => {
       `开始订阅: ${selectedProduct.name} (${formatPrice(selectedProduct.price)}/${formatPeriod(selectedProduct.period)})`,
     );
 
-    const result = await subscribe({
-      priceId: selectedProduct.price_id,
-      productId: selectedProduct.product_id,
-      productName: selectedProduct.name,
-      period: selectedProduct.period,
-      merchantDisplayName: 'FocusOne',
-    });
-
-    handlePaymentResult(
-      result,
-      () => addLog('success', '订阅成功！'),
-      () => addLog('info', '用户取消订阅'),
-      message => addLog('error', `订阅失败: ${message}`),
+    const success = await subscribe(
+      {
+        priceId: selectedProduct.price_id,
+        productId: selectedProduct.product_id,
+        productName: selectedProduct.name,
+        period: selectedProduct.period,
+      },
+      result => {
+        // 支付完成回调
+        if (result.success) {
+          addLog('success', '订阅成功！');
+        } else if (result.canceled) {
+          addLog('info', '用户取消订阅');
+        } else {
+          addLog('error', `订阅失败: ${result.error || '未知错误'}`);
+        }
+      },
     );
+
+    if (!success) {
+      addLog('error', '创建订阅会话失败');
+    }
   };
 
   // 清空日志
@@ -187,7 +174,8 @@ const StripeTestPage = () => {
               <Text
                 className="text-center opacity-60"
                 style={{ color: colors.text }}>
-                暂无订阅产品，请确保数据库中有 product_class = focus_stripe 的产品
+                暂无订阅产品，请确保数据库中有 product_class = focus_stripe
+                的产品
               </Text>
             </View>
           ) : (
@@ -363,6 +351,13 @@ const StripeTestPage = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Stripe WebView 弹窗 */}
+      <StripeWebView
+        visible={visible}
+        checkoutUrl={checkoutUrl}
+        onClose={handleClose}
+      />
     </Page>
   );
 };

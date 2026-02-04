@@ -1,434 +1,286 @@
-import {
-  PresentPaymentSheetResult,
-  useStripe,
-} from '@stripe/stripe-react-native';
+/**
+ * Stripe WebView 支付 Hook
+ *
+ * 使用 Stripe Checkout Session + WebView 完成支付
+ * 替代原生 SDK 的 PaymentSheet
+ */
+import type { StripePaymentResult } from '@/components/business';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 import request from './request';
 
 /**
- * 从服务端获取 PaymentSheet 参数的响应类型
+ * Checkout Session 响应类型
  */
-interface PaymentSheetParams {
-  paymentIntent: string; // PaymentIntent client secret
-  customerSessionClientSecret?: string; // CustomerSession client secret
-  customer?: string; // Customer ID
-  publishableKey: string;
+interface CheckoutSessionResponse {
+  /** Checkout 页面 URL */
+  checkoutUrl: string;
+  /** Session ID */
+  sessionId: string;
 }
 
 /**
- * 订阅响应类型
- */
-interface SubscriptionParams {
-  subscriptionId: string; // Stripe Subscription ID
-  clientSecret: string; // PaymentIntent client secret（用于 PaymentSheet）
-  customerSessionClientSecret?: string; // CustomerSession client secret
-  customer: string; // Customer ID
-  publishableKey: string;
-}
-
-/**
- * 自定义错误类型
- */
-interface StripePaymentError {
-  code: string;
-  message: string;
-}
-
-/**
- * 支付结果类型
+ * 支付结果类型（导出供外部使用）
  */
 export type PaymentResult =
-  | { success: true }
-  | { success: false; error: StripePaymentError; canceled: boolean };
+  | { success: true; sessionId?: string }
+  | { success: false; canceled: boolean; error?: string };
 
 /**
- * Stripe 支付 Hook
+ * Stripe WebView 支付 Hook
  *
  * 使用示例：
  * ```tsx
- * const { initializePayment, presentPayment, loading } = useStripePayment();
+ * const { createCheckout, loading, checkoutUrl, visible, handleClose } = useStripePayment();
  *
  * const handlePayment = async () => {
- *   const initialized = await initializePayment({ amount: 999, currency: 'cny' });
- *   if (initialized) {
- *     const result = await presentPayment();
- *     if (result.success) {
- *       // 支付成功
- *     }
+ *   const result = await createCheckout({
+ *     amount: 999,
+ *     currency: 'cny',
+ *     productName: '月度会员',
+ *   });
+ *   if (result) {
+ *     // checkoutUrl 已设置，StripeWebView 会自动显示
  *   }
  * };
+ *
+ * return (
+ *   <>
+ *     <Button onPress={handlePayment}>支付</Button>
+ *     <StripeWebView
+ *       visible={visible}
+ *       checkoutUrl={checkoutUrl}
+ *       onClose={handleClose}
+ *     />
+ *   </>
+ * );
  * ```
  */
 export const useStripePayment = () => {
-  const { initPaymentSheet, presentPaymentSheet, resetPaymentSheetCustomer } =
-    useStripe();
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState('');
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [onCompleteCallback, setOnCompleteCallback] = useState<
+    ((result: PaymentResult) => void) | null
+  >(null);
 
   /**
-   * 从服务端获取 PaymentSheet 参数
-   *
-   * @param params 支付参数
-   * @returns PaymentSheet 配置参数
+   * 创建 Checkout Session 并获取支付链接
    */
-  const fetchPaymentSheetParams = async (params: {
+  const createCheckoutSession = async (params: {
     amount: number;
     currency?: string;
     productId?: string;
     productName?: string;
     period?: number;
-  }): Promise<PaymentSheetParams | null> => {
+    /** 成功回调 URL（后端需要配置） */
+    successUrl?: string;
+    /** 取消回调 URL（后端需要配置） */
+    cancelUrl?: string;
+  }): Promise<CheckoutSessionResponse | null> => {
     try {
-      const response = await request.post<{ data: PaymentSheetParams }>(
-        '/stripe/ios/create-payment',
+      const response = await request.post<{ data: CheckoutSessionResponse }>(
+        '/stripe/create-checkout-session',
         {
           amount: params.amount,
           currency: params.currency || 'cny',
           productId: params.productId,
           productName: params.productName,
           period: params.period,
+          successUrl: params.successUrl || 'focusone://stripe/success',
+          cancelUrl: params.cancelUrl || 'focusone://stripe/cancel',
         },
       );
-      return (response as any).data as PaymentSheetParams;
+      return (response as any).data as CheckoutSessionResponse;
     } catch (error) {
-      console.error('【Stripe】获取支付参数失败:', error);
+      console.error('【Stripe】创建 Checkout Session 失败:', error);
       return null;
     }
   };
 
   /**
-   * 初始化 PaymentSheet
+   * 创建订阅 Checkout Session
+   */
+  const createSubscriptionSession = async (params: {
+    priceId: string;
+    productId?: string;
+    productName?: string;
+    period?: number;
+    successUrl?: string;
+    cancelUrl?: string;
+  }): Promise<CheckoutSessionResponse | null> => {
+    try {
+      const response = await request.post<{ data: CheckoutSessionResponse }>(
+        '/stripe/create-subscription-session',
+        {
+          priceId: params.priceId,
+          productId: params.productId,
+          productName: params.productName,
+          period: params.period,
+          successUrl: params.successUrl || 'focusone://stripe/success',
+          cancelUrl: params.cancelUrl || 'focusone://stripe/cancel',
+        },
+      );
+      return (response as any).data as CheckoutSessionResponse;
+    } catch (error) {
+      console.error('【Stripe】创建订阅 Session 失败:', error);
+      return null;
+    }
+  };
+
+  /**
+   * 发起一次性支付
    *
    * @param params 支付参数
-   * @returns 是否初始化成功
+   * @param onComplete 支付完成回调
    */
-  const initializePayment = useCallback(
-    async (params: {
-      amount: number;
-      currency?: string;
-      productId?: string;
-      productName?: string;
-      merchantDisplayName?: string;
-      allowsDelayedPaymentMethods?: boolean;
-      defaultBillingDetails?: {
-        name?: string;
-        email?: string;
-        phone?: string;
-        address?: {
-          country?: string;
-          city?: string;
-          line1?: string;
-          line2?: string;
-          postalCode?: string;
-          state?: string;
-        };
-      };
-    }): Promise<boolean> => {
+  const checkout = useCallback(
+    async (
+      params: {
+        amount: number;
+        currency?: string;
+        productId?: string;
+        productName?: string;
+      },
+      onComplete?: (result: PaymentResult) => void,
+    ): Promise<boolean> => {
       setLoading(true);
-      setReady(false);
 
       try {
-        const paymentParams = await fetchPaymentSheetParams({
+        const session = await createCheckoutSession({
           amount: params.amount,
           currency: params.currency,
           productId: params.productId,
           productName: params.productName,
         });
 
-        if (!paymentParams) {
-          Alert.alert('错误', '获取支付信息失败，请稍后重试');
+        if (!session) {
+          Alert.alert('错误', '创建支付订单失败，请稍后重试');
+          setLoading(false);
           return false;
         }
 
-        const { error } = await initPaymentSheet({
-          merchantDisplayName: params.merchantDisplayName || 'FocusOne',
-          paymentIntentClientSecret: paymentParams.paymentIntent,
-          customerId: paymentParams.customer,
-          customerEphemeralKeySecret: paymentParams.customerSessionClientSecret,
-          // 允许延迟支付方式（如银行转账）
-          allowsDelayedPaymentMethods:
-            params.allowsDelayedPaymentMethods ?? false,
-          // 默认账单信息
-          defaultBillingDetails: params.defaultBillingDetails,
-          // iOS 返回 URL
-          returnURL: 'focusone://stripe-redirect',
-          // Apple Pay 配置
-          applePay: {
-            merchantCountryCode: 'CN',
-          },
-          // Google Pay 配置
-          googlePay: {
-            merchantCountryCode: 'CN',
-            testEnv: __DEV__, // 开发环境使用测试模式
-          },
-        });
-
-        if (error) {
-          console.error('【Stripe】初始化 PaymentSheet 失败:', error);
-          Alert.alert('错误', error.message || '初始化支付失败');
-          return false;
-        }
-
-        setReady(true);
+        setCheckoutUrl(session.checkoutUrl);
+        setSessionId(session.sessionId);
+        setOnCompleteCallback(() => onComplete ?? null);
+        setVisible(true);
+        setLoading(false);
         return true;
       } catch (error) {
-        console.error('【Stripe】初始化支付异常:', error);
-        Alert.alert('错误', '初始化支付失败，请稍后重试');
-        return false;
-      } finally {
+        console.error('【Stripe】发起支付失败:', error);
+        Alert.alert('错误', '发起支付失败，请稍后重试');
         setLoading(false);
+        return false;
       }
     },
-    [initPaymentSheet],
+    [],
   );
 
   /**
-   * 展示 PaymentSheet 并处理支付
-   *
-   * @returns 支付结果
-   */
-  const presentPayment = useCallback(async (): Promise<PaymentResult> => {
-    if (!ready) {
-      return {
-        success: false,
-        error: { code: 'Failed', message: '支付未初始化' },
-        canceled: false,
-      };
-    }
-
-    setLoading(true);
-
-    try {
-      const { error }: PresentPaymentSheetResult = await presentPaymentSheet();
-
-      if (error) {
-        console.log('【Stripe】支付结果:', error.code, error.message);
-        const canceled = error.code === 'Canceled';
-        if (!canceled) {
-          Alert.alert('支付失败', error.message || '支付未完成');
-        }
-        return {
-          success: false,
-          error: { code: error.code, message: error.message || '支付失败' },
-          canceled,
-        };
-      }
-
-      console.log('【Stripe】支付成功');
-      return { success: true };
-    } catch (error) {
-      console.error('【Stripe】支付异常:', error);
-      return {
-        success: false,
-        error: { code: 'Failed', message: '支付异常' },
-        canceled: false,
-      };
-    } finally {
-      setLoading(false);
-      setReady(false);
-    }
-  }, [ready, presentPaymentSheet]);
-
-  /**
-   * 一键支付（初始化 + 展示）
-   *
-   * @param params 支付参数
-   * @returns 支付结果
-   */
-  const checkout = useCallback(
-    async (params: {
-      amount: number;
-      currency?: string;
-      productId?: string;
-      productName?: string;
-      merchantDisplayName?: string;
-    }): Promise<PaymentResult> => {
-      const initialized = await initializePayment(params);
-      if (!initialized) {
-        return {
-          success: false,
-          error: {
-            code: 'Failed',
-            message: '初始化失败',
-          },
-          canceled: false,
-        };
-      }
-      return presentPayment();
-    },
-    [initializePayment, presentPayment],
-  );
-
-  // ==================== 订阅相关方法 ====================
-
-  /**
-   * 从服务端创建订阅并获取 PaymentSheet 参数
+   * 发起订阅支付
    *
    * @param params 订阅参数
-   * @returns 订阅参数
-   */
-  const fetchSubscriptionParams = async (params: {
-    priceId: string;
-    productId?: string;
-    productName?: string;
-    period?: number;
-  }): Promise<SubscriptionParams | null> => {
-    try {
-      const response = await request.post<{ data: SubscriptionParams }>(
-        '/stripe/ios/create-subscription',
-        {
-          priceId: params.priceId,
-          productId: params.productId,
-          productName: params.productName,
-          period: params.period,
-        },
-      );
-      return (response as any).data as SubscriptionParams;
-    } catch (error) {
-      console.error('【Stripe】创建订阅失败:', error);
-      return null;
-    }
-  };
-
-  /**
-   * 订阅支付（一键完成：创建订阅 + 初始化 + 展示 PaymentSheet）
-   *
-   * @param params 订阅参数
-   * @returns 支付结果
+   * @param onComplete 支付完成回调
    */
   const subscribe = useCallback(
-    async (params: {
-      priceId: string;
-      productId?: string;
-      productName?: string;
-      period?: number;
-      merchantDisplayName?: string;
-    }): Promise<PaymentResult> => {
+    async (
+      params: {
+        priceId: string;
+        productId?: string;
+        productName?: string;
+        period?: number;
+      },
+      onComplete?: (result: PaymentResult) => void,
+    ): Promise<boolean> => {
       setLoading(true);
-      setReady(false);
 
       try {
-        // 1. 创建订阅并获取参数
-        const subscriptionParams = await fetchSubscriptionParams({
+        const session = await createSubscriptionSession({
           priceId: params.priceId,
           productId: params.productId,
           productName: params.productName,
           period: params.period,
         });
 
-        if (!subscriptionParams) {
+        if (!session) {
           Alert.alert('错误', '创建订阅失败，请稍后重试');
-          return {
-            success: false,
-            error: { code: 'Failed', message: '创建订阅失败' },
-            canceled: false,
-          };
+          setLoading(false);
+          return false;
         }
 
-        // 2. 初始化 PaymentSheet
-        // 注意：使用 customerSessionClientSecret 而不是 customerEphemeralKeySecret
-        const { error: initError } = await initPaymentSheet({
-          merchantDisplayName: params.merchantDisplayName || 'FocusOne',
-          paymentIntentClientSecret: subscriptionParams.clientSecret,
-          customerId: subscriptionParams.customer,
-          customerSessionClientSecret:
-            subscriptionParams.customerSessionClientSecret,
-          returnURL: 'focusone://stripe-redirect',
-          applePay: {
-            merchantCountryCode: 'CN',
-          },
-          googlePay: {
-            merchantCountryCode: 'CN',
-            testEnv: __DEV__,
-          },
-        });
-
-        if (initError) {
-          console.error('【Stripe】初始化订阅 PaymentSheet 失败:', initError);
-          Alert.alert('错误', initError.message || '初始化支付失败');
-          return {
-            success: false,
-            error: {
-              code: initError.code,
-              message: initError.message || '初始化失败',
-            },
-            canceled: false,
-          };
-        }
-
-        // 3. 展示 PaymentSheet
-        const { error: presentError }: PresentPaymentSheetResult =
-          await presentPaymentSheet();
-
-        if (presentError) {
-          console.log(
-            '【Stripe】订阅支付结果:',
-            presentError.code,
-            presentError.message,
-          );
-          const canceled = presentError.code === 'Canceled';
-          if (!canceled) {
-            Alert.alert('支付失败', presentError.message || '支付未完成');
-          }
-          return {
-            success: false,
-            error: {
-              code: presentError.code,
-              message: presentError.message || '支付失败',
-            },
-            canceled,
-          };
-        }
-
-        console.log(
-          '【Stripe】订阅支付成功，订阅 ID:',
-          subscriptionParams.subscriptionId,
-        );
-        return { success: true };
-      } catch (error) {
-        console.error('【Stripe】订阅支付异常:', error);
-        Alert.alert('错误', '订阅支付失败，请稍后重试');
-        return {
-          success: false,
-          error: { code: 'Failed', message: '订阅支付异常' },
-          canceled: false,
-        };
-      } finally {
+        setCheckoutUrl(session.checkoutUrl);
+        setSessionId(session.sessionId);
+        setOnCompleteCallback(() => onComplete ?? null);
+        setVisible(true);
         setLoading(false);
-        setReady(false);
+        return true;
+      } catch (error) {
+        console.error('【Stripe】发起订阅失败:', error);
+        Alert.alert('错误', '发起订阅失败，请稍后重试');
+        setLoading(false);
+        return false;
       }
     },
-    [initPaymentSheet, presentPaymentSheet],
+    [],
   );
 
   /**
-   * 用户登出时清除 Stripe 客户信息
+   * 处理 WebView 关闭
    */
-  const clearCustomer = useCallback(async () => {
-    try {
-      await resetPaymentSheetCustomer();
-      console.log('【Stripe】已清除客户信息');
-    } catch (error) {
-      console.error('【Stripe】清除客户信息失败:', error);
-    }
-  }, [resetPaymentSheetCustomer]);
+  const handleClose = useCallback(
+    (result: StripePaymentResult) => {
+      setVisible(false);
+      setCheckoutUrl('');
+
+      const paymentResult: PaymentResult = result.success
+        ? { success: true, sessionId: result.sessionId }
+        : { success: false, canceled: result.canceled, error: result.error };
+
+      if (result.success) {
+        console.log('【Stripe】支付成功，session_id:', result.sessionId);
+      } else if (result.canceled) {
+        console.log('【Stripe】用户取消支付');
+      } else {
+        console.log('【Stripe】支付失败:', result.error);
+      }
+
+      // 调用完成回调
+      onCompleteCallback?.(paymentResult);
+      setOnCompleteCallback(null);
+      setSessionId(null);
+    },
+    [onCompleteCallback],
+  );
+
+  /**
+   * 重置状态
+   */
+  const reset = useCallback(() => {
+    setLoading(false);
+    setVisible(false);
+    setCheckoutUrl('');
+    setSessionId(null);
+    setOnCompleteCallback(null);
+  }, []);
 
   return {
-    /** 初始化 PaymentSheet */
-    initializePayment,
-    /** 展示 PaymentSheet */
-    presentPayment,
-    /** 一键支付（初始化 + 展示） */
+    /** 发起一次性支付 */
     checkout,
-    /** 订阅支付（传入 priceId） */
+    /** 发起订阅支付 */
     subscribe,
-    /** 清除客户信息（登出时调用） */
-    clearCustomer,
+    /** 处理 WebView 关闭 */
+    handleClose,
+    /** 重置状态 */
+    reset,
     /** 是否正在加载 */
     loading,
-    /** PaymentSheet 是否已准备好 */
-    ready,
+    /** WebView 是否可见 */
+    visible,
+    /** Checkout URL */
+    checkoutUrl,
+    /** 当前 Session ID */
+    sessionId,
   };
 };
 

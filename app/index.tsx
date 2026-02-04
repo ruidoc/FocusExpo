@@ -1,4 +1,4 @@
-import { useExperimentStore, useHomeStore, usePermisStore } from '@/stores';
+import { useHomeStore, usePermisStore } from '@/stores';
 import { getUserActivationState } from '@/utils';
 import { checkScreenTimePermission } from '@/utils/permission';
 import { Redirect } from 'expo-router';
@@ -8,7 +8,6 @@ import { ActivityIndicator, View } from 'react-native';
 const Index = () => {
   const hstore = useHomeStore();
   const pmstore = usePermisStore();
-  const experiment = useExperimentStore();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -45,13 +44,10 @@ const Index = () => {
   let initialRoute: any = '/(tabs)';
 
   // 如果用户是新用户且命中onboarding实验，导航到引导页
-  if (userState.isNewUser && experiment.isOnboarding) {
+  if (userState.isNewUser) {
     initialRoute = '/others/welcome';
-    console.log('[路由] 新用户命中onboarding实验，导航到引导页');
-  } else if (userState.isNewUser && !experiment.isOnboarding) {
-    console.log('[路由] 新用户未命中onboarding实验，跳过引导直接进入首页');
   } else {
-    console.log('[路由] 已有用户，直接进入首页');
+    console.log('完成过onboarding，直接进入首页');
   }
 
   return <Redirect href={initialRoute} />;

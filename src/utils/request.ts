@@ -5,7 +5,7 @@ import axios, { AxiosInstance } from 'axios';
 import axiosRetry, { exponentialDelay } from 'axios-retry';
 
 const baseURL = 'https://focus.ruidoc.cn/dev-api';
-// const baseURL = 'http://192.168.0.5:8849';
+// const baseURL = 'http://192.168.109.92:8849';
 
 const instance: AxiosInstance = axios.create({
   baseURL,
@@ -67,7 +67,8 @@ instance.interceptors.response.use(
       let response = error.response;
       console.log('【请求错误】', response.status, response.data);
       if (response.status === 401) {
-        Toast({ position: 'bottom', message: '登录已过期，请重新登录' });
+        // 静默处理 401，清除过期 token 即可
+        // 不显示 Toast，避免在 welcome/onboarding 等页面打扰用户
         storage.delete('access_token');
         storage.delete('user_info');
         useUserStore.setState({ uInfo: null });
