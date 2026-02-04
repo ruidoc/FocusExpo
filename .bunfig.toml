@@ -1,6 +1,0 @@
-[install]
-# 设置淘宝镜像
-registry = "https://registry.npmmirror.com"
-
-# 或者使用其他镜像源（可选）
-# registry = "https://registry.npm.taobao.org" 

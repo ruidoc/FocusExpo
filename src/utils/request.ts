@@ -1,14 +1,12 @@
 import { Toast } from '@/components/ui';
+import { API_BASE_URL } from '@/config/env';
 import { useUserStore } from '@/stores';
 import { storage } from '@/utils';
 import axios, { AxiosInstance } from 'axios';
 import axiosRetry, { exponentialDelay } from 'axios-retry';
 
-const baseURL = 'https://focus.ruidoc.cn/dev-api';
-// const baseURL = 'http://192.168.109.92:8849';
-
 const instance: AxiosInstance = axios.create({
-  baseURL,
+  baseURL: API_BASE_URL,
   timeout: 6000,
   headers: {
     'Content-Type': 'application/json',
@@ -46,7 +44,7 @@ instance.interceptors.request.use(async request => {
   if (request.data instanceof FormData) {
     request.headers['Content-Type'] = 'multipart/form-data';
   }
-  storage.setGroup('http_base_url', baseURL);
+  storage.setGroup('http_base_url', API_BASE_URL);
   // console.log('【网络请求】', request.method, request.url);
   request.headers.Authorization = `Bearer ${
     storage.getString('access_token') || ''

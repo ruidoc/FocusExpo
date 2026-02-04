@@ -9,9 +9,12 @@ import { setGlobalPostHogInstance } from '@/utils/analytics';
 import { PostHogProvider, usePostHog } from 'posthog-react-native';
 import { ReactNode, useEffect } from 'react';
 
+import { POSTHOG_HOST } from '@/config/env';
+
 // PostHog 配置
 const POSTHOG_API_KEY = 'phc_A4Pt2WQHEQLedNR9wyLMxSHrpdnOdUTCiR8LHNGT5QG';
-const POSTHOG_HOST = 'https://us.i.posthog.com';
+// 通过自建代理访问 PostHog，解决中国大陆访问不稳定问题
+// host 由 @/config/env.ts 统一管理，基于 API_BASE_URL + '/i'
 
 interface PostHogProviderWrapperProps {
   children: ReactNode;
@@ -113,12 +116,10 @@ export const PostHogProviderWrapper = ({
       apiKey={POSTHOG_API_KEY}
       options={{
         host: POSTHOG_HOST,
-        enableSessionReplay: true,
+        enableSessionReplay: false, // 关闭 Session Replay，减少代理压力
         // 增加 flush 间隔，减少网络请求频率
         flushInterval: 30000, // 30秒（默认 10-15秒）
         flushAt: 20, // 累积 20 个事件才 flush（默认 20）
-        // 网络错误时静默处理，不阻塞 SDK 运行
-        captureMode: 'json', // 使用 JSON 模式，更稳定
       }}
       autocapture>
       <PostHogInstanceSetter>{children}</PostHogInstanceSetter>
