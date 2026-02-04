@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/images/logo.png",
-    "scheme": ["wxdc022c6a39cb32b7", "focusone"],
+    "scheme": [
+      "wxdc022c6a39cb32b7",
+      "focusone"
+    ],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -19,11 +22,15 @@
         "NSPhotoLibraryUsageDescription": "此应用需要访问相册来保存截图",
         "NSPhotoLibraryAddUsageDescription": "此应用需要访问相册来保存截图"
       },
-      "associatedDomains": ["applinks:(focusone.ruidoc.cn)"],
+      "associatedDomains": [
+        "applinks:(focusone.ruidoc.cn)"
+      ],
       "bundleIdentifier": "com.focusone",
       "entitlements": {
         "com.apple.developer.family-controls": true,
-        "com.apple.security.application-groups": ["group.com.focusone"]
+        "com.apple.security.application-groups": [
+          "group.com.focusone"
+        ]
       },
       "usesAppleSignIn": true
     },
@@ -80,7 +87,15 @@
       ],
       "expo-localization",
       "expo-apple-authentication",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "freeshore"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

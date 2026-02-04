@@ -40,3 +40,5 @@ build.log
 *.tsbuildinfo
 
 app-example
+
+.env.local

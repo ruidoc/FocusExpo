@@ -10,11 +10,30 @@ import { initAppData } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { Provider } from '@fruits-chain/react-native-xiaoshu';
 import { ThemeProvider } from '@react-navigation/native';
+import * as Sentry from '@sentry/react-native';
 import { useFonts } from 'expo-font';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
+
+Sentry.init({
+  dsn: 'https://2447422f11e34845d9b2f5ea7b747475@o4510827934121984.ingest.us.sentry.io/4510827938119680',
+
+  // 自动收集更多用户上下文(隐私合规风险)
+  sendDefaultPii: false,
+  // 启用日志
+  enableLogs: false,
+
+  // 禁用 JS 错误上报
+  beforeSend(event) {
+    // 只保留原生崩溃
+    if (event.platform === 'javascript') {
+      return null; // 丢弃 JS 错误
+    }
+    return event;
+  },
+});
 
 const RootLayout = () => {
   const [loaded] = useFonts({
@@ -189,4 +208,4 @@ const RootLayout = () => {
   );
 };
 
-export default RootLayout;
+export default Sentry.wrap(RootLayout);
