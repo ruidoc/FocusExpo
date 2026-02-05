@@ -21,7 +21,8 @@ extension UserDefaults {
 struct CustomFamilyActivityPicker: View {
   @Binding var selection: FamilyActivitySelection
   var onDismiss: (Bool) -> Void
-  var maxCount: Int = 0 // 0 表示不限制；>0 时限制选择数量并禁止分组
+  var maxCount: Int = 0 // 0 表示不限制 App 数量
+  var maxCategoryCount: Int = 0 // 0 表示禁止选择分类；>0 限制分类数量；-1 表示不限制
   
   @Environment(\.dismiss) private var dismiss
   @State private var selectedApps = FamilyActivitySelection()
@@ -40,34 +41,27 @@ struct CustomFamilyActivityPicker: View {
           }
           ToolbarItem(placement: .confirmationAction) {
             Button("完成") {
-              // 校验：当 maxCount > 0 时，限制应用数量且禁止分组选择
-              if maxCount > 0 {
-                let appCount = selectedApps.applicationTokens.count
-                let hasGroups = !selectedApps.categoryTokens.isEmpty
-                if hasGroups {
-                  // 不允许选择分组
-                  let alert = UIAlertController(title: "不支持选择分组", message: "请仅选择具体的 App。", preferredStyle: .alert)
-                  alert.addAction(UIAlertAction(title: "我知道了", style: .default, handler: nil))
-                  if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                     let rootViewController = windowScene.windows.first?.rootViewController {
-                    var top = rootViewController
-                    while let presented = top.presentedViewController { top = presented }
-                    top.present(alert, animated: true, completion: nil)
-                  }
-                  return
-                }
-                if appCount > maxCount {
-                  let alert = UIAlertController(title: "最多可选择 \(maxCount) 个 App", message: "请减少选择的 App 数量后再试。", preferredStyle: .alert)
-                  alert.addAction(UIAlertAction(title: "好的", style: .default, handler: nil))
-                  if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                     let rootViewController = windowScene.windows.first?.rootViewController {
-                    var top = rootViewController
-                    while let presented = top.presentedViewController { top = presented }
-                    top.present(alert, animated: true, completion: nil)
-                  }
-                  return
-                }
+              let appCount = selectedApps.applicationTokens.count
+              let categoryCount = selectedApps.categoryTokens.count
+              
+              // 校验分类数量
+              if maxCategoryCount == 0 && categoryCount > 0 {
+                // 禁止选择分类
+                showAlert(title: "不支持选择分类", message: "当前权益不支持选择分类，请仅选择具体的 App。")
+                return
               }
+              if maxCategoryCount > 0 && categoryCount > maxCategoryCount {
+                // 分类数量超限
+                showAlert(title: "最多可选择 \(maxCategoryCount) 个分类", message: "请减少选择的分类数量后再试。")
+                return
+              }
+              
+              // 校验 App 数量
+              if maxCount > 0 && appCount > maxCount {
+                showAlert(title: "最多可选择 \(maxCount) 个 App", message: "请减少选择的 App 数量后再试。")
+                return
+              }
+              
               // 将选择的应用传递给外部绑定
               selection = selectedApps
               onDismiss(true)
@@ -79,6 +73,17 @@ struct CustomFamilyActivityPicker: View {
           // 进入选择器时，将上次已保存的选择作为初始选中
           selectedApps = selection
         }
+    }
+  }
+  
+  private func showAlert(title: String, message: String) {
+    let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+    alert.addAction(UIAlertAction(title: "我知道了", style: .default, handler: nil))
+    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+       let rootViewController = windowScene.windows.first?.rootViewController {
+      var top = rootViewController
+      while let presented = top.presentedViewController { top = presented }
+      top.present(alert, animated: true, completion: nil)
     }
   }
 }
@@ -408,7 +413,7 @@ class NativeModule: RCTEventEmitter {
   }
   
   // 选择要限制的应用
-  // maxCount: 0 表示不限制；>0 表示限制选择数量并禁止分组
+  // 限制逻辑从 App Groups 读取：is_subscribed=true 不限制，否则使用 app_count
   @objc
   func selectAppsToLimit(_ maxCount: NSNumber, apps: NSString, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     Task {
@@ -425,6 +430,21 @@ class NativeModule: RCTEventEmitter {
           guard let self = self else {
             resolve(["success": false])
             return
+          }
+          
+          // 从 App Groups 读取限制配置
+          var effectiveMaxCount = 0        // 0 = 不限制 App 数量
+          var effectiveMaxCategoryCount = -1  // -1 = 不限制分类数量
+          if let defaults = UserDefaults.groupUserDefaults() {
+            let isSubscribed = defaults.string(forKey: "is_subscribed") == "true"
+            if !isSubscribed {
+              // 免费用户：使用 app_count 和 category_count 限制
+              let appCount = defaults.integer(forKey: "app_count")
+              let categoryCount = defaults.integer(forKey: "category_count")
+              effectiveMaxCount = appCount > 0 ? appCount : 5 // 默认 5
+              effectiveMaxCategoryCount = categoryCount // 0 = 禁止选分类
+            }
+            // VIP 用户：不限制
           }
           
           // 根据字符串参数决定默认选择：
@@ -478,7 +498,8 @@ class NativeModule: RCTEventEmitter {
                   resolve(["success": false])
                 }
               },
-              maxCount: Int(truncating: maxCount)
+              maxCount: effectiveMaxCount,
+              maxCategoryCount: effectiveMaxCategoryCount
             )
           )
           

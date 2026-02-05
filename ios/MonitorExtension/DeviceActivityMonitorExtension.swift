@@ -40,9 +40,17 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             return
         }
         
-        // 2. 一次性任务：只发送通知，不做其他处理
+        // 2. 一次性任务：检查跨日、配额，发送通知
         if activity.rawValue == "FocusOne.ScreenTime" {
             logToJS(level: "log", message: "一次性任务开始，发送通知")
+            checkAndHandleDayChange(defaults: defaults)
+            
+            // 获取计划时长（一次性任务的时长存在 TotalMinutes 中）
+            let totalMin = defaults.integer(forKey: "FocusOne.TotalMinutes")
+            if totalMin > 0 {
+                _ = checkFreeUserQuota(totalMinutes: totalMin, defaults: defaults)
+            }
+            
             notifyStart()
             return
         }
@@ -132,6 +140,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     // MARK: - Core Logic
     
     private func startPlanSession(for activity: DeviceActivityName, defaults: UserDefaults) {
+        // 0. 检查跨日，同步权益
+        checkAndHandleDayChange(defaults: defaults)
+        
         // 1. 从 activity name 解析 planId
         // Name format: FocusOne.Plan.{planId}_D{d} or FocusOne.Plan.{planId}_P1_D{d}
         let raw = activity.rawValue
@@ -213,10 +224,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults.set("periodic", forKey: "FocusOne.FocusType")
         defaults.set(plan.id, forKey: "FocusOne.CurrentPlanId")
         
-        // 4. 发送通知
+        // 4. 检查配额（仅用于发送通知提醒，不阻止已调度的任务）
+        _ = checkFreeUserQuota(totalMinutes: totalMin, defaults: defaults)
+        
+        // 5. 发送通知
         notifyStart()
         
-        // 5. 创建后端记录 (异步，不阻塞屏蔽)
+        // 6. 创建后端记录 (异步，不阻塞屏蔽)
         createRecord(for: plan, totalMinutes: totalMin, defaults: defaults)
     }
     
@@ -382,6 +396,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         let completedKey = "FocusOne.RecordCompleted_\(recordId)"
         if defaults.bool(forKey: completedKey) { return }
         
+        // 更新今日已使用时长
+        let totalMin = defaults.integer(forKey: "FocusOne.TotalMinutes")
+        if totalMin > 0 {
+            updateTodayUsed(minutes: totalMin, defaults: defaults)
+        }
+        
         NetworkManager.shared.post(path: "/record/complete/\(recordId)") { result in
             switch result {
             case .success(_):
@@ -391,5 +411,143 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 defaults.removeObject(forKey: "record_id")
             }
         }
+    }
+    
+    // MARK: - 配额管理
+    
+    /// 格式化日期为 YYYY-MM-DD
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+    
+    /// 检查是否跨日，如果是则重置 today_used 并同步权益
+    private func checkAndHandleDayChange(defaults: UserDefaults) {
+        let today = formatDate(Date())
+        let storedDate = defaults.string(forKey: "today_date") ?? ""
+        
+        if storedDate != today {
+            logToJS(level: "log", message: "检测到跨日", data: ["stored": storedDate, "today": today])
+            
+            // 重置今日已使用
+            defaults.set(0, forKey: "today_used")
+            defaults.set(today, forKey: "today_date")
+            
+            // 异步同步权益（从后端获取最新数据）
+            syncBenefitStatus(defaults: defaults)
+        }
+    }
+    
+    /// 从后端同步权益状态
+    private func syncBenefitStatus(defaults: UserDefaults) {
+        NetworkManager.shared.get(path: "/benefit") { result in
+            switch result {
+            case .success(let response):
+                if let json = response.json(),
+                   let data = json["data"] as? [String: Any] {
+                    
+                    // 更新订阅状态
+                    if let isSubscribed = data["is_subscribed"] as? Bool {
+                        defaults.set(isSubscribed ? "true" : "false", forKey: "is_subscribed")
+                    }
+                    
+                    // 更新权益配额
+                    if let dayDuration = data["day_duration"] as? Int {
+                        defaults.set(dayDuration, forKey: "day_duration")
+                    }
+                    
+                    // 更新今日已使用（后端返回的是准确值）
+                    if let todayUsed = data["today_used"] as? Int {
+                        defaults.set(todayUsed, forKey: "today_used")
+                    }
+                    
+                    // 更新 App/分类 数量限制
+                    if let appCount = data["app_count"] as? Int {
+                        defaults.set(appCount, forKey: "app_count")
+                    }
+                    if let categoryCount = data["category_count"] as? Int {
+                        defaults.set(categoryCount, forKey: "category_count")
+                    }
+                    
+                    self.logToJS(level: "log", message: "权益同步成功", data: data)
+                }
+            case .failure(let error):
+                self.logToJS(level: "error", message: "权益同步失败: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    /// 更新今日已使用时长
+    private func updateTodayUsed(minutes: Int, defaults: UserDefaults) {
+        let currentUsed = defaults.integer(forKey: "today_used")
+        let newUsed = currentUsed + minutes
+        defaults.set(newUsed, forKey: "today_used")
+        logToJS(level: "log", message: "更新今日已使用", data: ["added": minutes, "total": newUsed])
+    }
+    
+    /// 检查免费用户配额（返回是否允许继续）
+    private func checkFreeUserQuota(totalMinutes: Int, defaults: UserDefaults) -> Bool {
+        // 1. 检查是否为 VIP
+        let isSubscribed = defaults.string(forKey: "is_subscribed") == "true"
+        if isSubscribed {
+            logToJS(level: "log", message: "VIP用户，不限制配额")
+            return true
+        }
+        
+        // 2. 免费用户，检查配额
+        let dayDuration = defaults.integer(forKey: "day_duration")
+        let todayUsed = defaults.integer(forKey: "today_used")
+        let remaining = dayDuration - todayUsed
+        
+        logToJS(level: "log", message: "配额检查", data: [
+            "dayDuration": dayDuration,
+            "todayUsed": todayUsed,
+            "remaining": remaining,
+            "planMinutes": totalMinutes
+        ])
+        
+        // 3. 如果剩余配额不足
+        if remaining <= 0 {
+            notifyQuotaExhausted()
+            return false
+        }
+        
+        // 4. 如果剩余配额不足以完成本次计划，发送提醒
+        if remaining < totalMinutes {
+            notifyQuotaWarning(remaining: remaining)
+        } else if remaining <= 15 {
+            // 剩余15分钟以内，发送提醒
+            notifyQuotaLow(remaining: remaining)
+        }
+        
+        return true
+    }
+    
+    /// 发送配额耗尽通知
+    private func notifyQuotaExhausted() {
+        let content = UNMutableNotificationContent()
+        content.title = "今日配额已用完"
+        content.body = "升级 VIP 解锁无限专注时长"
+        let request = UNNotificationRequest(identifier: "QuotaExhausted", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
+    
+    /// 发送配额不足警告
+    private func notifyQuotaWarning(remaining: Int) {
+        let content = UNMutableNotificationContent()
+        content.title = "配额提醒"
+        content.body = "今日还剩 \(remaining) 分钟免费额度"
+        let request = UNNotificationRequest(identifier: "QuotaWarning", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+    }
+    
+    /// 发送配额即将耗尽提醒
+    private func notifyQuotaLow(remaining: Int) {
+        let content = UNMutableNotificationContent()
+        content.title = "配额即将用完"
+        content.body = "今日还剩 \(remaining) 分钟，升级 VIP 无限制"
+        let request = UNNotificationRequest(identifier: "QuotaLow", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
 }
