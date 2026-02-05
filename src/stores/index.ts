@@ -11,4 +11,4 @@ export { default as useRecordStore } from './record';
 export { default as useStatisticStore } from './statistic';
 export { default as useTestStore } from './test';
 export { default as useUserStore } from './user';
-export { default as useVipStore } from './vip';
+export { default as useSubscriptionStore } from './subscription';

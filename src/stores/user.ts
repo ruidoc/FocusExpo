@@ -16,6 +16,7 @@ import {
   useHomeStore,
   usePlanStore,
   useRecordStore,
+  useSubscriptionStore,
 } from '.';
 
 const UserStore = combine(
@@ -69,6 +70,7 @@ const UserStore = combine(
             usePlanStore.getState().getPlans();
             useBenefitStore.getState().getBenefit();
             useRecordStore.getState().getStatis();
+            useSubscriptionStore.getState().getSubscription();
           } catch (error) {
             // 如果获取用户信息失败，说明token已过期，清除本地数据
             console.log('Token验证失败，重新登录', error);
@@ -246,6 +248,7 @@ const UserStore = combine(
       useHomeStore.getState().loadApps();
       useAppStore.getState().getCurapp();
       usePlanStore.getState().getPlans();
+      useSubscriptionStore.getState().getSubscription();
       (get() as any).getInfo();
 
       // PostHog埋点：记录登录事件
@@ -260,6 +263,7 @@ const UserStore = combine(
       useAppStore.getState().setShieldApps([]);
       usePlanStore.getState().clearPlans();
       useHomeStore.getState().stopVpn();
+      useSubscriptionStore.getState().clearSubscription();
       (get() as any).setUinfo(null);
 
       // PostHog埋点：记录登出事件

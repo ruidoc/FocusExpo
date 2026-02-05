@@ -6,6 +6,7 @@
  * 这里提供事件追踪的工具函数
  */
 
+import Superwall from '@superwall/react-native-superwall';
 import { PostHog, usePostHog } from 'posthog-react-native';
 import { Platform } from 'react-native';
 
@@ -39,39 +40,65 @@ export const getPostHogClient = (): PostHog | null => {
 
 /**
  * 识别用户（登录后调用）
+ * 同时识别 PostHog 和 Superwall 用户
+ *
  * 支持两种调用方式：
  * 1. 在组件中：传入 usePostHogClient() 返回的实例
  * 2. 在非组件代码中：不传参数，自动获取全局实例
  */
-export const identifyUser = (
+export const identifyUser = async (
   userId: string,
   properties?: Record<string, any>,
   posthog?: PostHog | null,
 ) => {
+  // 1. PostHog 识别
   const client = posthog || getPostHogClient();
-  if (!client) {
+  if (client) {
+    client.identify(userId, {
+      platform: Platform.OS,
+      ...properties,
+    });
+    console.log('[PostHog] 用户识别:', userId);
+  } else {
     console.warn('[PostHog] 客户端未初始化');
-    return;
   }
 
-  client.identify(userId, {
-    platform: Platform.OS,
-    ...properties,
-  });
-  console.log('[PostHog] 用户识别:', userId);
+  // 2. Superwall 识别（关键：确保 Webhook 能关联到正确的用户）
+  try {
+    await Superwall.shared.identify(userId);
+    // 设置用户属性（可选，用于 Paywall 个性化）
+    if (properties) {
+      await Superwall.shared.setUserAttributes(properties);
+    }
+    console.log('[Superwall] 用户识别:', userId);
+  } catch (error) {
+    console.warn('[Superwall] 用户识别失败:', error);
+  }
 };
 
 /**
  * 重置用户（登出后调用）
+ * 同时重置 PostHog 和 Superwall 用户
+ *
  * 支持两种调用方式：
  * 1. 在组件中：传入 usePostHogClient() 返回的实例
  * 2. 在非组件代码中：不传参数，自动获取全局实例
  */
-export const resetUser = (posthog?: PostHog | null) => {
+export const resetUser = async (posthog?: PostHog | null) => {
+  // 1. PostHog 重置
   const client = posthog || getPostHogClient();
-  if (!client) return;
-  client.reset();
-  console.log('[PostHog] 用户重置');
+  if (client) {
+    client.reset();
+    console.log('[PostHog] 用户重置');
+  }
+
+  // 2. Superwall 重置
+  try {
+    await Superwall.shared.reset();
+    console.log('[Superwall] 用户重置');
+  } catch (error) {
+    console.warn('[Superwall] 用户重置失败:', error);
+  }
 };
 
 /**

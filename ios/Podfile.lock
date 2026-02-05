@@ -2987,7 +2987,7 @@ SPEC CHECKSUMS:
   openiap: dcfa2a4dcf31259ec4b73658e7d1441babccce66
   PostHog: b42fd6ae60326411582e97bea5786ba748cab8a0
   posthog-react-native-session-replay: 0263951f5e4fbbb1f34281c3ca9ecf2a4ad53ea2
-  RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
+  RCT-Folly: 36fe2295e44b10d831836cc0d1daec5f8abcf809
   RCTDeprecation: 9bc64754b40b86fa5e32f293ab3ea8eea2248339
   RCTRequired: ee36c1ce9a5e65a3f629c13f38a85308eb8eebda
   RCTTypeSafety: 7c0b654b92ef732fffc2a3992a02d10dc8f94bfd
