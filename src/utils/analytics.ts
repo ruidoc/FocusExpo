@@ -6,7 +6,7 @@
  * 这里提供事件追踪的工具函数
  */
 
-import Superwall from '@superwall/react-native-superwall';
+import { useSuperwallStore } from 'expo-superwall';
 import { PostHog, usePostHog } from 'posthog-react-native';
 import { Platform } from 'react-native';
 
@@ -65,10 +65,16 @@ export const identifyUser = async (
 
   // 2. Superwall 识别（关键：确保 Webhook 能关联到正确的用户）
   try {
-    await Superwall.shared.identify(userId);
+    const superwall = useSuperwallStore.getState();
+    // 防护：SDK 未配置时跳过，避免原生侧 crash
+    if (!superwall.isConfigured) {
+      console.warn('[Superwall] SDK 未配置，跳过 identify');
+      return;
+    }
+    await superwall.identify(userId);
     // 设置用户属性（可选，用于 Paywall 个性化）
     if (properties) {
-      await Superwall.shared.setUserAttributes(properties);
+      await superwall.setUserAttributes(properties);
     }
     console.log('[Superwall] 用户识别:', userId);
   } catch (error) {
@@ -94,7 +100,9 @@ export const resetUser = async (posthog?: PostHog | null) => {
 
   // 2. Superwall 重置
   try {
-    await Superwall.shared.reset();
+    const superwall = useSuperwallStore.getState();
+    if (!superwall.isConfigured) return;
+    await superwall.reset();
     console.log('[Superwall] 用户重置');
   } catch (error) {
     console.warn('[Superwall] 用户重置失败:', error);

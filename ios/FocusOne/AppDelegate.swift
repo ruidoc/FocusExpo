@@ -1,6 +1,7 @@
 import Expo
 import React
 import ReactAppDependencyProvider
+import Sentry
 
 @UIApplicationMain
 public class AppDelegate: ExpoAppDelegate {
@@ -13,6 +14,14 @@ public class AppDelegate: ExpoAppDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    // 原生侧 Sentry 初始化：在 JS 加载前注册 crash handler
+    // JS 侧 Sentry.init() 会在此基础上配置更多选项
+    SentrySDK.start { options in
+      options.dsn = "https://2447422f11e34845d9b2f5ea7b747475@o4510827934121984.ingest.us.sentry.io/4510827938119680"
+      options.debug = false
+      options.enableAutoPerformanceTracing = false
+    }
+
     let delegate = ReactNativeDelegate()
     let factory = ExpoReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()

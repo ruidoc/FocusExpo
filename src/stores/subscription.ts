@@ -27,7 +27,7 @@ interface Subscription {
   source: string; // 订阅来源（app_store/stripe/play_store）
   started_at: string; // 订阅开始时间
   expires_at: string; // 订阅到期时间
-  trial_ends_at: string | null; // 试用期结束时间
+  trial_end_at: string | null; // 试用期结束时间
   canceled_at: string | null; // 取消时间
 }
 
@@ -58,7 +58,10 @@ const SubscriptionStore = combine(
             subscription,
             isSubscribed: !!subscription && subscription.status === 0,
           });
-          console.log('[SubscriptionStore] 订阅状态:', subscription ? '已订阅' : '未订阅');
+          console.log(
+            '[SubscriptionStore] 订阅状态:',
+            subscription ? '已订阅' : '未订阅',
+          );
         }
       } catch (error) {
         console.log('[SubscriptionStore] 获取订阅信息失败：', error);
