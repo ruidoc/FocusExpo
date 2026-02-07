@@ -375,7 +375,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         CFNotificationCenterPostNotification(dCenter, dName, nil, nil, true)
 
         let content = UNMutableNotificationContent()
-        content.title = "专注一点"
+        content.title = "专注契约"
         content.body = "屏蔽已开启，保持专注"
         let request = UNNotificationRequest(identifier: "FocusStartPeriodic", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)

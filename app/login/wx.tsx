@@ -91,7 +91,7 @@ const App = () => {
               color: colors.text,
               letterSpacing: 5,
             }}>
-            专注一点
+            专注契约
           </Text>
         </Flex>
         <View style={{ flex: 1 }}>

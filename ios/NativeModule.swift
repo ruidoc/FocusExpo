@@ -660,7 +660,7 @@ class NativeModule: RCTEventEmitter {
       self.emitProgress()
       // 发送开始通知（一次性）
       let content = UNMutableNotificationContent()
-      content.title = "专注一点"
+      content.title = "专注契约"
       content.body = "屏蔽已开启，保持专注"
       let request = UNNotificationRequest(identifier: "FocusStartOnce", content: content, trigger: nil)
       UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)

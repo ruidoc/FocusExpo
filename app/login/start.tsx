@@ -131,7 +131,7 @@ const App = () => {
               color: colors.text,
               letterSpacing: 5,
             }}>
-            专注一点
+            专注契约
           </Text>
         </Flex>
         <View style={{ flex: 1 }}>
@@ -164,7 +164,7 @@ const App = () => {
         onPressCancel={handlePrivacyCancel}>
         <View style={{ paddingHorizontal: 20, paddingVertical: 10 }}>
           <Text>
-            欢迎使用专注一点！我们非常重视您的隐私和个人信息保护。请您务必仔细阅读
+            欢迎使用专注契约！我们非常重视您的隐私和个人信息保护。请您务必仔细阅读
             <Text
               style={{ color: colors.primary, textDecorationLine: 'underline' }}
               onPress={handlePrivacyLink}>
