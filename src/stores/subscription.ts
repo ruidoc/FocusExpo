@@ -58,10 +58,7 @@ const SubscriptionStore = combine(
             subscription,
             isSubscribed: !!subscription && subscription.status === 0,
           });
-          console.log(
-            '[SubscriptionStore] 订阅状态:',
-            subscription ? '已订阅' : '未订阅',
-          );
+          console.log('用户订阅状态:', subscription ? '已订阅' : '未订阅');
         }
       } catch (error) {
         console.log('[SubscriptionStore] 获取订阅信息失败：', error);

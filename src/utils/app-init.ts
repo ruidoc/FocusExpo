@@ -23,9 +23,15 @@ export async function initAppData(): Promise<void> {
   const ustore = useUserStore.getState();
   const dstore = useDebugStore.getState();
 
-  // 初始化用户状态（恢复登录状态 + identify PostHog）
+  // 初始化用户状态（恢复本地登录状态 + identify）
   console.log('[AppInit] 初始化用户状态...');
-  await ustore.init();
+  const isLoggedIn = await ustore.init();
+
+  // 已登录：同步远程数据（验证 token + 拉取业务数据，不阻塞后续初始化）
+  if (isLoggedIn) {
+    console.log('[AppInit] 同步远程数据...');
+    ustore.syncRemoteData();
+  }
 
   // 获取 iOS 应用列表
   console.log('[AppInit] 获取 iOS 应用列表...');

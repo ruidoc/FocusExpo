@@ -355,7 +355,7 @@ PODS:
   - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
   - openiap (1.1.9)
-  - PostHog (3.39.0)
+  - PostHog (3.40.0)
   - posthog-react-native-session-replay (1.2.3):
     - boost
     - DoubleConversion
@@ -3693,7 +3693,7 @@ SPEC CHECKSUMS:
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   openiap: dcfa2a4dcf31259ec4b73658e7d1441babccce66
-  PostHog: 4b3bbd8aa09d76db00ca918b4966f2b5be9a4bf6
+  PostHog: 1118eb27c5f54a0f7f11fe669d60f1a77c6b3a9d
   posthog-react-native-session-replay: 6e56673b3d4cd0bddf3175a52c0bfab957f9ab8a
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: 5eb1d2eeff5fb91151e8a8eef45b6c7658b6c897

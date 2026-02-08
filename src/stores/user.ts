@@ -1,5 +1,6 @@
 import { Toast } from '@/components/ui';
 import {
+  getPostHogClient,
   identifyUser,
   storage,
   trackLogin,
@@ -32,13 +33,17 @@ const UserStore = combine(
       set({ wxInfo: info });
     },
 
-    // 初始化方法：从AsyncStorage恢复登录状态
-    init: async () => {
+    /**
+     * 初始化：恢复本地状态（轻量，不发请求）
+     * - 已登录：恢复 uInfo，PostHog + Superwall 识别延迟到 getInfo() 返回后
+     * - 匿名：仅 PostHog 识别（无需 Superwall）
+     * 返回是否已登录
+     */
+    init: async (): Promise<boolean> => {
       try {
         // 获取或生成 deviceId
         let deviceId = storage.getString('device_id');
         if (!deviceId) {
-          // 使用设备的唯一标识
           deviceId =
             Device.osBuildId ||
             Device.osInternalBuildId ||
@@ -50,42 +55,41 @@ const UserStore = combine(
         const token = storage.getString('access_token');
         const userInfoStr = storage.getString('user_info');
 
-        console.log('【用户信息】:', userInfoStr);
         if (token && userInfoStr) {
-          // 如果有token和用户信息，尝试恢复状态
           const userInfo = JSON.parse(userInfoStr);
           (get() as any).setUinfo(userInfo);
-
-          // PostHog: 识别已登录用户
-          identifyUser(userInfo.id || deviceId, {
-            username: userInfo.username,
-            phone: userInfo.phone,
-            device_id: deviceId,
-          });
-          console.log('[UserStore] 识别已登录用户:', userInfo.id);
-
-          // 验证token是否仍然有效
-          try {
-            await (get() as any).getInfo();
-            usePlanStore.getState().getPlans();
-            useBenefitStore.getState().getBenefit();
-            useRecordStore.getState().getStatis();
-            useSubscriptionStore.getState().getSubscription();
-          } catch (error) {
-            // 如果获取用户信息失败，说明token已过期，清除本地数据
-            console.log('Token验证失败，重新登录', error);
-            (get() as any).logout();
-          }
+          console.log('[UserStore] 恢复已登录用户:', userInfo.id);
+          return true;
         } else {
-          // PostHog: 未登录用户，使用 deviceId 识别
-          identifyUser(deviceId, {
+          // 匿名用户：仅 PostHog 识别
+          const posthog = getPostHogClient();
+          posthog?.identify(deviceId, {
             device_id: deviceId,
             is_anonymous: true,
           });
-          console.log('[UserStore] 识别匿名用户，deviceId:', deviceId);
+          console.log('[UserStore] 匿名用户，deviceId:', deviceId);
+          return false;
         }
       } catch (error) {
         console.log('初始化用户状态失败:', error);
+        return false;
+      }
+    },
+
+    /**
+     * 同步远程数据（验证 token + 拉取业务数据）
+     * 在 init() 之后调用，仅已登录用户需要
+     */
+    syncRemoteData: async () => {
+      try {
+        await (get() as any).getInfo();
+        usePlanStore.getState().getPlans();
+        useBenefitStore.getState().getBenefit();
+        useRecordStore.getState().getStatis();
+        useSubscriptionStore.getState().getSubscription();
+      } catch (error) {
+        console.log('Token 验证失败，重新登录', error);
+        (get() as any).logout();
       }
     },
 
