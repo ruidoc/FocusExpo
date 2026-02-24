@@ -11,6 +11,7 @@ export const ScreenOptions: NativeStackNavigationOptions = {
   statusBarTranslucent: true, // 状态栏沉浸
   headerTintColor: '#fff',
   headerBackTitle: '',
+  headerBackButtonDisplayMode: 'minimal',
   // statusBarColor: 'transparent', // 状态栏透明
   // gestureEnabled: true, // 启用手势
   // animationTypeForReplace: 'push', // 替换动画

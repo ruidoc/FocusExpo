@@ -137,7 +137,7 @@ const App = () => {
     },
     sectionBox: {
       marginHorizontal: 30,
-      marginTop: 140,
+      marginTop: 40,
     },
     button: {
       height: 52,

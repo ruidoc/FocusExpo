@@ -1,22 +1,25 @@
 import { FieldGroup, FieldItem, Flex } from '@/components/ui';
-import { useUserStore } from '@/stores';
+import { useRecordStore, useSubscriptionStore, useUserStore } from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useTheme } from '@react-navigation/native';
+import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   Image,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const App = () => {
   const store = useUserStore();
-  const { colors, dark } = useTheme();
+  const subStore = useSubscriptionStore();
+  const recStore = useRecordStore();
+  const { dark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const toLogin = () => {
     if (!store.uInfo) {
@@ -35,144 +38,243 @@ const App = () => {
     }
   };
 
-  // 创建带背景色的图标组件
-  const ColoredIcon = ({
-    color,
+  const formatMins = (m: number) => {
+    const h = Math.floor((m || 0) / 60);
+    const mm = (m || 0) % 60;
+    if (h) return `${h}h${mm}m`;
+    return `${mm}m`;
+  };
+
+  const formatExpiry = (dateStr: string) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const MenuIcon = ({
     icon,
-    size = 17,
+    size = 18,
   }: {
-    color: string;
     icon: keyof typeof Icon.glyphMap;
     size?: number;
-  }) => (
-    <View
-      style={{
-        backgroundColor: color,
-        padding: 5,
-        borderRadius: 9,
-      }}>
-      <Icon name={icon} size={size} color="#ffffff99" />
-    </View>
+  }) => <Icon name={icon} size={size} color={dark ? '#6B7280' : '#94A3B8'} />;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (store.uInfo) {
+        useSubscriptionStore.getState().getSubscription();
+      }
+    }, [store.uInfo]),
   );
 
-  useEffect(() => {}, []);
+  const sub = subStore.subscription;
+  const isActive = subStore.isSubscribed;
 
-  const styles = StyleSheet.create({
-    userBox: {
-      paddingHorizontal: 30,
-      paddingBottom: 30,
-      paddingTop: 75,
-      marginBottom: 10,
-    },
-    userTitle: {
-      fontSize: 25,
-      marginBottom: 5,
-      fontWeight: '500',
-      color: colors.text,
-    },
-    userDesc: {
-      fontSize: 14,
-      color: '#666',
-    },
-    avator: {
-      width: 60,
-      height: 60,
-      borderRadius: 20,
-      marginRight: 14,
-    },
-  });
+  const sourceLabel: Record<string, string> = {
+    app_store: 'App Store',
+    superwall: 'App Store',
+    stripe: 'Stripe',
+    play_store: 'Google Play',
+  };
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <Flex className="justify-between" style={styles.userBox}>
+    <ScrollView
+      className="flex-1"
+      style={{ backgroundColor: dark ? '#14141C' : '#fff' }}>
+      {/* 个人信息 */}
+      <Flex
+        className="justify-between items-center px-6 pb-5"
+        style={{ paddingTop: insets.top + 16 }}>
         <Flex onPress={toLogin}>
-          {store.uInfo?.avatar && (
-            <Image source={{ uri: store.uInfo.avatar }} style={styles.avator} />
-          )}
-          {!store.uInfo?.avatar && (
-            <Image
-              source={require('@/assets/images/logo.png')}
-              style={styles.avator}
-            />
-          )}
+          <Image
+            source={
+              store.uInfo?.avatar
+                ? { uri: store.uInfo.avatar }
+                : require('@/assets/images/logo.png')
+            }
+            className="w-14 h-14 rounded-[18px] mr-3.5"
+          />
           <View>
-            {store.uInfo && (
+            {store.uInfo ? (
               <>
-                <Text style={styles.userTitle}>{store.uInfo.username}</Text>
-                <Text style={styles.userDesc}>{store.uInfo.phone}</Text>
+                <Text
+                  className="text-[22px] font-semibold mb-0.5"
+                  style={{ color: dark ? '#E5E7EB' : '#0F172A' }}>
+                  {store.uInfo.username}
+                </Text>
+                <Text
+                  className="text-[13px]"
+                  style={{ color: dark ? '#8A8A98' : '#94A3B8' }}>
+                  {store.uInfo.phone}
+                </Text>
               </>
+            ) : (
+              <Text
+                className="text-[22px] font-semibold"
+                style={{ color: dark ? '#E5E7EB' : '#0F172A' }}>
+                请登录
+              </Text>
             )}
-            {!store.uInfo && <Text style={styles.userTitle}>请登录</Text>}
           </View>
         </Flex>
         {store.uInfo && (
           <TouchableOpacity
-            onPress={() => toNavigate('user/vip')}
-            activeOpacity={0.7}>
-            <Flex
-              className="justify-center"
-              style={{
-                backgroundColor: dark ? '#232323' : '#ffffff',
-                padding: 8,
-                paddingHorizontal: 12,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: 'transparent',
-              }}>
-              <Icon name="diamond-outline" size={18} color="#FFC107" />
-              <Text style={{ color: '#FFC107', fontSize: 14, marginLeft: 5 }}>
-                VIP
-              </Text>
-            </Flex>
+            activeOpacity={0.6}
+            className="p-2"
+            onPress={() => router.push('/user/edit')}>
+            <Icon
+              name="chevron-forward"
+              size={20}
+              color={dark ? '#6B7280' : '#94A3B8'}
+            />
           </TouchableOpacity>
         )}
       </Flex>
-      <Flex className="flex-col items-stretch gap-2">
-        {store.uInfo && (
-          <FieldGroup className="rounded-[10px] mx-5">
-            <FieldItem
-              icon={<ColoredIcon color="#FFA238" icon="brush-sharp" />}
-              title="打卡"
-              onPress={() => toNavigate('punchCard')}
-              titleStyle={{ fontSize: 17, marginLeft: 10 }}
-            />
-          </FieldGroup>
-        )}
-        <FieldGroup className="rounded-[10px] mx-5">
+
+      {/* 会员卡片 */}
+      {store.uInfo && (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => toNavigate('user/vip')}
+          className="mx-4 rounded-2xl p-[18px] overflow-hidden"
+          style={
+            isActive
+              ? { backgroundColor: dark ? '#2A2040' : '#F0EBFF' }
+              : {
+                  backgroundColor: dark ? '#1C1C26' : '#F5F7FB',
+                  borderWidth: 1,
+                  borderColor: dark ? '#2A2A3A' : '#E5E7EB',
+                }
+          }>
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-1.5">
+              <Icon
+                name="diamond"
+                size={20}
+                color={isActive ? '#FFC107' : dark ? '#6B7280' : '#94A3B8'}
+              />
+              <Text
+                className="text-base font-semibold"
+                style={{
+                  color: isActive
+                    ? dark ? '#C4A6FF' : '#7A5AF8'
+                    : dark ? '#8A8A98' : '#64748B',
+                }}>
+                {isActive ? 'VIP 会员' : '未开通会员'}
+              </Text>
+            </View>
+            {!isActive && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                className="px-3.5 py-1.5 rounded-[20px]"
+                style={{ backgroundColor: '#7A5AF8' }}
+                onPress={() => toNavigate('user/vip')}>
+                <Text className="text-[13px] font-semibold text-white">
+                  立即开通
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {isActive && sub && (
+            <View className="flex-row mt-3.5 gap-5">
+              <View className="gap-0.5">
+                <Text
+                  className="text-[11px]"
+                  style={{ color: dark ? '#6B7280' : '#94A3B8' }}>
+                  订阅来源
+                </Text>
+                <Text
+                  className="text-[13px] font-medium"
+                  style={{ color: dark ? '#C4A6FF' : '#7A5AF8' }}>
+                  {sourceLabel[sub.source] || sub.source}
+                </Text>
+              </View>
+              <View className="gap-0.5">
+                <Text
+                  className="text-[11px]"
+                  style={{ color: dark ? '#6B7280' : '#94A3B8' }}>
+                  到期时间
+                </Text>
+                <Text
+                  className="text-[13px] font-medium"
+                  style={{ color: dark ? '#C4A6FF' : '#7A5AF8' }}>
+                  {formatExpiry(sub.expires_at)}
+                </Text>
+              </View>
+              {sub.is_trial === 1 && (
+                <View className="gap-0.5">
+                  <Text
+                    className="text-[11px]"
+                    style={{ color: dark ? '#6B7280' : '#94A3B8' }}>
+                    状态
+                  </Text>
+                  <Text
+                    className="text-[13px] font-medium"
+                    style={{ color: dark ? '#C4A6FF' : '#7A5AF8' }}>
+                    试用中
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </TouchableOpacity>
+      )}
+
+      {/* 专注数据概览 */}
+      {store.uInfo && (
+        <View className="flex-row mx-4 mt-4 gap-2.5">
+          {[
+            { value: formatMins(recStore.actual_mins), label: '累计专注' },
+            { value: formatMins(recStore.total_mins), label: '计划时长' },
+            { value: recStore.success_rate, label: '成功率' },
+          ].map(item => (
+            <View
+              key={item.label}
+              className="flex-1 rounded-[14px] py-3.5 px-3 items-center"
+              style={{ backgroundColor: dark ? '#1A1530' : '#F3EEFF' }}>
+              <Text
+                className="text-lg font-bold mb-1"
+                style={{ color: dark ? '#C4A6FF' : '#7A5AF8' }}>
+                {item.value}
+              </Text>
+              <Text
+                className="text-[11px]"
+                style={{ color: dark ? '#8A7DB8' : '#9B8ACE' }}>
+                {item.label}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* 菜单列表 */}
+      <Flex className="flex-col items-stretch mt-7 gap-2 opacity-85">
+        <FieldGroup className="rounded-[10px] mx-4">
           <FieldItem
-            icon={<ColoredIcon color="#34B545" icon="cube-sharp" />}
+            icon={<MenuIcon icon="shield-checkmark-outline" />}
             title="权限管理"
             onPress={() => toNavigate('setting/permission')}
-            titleStyle={{ fontSize: 17, marginLeft: 10 }}
+            titleStyle={{ fontSize: 15, marginLeft: 10 }}
           />
           <FieldItem
-            icon={<ColoredIcon color="#1BA2FC" icon="mail-open" />}
+            icon={<MenuIcon icon="chatbubble-ellipses-outline" />}
             title="意见反馈"
             onPress={() => toNavigate('setting/feedback')}
-            titleStyle={{ fontSize: 17, marginLeft: 10 }}
+            titleStyle={{ fontSize: 15, marginLeft: 10 }}
           />
           <FieldItem
-            icon={<ColoredIcon color="#0065FE" icon="people-sharp" />}
+            icon={<MenuIcon icon="information-circle-outline" />}
             title="关于我们"
             onPress={() => toNavigate('setting/about')}
-            titleStyle={{ fontSize: 17, marginLeft: 10 }}
+            titleStyle={{ fontSize: 15, marginLeft: 10 }}
           />
-        </FieldGroup>
-        <FieldGroup className="rounded-[10px] mx-5">
           <FieldItem
-            icon={<ColoredIcon color="#7D45E6" icon="settings-sharp" />}
+            icon={<MenuIcon icon="settings-outline" />}
             title="设置"
             onPress={() => toNavigate('setting')}
-            titleStyle={{ fontSize: 17, marginLeft: 10 }}
+            titleStyle={{ fontSize: 15, marginLeft: 10 }}
           />
         </FieldGroup>
-        {/* {store.uInfo && (
-          <TouchableOpacity onPress={toLogout} activeOpacity={0.7}>
-            <Flex className="justify-center" style={styles.itemBox}>
-              <Text style={styles.itemText}>退出</Text>
-            </Flex>
-          </TouchableOpacity>
-        )} */}
       </Flex>
     </ScrollView>
   );

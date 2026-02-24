@@ -20,16 +20,16 @@ const App = (props: Props) => {
     try {
       const authResult = await sendAuthRequest();
       const code = authResult?.data?.code;
-      
+
       if (!code) {
         console.log('微信授权取消或失败', authResult);
         return;
       }
-      
+
       setLoading(true);
       let result: any = await http.post('/user/wechat-app', { code });
       setLoading(false);
-      
+
       if (result?.statusCode) {
         props.onSuccess(result);
       }
@@ -51,7 +51,7 @@ const App = (props: Props) => {
       type={props.type || 'primary'}
       loading={loading}
       loadingText="登录中..."
-      style={{ marginBottom: 15 }}
+      style={{ marginBottom: 10 }}
       onPress={onButtonClicked}>
       {props.label || '微信登录/注册'}
     </Button>

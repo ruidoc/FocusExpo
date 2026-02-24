@@ -22,9 +22,9 @@ interface Subscription {
   product_id: string;
   period: number; // 订阅周期（月）
   price: number; // 价格（分）
-  status: number; // 0进行中、1已取消、2已到期
+  status: 'active' | 'canceled' | 'expired'; // active=生效中、canceled=已取消、expired=已到期
   is_trial: number; // 0否、1是
-  source: string; // 订阅来源（app_store/stripe/play_store）
+  source: string; // 订阅来源（app_store/stripe/superwall）
   started_at: string; // 订阅开始时间
   expires_at: string; // 订阅到期时间
   trial_end_at: string | null; // 试用期结束时间
@@ -56,9 +56,9 @@ const SubscriptionStore = combine(
           const subscription = res.data as Subscription | null;
           set({
             subscription,
-            isSubscribed: !!subscription && subscription.status === 0,
+            isSubscribed: subscription && subscription.status === 'active',
           });
-          console.log('用户订阅状态:', subscription ? '已订阅' : '未订阅');
+          console.log('用户订阅状态:', subscription);
         }
       } catch (error) {
         console.log('[SubscriptionStore] 获取订阅信息失败：', error);

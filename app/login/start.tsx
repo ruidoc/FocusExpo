@@ -129,7 +129,7 @@ const App = () => {
             style={{
               fontSize: 24,
               color: colors.text,
-              letterSpacing: 5,
+              letterSpacing: 9,
             }}>
             专注契约
           </Text>

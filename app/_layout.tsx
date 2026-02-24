@@ -1,20 +1,20 @@
 import { DebugBall } from '@/components/debug/debug-ball';
 import { PostHogProviderWrapper } from '@/components/providers/PostHogProvider';
 import { SuperwallProviderWrapper } from '@/components/providers/SuperwallProvider';
-import { ActionSheet, DateTimePicker, Dialog, Flex, Toast } from '@/components/ui';
+import { ActionSheet, DateTimePicker, Dialog, Toast } from '@/components/ui';
 import { ScreenOptions } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
 import { setupIOSFocusSync } from '@/native/ios';
 import '@/styles/global.css';
 import { initAppData } from '@/utils';
-import Icon from '@expo/vector-icons/Ionicons';
+
 import { ThemeProvider } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import { useFonts } from 'expo-font';
-import { Stack, router } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 Sentry.init({
   dsn: 'https://2447422f11e34845d9b2f5ea7b747475@o4510827934121984.ingest.us.sentry.io/4510827938119680',
@@ -58,13 +58,6 @@ const RootLayout = () => {
     return null;
   }
 
-  const BackIcon = () => (
-    <Flex className="items-center gap-4">
-      <Pressable onPress={() => router.back()}>
-        <Icon name="chevron-back" size={24} color="#fff" />
-      </Pressable>
-    </Flex>
-  );
   return (
     <PostHogProviderWrapper>
       <SuperwallProviderWrapper>
@@ -75,12 +68,7 @@ const RootLayout = () => {
           <Dialog.Global />
           <Toast.Global />
           <View className="flex-1">
-            <Stack
-              screenOptions={{
-                ...ScreenOptions,
-                headerLeft: ({ canGoBack }) =>
-                  canGoBack ? <BackIcon /> : null,
-              }}>
+            <Stack screenOptions={ScreenOptions}>
               <Stack.Screen
                 name="(tabs)"
                 options={{ headerShown: false, headerTitle: '' }}
@@ -98,22 +86,19 @@ const RootLayout = () => {
               />
               <Stack.Screen
                 name="login/index"
-                options={{
-                  title: '登录',
-                  headerTransparent: true,
-                }}
+                options={{ title: '登录' }}
               />
               <Stack.Screen
                 name="login/wx"
-                options={{ title: '', headerTransparent: true }}
+                options={{ title: '' }}
               />
               <Stack.Screen
                 name="login/start"
-                options={{ title: '', headerTransparent: true }}
+                options={{ title: '' }}
               />
               <Stack.Screen
                 name="login/register"
-                options={{ title: '注册', headerTransparent: true }}
+                options={{ title: '注册' }}
               />
               <Stack.Screen
                 name="user/edit"

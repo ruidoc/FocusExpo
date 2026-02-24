@@ -1,17 +1,19 @@
 import { Apple, Privicy, Wechat } from '@/components/business';
-import { Button, Flex } from '@/components/ui';
+import { Flex } from '@/components/ui';
 import { useUserStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const App = () => {
   const store = useUserStore();
   const { colors, dark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [agree, setAgree] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const navigation = useNavigation<any>();
 
@@ -44,69 +46,36 @@ const App = () => {
     });
   };
 
-  const styles = StyleSheet.create({
-    linearBox: {
-      flex: 1,
-    },
-    sectionBox: {
-      marginHorizontal: 30,
-      flex: 1,
-    },
-    button: {
-      height: 52,
-      marginBottom: 15,
-    },
-    avator: {
-      width: 100,
-      height: 100,
-      borderRadius: 20,
-      marginBottom: 14,
-    },
-    logoBox: {
-      flex: 2,
-    },
-  });
-
   return (
     <LinearGradient
-      // 设置渐变的颜色
       colors={
-        dark ? ['#394143', '#39414360'] : ['#E3E8FF', '#F0F4FF', '#FFF7F0']
+        dark
+          ? ['#1B1E2F', '#252A3A', '#1B1E2F']
+          : ['#E0E7FF', '#EDE9FE', '#FCE7F3']
       }
-      // 设置开始和结束点
       start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-      style={styles.linearBox}>
-      <Flex className="flex-col items-stretch flex-1" style={styles.sectionBox}>
-        <Flex
-          className="flex-col justify-center flex-[2]"
-          style={styles.logoBox}>
+      end={{ x: 0.3, y: 1 }}
+      className="flex-1">
+      <Flex
+        className="flex-col items-stretch flex-1 mx-[30px]"
+        style={{ paddingBottom: insets.bottom + 12 }}>
+        <Flex className="flex-col justify-center flex-[2]">
           <Image
             source={require('@/assets/images/logo.png')}
-            style={styles.avator}
+            className="w-[100px] h-[100px] rounded-[20px] mb-3.5"
           />
           <Text
-            style={{
-              fontSize: 24,
-              color: colors.text,
-              letterSpacing: 5,
-            }}>
+            className="text-2xl"
+            style={{ color: colors.text, letterSpacing: 6 }}>
             专注契约
           </Text>
         </Flex>
-        <View style={{ flex: 1 }}>
+        <View className="flex-1">
           <Wechat disabled={!agree} onSuccess={loginResult} />
-          <Apple
-            disabled={!agree}
-            onSuccess={appleLoginResult}
-            type="ghost"
-          />
-          <Button type="ghost" style={styles.button} onPress={toRoute}>
-            手机号登录
-          </Button>
+          <Apple disabled={!agree} onSuccess={appleLoginResult} type="ghost" />
         </View>
+        <Privicy onChange={setAgree} />
       </Flex>
-      <Privicy onChange={setAgree} />
     </LinearGradient>
   );
 };

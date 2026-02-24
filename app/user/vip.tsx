@@ -1,139 +1,58 @@
 import { Page } from '@/components/business';
 import { Toast } from '@/components/ui';
+import { useSubscriptionStore } from '@/stores';
 import { trackOpenPaywall, useSuperwall } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useTheme } from '@react-navigation/native';
-import React from 'react';
+import { useFocusEffect, useTheme } from '@react-navigation/native';
+import React, { useCallback, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Linking,
   Platform,
-  StyleSheet,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 
+const BENEFITS = [
+  { icon: 'infinite' as const, title: '无限计划', desc: '不限专注计划数量' },
+  { icon: 'apps' as const, title: '更多应用位', desc: '屏蔽更多分心应用' },
+  { icon: 'stats-chart' as const, title: '高级统计', desc: '多维度数据分析' },
+  { icon: 'shield-checkmark' as const, title: '优先支持', desc: '专属客服通道' },
+];
+
 const VipPage = () => {
-  const { colors, dark } = useTheme();
-
-  // Superwall paywall 集成
+  const { dark } = useTheme();
+  const subStore = useSubscriptionStore();
   const { registerPlacement } = useSuperwall();
+  const [loading, setLoading] = useState(false);
+  const isFocusedRef = useRef(true);
 
-  // 设计常量
-  const THEME_COLOR = colors.primary;
-  const TEXT_SECONDARY = '#999999';
-  const CARD_BG = dark ? '#1C1C26' : '#FFFFFF';
+  const sub = subStore.subscription;
+  const isActive = subStore.isSubscribed;
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      paddingHorizontal: 20,
-      paddingTop: 40,
-    },
-    heroSection: {
-      alignItems: 'center',
-      marginBottom: 40,
-    },
-    iconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: `${THEME_COLOR}20`,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 20,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: colors.text,
-      marginBottom: 12,
-      textAlign: 'center',
-    },
-    subtitle: {
-      fontSize: 16,
-      color: TEXT_SECONDARY,
-      textAlign: 'center',
-      lineHeight: 24,
-      paddingHorizontal: 20,
-    },
-    // 权益卡片
-    benefitsCard: {
-      backgroundColor: CARD_BG,
-      borderRadius: 16,
-      padding: 20,
-      marginBottom: 30,
-      borderWidth: 1,
-      borderColor: dark ? '#2C2C36' : '#E5E7EB',
-    },
-    benefitItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    benefitIconBox: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: `${THEME_COLOR}15`,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 12,
-    },
-    benefitText: {
-      fontSize: 15,
-      color: colors.text,
-      flex: 1,
-    },
-    // 主要操作按钮
-    primaryButton: {
-      height: 56,
-      borderRadius: 12,
-      backgroundColor: THEME_COLOR,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 20,
-    },
-    primaryButtonText: {
-      color: '#000',
-      fontSize: 18,
-      fontWeight: 'bold',
-    },
-    // 合规入口区域
-    complianceRow: {
-      marginTop: 10,
-      marginBottom: 20,
-      flexDirection: 'row',
-      justifyContent: 'center',
-      gap: 20,
-    },
-    smallButton: {
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.border || '#E5E7EB',
-      backgroundColor: CARD_BG,
-    },
-    smallButtonText: {
-      color: colors.text,
-      fontSize: 14,
-    },
-    // 底部链接
-    linksRow: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: 20,
-      paddingBottom: 30,
-    },
-    linkText: {
-      color: THEME_COLOR,
-      fontSize: 14,
-    },
-  });
+  useFocusEffect(
+    useCallback(() => {
+      isFocusedRef.current = true;
+      useSubscriptionStore.getState().getSubscription();
+      return () => {
+        isFocusedRef.current = false;
+      };
+    }, []),
+  );
 
-  // iOS 合规：管理订阅
+  const handleUpgrade = async () => {
+    setLoading(true);
+    trackOpenPaywall('show_paywall');
+    try {
+      if (!isFocusedRef.current) return;
+      await registerPlacement({ placement: 'show_paywall' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onManageSubscriptions = async () => {
     try {
       if (Platform.OS === 'ios') {
@@ -141,106 +60,220 @@ const VipPage = () => {
           'itms-apps://apps.apple.com/account/subscriptions',
         );
       }
-    } catch (e) {
-      console.warn('打开订阅管理失败：', e);
-      Toast({ message: '无法打开订阅管理页面' });
+    } catch {
+      Toast('无法打开订阅管理页面');
     }
   };
 
-  // 恢复购买（Superwall自动处理）
   const onRestorePurchases = () => {
-    Toast({ message: '正在恢复购买记录...' });
-    // Superwall SDK 会自动同步购买状态
+    Toast('正在恢复购买记录...');
   };
 
-  const openAgreement = () => {
-    Linking.openURL('https://focusone.ruidoc.cn/agreement');
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '--';
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   };
 
-  const openPrivacy = () => {
-    Linking.openURL('https://focusone.ruidoc.cn/privacy');
+  const sourceLabel: Record<string, string> = {
+    app_store: 'App Store',
+    superwall: 'App Store',
+    stripe: 'Stripe',
+    play_store: 'Google Play',
   };
 
-  // 打开Superwall购买页面
-  const handleUpgrade = () => {
-    trackOpenPaywall('show_paywall');
-    registerPlacement({ placement: 'show_paywall' });
+  const statusLabel = (s: string) => {
+    if (s === 'active') return '生效中';
+    if (s === 'canceled') return '已取消';
+    return '已到期';
   };
+
+  const statusColor = (s: string) => {
+    if (s === 'active') return '#16B364';
+    if (s === 'canceled') return '#F59E0B';
+    return '#EF4444';
+  };
+
+  const ACCENT = dark ? '#C4A6FF' : '#7A5AF8';
+  const ACCENT_BG = dark ? '#1A1530' : '#F3EEFF';
+  const CARD = dark ? '#1C1C26' : '#fff';
+  const BORDER = dark ? '#2A2A3A' : '#E5E7EB';
+  const TEXT2 = dark ? '#8A8A98' : '#94A3B8';
 
   return (
     <Page>
-      <View style={styles.container}>
-        {/* Hero区域 */}
-        <View style={styles.heroSection}>
-          <View style={styles.iconContainer}>
-            <Icon name="diamond" size={40} color={THEME_COLOR} />
+      <ScrollView className="flex-1 px-5 pt-5">
+        {/* 已订阅：订阅状态卡片 */}
+        {isActive && sub && (
+          <View
+            className="rounded-[18px] p-5 mb-6 border"
+            style={{
+              backgroundColor: dark ? '#2A1F48' : '#EDE5FF',
+              borderColor: dark ? '#4A3580' : '#C4A6FF',
+            }}>
+            <View className="flex-row justify-between items-center mb-4">
+              <View className="flex-row items-center gap-2">
+                <Icon name="diamond" size={22} color="#FFC107" />
+                <Text
+                  className="text-lg font-bold"
+                  style={{ color: dark ? '#D4BBFF' : '#6B3FD4' }}>
+                  VIP 会员
+                </Text>
+              </View>
+              <View
+                className="px-2.5 py-0.5 rounded-xl"
+                style={{ backgroundColor: statusColor(sub.status) + '20' }}>
+                <Text
+                  className="text-xs font-semibold"
+                  style={{ color: statusColor(sub.status) }}>
+                  {sub.is_trial === 1 ? '试用中' : statusLabel(sub.status)}
+                </Text>
+              </View>
+            </View>
+            <View className="flex-row flex-wrap gap-4">
+              {[
+                { label: '订阅来源', value: sourceLabel[sub.source] || sub.source },
+                { label: '订阅周期', value: sub.period === 1 ? '月度' : sub.period === 12 ? '年度' : `${sub.period}个月` },
+                { label: '开始时间', value: formatDate(sub.started_at) },
+                { label: '到期时间', value: formatDate(sub.expires_at) },
+              ].map(item => (
+                <View key={item.label} className="w-[45%]">
+                  <Text
+                    className="text-[11px] mb-0.5"
+                    style={{ color: dark ? '#8A7DB8' : '#9B8ACE' }}>
+                    {item.label}
+                  </Text>
+                  <Text
+                    className="text-sm font-semibold"
+                    style={{ color: dark ? '#D4BBFF' : '#6B3FD4' }}>
+                    {item.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-          <Text style={styles.title}>解锁专业版</Text>
-          <Text style={styles.subtitle}>
-            获得更强大的专注能力，提升效率，掌控时间
-          </Text>
+        )}
+
+        {/* 未订阅：标题引导 */}
+        {!isActive && (
+          <>
+            <Text
+              className="text-2xl font-extrabold text-center mb-2"
+              style={{ color: dark ? '#E5E7EB' : '#0F172A' }}>
+              解锁全部能力
+            </Text>
+            <Text
+              className="text-sm text-center mb-7"
+              style={{ color: TEXT2, lineHeight: 22 }}>
+              不限计划数量，屏蔽更多应用，掌控你的专注时间
+            </Text>
+          </>
+        )}
+
+        {/* 权益卡片网格 */}
+        <View className="flex-row flex-wrap gap-2.5 mb-7">
+          {BENEFITS.map(b => (
+            <View
+              key={b.icon}
+              className="w-[48%] rounded-[14px] p-4 border-hairline"
+              style={{ backgroundColor: CARD, borderColor: BORDER }}>
+              <View
+                className="w-9 h-9 rounded-[10px] justify-center items-center mb-2.5"
+                style={{ backgroundColor: ACCENT_BG }}>
+                <Icon name={b.icon} size={18} color={ACCENT} />
+              </View>
+              <Text
+                className="text-[15px] font-semibold mb-0.5"
+                style={{ color: dark ? '#E5E7EB' : '#0F172A' }}>
+                {b.title}
+              </Text>
+              <Text className="text-xs" style={{ color: TEXT2 }}>
+                {b.desc}
+              </Text>
+            </View>
+          ))}
         </View>
 
-        {/* 会员权益 */}
-        <View style={styles.benefitsCard}>
-          <View style={styles.benefitItem}>
-            <View style={styles.benefitIconBox}>
-              <Icon name="infinite" size={18} color={THEME_COLOR} />
-            </View>
-            <Text style={styles.benefitText}>无限制专注计划数量</Text>
-          </View>
-          <View style={styles.benefitItem}>
-            <View style={styles.benefitIconBox}>
-              <Icon name="apps" size={18} color={THEME_COLOR} />
-            </View>
-            <Text style={styles.benefitText}>解锁更多限制应用位</Text>
-          </View>
-          <View style={styles.benefitItem}>
-            <View style={styles.benefitIconBox}>
-              <Icon name="stats-chart" size={18} color={THEME_COLOR} />
-            </View>
-            <Text style={styles.benefitText}>高级数据统计分析</Text>
-          </View>
-          <View style={[styles.benefitItem, { marginBottom: 0 }]}>
-            <View style={styles.benefitIconBox}>
-              <Icon name="shield-checkmark" size={18} color={THEME_COLOR} />
-            </View>
-            <Text style={styles.benefitText}>优先客服支持</Text>
-          </View>
-        </View>
-
-        {/* 主要操作按钮 */}
-        <TouchableOpacity
-          style={styles.primaryButton}
-          activeOpacity={0.8}
-          onPress={handleUpgrade}>
-          <Text style={styles.primaryButtonText}>立即订阅</Text>
-        </TouchableOpacity>
-
-        {/* 合规入口：恢复购买、管理订阅 */}
-        <View style={styles.complianceRow}>
+        {/* CTA / 管理按钮 */}
+        {!isActive ? (
           <TouchableOpacity
-            style={styles.smallButton}
-            onPress={onRestorePurchases}>
-            <Text style={styles.smallButtonText}>恢复购买</Text>
+            className="h-[54px] rounded-[14px] justify-center items-center mb-4"
+            style={{ backgroundColor: '#7A5AF8', opacity: loading ? 0.7 : 1 }}
+            activeOpacity={0.8}
+            disabled={loading}
+            onPress={handleUpgrade}>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-[17px] font-bold text-white">立即订阅</Text>
+            )}
           </TouchableOpacity>
+        ) : (
           <TouchableOpacity
-            style={styles.smallButton}
+            className="h-[54px] rounded-[14px] justify-center items-center mb-4 border"
+            style={{ backgroundColor: CARD, borderColor: BORDER }}
+            activeOpacity={0.7}
             onPress={onManageSubscriptions}>
-            <Text style={styles.smallButtonText}>管理订阅</Text>
+            <Text
+              className="text-[17px] font-bold"
+              style={{ color: ACCENT }}>
+              管理订阅
+            </Text>
           </TouchableOpacity>
+        )}
+
+        {/* 取消订阅 */}
+        {isActive && sub && sub.status === 'active' && (
+          <TouchableOpacity
+            className="h-[54px] rounded-[14px] justify-center items-center mb-4 border"
+            style={{ backgroundColor: CARD, borderColor: BORDER }}
+            activeOpacity={0.7}
+            onPress={onManageSubscriptions}>
+            <Text className="text-[15px]" style={{ color: '#EF4444' }}>
+              取消订阅
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* 合规入口 */}
+        <View className="flex-row justify-center gap-6 mb-5">
+          <TouchableOpacity className="py-2" onPress={onRestorePurchases}>
+            <Text className="text-sm" style={{ color: ACCENT }}>
+              恢复购买
+            </Text>
+          </TouchableOpacity>
+          {!isActive && (
+            <TouchableOpacity className="py-2" onPress={onManageSubscriptions}>
+              <Text className="text-sm" style={{ color: ACCENT }}>
+                管理订阅
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* 协议与隐私链接 */}
-        <View style={styles.linksRow}>
-          <TouchableOpacity onPress={openAgreement}>
-            <Text style={styles.linkText}>用户协议</Text>
+        {/* 协议链接 */}
+        <View className="flex-row justify-center gap-4 pb-8">
+          <TouchableOpacity
+            onPress={() =>
+              Linking.openURL('https://focusone.ruidoc.cn/agreement')
+            }>
+            <Text className="text-xs" style={{ color: TEXT2 }}>
+              用户协议
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={openPrivacy}>
-            <Text style={styles.linkText}>隐私政策</Text>
+          <Text className="text-xs" style={{ color: TEXT2 }}>
+            ·
+          </Text>
+          <TouchableOpacity
+            onPress={() =>
+              Linking.openURL('https://focusone.ruidoc.cn/privacy')
+            }>
+            <Text className="text-xs" style={{ color: TEXT2 }}>
+              隐私政策
+            </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </Page>
   );
 };

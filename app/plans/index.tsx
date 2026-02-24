@@ -83,18 +83,15 @@ const App = () => {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Flex className="flex-row items-center gap-3">
-          <Pressable
-            onPress={handleSync}
-            disabled={syncing}>
+        <Flex className="flex-row items-center">
+          <Pressable onPress={handleSync} disabled={syncing}>
             {syncing ? (
               <ActivityIndicator size="small" color={colors.text} />
             ) : (
               <Icon name="sync" size={24} color={colors.text} />
             )}
           </Pressable>
-          <Pressable
-            onPress={() => toRoute('plans/add')}>
+          <Pressable onPress={() => toRoute('plans/add')}>
             <Icon name="add" size={27} color={colors.text} />
           </Pressable>
         </Flex>
