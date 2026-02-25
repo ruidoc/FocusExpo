@@ -15,20 +15,15 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-const CIRCLE_SIZE = 36;
-const GAP = 8;
-const RIGHT_PADDING = 14;
+const SIZE = 33;
+const EXPANDED_WIDTH = 100;
 
 /** 计划角标动画配置 */
 const PLAN_BADGE_ANIM_CONFIG = {
-  /** 进入首页后延迟多少 ms 开始动画 */
-  delayMs: 3000,
-  /** 展开动画时长 ms */
-  expandDurationMs: 600,
-  /** 展开后保持时长 ms */
-  holdDurationMs: 1600,
-  /** 收起动画时长 ms */
-  collapseDurationMs: 600,
+  delayMs: 3000, // 进入首页后延迟多少 ms 开始动画
+  expandDurationMs: 600, // 展开动画时长 ms
+  holdDurationMs: 1200, // 展开后保持时长 ms
+  collapseDurationMs: 500, // 收起动画时长 ms
 } as const;
 
 const PlanBadge = ({
@@ -39,8 +34,6 @@ const PlanBadge = ({
   onPress: () => void;
 }) => {
   const progress = useSharedValue(0);
-  const [contentWidth, setContentWidth] = React.useState(CIRCLE_SIZE + 60);
-
   const displayCount = count > 99 ? '99+' : count;
   const labelText = `${displayCount}个计划`;
 
@@ -82,10 +75,8 @@ const PlanBadge = ({
     }, [count, progress]),
   );
 
-  const expandedWidth = CIRCLE_SIZE + GAP + contentWidth + RIGHT_PADDING;
-
   const containerStyle = useAnimatedStyle(() => ({
-    width: interpolate(progress.value, [0, 1], [CIRCLE_SIZE, expandedWidth]),
+    width: interpolate(progress.value, [0, 1], [SIZE, EXPANDED_WIDTH]),
   }));
 
   const labelStyle = useAnimatedStyle(() => ({
@@ -97,81 +88,61 @@ const PlanBadge = ({
     transform: [{ scale: interpolate(progress.value, [0, 0.3], [1, 0.5]) }],
   }));
 
-  const textStyle = {
+  const labelTextStyle = {
     color: '#E5E7EB',
-    fontSize: 13,
-    fontWeight: '500' as const,
+    fontSize: 13.5,
+    fontWeight: '600' as const,
+    marginLeft: 0,
   };
 
   return (
-    <>
-      <View
-        style={{ position: 'absolute', opacity: 0, left: -9999 }}
-        onLayout={e => setContentWidth(e.nativeEvent.layout.width)}
-        pointerEvents="none">
-        <Text style={textStyle}>{labelText}</Text>
-      </View>
-      <Animated.View
-        style={[
-          containerStyle,
-          {
-            height: CIRCLE_SIZE,
-            borderRadius: CIRCLE_SIZE / 2,
-            backgroundColor: 'rgba(255,255,255,0.08)',
-            marginLeft: 16,
-          },
-        ]}>
-        <Pressable
-          onPress={onPress}
+    <Animated.View
+      style={[
+        containerStyle,
+        {
+          height: SIZE,
+          borderRadius: SIZE / 2,
+          backgroundColor: 'rgba(255,255,255,0.08)',
+        },
+      ]}>
+      <Pressable
+        onPress={onPress}
+        style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+        <View
           style={{
-            flex: 1,
-            flexDirection: 'row',
+            width: SIZE,
+            height: SIZE,
             alignItems: 'center',
+            justifyContent: 'center',
           }}>
-          <View
-            style={{
-              width: CIRCLE_SIZE,
-              height: CIRCLE_SIZE,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Icon name="calendar-outline" size={18} color="#E5E7EB" />
-            {count > 0 && (
-              <Animated.View
-                style={[
-                  badgeStyle,
-                  {
-                    position: 'absolute',
-                    top: 2,
-                    right: 2,
-                    backgroundColor: '#F97316',
-                    borderRadius: 8,
-                    minWidth: 16,
-                    height: 16,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingHorizontal: 3,
-                  },
-                ]}>
-                <Text
-                  style={{
-                    color: '#fff',
-                    fontSize: 10,
-                    fontWeight: '700',
-                    lineHeight: 16,
-                  }}>
-                  {displayCount}
-                </Text>
-              </Animated.View>
-            )}
-          </View>
-
-          <Animated.Text style={[labelStyle, textStyle]} numberOfLines={1}>
-            {labelText}
-          </Animated.Text>
-        </Pressable>
-      </Animated.View>
-    </>
+          <Icon name="calendar-outline" size={19} color="#E5E7EB" />
+          {count > 0 && (
+            <Animated.View
+              style={[
+                badgeStyle,
+                {
+                  position: 'absolute',
+                  top: 1,
+                  right: 1,
+                  backgroundColor: '#F97316',
+                  borderRadius: 8,
+                  minWidth: 16,
+                  height: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                },
+              ]}>
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>
+                {displayCount}
+              </Text>
+            </Animated.View>
+          )}
+        </View>
+        <Animated.Text style={[labelStyle, labelTextStyle]} numberOfLines={1}>
+          {labelText}
+        </Animated.Text>
+      </Pressable>
+    </Animated.View>
   );
 };
 

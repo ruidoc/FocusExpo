@@ -93,6 +93,67 @@ const UserStore = combine(
       }
     },
 
+    sendCode: async (phone: string): Promise<boolean> => {
+      try {
+        const res: any = await http.post('/user/send-code', { phone });
+        if (res?.statusCode === 200) {
+          return true;
+        }
+        Toast(res?.message || '发送失败');
+        return false;
+      } catch (error) {
+        return false;
+      }
+    },
+
+    loginByCode: async (
+      form: { phone: string; code: string },
+      fun?: (data?: HttpRes) => void,
+    ) => {
+      try {
+        const res: any = await http.post('/user/login-by-code', form);
+        if (res?.statusCode === 200) {
+          const loginRes = { token: res.data?.token };
+          (get() as any).loginSuccess(loginRes, 'phone');
+          fun?.(res);
+        } else {
+          Toast(res?.message || '登录失败');
+          fun?.();
+        }
+      } catch (error) {
+        fun?.();
+      }
+    },
+
+    bindByCode: async (
+      form: Record<string, string>,
+      wxInfo: any,
+      fun?: (data?: HttpRes) => void,
+    ) => {
+      try {
+        const body = {
+          phone: form.phone,
+          code: form.code,
+          openid: wxInfo.openid,
+          unionid: wxInfo.unionid,
+          avatar: wxInfo.headimgurl,
+          username: wxInfo.nickname,
+          sex: wxInfo.sex,
+        };
+        const res: any = await http.post('/user/wechat-bind-by-code', body);
+        if (res?.statusCode === 200) {
+          const loginRes = { token: res.data?.token };
+          (get() as any).loginSuccess(loginRes, 'wechat');
+          fun?.(res);
+        } else {
+          Toast(res?.message || '绑定失败');
+          fun?.();
+        }
+      } catch (error) {
+        fun?.();
+      }
+    },
+
     login: async (
       form: Record<string, string>,
       fun?: (data?: HttpRes) => void,

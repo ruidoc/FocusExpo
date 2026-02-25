@@ -4,14 +4,15 @@ import { useCustomTheme } from '@/config/theme';
 import { usePlanStore } from '@/stores';
 import { getPlansByPeriod } from '@/utils/date';
 import Icon from '@expo/vector-icons/Ionicons';
+import { HeaderButton } from '@react-navigation/elements';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -82,22 +83,38 @@ const App = () => {
 
   useEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <Flex className="flex-row items-center">
-          <Pressable onPress={handleSync} disabled={syncing}>
+      headerRight: ({ tintColor }: { tintColor?: string }) => (
+        <Flex className="flex-row items-center" style={{ gap: 0 }}>
+          <HeaderButton
+            onPress={handleSync}
+            disabled={syncing}
+            accessibilityLabel="同步">
             {syncing ? (
-              <ActivityIndicator size="small" color={colors.text} />
+              <ActivityIndicator
+                size="small"
+                color={tintColor ?? colors.text}
+              />
             ) : (
-              <Icon name="sync" size={24} color={colors.text} />
+              <Icon name="sync" size={24} color={tintColor ?? colors.text} />
             )}
-          </Pressable>
-          <Pressable onPress={() => toRoute('plans/add')}>
-            <Icon name="add" size={27} color={colors.text} />
-          </Pressable>
+          </HeaderButton>
+          <View
+            style={{
+              width: StyleSheet.hairlineWidth,
+              height: 18,
+              backgroundColor: colors.text3,
+              marginHorizontal: 4,
+            }}
+          />
+          <HeaderButton
+            onPress={() => toRoute('plans/add')}
+            accessibilityLabel="添加">
+            <Icon name="add" size={27} color={tintColor ?? colors.text} />
+          </HeaderButton>
         </Flex>
       ),
     });
-  }, [syncing, colors.text, handleSync, navigation]);
+  }, [syncing, colors.text, colors.border, handleSync, navigation]);
 
   // 根据筛选类型过滤任务
   const getFilteredPlans = () => {

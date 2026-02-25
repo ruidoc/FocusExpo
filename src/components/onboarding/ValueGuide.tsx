@@ -1,4 +1,5 @@
 import { Privicy, Wechat } from '@/components/business';
+import { useCustomTheme } from '@/config/theme';
 import { useHomeStore, useUserStore } from '@/stores';
 import { markOnboardingCompleted, trackEvent } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -14,7 +15,9 @@ interface ValueGuideProps {
 const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
   const store = useHomeStore();
   const ustore = useUserStore();
+  const { colors } = useCustomTheme();
   const [agree, setAgree] = useState(false);
+  const accentColor = colors.primary ?? '#2E90FA';
 
   useEffect(() => {
     // 停止 VPN（如果有的话）
@@ -79,137 +82,107 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
     router.push({ pathname: '/login', params: { type: 'bind' } });
   };
 
+  const scheduleItems = [
+    { time: '9:00', label: copy.example1 },
+    { time: '14:00', label: copy.example2 },
+    { time: '21:00', label: copy.example3 },
+  ];
+
+  const features = [
+    { icon: 'calendar-outline', label: '设置一次' },
+    { icon: 'time-outline', label: '每天自动' },
+    { icon: 'flash-outline', label: '不用纠结' },
+  ] as const;
+
   return (
     <View className="flex-1">
       <View className="flex-1 px-6">
         {/* 顶部成功提示 */}
-        <View className="items-center mb-8 pt-6">
-          <View
-            className="w-16 h-16 rounded-full items-center justify-center mb-4"
-            style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)' }}>
-            <Icon name="checkmark-circle" size={48} color="#10b981" />
-          </View>
-          <Text className="text-lg text-white/80 text-center">
-            你已经体验到了系统级锁定的效果
+        <View className="items-center mb-6 pt-2">
+          <Text className="text-[50px] font-bold text-white text-center tracking-tight">
+            🔒
+          </Text>
+          <Text className="text-2xl font-bold text-white text-center tracking-tight">
+            锁定应用还不够！
           </Text>
         </View>
 
-        {/* 问题区 */}
-        <View className="mb-6">
-          <Text className="text-base text-white/70 mb-2">
-            然而，每次主动专注，都需要意志力
+        {/* 问题 → 解决方案 */}
+        <View className="mb-5">
+          <Text className="text-base text-white/60 mb-2 leading-6">
+            主动性专注，消耗意志力，很难长期坚持下去
+          </Text>
+          <Text className="text-base font-semibold text-white/60 leading-7">
+            更好的方式：<Text className="text-white">创建计划，自动发生</Text>
           </Text>
         </View>
-
-        {/* 解决方案标题 */}
-        <Text className="text-base text-white/80 mb-4">
-          更好的方式：让它每天自动发生
-        </Text>
 
         {/* 定时计划卡片 */}
         <View
-          className="rounded-3xl p-5 mb-6"
+          className="rounded-3xl p-5 mb-5"
           style={{
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.08)',
           }}>
-          <Text className="text-lg font-semibold text-white mb-4">
-            定时计划
-          </Text>
-
-          <View className="gap-y-3">
-            <View className="flex-row items-center">
-              <Text className="text-white/60 text-sm">每天 9:00</Text>
-              <Icon
-                name="arrow-forward"
-                size={16}
-                color="rgba(255, 255, 255, 0.4)"
-                style={{ marginHorizontal: 8 }}
-              />
-              <Text className="text-white/80 text-sm flex-1">
-                {copy.example1}
-              </Text>
-            </View>
-
-            <View className="flex-row items-center">
-              <Text className="text-white/60 text-sm">每天 14:00</Text>
-              <Icon
-                name="arrow-forward"
-                size={16}
-                color="rgba(255, 255, 255, 0.4)"
-                style={{ marginHorizontal: 8 }}
-              />
-              <Text className="text-white/80 text-sm flex-1">
-                {copy.example2}
-              </Text>
-            </View>
-
-            <View className="flex-row items-center">
-              <Text className="text-white/60 text-sm">每天 21:00</Text>
-              <Icon
-                name="arrow-forward"
-                size={16}
-                color="rgba(255, 255, 255, 0.4)"
-                style={{ marginHorizontal: 8 }}
-              />
-              <Text className="text-white/80 text-sm flex-1">
-                {copy.example3}
-              </Text>
-            </View>
+          <View className="flex-row items-center mb-4 gap-2">
+            <Icon name="alarm-outline" size={22} color={accentColor} />
+            <Text className="text-lg font-semibold text-white">定时计划</Text>
           </View>
 
-          <View
-            className="h-px my-4"
-            style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
-          />
+          <View className="gap-y-4">
+            {scheduleItems.map((item, index) => (
+              <View
+                key={index}
+                className="flex-row items-center py-2.5 px-3 rounded-xl"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)' }}>
+                <Text className="text-sm text-[#858699] font-medium w-14 pl-2">
+                  {item.time}
+                </Text>
+                <Icon
+                  name="chevron-forward"
+                  size={16}
+                  color="rgba(255, 255, 255, 0.3)"
+                  style={{ marginRight: 12 }}
+                />
+                <Text className="text-base text-white/90 flex-1">
+                  {item.label}
+                </Text>
+              </View>
+            ))}
+          </View>
 
-          <Text className="text-sm text-white/60">
+          <Text className="text-sm text-white/50 mt-4">
             到点自动执行，无需手动开启
           </Text>
         </View>
 
         {/* 功能亮点 */}
-        <View className="flex-row justify-around mb-6">
-          <View className="items-center">
+        {/* <View className="flex-row gap-4 mb-6">
+          {features.map((item, index) => (
             <View
-              className="w-10 h-10 rounded-xl items-center justify-center mb-1"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}>
-              <Icon name="calendar-outline" size={20} color="#7A5AF8" />
+              key={index}
+              className="flex-1 items-center py-4 rounded-2xl"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)' }}>
+              <View
+                className="w-11 h-11 rounded-xl items-center justify-center mb-2"
+                style={{ backgroundColor: accentColor + '20' }}>
+                <Icon name={item.icon} size={22} color={accentColor} />
+              </View>
+              <Text className="text-xs font-medium text-white/70">
+                {item.label}
+              </Text>
             </View>
-            <Text className="text-xs text-white/40">设置一次</Text>
-          </View>
-          <View className="items-center">
-            <View
-              className="w-10 h-10 rounded-xl items-center justify-center mb-1"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}>
-              <Icon name="time-outline" size={20} color="#7A5AF8" />
-            </View>
-            <Text className="text-xs text-white/40">每天自动</Text>
-          </View>
-          <View className="items-center">
-            <View
-              className="w-10 h-10 rounded-xl items-center justify-center mb-1"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}>
-              <Icon name="flash-outline" size={20} color="#7A5AF8" />
-            </View>
-            <Text className="text-xs text-white/40">不用纠结</Text>
-          </View>
-        </View>
+          ))}
+        </View> */}
       </View>
 
       {/* 底部操作区 */}
-      <View className="flex px-6 gap-0">
+      <View className="flex px-6 gap-0 pb-2">
         <Wechat
           type="custom"
           disabled={!agree}
           onSuccess={loginResult}
           label="登录后创建计划"
         />
-
-        {/* <Text className="text-center text-white/40 text-xs">
-          设置一次，每天生效
-        </Text> */}
         <View className="flex-row items-center justify-center mt-4">
           <Privicy onChange={setAgree} />
         </View>

@@ -1,79 +1,101 @@
 import { Apple, Privicy, Wechat } from '@/components/business';
 import { Keyboard } from '@/components/system';
 import { Button, TextInput, Toast } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { useUserStore } from '@/stores';
 import { toast } from '@/utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useRoute, useTheme } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
+import Icon from '@expo/vector-icons/Ionicons';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+
+const CODE_COOLDOWN = 60;
 
 const App = () => {
   const store = useUserStore();
-  const { colors, dark } = useTheme();
+  const { colors } = useCustomTheme();
   const [loading, setLoading] = useState(false);
   const [agree, setAgree] = useState(false);
   const [isbind, setIsbind] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const route = useRoute();
-
   const navigation = useNavigation<any>();
 
   const [form, setForm] = useState({
     phone: '',
-    password: '',
-    confirm_password: '',
+    code: '',
   });
 
-  const setInfo = (val: any, key: string) => {
-    setForm({
-      ...form,
-      [key]: val,
-    });
+  const setInfo = (val: string, key: 'phone' | 'code') => {
+    setForm(prev => ({ ...prev, [key]: val }));
   };
 
-  const toBind = () => {
-    if (form.password.length < 6) {
-      return Toast('密码至少6位');
+  const canSendCode = /^1\d{10}$/.test(form.phone) && countdown === 0;
+
+  const sendCode = async () => {
+    if (!canSendCode) return;
+    const ok = await store.sendCode(form.phone);
+    if (ok) {
+      Toast('验证码已发送');
+      setCountdown(CODE_COOLDOWN);
+      timerRef.current = setInterval(() => {
+        setCountdown(c => {
+          if (c <= 1) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            return 0;
+          }
+          return c - 1;
+        });
+      }, 1000);
     }
-    if (form.password !== form.confirm_password) {
-      return Toast('两次密码输入不符，请重新输入');
+  };
+
+  const toBind = async () => {
+    if (!form.phone || !form.code) return;
+    if (form.code.length < 4) {
+      return Toast('请输入完整验证码');
     }
     setLoading(true);
-    let { openid, unionid, headimgurl, nickname, sex } = store.wxInfo;
-    let submitForm = {
-      ...form,
-      openid,
-      unionid,
-      avatar: headimgurl,
-      username: nickname,
-      sex,
-    };
-    console.log(submitForm);
-    store.register(submitForm as Record<string, any>, val => {
+    const wxInfo = store.wxInfo;
+    if (!wxInfo) {
+      Toast('请先通过微信登录');
       setLoading(false);
-      if (val) {
-        router.replace('/(tabs)');
-      }
+      return;
+    }
+    store.bindByCode(form, wxInfo, () => {
+      setLoading(false);
+      router.replace('/(tabs)');
     });
   };
 
-  const toRegister = (data: any) => {
-    store.setWxInfo(data);
-    navigation.replace('Login', { type: 'bind' });
+  const toLogin = async () => {
+    if (!agree) {
+      return toast('请阅读并勾选下方隐私政策');
+    }
+    if (!form.phone || !form.code) return;
+    if (form.code.length < 4) {
+      return Toast('请输入完整验证码');
+    }
+    setLoading(true);
+    store.loginByCode(form, () => {
+      setLoading(false);
+      router.replace('/(tabs)');
+    });
   };
 
   const loginResult = (result: any) => {
-    console.log('微信登录结果', result);
-    if (result.statusCode === 20003) {
-      return toRegister(result.data);
+    if (result?.statusCode === 20003) {
+      store.setWxInfo(result.data);
+      router.replace({ pathname: '/login', params: { type: 'bind' } });
+      return;
     }
-    store.login(result as Record<string, any>, val => {
-      if (val) {
-        router.replace('/(tabs)');
-      }
-    });
+    if (result?.statusCode === 200 && result?.data?.token) {
+      store.loginSuccess(result.data, 'wechat');
+      router.replace('/(tabs)');
+    }
   };
 
   const appleLoginResult = (credential: any) => {
@@ -86,152 +108,181 @@ const App = () => {
     });
   };
 
-  const toLogin = () => {
-    if (!agree) {
-      return toast('请阅读并勾选下方隐私政策');
-    }
-    setLoading(true);
-    delete form.confirm_password;
-    console.log(form);
-    store.login(form as Record<string, any>, val => {
-      setLoading(false);
-      if (val) {
-        router.replace('/(tabs)');
-      }
-    });
-  };
-
   const initState = async () => {
     const privacy_readed = await AsyncStorage.getItem('privacy_readed');
-    if (privacy_readed) {
-      setAgree(true);
-    }
+    if (privacy_readed) setAgree(true);
   };
 
   useEffect(() => {
-    let type = (route.params as any)?.type;
-    if (type && type === 'bind') {
+    const type = (route.params as any)?.type;
+    if (type === 'bind') {
       setIsbind(true);
-      navigation.setOptions({
-        title: '绑定手机号',
-      });
+      navigation.setOptions({ title: '绑定手机号' });
     }
     initState();
   }, []);
 
-  const styles = StyleSheet.create({
-    linearBox: {
-      flex: 1,
-    },
-    inputWrap: {
-      backgroundColor: dark ? '#12121250' : '#F5F6FA',
-      borderRadius: 9,
-      marginBottom: 14,
-      paddingVertical: 15,
-      paddingHorizontal: 20,
-    },
-    inputBox: {
-      textAlign: 'left',
-      fontSize: 18,
-      color: dark ? '#fff' : '#222',
-    },
-    sectionBox: {
-      marginHorizontal: 30,
-      marginTop: 40,
-    },
-    button: {
-      height: 52,
-      marginTop: 20,
-      marginBottom: 14,
-      fontSize: 17,
-    },
-    footer: {
-      position: 'absolute',
-      bottom: 30,
-      left: 0,
-      right: 0,
-      paddingHorizontal: 30,
-    },
-  });
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const bg = '#14141C';
 
   return (
     <Keyboard>
-      <LinearGradient
-        // 设置渐变的颜色
-        colors={
-          dark ? ['#443937', '#44393760'] : ['#E3E8FF', '#F0F4FF', '#FFF7F0']
-        }
-        // 设置开始和结束点
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.linearBox}>
-        <View style={styles.sectionBox}>
-          <View style={styles.inputWrap}>
-            <TextInput
-              style={styles.inputBox}
-              placeholder="请输入手机号"
-              placeholderTextColor={dark ? '#FFFFFF50' : '#888'}
-              value={form.phone}
-              clearable
-              keyboardType="number-pad"
-              onChange={v => setInfo(v, 'phone')}
-            />
+      <View className="flex-1" style={{ backgroundColor: bg }}>
+        <View className="flex-1 px-6 pt-12">
+          {/* 标题 */}
+          <View className="mb-10">
+            <Text
+              className="text-2xl font-bold tracking-tight"
+              style={{ color: colors.text }}>
+              {isbind ? '绑定手机号' : '手机号登录'}
+            </Text>
+            <Text
+              className="text-base mt-2"
+              style={{ color: colors.text2 }}>
+              {isbind
+                ? '验证后即可完成微信账号绑定'
+                : '验证后将自动登录或注册'}
+            </Text>
           </View>
-          <View style={styles.inputWrap}>
-            <TextInput
-              secureTextEntry
-              style={styles.inputBox}
-              placeholder="请输入密码"
-              placeholderTextColor={dark ? '#FFFFFF50' : '#888'}
-              value={form.password}
-              clearable
-              onChange={v => setInfo(v, 'password')}
-            />
-          </View>
-          {isbind && (
-            <View style={styles.inputWrap}>
+
+          {/* 手机号 */}
+          <View
+            className="rounded-2xl mb-4 px-4 py-4"
+            style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+            <View className="flex-row items-center">
+              <Icon
+                name="call-outline"
+                size={20}
+                color="rgba(255,255,255,0.5)"
+                style={{ marginRight: 12 }}
+              />
               <TextInput
-                secureTextEntry
-                style={styles.inputBox}
-                placeholder="再次输入密码"
-                placeholderTextColor={dark ? '#FFFFFF50' : '#888'}
-                value={form.confirm_password}
+                className="flex-1 text-base"
+                placeholder="请输入手机号"
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                value={form.phone}
                 clearable
-                onChange={v => setInfo(v, 'confirm_password')}
+                keyboardType="number-pad"
+                maxLength={11}
+                onChange={v => setInfo(v, 'phone')}
+                style={{ color: colors.text, paddingVertical: 4 }}
               />
             </View>
-          )}
-          <Button
-            disabled={!form.password || !form.phone}
-            style={styles.button}
-            loading={loading}
-            size="xl"
-            onPress={isbind ? toBind : toLogin}>
-            {(!isbind && '登录') || '绑定'}
-          </Button>
-          {!isbind && (
-            <>
-              <Wechat
-                type="ghost"
-                disabled={!agree}
-                color="#07C160"
-                onSuccess={loginResult}
+          </View>
+
+          {/* 验证码 */}
+          <View
+            className="rounded-2xl mb-6 px-4 py-4 flex-row items-center"
+            style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+            <Icon
+              name="keypad-outline"
+              size={20}
+              color="rgba(255,255,255,0.5)"
+              style={{ marginRight: 12 }}
+            />
+            <View className="flex-1 min-w-0">
+              <TextInput
+                className="text-base"
+                placeholder="请输入验证码"
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                value={form.code}
+                clearable
+                keyboardType="number-pad"
+                maxLength={6}
+                onChange={v => setInfo(v, 'code')}
+                style={{ color: colors.text, paddingVertical: 4 }}
               />
-              <Apple
-                type="ghost"
-                disabled={!agree}
-                onSuccess={appleLoginResult}
-              />
-            </>
-          )}
-          {/* <Flex justify="end">
-            <TouchableOpacity activeOpacity={0.7} onPress={toRoute}>
-              <Text style={{ color: colors.primary }}>没有账号？去注册</Text>
+            </View>
+            <TouchableOpacity
+              onPress={sendCode}
+              disabled={!canSendCode}
+              activeOpacity={0.7}
+              style={{
+                marginLeft: 16,
+                paddingVertical: 8,
+                paddingHorizontal: 8,
+                flexShrink: 0,
+              }}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              {countdown > 0 ? (
+                <Text
+                  className="text-sm font-medium"
+                  style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  {countdown}s 后重发
+                </Text>
+              ) : (
+                <Text
+                  className="text-sm font-medium"
+                  style={{
+                    color: canSendCode
+                      ? (colors.primary || '#7A5AF8')
+                      : '#9CA3AF',
+                  }}>
+                  获取验证码
+                </Text>
+              )}
             </TouchableOpacity>
-          </Flex> */}
+          </View>
+
+          {/* 主按钮 */}
+          <Button
+            disabled={!form.phone || !form.code || form.code.length < 4}
+            loading={loading}
+            onPress={isbind ? toBind : toLogin}
+            text={isbind ? '绑定' : '登录'}
+            className="w-full rounded-2xl h-14"
+            textClassName="text-lg"
+          />
+
+          {/* 第三方登录 - 仅非绑定模式 */}
+          {!isbind && (
+            <View className="mt-8">
+              <View className="flex-row items-center mb-6">
+                <View
+                  className="flex-1 h-px"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                />
+                <Text
+                  className="mx-4 text-sm"
+                  style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  其他登录方式
+                </Text>
+                <View
+                  className="flex-1 h-px"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                />
+              </View>
+              <View className="flex-row gap-4">
+                <View className="flex-1">
+                  <Wechat
+                    type="ghost"
+                    disabled={!agree}
+                    onSuccess={loginResult}
+                  />
+                </View>
+                <View className="flex-1">
+                  <Apple
+                    type="ghost"
+                    disabled={!agree}
+                    onSuccess={appleLoginResult}
+                  />
+                </View>
+              </View>
+            </View>
+          )}
         </View>
-        {!isbind && <Privicy agree={agree} onChange={setAgree} />}
-      </LinearGradient>
+
+        {!isbind && (
+          <View className="px-6 pb-8">
+            <Privicy onChange={setAgree} />
+          </View>
+        )}
+      </View>
     </Keyboard>
   );
 };

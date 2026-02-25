@@ -9,6 +9,7 @@ const Page = (props: PageProps) => {
 
   return (
     <Wrapper
+      {...(props.safe && props.safeEdges && { edges: props.safeEdges })}
       className="flex-1 relative"
       style={props.bgcolor ? { backgroundColor: props.bgcolor } : undefined}>
       {props.decoration && <Decoration />}

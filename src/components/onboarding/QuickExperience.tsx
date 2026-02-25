@@ -144,10 +144,8 @@ const QuickExperience = ({
             className="w-full p-5 rounded-3xl items-center"
             style={{
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.08)',
             }}>
-            <Text className="text-sm font-medium text-white/70 mb-4">
+            <Text className="text-[15px] text-white/70 mb-4">
               即将锁定的应用
             </Text>
 
@@ -156,7 +154,7 @@ const QuickExperience = ({
                 <AppToken
                   key={item.id || item.stableId || index}
                   app={item}
-                  size={33}
+                  size={30}
                 />
               ))}
               {astore.ios_selected_apps.length > 9 && (
@@ -171,11 +169,11 @@ const QuickExperience = ({
             </View>
 
             <View
-              className="w-full h-px mb-3"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
+              className="w-[50%] h-px mb-3"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
             />
 
-            <Text className="text-xs text-white/50">
+            <Text className="text-[14px] text-white/40">
               锁定时长：{FOCUS_DURATION} 分钟
             </Text>
           </View>
@@ -200,37 +198,15 @@ const QuickExperience = ({
     <View className="flex-1">
       <View className="flex-1 px-6">
         {/* 庆祝区 */}
-        <View className="items-center pt-12 mb-8">
-          <View
-            className="w-16 h-16 rounded-full items-center justify-center mb-4"
-            style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)' }}>
-            <Icon name="checkmark-circle" size={48} color="#10b981" />
-          </View>
-          <Text className="text-2xl font-bold text-white mb-2 text-center tracking-tight">
-            🎉 恭喜，锁定成功！
+        <View className="items-center pt-12 mb-2">
+          <Icon name="checkmark-circle-outline" size={114} color="#10b981" />
+          <Text className="text-2xl mt-4 font-bold text-white mb-2 text-center tracking-tight">
+            🎉 恭喜，应用锁定成功！
           </Text>
-          <Text className="text-base text-white/60 text-center">
-            {copy.activeSuccess}
-          </Text>
-        </View>
-
-        {/* 倒计时圆环 */}
-        <View className="items-center mb-6">
-          <View
-            className="w-24 h-24 rounded-full items-center justify-center"
-            style={{
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              borderWidth: 3,
-              borderColor: 'rgba(16, 185, 129, 0.3)',
-            }}>
-            <Text className="text-white text-2xl font-bold">
-              {formatTime(remaining)}
-            </Text>
-          </View>
         </View>
 
         {/* 显示被锁定的应用图标 */}
-        <View className="flex-row flex-wrap justify-center gap-3 mb-6">
+        <View className="flex-row flex-wrap justify-center gap-3 mb-12">
           {astore.ios_selected_apps.slice(0, 6).map((item, index) => (
             <AppToken
               key={item.id || item.stableId || index}
@@ -249,13 +225,23 @@ const QuickExperience = ({
           )}
         </View>
 
+        {/* 倒计时 */}
+        <View className="items-center mb-8">
+          <Text
+            className="text-5xl font-semibold tracking-tight"
+            style={{ color: '#22D3EE' }}>
+            {formatTime(remaining)}
+          </Text>
+          <Text className="text-base text-white/60 text-center">
+            倒计时结束后，自动解锁
+          </Text>
+        </View>
+
         {/* 验证邀请卡片 */}
         <View
           className="px-5 py-4 rounded-2xl w-full"
           style={{
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.08)',
           }}>
           <View className="flex-row items-center mb-3">
             <Icon
@@ -276,9 +262,9 @@ const QuickExperience = ({
             </Text>
           </View>
         </View>
-        <Text className="text-xs text-center mt-3 text-white/40">
+        {/* <Text className="text-xs text-center mt-3 text-white/40">
           提示：非紧急时刻，不允许解除锁定
-        </Text>
+        </Text> */}
       </View>
 
       {/* 底部按钮 */}

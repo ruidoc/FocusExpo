@@ -55,7 +55,7 @@ const App = () => {
       }
       start={{ x: 0, y: 0 }}
       end={{ x: 0.3, y: 1 }}
-      className="flex-1">
+      style={{ flex: 1 }}>
       <Flex
         className="flex-col items-stretch flex-1 mx-[30px]"
         style={{ paddingBottom: insets.bottom + 12 }}>
@@ -73,6 +73,12 @@ const App = () => {
         <View className="flex-1">
           <Wechat disabled={!agree} onSuccess={loginResult} />
           <Apple disabled={!agree} onSuccess={appleLoginResult} type="ghost" />
+          {/* <Button
+            type="ghost"
+            text="手机号登录"
+            onPress={toRoute}
+            className="mt-2"
+          /> */}
         </View>
         <Privicy onChange={setAgree} />
       </Flex>

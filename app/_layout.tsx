@@ -90,7 +90,7 @@ const RootLayout = () => {
               />
               <Stack.Screen
                 name="login/wx"
-                options={{ title: '' }}
+                options={{ headerShown: false }}
               />
               <Stack.Screen
                 name="login/start"

@@ -135,9 +135,10 @@ const App = () => {
   };
 
   return (
-    <Page safe decoration>
+    <Page safe safeEdges={['top']} decoration>
       <ScrollView
         className="flex-1"
+        contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -146,7 +147,7 @@ const App = () => {
         <HomeHeader />
 
         {/* 中央时间流动组件 */}
-        <View className="items-center mt-[60px] mb-[30px]">
+        <View className="flex-1 items-center mt-[60px] mb-[30px]">
           {renderMainContent()}
         </View>
       </ScrollView>
