@@ -5,13 +5,7 @@ import Icon from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import React, { useCallback } from 'react';
-import {
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const App = () => {
@@ -157,8 +151,12 @@ const App = () => {
                 className="text-base font-semibold"
                 style={{
                   color: isActive
-                    ? dark ? '#C4A6FF' : '#7A5AF8'
-                    : dark ? '#8A8A98' : '#64748B',
+                    ? dark
+                      ? '#C4A6FF'
+                      : '#7A5AF8'
+                    : dark
+                      ? '#8A8A98'
+                      : '#64748B',
                 }}>
                 {isActive ? 'VIP 会员' : '未开通会员'}
               </Text>
@@ -218,33 +216,6 @@ const App = () => {
             </View>
           )}
         </TouchableOpacity>
-      )}
-
-      {/* 专注数据概览 */}
-      {store.uInfo && (
-        <View className="flex-row mx-4 mt-4 gap-2.5">
-          {[
-            { value: formatMins(recStore.actual_mins), label: '累计专注' },
-            { value: formatMins(recStore.total_mins), label: '计划时长' },
-            { value: recStore.success_rate, label: '成功率' },
-          ].map(item => (
-            <View
-              key={item.label}
-              className="flex-1 rounded-[14px] py-3.5 px-3 items-center"
-              style={{ backgroundColor: dark ? '#1A1530' : '#F3EEFF' }}>
-              <Text
-                className="text-lg font-bold mb-1"
-                style={{ color: dark ? '#C4A6FF' : '#7A5AF8' }}>
-                {item.value}
-              </Text>
-              <Text
-                className="text-[11px]"
-                style={{ color: dark ? '#8A7DB8' : '#9B8ACE' }}>
-                {item.label}
-              </Text>
-            </View>
-          ))}
-        </View>
       )}
 
       {/* 菜单列表 */}

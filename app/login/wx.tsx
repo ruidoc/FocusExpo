@@ -1,4 +1,4 @@
-import { Apple, Privicy, Wechat } from '@/components/business';
+import { Apple, Privicy } from '@/components/business';
 import { Flex } from '@/components/ui';
 import { useUserStore } from '@/stores';
 import { useNavigation, useTheme } from '@react-navigation/native';
@@ -71,8 +71,8 @@ const App = () => {
           </Text>
         </Flex>
         <View className="flex-1">
-          <Wechat disabled={!agree} onSuccess={loginResult} />
-          <Apple disabled={!agree} onSuccess={appleLoginResult} type="ghost" />
+          {/* <Wechat disabled={!agree} onSuccess={loginResult} /> */}
+          <Apple disabled={!agree} onSuccess={appleLoginResult} />
           {/* <Button
             type="ghost"
             text="手机号登录"

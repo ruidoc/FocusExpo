@@ -1,4 +1,4 @@
-import { Privicy, Wechat } from '@/components/business';
+import { Apple, Privicy } from '@/components/business';
 import { useCustomTheme } from '@/config/theme';
 import { useHomeStore, useUserStore } from '@/stores';
 import { markOnboardingCompleted, trackEvent } from '@/utils';
@@ -56,14 +56,13 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
 
   const copy = getPersonalizedCopy();
 
-  const loginResult = (result: any) => {
-    if (result.statusCode === 20003) {
-      // 需要绑定手机号
-      return toRegister(result.data);
-    }
-    // 参考 wx.tsx 的做法：直接调用 loginSuccess，传入 result.data
-    ustore.loginSuccess(result.data, 'wechat');
-    completeWithLogin();
+  const appleLoginResult = (credential: any) => {
+    ustore.appleLogin(credential, res => {
+      if (res?.statusCode === 200) {
+        ustore.loginSuccess({ token: res.data?.token }, 'apple');
+        completeWithLogin();
+      }
+    });
   };
 
   const completeWithLogin = () => {
@@ -72,14 +71,8 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
       with_login: true,
       step: 'value_guide',
     });
-    // 登录成功后跳转到预设计划选择页面
     router.replace('/plans/presets?from=onboarding');
     onComplete();
-  };
-
-  const toRegister = (data: any) => {
-    ustore.setWxInfo(data);
-    router.push({ pathname: '/login', params: { type: 'bind' } });
   };
 
   const scheduleItems = [
@@ -177,10 +170,10 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
 
       {/* 底部操作区 */}
       <View className="flex px-6 gap-0 pb-2">
-        <Wechat
+        <Apple
           type="custom"
           disabled={!agree}
-          onSuccess={loginResult}
+          onSuccess={appleLoginResult}
           label="登录后创建计划"
         />
         <View className="flex-row items-center justify-center mt-4">

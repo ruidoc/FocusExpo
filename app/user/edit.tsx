@@ -149,8 +149,14 @@ const App = () => {
             />
             <FieldItem
               title="手机号"
-              rightText={store.uInfo.phone}
-              onPress={() => onClick('privicy')}
+              rightText={store.uInfo.phone || '点击绑定'}
+              onPress={() => {
+                if (store.uInfo?.phone) {
+                  onClick('privicy');
+                } else {
+                  router.push({ pathname: '/login', params: { type: 'bind' } });
+                }
+              }}
             />
             <FieldItem
               title="性别"

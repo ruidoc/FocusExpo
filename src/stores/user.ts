@@ -9,6 +9,7 @@ import {
 } from '@/utils';
 import http from '@/utils/request';
 import * as Device from 'expo-device';
+import { Platform } from 'react-native';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
 import {
@@ -154,6 +155,26 @@ const UserStore = combine(
       }
     },
 
+    /** 登录用户绑定手机号（验证码），需已登录 */
+    bindPhoneByCode: async (
+      form: Record<string, string>,
+      fun?: (data?: HttpRes) => void,
+    ) => {
+      try {
+        const res: any = await http.post('/user/bind-phone-by-code', form);
+        if (res?.statusCode === 200) {
+          await (get() as any).getInfo();
+          Toast('绑定成功');
+        } else {
+          Toast(res?.message || '绑定失败');
+        }
+        fun?.(res);
+      } catch (error) {
+        Toast('绑定失败，请重试');
+        fun?.();
+      }
+    },
+
     login: async (
       form: Record<string, string>,
       fun?: (data?: HttpRes) => void,
@@ -206,11 +227,7 @@ const UserStore = combine(
 
         const res = (await http.post('/user/apple-login', body)) as HttpRes;
         if (res.statusCode === 200) {
-          // 处理登录成功
-          const loginRes = {
-            token: res.data.token,
-            data: res.data.user,
-          };
+          const loginRes = { token: res.data.token };
           (get() as any).loginSuccess(loginRes, 'apple');
           fun?.(res);
         } else {
@@ -318,7 +335,8 @@ const UserStore = combine(
 
       // 同步 PostHog API Key 到 App Groups (供 iOS Extension 使用)
       if (Platform.OS === 'ios') {
-        const POSTHOG_API_KEY = 'phc_A4Pt2WQHEQLedNR9wyLMxSHrpdnOdUTCiR8LHNGT5QG';
+        const POSTHOG_API_KEY =
+          'phc_A4Pt2WQHEQLedNR9wyLMxSHrpdnOdUTCiR8LHNGT5QG';
         storage.setGroup('posthog_api_key', POSTHOG_API_KEY);
       }
 

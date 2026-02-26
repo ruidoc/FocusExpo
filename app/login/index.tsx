@@ -4,8 +4,8 @@ import { Button, TextInput, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useUserStore } from '@/stores';
 import { toast } from '@/utils';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from '@expo/vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -60,15 +60,18 @@ const App = () => {
     }
     setLoading(true);
     const wxInfo = store.wxInfo;
-    if (!wxInfo) {
-      Toast('请先通过微信登录');
-      setLoading(false);
-      return;
+    if (wxInfo) {
+      store.bindByCode(form, wxInfo, () => {
+        setLoading(false);
+        router.replace('/(tabs)');
+      });
+    } else {
+      // 已登录用户绑定手机号
+      store.bindPhoneByCode(form, () => {
+        setLoading(false);
+        router.back();
+      });
     }
-    store.bindByCode(form, wxInfo, () => {
-      setLoading(false);
-      router.replace('/(tabs)');
-    });
   };
 
   const toLogin = async () => {
@@ -117,7 +120,11 @@ const App = () => {
     const type = (route.params as any)?.type;
     if (type === 'bind') {
       setIsbind(true);
-      navigation.setOptions({ title: '绑定手机号' });
+      navigation.setOptions({
+        title: '',
+        headerTransparent: true,
+        headerShown: true,
+      });
     }
     initState();
   }, []);
@@ -133,7 +140,7 @@ const App = () => {
   return (
     <Keyboard>
       <View className="flex-1" style={{ backgroundColor: bg }}>
-        <View className="flex-1 px-6 pt-12">
+        <View className="flex-1 px-6 pt-12 mt-[100px]">
           {/* 标题 */}
           <View className="mb-10">
             <Text
@@ -141,12 +148,10 @@ const App = () => {
               style={{ color: colors.text }}>
               {isbind ? '绑定手机号' : '手机号登录'}
             </Text>
-            <Text
-              className="text-base mt-2"
-              style={{ color: colors.text2 }}>
+            <Text className="text-base mt-2" style={{ color: colors.text2 }}>
               {isbind
-                ? '验证后即可完成微信账号绑定'
-                : '验证后将自动登录或注册'}
+                ? '根据国家相关法律规定，请绑定手机号'
+                : '未注册的手机号将自动创建账号'}
             </Text>
           </View>
 
@@ -220,7 +225,7 @@ const App = () => {
                   className="text-sm font-medium"
                   style={{
                     color: canSendCode
-                      ? (colors.primary || '#7A5AF8')
+                      ? colors.primary || '#7A5AF8'
                       : '#9CA3AF',
                   }}>
                   获取验证码

@@ -99,7 +99,7 @@ const QuickStartPage = () => {
         {/* 选择APP */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
-            title="暂停这些应用"
+            title="要锁定的应用"
             className="pt-3 pb-2"
             rightElement={
               <SelectApps
@@ -116,7 +116,7 @@ const QuickStartPage = () => {
 
         {/* 设置时长 */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
-          <FieldItem title="设置时长" className="pb-2" showArrow={false} />
+          <FieldItem title="锁定时长" className="pb-2" showArrow={false} />
           <View className="px-4 pb-4">
             <TimeSlider minute={minute} setMinute={setMinute} />
           </View>
