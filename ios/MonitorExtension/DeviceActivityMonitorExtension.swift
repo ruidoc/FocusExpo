@@ -142,42 +142,74 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     private func startPlanSession(for activity: DeviceActivityName, defaults: UserDefaults) {
         // 0. 检查跨日，同步权益
         checkAndHandleDayChange(defaults: defaults)
-        
+
         // 1. 从 activity name 解析 planId
-        // Name format: FocusOne.Plan.{planId}_D{d} or FocusOne.Plan.{planId}_P1_D{d}
         let raw = activity.rawValue
         guard raw.starts(with: "FocusOne.Plan.") else { return }
-        
-        // 简单解析：去除前缀，然后截取到第一个 _ 之前（如果 planId 本身包含 _ 可能会有问题，但通常是 UUID 或 MongoId）
-        // 更稳妥的方式：我们知道后缀格式是固定的 _D\d+ 或 _P\d+_D\d+
-        // 假设 planId 不包含 "_D" 这种子串
-        
+
         // 使用 findPlan 方法查找对应的计划配置
         guard let plan = findPlan(by: raw, defaults: defaults) else {
+            // ❌ 埋点: 计划未找到
+            // 从 activity name 尝试提取 plan_id 以判断类型
+            let planIdMatch = raw.replacingOccurrences(of: "FocusOne.Plan.", with: "").split(separator: "_").first ?? ""
+            let planType = String(planIdMatch).hasPrefix("once") ? "quick_start" : "scheduled"
+            Analytics.shared.track(
+                event: "plan_shield_failed",
+                properties: [
+                    "activity_name": raw,
+                    "plan_type": planType,
+                    "error_type": "plan_not_found"
+                ]
+            )
             logToJS(level: "error", message: "未找到对应的计划配置", data: ["activityName": raw])
             return
         }
-        
+
         logToJS(level: "log", message: "找到计划: \(plan.id), 开始执行 shielding", data: ["planId": plan.id, "planName": plan.name ?? ""])
-        
+
         // 2. 解析 Selection Token 并应用屏蔽
-        if let data = Data(base64Encoded: plan.token),
-           let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
-            
-            // 保存屏蔽设置到本地，供暂停恢复使用
-            if let selectionData = try? JSONEncoder().encode(selection) {
-                defaults.set(selectionData, forKey: "FocusOne.CurrentShieldSelection")
-            }
-            
-            let store = ManagedSettingsStore()
-            store.shield.applications = selection.applicationTokens
-            store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
-            store.shield.webDomains = selection.webDomainTokens
-            
-            logToJS(level: "log", message: "屏蔽已应用", data: ["planId": plan.id])
-        } else {
+        guard let data = Data(base64Encoded: plan.token),
+              let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else {
+            // ❌ 埋点: Token 解码失败
+            let planType = plan.id.hasPrefix("once_") ? "quick_start" : "scheduled"
+            Analytics.shared.track(
+                event: "plan_shield_failed",
+                properties: [
+                    "plan_id": plan.id,
+                    "plan_type": planType,
+                    "error_type": "token_decode_error",
+                    "token_length": plan.token.count
+                ]
+            )
             logToJS(level: "error", message: "无法解析 selection token", data: ["planId": plan.id])
+            return
         }
+
+        // 保存屏蔽设置到本地，供暂停恢复使用
+        if let selectionData = try? JSONEncoder().encode(selection) {
+            defaults.set(selectionData, forKey: "FocusOne.CurrentShieldSelection")
+        }
+
+        let store = ManagedSettingsStore()
+        store.shield.applications = selection.applicationTokens
+        store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
+        store.shield.webDomains = selection.webDomainTokens
+
+        // ✅ 埋点: 屏蔽应用成功
+        let planType = plan.id.hasPrefix("once_") ? "quick_start" : "scheduled"
+        Analytics.shared.track(
+            event: "plan_shield_success",
+            properties: [
+                "plan_id": plan.id,
+                "plan_name": plan.name ?? "",
+                "plan_type": planType,
+                "apps_count": selection.applicationTokens.count,
+                "categories_count": selection.categoryTokens.count,
+                "activity_name": raw
+            ]
+        )
+
+        logToJS(level: "log", message: "屏蔽已应用", data: ["planId": plan.id])
         
         // 3. 记录时间和状态
         let now = Date()

@@ -62,28 +62,125 @@ pnpm start -c
 
 ---
 
+## 🔗 后端接口项目
+
+### 项目位置
+**路径**: `/Users/yangrui/ruidoc/FocusApi`
+
+### 技术栈
+- **框架**: NestJS (TypeScript)
+- **运行时**: Node.js / Bun
+- **包管理**: Yarn / Bun
+
+### 启动命令
+```bash
+cd /Users/yangrui/ruidoc/FocusApi
+
+# 开发模式（热重载）
+yarn start:dev
+
+# 生产模式
+yarn start:prod
+
+# 调试模式
+yarn start:debug
+```
+
+### 模块结构
+```
+src/focusone/
+├── plan/         # 专注计划 API
+├── record/       # 专注记录 API
+├── osapp/        # 应用管理 API
+├── iosapp/       # iOS 应用 API
+├── challenge/    # 挑战系统 API
+├── benefit/      # 积分奖励 API
+├── guide/        # 新手引导 API
+└── admin/        # 管理后台 API
+```
+
+### API 文档
+- 文档目录: `/Users/yangrui/ruidoc/FocusApi/docs/`
+- OpenAI SDK: `docs/openai-api-guide.md`
+- AI Service: `docs/ai-service-reference.md`
+- AI 接口: `docs/ai-api-endpoints.md`
+
+### 前后端联调
+- **前端请求地址**: `https://focus.ruidoc.cn/dev-api`
+- **本地开发**: 修改接口后需重启 `yarn start:dev`
+- **接口修改**: 可直接修改 `/Users/yangrui/ruidoc/FocusApi/src/focusone/` 下的模块
+
+---
+
 ## 🏗️ 核心架构
 
 ### 路由结构（Expo Router v5，文件基础路由）
 
 ```
 app/
-├── (tabs)/                    # 主标签导航（4个标签）
+├── (tabs)/                    # 主标签导航（3个标签）
 │   ├── index.tsx             # 专注页面（主页）
 │   ├── record.tsx            # 统计页面
-│   ├── challenges.tsx        # 挑战页面（MVP 隐藏）
 │   └── user.tsx              # 我的页面
 ├── plans/                     # 计划管理
 │   ├── index.tsx             # 计划列表
 │   ├── add.tsx               # 新建计划
 │   └── item.tsx              # 计划详情
-├── apps/                      # App 管理
+├── onboarding/               # 新手引导
 ├── setting/                   # 设置页面
 ├── login/                     # 登录认证
 ├── quick-start/              # 快速启动模式
-├── (guides)/                  # 新手引导（5步）
+├── apps/                      # ⚠️ 已归档（暂不迭代）
+├── challenges/               # ⚠️ 已归档（暂不迭代）
 └── _layout.tsx               # 全局根布局
 ```
+
+### 📍 页面快速定位索引
+
+**主要页面**
+- 首页/专注 → `(tabs)/index.tsx`
+- 统计 → `(tabs)/record.tsx`
+- 我的 → `(tabs)/user.tsx`
+
+**计划相关**
+- 计划列表 → `plans/index.tsx`
+- 新建计划 → `plans/add.tsx`
+- 计划详情 → `plans/item.tsx`
+- 预设模板 → `plans/presets.tsx`
+
+**快速启动**
+- 快速启动 → `quick-start/index.tsx`
+- 模式切换 → `quick-start/mode-switcher.tsx`
+- 时间滑块 → `quick-start/time-slider.tsx`
+
+**用户/设置**
+- VIP会员 → `user/vip.tsx`
+- 积分 → `user/coins.tsx`
+- 编辑资料 → `user/edit.tsx`
+- 设置 → `setting/index.tsx`
+- 权限 → `setting/permission.tsx`
+- 意见反馈 → `setting/feedback.tsx`
+- 关于我们 → `setting/about.tsx`
+- 注销账号 → `setting/logoff.tsx`
+
+**登录/引导**
+- 登录 → `login/index.tsx`
+- 登录开始 → `login/start.tsx`
+- 注册 → `login/register.tsx`
+- 微信登录 → `login/wx.tsx`
+- 新手引导 → `onboarding/index.tsx`
+- 欢迎页 → `others/welcome.tsx`
+
+**⚠️ 已归档（暂不迭代）**
+- 应用管理 → `apps/` (已归档，不在更新范围)
+- 挑战系统 → `challenges/` (已归档，不在更新范围)
+
+**其他**
+- 支付 → `checkout/index.tsx`
+- 调试 → `debug/index.tsx`
+- WebView → `others/webview.tsx`
+- 测试页面 → `test/index.tsx`
+- Stripe测试 → `test/stripe.tsx`
 
 ### 状态管理（Zustand + combine 中间件）
 

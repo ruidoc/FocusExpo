@@ -289,6 +289,11 @@ const UserStore = combine(
           (get() as any).setUinfo(res.data as UserInfo);
           storage.set('user_info', JSON.stringify(res.data));
 
+          // 同步 user_id 到 App Groups (供 iOS Extension 读取)
+          if (Platform.OS === 'ios' && res.data.id) {
+            storage.setGroup('user_id', res.data.id);
+          }
+
           // PostHog: 更新用户信息
           const deviceId = storage.getString('device_id') || '';
           identifyUser(res.data.id || deviceId, {
@@ -310,6 +315,13 @@ const UserStore = combine(
     ) => {
       storage.set('access_token', res.token);
       storage.setGroup('access_token', res.token);
+
+      // 同步 PostHog API Key 到 App Groups (供 iOS Extension 使用)
+      if (Platform.OS === 'ios') {
+        const POSTHOG_API_KEY = 'phc_A4Pt2WQHEQLedNR9wyLMxSHrpdnOdUTCiR8LHNGT5QG';
+        storage.setGroup('posthog_api_key', POSTHOG_API_KEY);
+      }
+
       useHomeStore.getState().loadApps();
       useAppStore.getState().getCurapp();
       usePlanStore.getState().getPlans();

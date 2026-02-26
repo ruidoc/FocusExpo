@@ -155,6 +155,14 @@ class NativeModule: RCTEventEmitter {
   @objc
   func updatePlan(_ planJSON: String, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     guard let data = planJSON.data(using: .utf8) else {
+      // ❌ 埋点: JSON 解析失败
+      Analytics.shared.track(
+        event: "plan_sync_failed",
+        properties: [
+          "error_type": "json_parse_error",
+          "plan_json_length": planJSON.count
+        ]
+      )
       reject("PARSE_ERROR", "无效的 JSON 数据", nil)
       return
     }
@@ -164,7 +172,7 @@ class NativeModule: RCTEventEmitter {
     // 尝试解析为标准 PlanConfig (apps 为数组，token 为字符串)
     if let plan = try? JSONDecoder().decode(PlanConfig.self, from: data) {
       finalPlan = plan
-    } 
+    }
     // 尝试解析为 Input 格式 (apps 为 ID 数组)
     else if let input = try? JSONDecoder().decode(PlanConfigInput.self, from: data) {
         // 转换 ID 数组为 Token String
@@ -172,13 +180,36 @@ class NativeModule: RCTEventEmitter {
         if let selection = Helper.buildSelectionFromApps(input.apps),
            let selectionData = try? JSONEncoder().encode(selection) {
             token = selectionData.base64EncodedString()
+        } else {
+            // ❌ 埋点: Token 转换失败
+            let planType = input.id.hasPrefix("once_") ? "quick_start" : "scheduled"
+            Analytics.shared.track(
+              event: "plan_sync_failed",
+              properties: [
+                "plan_id": input.id,
+                "plan_type": planType,
+                "error_type": "token_build_error",
+                "apps_count": input.apps.count,
+                "apps": input.apps
+              ]
+            )
+            reject("TOKEN_ERROR", "Token 转换失败", nil)
+            return
         }
-        
+
         // 创建 PlanConfig，apps 直接存储 ID 数组，token 存储 Token 字符串
         finalPlan = PlanConfig(id: input.id, name: input.name, start: input.start, end: input.end, days: input.days, apps: input.apps, token: token)
     }
 
     guard let plan = finalPlan else {
+      // ❌ 埋点: 计划解析失败
+      Analytics.shared.track(
+        event: "plan_sync_failed",
+        properties: [
+          "error_type": "plan_decode_error",
+          "plan_json": planJSON
+        ]
+      )
       reject("PARSE_ERROR", "无法解析计划数据", nil)
       return
     }
@@ -190,23 +221,65 @@ class NativeModule: RCTEventEmitter {
        let existing = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) {
       plansMap = existing
     }
-    
+
     // 如果已存在，先停止旧的
     if let oldPlan = plansMap[plan.id] {
         stopMonitor(for: oldPlan)
     }
-    
+
     plansMap[plan.id] = plan
-    
+
     if let defaults = UserDefaults.groupUserDefaults(),
        let newData = try? JSONEncoder().encode(plansMap) {
       defaults.set(newData, forKey: kPlansMap)
+    } else {
+      // ❌ 埋点: App Groups 写入失败
+      let planType = plan.id.hasPrefix("once_") ? "quick_start" : "scheduled"
+      Analytics.shared.track(
+        event: "plan_sync_failed",
+        properties: [
+          "plan_id": plan.id,
+          "plan_type": planType,
+          "error_type": "app_groups_write_error"
+        ]
+      )
+      reject("STORAGE_ERROR", "存储失败", nil)
+      return
     }
 
     // B. 启动新监控
-    startMonitor(for: plan)
-    
-    resolve(true)
+    do {
+      try startMonitor(for: plan)
+
+      // ✅ 埋点: 同步成功
+      let planType = plan.id.hasPrefix("once_") ? "quick_start" : "scheduled"
+      Analytics.shared.track(
+        event: "plan_sync_success",
+        properties: [
+          "plan_id": plan.id,
+          "plan_name": plan.name ?? "",
+          "plan_type": planType,
+          "apps_count": plan.apps.count,
+          "is_cross_day": plan.start > plan.end,
+          "days": plan.days
+        ]
+      )
+
+      resolve(true)
+    } catch {
+      // ❌ 埋点: 监控注册失败
+      let planType = plan.id.hasPrefix("once_") ? "quick_start" : "scheduled"
+      Analytics.shared.track(
+        event: "plan_sync_failed",
+        properties: [
+          "plan_id": plan.id,
+          "plan_type": planType,
+          "error_type": "monitor_register_error",
+          "error_message": error.localizedDescription
+        ]
+      )
+      reject("MONITOR_ERROR", "监控注册失败: \(error.localizedDescription)", nil)
+    }
   }
 
   // 2. 删除单个计划
@@ -229,13 +302,13 @@ class NativeModule: RCTEventEmitter {
   }
 
   // 内部方法：启动监控（含跨日拆分逻辑）
-  private func startMonitor(for plan: PlanConfig) {
+  private func startMonitor(for plan: PlanConfig) throws {
     let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
     let startH = plan.start / 60
     let startM = plan.start % 60
     let endH = plan.end / 60
     let endM = plan.end % 60
-    
+
     if plan.start > plan.end {
       // 跨日拆分
       for d in days {
@@ -246,23 +319,17 @@ class NativeModule: RCTEventEmitter {
           intervalEnd: DateComponents(hour: 23, minute: 59, weekday: wd),
           repeats: true
         )
-        try? center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1_D\(d)"), during: s1)
-        
+        try center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1_D\(d)"), during: s1)
+
         // Part 2: 00:00 -> End (Day d+1)
-        // 这里的逻辑是：如果用户设定周一执行，那么周一晚上跨到周二凌晨。
-        // iOS 的 weekday 是绝对的。周一的 00:00 是周一凌晨。
-        // 所以我们需要为 "Next Day" 注册 Part 2。
-        let nextWd = (d + 1) % 7 + 1 // 1=Sun, 2=Mon... 7=Sat. (d: 0=Sun..6=Sat)
-                                     // d=0(Sun) -> nextWd=2(Mon). Correct.
-                                     // d=6(Sat) -> nextWd=1(Sun). Correct.
-        
+        let nextWd = (d + 1) % 7 + 1
+
         let s2 = DeviceActivitySchedule(
           intervalStart: DateComponents(hour: 0, minute: 0, weekday: nextWd),
           intervalEnd: DateComponents(hour: endH, minute: endM, weekday: nextWd),
           repeats: true
         )
-        // 命名: _P2_D{d} 代表 "这是 Day {d} 跨日产生的 Part 2"
-        try? center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2_D\(d)"), during: s2) 
+        try center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2_D\(d)"), during: s2)
       }
     } else {
       // 非跨日
@@ -273,7 +340,7 @@ class NativeModule: RCTEventEmitter {
           intervalEnd: DateComponents(hour: endH, minute: endM, weekday: wd),
           repeats: true
         )
-        try? center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_D\(d)"), during: schedule)
+        try center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_D\(d)"), during: schedule)
       }
     }
   }
@@ -676,12 +743,25 @@ class NativeModule: RCTEventEmitter {
   func stopAppLimits(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     // 标记任务失败（手动停止），阻止 Extension 调用 complete
     if let defaults = UserDefaults.groupUserDefaults() {
+      // 【P0修复】累加已用时长（手动退出时）
+      let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
+      if startAt > 0 {
+        let now = Date().timeIntervalSince1970
+        let elapsedMin = Int((now - startAt) / 60)
+        if elapsedMin > 0 {
+          let currentUsed = defaults.integer(forKey: "today_used")
+          let newUsed = currentUsed + elapsedMin
+          defaults.set(newUsed, forKey: "today_used")
+          print("【手动退出】累加已用时长: \(elapsedMin) 分钟，总计: \(newUsed) 分钟")
+        }
+      }
+
       defaults.set(true, forKey: "FocusOne.TaskFailed")
       defaults.set("user_exit", forKey: "FocusOne.FailedReason")
     }
     // 仅停止一次性任务与暂停恢复活动，保留周期性计划监控，确保下个周期继续生效
     center.stopMonitoring([activityName, pauseResumeActivity])
-    
+
     // 清除所有限制
     let store = ManagedSettingsStore()
     store.clearAllSettings()
@@ -702,7 +782,7 @@ class NativeModule: RCTEventEmitter {
       defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
       defaults.removeObject(forKey: "FocusOne.PausedUntil")
     }
-    
+
     resolve(true)
   }
 
