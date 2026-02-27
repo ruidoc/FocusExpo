@@ -1,10 +1,16 @@
 import { Page } from '@/components/business';
 import { ActionSheet, FieldGroup, FieldItem, Switch } from '@/components/ui';
-import { useHomeStore, useUserStore } from '@/stores';
+import {
+  useHomeStore,
+  usePlanStore,
+  useRecordStore,
+  useUserStore,
+} from '@/stores';
+import { stopAppLimits } from '@/utils/permission';
 import { toast } from '@/utils';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react';
-import { Appearance, Linking, View } from 'react-native';
+import { Appearance, Linking, Platform, View } from 'react-native';
 
 const App = () => {
   const store = useUserStore();
@@ -40,16 +46,27 @@ const App = () => {
   };
 
   const toLogout = () => {
+    const pstore = usePlanStore.getState();
+    const rstore = useRecordStore.getState();
+    const hasFocus =
+      !!rstore.record_id || (!!pstore.active_plan && pstore.is_focus_mode());
+
     ActionSheet({
       actions: ['确认'],
       cancelText: '取消',
-      description: '确认退出登录吗？',
+      description: hasFocus
+        ? '退出登录将会结束当前专注，是否继续？'
+        : '确认退出登录吗？',
     })
-      .then(() => {
+      .then(async () => {
+        if (hasFocus && Platform.OS === 'ios') {
+          await stopAppLimits();
+          await pstore.exitPlan();
+        }
         store.logout();
         navigation.goBack();
       })
-      .catch(e => {});
+      .catch(() => {});
   };
 
   useEffect(() => {}, []);

@@ -24,6 +24,10 @@ const App = () => {
   const fetchData = useCallback(async (p: Period) => {
     setLoading(true);
     try {
+      const astore = useAppStore.getState();
+      if (astore.ios_all_apps.length === 0) {
+        await astore.getIosApps();
+      }
       await useStatisticStore.getState().fetchAppStatis(p);
     } finally {
       setLoading(false);
@@ -34,9 +38,16 @@ const App = () => {
     fetchData('today');
   }, [fetchData]);
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    sstore.fetchAppStatis(period).finally(() => setRefreshing(false));
+    try {
+      if (astore.ios_all_apps.length === 0) {
+        await astore.getIosApps();
+      }
+      await sstore.fetchAppStatis(period);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const periods: { key: Period; label: string }[] = useMemo(
@@ -52,7 +63,7 @@ const App = () => {
     const app_stableid = app.split(':')[0];
     const cur_app = astore.ios_all_apps.find(a => a.stableId === app_stableid);
     return cur_app ? (
-      <AppToken key={cur_app.id} app={cur_app} size={20} />
+      <AppToken key={cur_app.id} app={cur_app} size={26} />
     ) : null;
   };
 
@@ -243,7 +254,7 @@ const App = () => {
             <Text
               className="text-[15px] font-semibold px-5 mb-3"
               style={{ color: colors.text }}>
-              锁定应用明细
+              APP锁定明细
             </Text>
             <View
               className="mx-4 mb-8 rounded-3xl overflow-hidden"
@@ -252,11 +263,26 @@ const App = () => {
                 borderWidth: dark ? 0 : StyleSheet.hairlineWidth,
                 borderColor: '#E5E7EB',
               }}>
-              {items
-                .slice()
-                .sort((a, b) => b.actual_mins - a.actual_mins)
-                .map((item, index) => {
+              {(() => {
+                const sortedItems = items
+                  .slice()
+                  .sort((a, b) => b.actual_mins - a.actual_mins);
+                const medianMins =
+                  sortedItems.length > 0
+                    ? sortedItems[Math.floor(sortedItems.length / 2)]
+                        .actual_mins || 30
+                    : 30;
+                const maxBarWidth = 250;
+                const refMins = Math.max(medianMins * 2, 1);
+                return sortedItems.map((item, index) => {
                   const locked = isAppCurrentlyLocked(item.app);
+                  const barWidth = Math.max(
+                    12,
+                    Math.min(
+                      maxBarWidth,
+                      (item.actual_mins / refMins) * maxBarWidth,
+                    ),
+                  );
                   return (
                     <View key={item.app}>
                       {index > 0 && (
@@ -270,26 +296,39 @@ const App = () => {
                       <View className="py-3.5 px-4 flex-row items-center gap-3">
                         <View>{getAppIcon(item.app)}</View>
                         <View className="flex-1">
-                          <Text
-                            className="text-xs mb-1"
-                            style={{ color: TEXT2 }}>
-                            已锁定时长 {formatMins(item.actual_mins)}
-                          </Text>
-                          <Text className="text-xs" style={{ color: TEXT2 }}>
-                            被锁定 {item.task_count} 次
+                          <View className="flex-row items-center mb-[2px]">
+                            <View
+                              className="h-1.5 rounded-full mr-2"
+                              style={{
+                                width: barWidth,
+                                backgroundColor: dark ? '#4B5563' : '#9CA3AF',
+                              }}
+                            />
+                            <Text className="text-xs" style={{ color: TEXT2 }}>
+                              {formatMins(item.actual_mins)}
+                            </Text>
+                          </View>
+                          <View className="flex-row items-center">
+                            <Text className="text-xs" style={{ color: TEXT2 }}>
+                              共 {item.task_count} 次
+                            </Text>
                             {locked ? (
-                              <Text
-                                className="text-xs ml-2"
-                                style={{ color: ACCENT }}>
-                                当前锁定中
-                              </Text>
+                              <View className="flex-row items-center gap-1.5 ml-4">
+                                <View className="w-1.5 h-1.5 rounded-full bg-[#7A5AF8]" />
+                                <Text
+                                  className="text-xs"
+                                  style={{ color: TEXT2 }}>
+                                  锁定中
+                                </Text>
+                              </View>
                             ) : null}
-                          </Text>
+                          </View>
                         </View>
                       </View>
                     </View>
                   );
-                })}
+                });
+              })()}
             </View>
           </>
         )}

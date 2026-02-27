@@ -1,12 +1,13 @@
 import { Flex } from '@/components/ui';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Platform, Text } from 'react-native';
 
 interface SelectAppsProps {
   maxCount?: number;
-  apps: string[];
+  /** 已选应用：支持 string[]（stableId:type）或对象数组 { stableId, type } */
+  apps: string[] | { stableId: string; type?: string }[];
   onFinish: (apps: any[]) => void;
 }
 
@@ -15,15 +16,22 @@ const SelectApps: React.FC<SelectAppsProps> = ({
   apps,
   onFinish,
 }) => {
+  // 转为 native 期望的 string[] 格式 stableId:type
+  const appIds = useMemo(() => {
+    if (!apps?.length) return [];
+    return apps.map(a =>
+      typeof a === 'string' ? a : `${a.stableId}:${a.type ?? 'application'}`,
+    );
+  }, [apps]);
+
   const selectApps = () => {
     if (Platform.OS !== 'ios') return;
-    selectAppsToLimit(maxCount, apps)
-      .then(data => {
-        if (data.success && data.apps) {
-          // 同时存储到AppStore和当前组件状态
-          onFinish(data.apps);
-        }
-      })
+    selectAppsToLimit(maxCount, appIds).then(data => {
+      if (data.success && data.apps) {
+        // 同时存储到AppStore和当前组件状态
+        onFinish(data.apps);
+      }
+    });
   };
 
   return (

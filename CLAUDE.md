@@ -65,14 +65,17 @@ pnpm start -c
 ## 🔗 后端接口项目
 
 ### 项目位置
+
 **路径**: `/Users/yangrui/ruidoc/FocusApi`
 
 ### 技术栈
+
 - **框架**: NestJS (TypeScript)
 - **运行时**: Node.js / Bun
 - **包管理**: Yarn / Bun
 
 ### 启动命令
+
 ```bash
 cd /Users/yangrui/ruidoc/FocusApi
 
@@ -87,6 +90,7 @@ yarn start:debug
 ```
 
 ### 模块结构
+
 ```
 src/focusone/
 ├── plan/         # 专注计划 API
@@ -100,12 +104,14 @@ src/focusone/
 ```
 
 ### API 文档
+
 - 文档目录: `/Users/yangrui/ruidoc/FocusApi/docs/`
 - OpenAI SDK: `docs/openai-api-guide.md`
 - AI Service: `docs/ai-service-reference.md`
 - AI 接口: `docs/ai-api-endpoints.md`
 
 ### 前后端联调
+
 - **前端请求地址**: `https://focus.ruidoc.cn/dev-api`
 - **本地开发**: 修改接口后需重启 `yarn start:dev`
 - **接口修改**: 可直接修改 `/Users/yangrui/ruidoc/FocusApi/src/focusone/` 下的模块
@@ -138,22 +144,25 @@ app/
 ### 📍 页面快速定位索引
 
 **主要页面**
+
 - 首页/专注 → `(tabs)/index.tsx`
 - 统计 → `(tabs)/record.tsx`
 - 我的 → `(tabs)/user.tsx`
 
 **计划相关**
+
 - 计划列表 → `plans/index.tsx`
 - 新建计划 → `plans/add.tsx`
 - 计划详情 → `plans/item.tsx`
 - 预设模板 → `plans/presets.tsx`
 
 **快速启动**
+
 - 快速启动 → `quick-start/index.tsx`
-- 模式切换 → `quick-start/mode-switcher.tsx`
 - 时间滑块 → `quick-start/time-slider.tsx`
 
 **用户/设置**
+
 - VIP会员 → `user/vip.tsx`
 - 积分 → `user/coins.tsx`
 - 编辑资料 → `user/edit.tsx`
@@ -164,6 +173,7 @@ app/
 - 注销账号 → `setting/logoff.tsx`
 
 **登录/引导**
+
 - 登录 → `login/index.tsx`
 - 登录开始 → `login/start.tsx`
 - 注册 → `login/register.tsx`
@@ -172,10 +182,12 @@ app/
 - 欢迎页 → `others/welcome.tsx`
 
 **⚠️ 已归档（暂不迭代）**
+
 - 应用管理 → `apps/` (已归档，不在更新范围)
 - 挑战系统 → `challenges/` (已归档，不在更新范围)
 
 **其他**
+
 - 支付 → `checkout/index.tsx`
 - 调试 → `debug/index.tsx`
 - WebView → `others/webview.tsx`

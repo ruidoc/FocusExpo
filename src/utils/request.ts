@@ -57,7 +57,7 @@ instance.interceptors.request.use(async request => {
 // 响应拦截器，全局错误处理
 instance.interceptors.response.use(
   response => {
-    console.log('【响应结果】', response.data);
+    // console.log('【响应结果】', response.data);
     return response.data;
   },
   error => {

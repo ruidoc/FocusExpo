@@ -1,6 +1,11 @@
 import { Page } from '@/components/business';
 import { ActionSheet, Dialog, FieldGroup, FieldItem, Toast } from '@/components/ui';
-import { useUserStore } from '@/stores';
+import {
+  usePlanStore,
+  useRecordStore,
+  useUserStore,
+} from '@/stores';
+import { stopAppLimits } from '@/utils/permission';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform, Text, View } from 'react-native';
@@ -123,16 +128,27 @@ const App = () => {
   };
 
   const toLogout = () => {
+    const pstore = usePlanStore.getState();
+    const rstore = useRecordStore.getState();
+    const hasFocus =
+      !!rstore.record_id || (!!pstore.active_plan && pstore.is_focus_mode());
+
     ActionSheet({
       actions: ['确认'],
       cancelText: '取消',
-      description: '确认退出登录吗？',
+      description: hasFocus
+        ? '退出登录将会结束当前专注，是否继续？'
+        : '确认退出登录吗？',
     })
-      .then(() => {
+      .then(async () => {
+        if (hasFocus && Platform.OS === 'ios') {
+          await stopAppLimits();
+          await pstore.exitPlan();
+        }
         store.logout();
         router.back();
       })
-      .catch(e => {});
+      .catch(() => {});
   };
 
   useEffect(() => {}, []);
