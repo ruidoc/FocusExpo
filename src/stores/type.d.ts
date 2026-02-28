@@ -6,6 +6,8 @@ interface UserInfo {
   avatar: string;
   sex: number;
   openid: string;
+  /** IAP appAccountToken，购买时传入以便 Webhook 关联用户 */
+  superwall_uuid?: string;
 }
 
 interface CusPlan {

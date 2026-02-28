@@ -129,7 +129,7 @@ const App = () => {
       {store.uInfo && (
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => toNavigate('user/vip')}
+          onPress={() => toNavigate('paywall')}
           className="mx-4 rounded-2xl p-[18px] overflow-hidden"
           style={
             isActive
@@ -166,7 +166,7 @@ const App = () => {
                 activeOpacity={0.7}
                 className="px-3.5 py-1.5 rounded-[20px]"
                 style={{ backgroundColor: '#7A5AF8' }}
-                onPress={() => toNavigate('user/vip')}>
+                onPress={() => toNavigate('paywall')}>
                 <Text className="text-[13px] font-semibold text-white">
                   立即开通
                 </Text>

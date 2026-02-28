@@ -1,10 +1,12 @@
-import React, { useEffect, useRef } from 'react';
-import ViewShot from 'react-native-view-shot';
+import { Flex } from '@/components/ui';
+import React, { useEffect } from 'react';
 import TokenLabel from '../../native/TokenLabel';
 
 const CustomAppToken = (props: AppToken) => {
   const size = props.size || 20;
-  const viewShotRef = useRef<ViewShot>(null);
+  const isCategory = props.app.type === 'category';
+  const iconSize = isCategory ? size * 0.67 : size;
+  // const viewShotRef = useRef<ViewShot>(null);
 
   useEffect(() => {
     // viewShotRef.current
@@ -18,21 +20,29 @@ const CustomAppToken = (props: AppToken) => {
   }, []);
 
   return (
-    <ViewShot
-      ref={viewShotRef}
-      options={{
-        fileName: `app-token-${Date.now()}`,
-        format: 'jpg',
-        quality: 0.9,
-        // result: 'data-uri',
-      }}>
+    // <ViewShot
+    //   ref={viewShotRef}
+    //   options={{
+    //     fileName: `app-token-${Date.now()}`,
+    //     format: 'jpg',
+    //     quality: 0.9,
+    //     // result: 'data-uri',
+    //   }}>
+    <Flex
+      className="justify-center items-start"
+      style={{ height: size, width: size }}>
       <TokenLabel
         tokenBase64={props.app.tokenData}
         tokenType={props.app.type}
-        size={props.size || undefined}
-        style={{ height: size, width: size }}
+        size={iconSize || undefined}
+        style={{
+          height: iconSize,
+          width: iconSize,
+          position: 'relative',
+        }}
       />
-    </ViewShot>
+    </Flex>
+    // </ViewShot>
   );
 };
 

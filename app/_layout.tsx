@@ -73,10 +73,7 @@ const RootLayout = () => {
                 name="(tabs)"
                 options={{ headerShown: false, headerTitle: '' }}
               />
-              <Stack.Screen
-                name="(guides)"
-                options={{ headerShown: false }}
-              />
+              <Stack.Screen name="(guides)" options={{ headerShown: false }} />
               <Stack.Screen
                 name="onboarding/index"
                 options={{
@@ -84,35 +81,14 @@ const RootLayout = () => {
                   gestureEnabled: false,
                 }}
               />
-              <Stack.Screen
-                name="login/index"
-                options={{ title: '登录' }}
-              />
-              <Stack.Screen
-                name="login/wx"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="login/start"
-                options={{ title: '' }}
-              />
-              <Stack.Screen
-                name="login/register"
-                options={{ title: '注册' }}
-              />
-              <Stack.Screen
-                name="user/edit"
-                options={{ title: '个人信息' }}
-              />
+              <Stack.Screen name="login/index" options={{ title: '登录' }} />
+              <Stack.Screen name="login/wx" options={{ headerShown: false }} />
+              <Stack.Screen name="login/start" options={{ title: '' }} />
+              <Stack.Screen name="login/register" options={{ title: '注册' }} />
+              <Stack.Screen name="user/edit" options={{ title: '个人信息' }} />
               <Stack.Screen name="user/vip" options={{ title: '会员中心' }} />
-              <Stack.Screen
-                name="user/coins"
-                options={{ title: '金币中心' }}
-              />
-              <Stack.Screen
-                name="setting/index"
-                options={{ title: '设置' }}
-              />
+              <Stack.Screen name="user/coins" options={{ title: '金币中心' }} />
+              <Stack.Screen name="setting/index" options={{ title: '设置' }} />
               <Stack.Screen
                 name="setting/permission"
                 options={{ title: '权限管理' }}
@@ -142,10 +118,7 @@ const RootLayout = () => {
                 name="plans/presets"
                 options={{ title: '预设专注计划' }}
               />
-              <Stack.Screen
-                name="apps/index"
-                options={{ title: 'APP管理' }}
-              />
+              <Stack.Screen name="apps/index" options={{ title: 'APP管理' }} />
               <Stack.Screen name="apps/add" options={{ title: '选择APP' }} />
               <Stack.Screen
                 name="others/webview"
@@ -173,7 +146,16 @@ const RootLayout = () => {
               />
               {/* 支付页面 */}
               <Stack.Screen
-                name="checkout/index"
+                name="paywall/index"
+                options={{
+                  title: '',
+                  presentation: 'fullScreenModal',
+                  headerShown: false,
+                }}
+              />
+              {/* 支付页面 */}
+              <Stack.Screen
+                name="paywall/stripe"
                 options={{ title: 'Stripe 支付' }}
               />
               {/* 调试页面 */}
