@@ -40,17 +40,30 @@ const SelectedApps: React.FC<SelectedAppsListProps> = ({ apps }) => {
           ))}
         </Flex>
       </ScrollView>
-      {apps.length > 0 && (
-        <Text
-          style={{
-            fontSize: 12,
-            color: '#666',
-            marginTop: 8,
-            textAlign: 'center',
-          }}>
-          已选择 {apps.length} 个应用
-        </Text>
-      )}
+      {apps.length > 0 && (() => {
+        const categoryCount = apps.filter(
+          (a: App) => a.type === 'category',
+        ).length;
+        const appCount = apps.filter(
+          (a: App) => a.type === 'application' || a.type === 'webDomain',
+        ).length;
+        const parts: string[] = [];
+        if (categoryCount > 0) parts.push(`${categoryCount} 个分类`);
+        if (appCount > 0) parts.push(`${appCount} 个应用`);
+        const countText =
+          parts.length > 0 ? `已选择 ${parts.join('、')}` : `已选择 ${apps.length} 个`;
+        return (
+          <Text
+            style={{
+              fontSize: 12,
+              color: '#666',
+              marginTop: 8,
+              textAlign: 'center',
+            }}>
+            {countText}
+          </Text>
+        );
+      })()}
     </View>
   );
 };

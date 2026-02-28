@@ -220,7 +220,7 @@ const DateTimePickerGlobal: React.FC = () => {
           </View>
 
           {/* Picker 内容 */}
-          <View className="py-4">
+          <View className="py-4 flex-row justify-center">
             <RNDateTimePicker
               value={date}
               mode={getCurrentPickerMode()}

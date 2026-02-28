@@ -8,6 +8,7 @@ interface UserInfo {
   openid: string;
   /** IAP appAccountToken，购买时传入以便 Webhook 关联用户 */
   superwall_uuid?: string;
+  apple_id?: string;
 }
 
 interface CusPlan {
@@ -49,4 +50,3 @@ interface TodayStatis {
 VPN 申请弹框出现，点击会触发 'open' 和 'refuse' 两个状态，表示同意或拒绝
 同意之后，会启动 VPN，此时会触发 'start' 和 'notask' 两个状态，表示启动或没有任务
 */
-

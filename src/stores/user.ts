@@ -9,6 +9,7 @@ import {
 } from '@/utils';
 import http from '@/utils/request';
 import * as Device from 'expo-device';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { Platform } from 'react-native';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
@@ -295,6 +296,79 @@ const UserStore = combine(
         console.log('注册结果：', res);
       } catch (error) {
         console.log(error);
+        fun?.();
+      }
+    },
+
+    /** 更新用户信息（用户名、性别、头像等） */
+    updateUser: async (data: {
+      username?: string;
+      sex?: number;
+      avatar?: string;
+    }) => {
+      try {
+        const res: HttpRes = await http.post('/user/update', data);
+        if (res.statusCode === 200 && res.data) {
+          const newInfo = { ...(get().uInfo || {}), ...res.data } as UserInfo;
+          (get() as any).setUinfo(newInfo);
+          storage.set('user_info', JSON.stringify(newInfo));
+          return true;
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    },
+
+    /** 上传头像：先压缩再上传 */
+    uploadAvatar: async (uri: string): Promise<boolean> => {
+      try {
+        const compressed = await ImageManipulator.manipulateAsync(
+          uri,
+          [{ resize: { width: 400 } }],
+          {
+            compress: 0.7,
+            format: ImageManipulator.SaveFormat.JPEG,
+          },
+        );
+        const formData = new FormData();
+        const filename = uri.split('/').pop() || 'avatar.jpg';
+        formData.append('file', {
+          uri: compressed.uri,
+          type: 'image/jpeg',
+          name: filename,
+        } as any);
+        const res: any = await http.post('/extend/upload-uinfo-file', formData);
+        if (res?.statusCode === 200 && res?.data?.url) {
+          const ok = await (get() as any).updateUser({ avatar: res.data.url });
+          if (ok) await (get() as any).getInfo();
+          return !!ok;
+        }
+        return false;
+      } catch (e) {
+        console.log('头像上传失败', e);
+        return false;
+      }
+    },
+
+    /** 绑定微信（纯绑定，若该微信已绑定其他账户则失败） */
+    wechatBind: async (code: string, fun?: (res?: HttpRes) => void) => {
+      try {
+        const res: any = await http.post('/user/wechat-bind-code', { code });
+        if (res?.statusCode === 200) {
+          await (get() as any).getInfo();
+          Toast('微信绑定成功');
+          fun?.(res);
+        } else {
+          Toast(res?.message || '绑定失败');
+          fun?.(res);
+        }
+      } catch (e: any) {
+        const msg =
+          e?.response?.data?.message ||
+          e?.message ||
+          '该微信已绑定其他账户，无法绑定';
+        Toast(msg);
         fun?.();
       }
     },

@@ -1,11 +1,11 @@
 import { Button, Checkbox, TextInput } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { toast } from '@/utils';
-import { useTheme } from '@react-navigation/native';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 const App = () => {
-  const { colors, dark } = useTheme();
+  const { colors } = useCustomTheme();
   const [reason, setReason] = useState('');
   const [type, setType] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ const App = () => {
     <View
       className="flex-1 pt-[30px]"
       style={{ backgroundColor: colors.background }}>
-      <View className="flex-col items-stretch mx-5">
+      <View className="flex-col items-stretch mx-5 gap-2">
         <Text className="text-base" style={{ color: colors.text }}>
           反馈类型
         </Text>
@@ -44,7 +44,7 @@ const App = () => {
           />
         </View>
       </View>
-      <View className="flex-col items-stretch mx-5">
+      <View className="flex-col items-stretch mx-5 gap-2">
         <Text className="text-base" style={{ color: colors.text }}>
           反馈内容
         </Text>
@@ -55,7 +55,7 @@ const App = () => {
             type="textarea"
             rows={4}
             placeholder="请输入您的意见和反馈，我们会尽快处理并改进"
-            placeholderTextColor={colors.border}
+            placeholderTextColor={colors.text3}
             value={reason}
             clearable
             style={{ color: colors.text }}

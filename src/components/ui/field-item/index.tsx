@@ -1,5 +1,6 @@
 import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
+import { SymbolView } from 'expo-symbols';
 import React from 'react';
 import {
   Image,
@@ -68,6 +69,10 @@ interface FieldItemProps {
    */
   showArrow?: boolean;
   /**
+   * 箭头方向：right=向右（默认），down=向下（如展开状态）
+   */
+  arrowDirection?: 'right' | 'down';
+  /**
    * 箭头图标颜色（可选，默认使用主题色）
    */
   arrowColor?: string;
@@ -125,6 +130,7 @@ const FieldItem: React.FC<FieldItemProps> = ({
   rightTextClassName,
   rightElement,
   showArrow = true,
+  arrowDirection = 'right',
   arrowColor,
   onPress,
   disabled = false,
@@ -137,7 +143,7 @@ const FieldItem: React.FC<FieldItemProps> = ({
 }) => {
   const { colors } = useCustomTheme();
   const iconCol = iconColor || colors.text;
-  const arrowCol = arrowColor || colors.text;
+  const arrowCol = arrowColor || colors.text2;
   const dividerCol = dividerColor || colors.border;
 
   // 默认 className，如果没有提供则使用默认值
@@ -221,7 +227,13 @@ const FieldItem: React.FC<FieldItemProps> = ({
               </Text>
             )}
             {showArrow && (
-              <Icon name="chevron-forward" size={20} color={arrowCol} />
+              <SymbolView
+                name={
+                  arrowDirection === 'down' ? 'chevron.down' : 'chevron.forward'
+                }
+                size={14}
+                tintColor={arrowCol}
+              />
             )}
           </>
         )}

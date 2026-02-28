@@ -16,7 +16,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 type FormState = {
   name: string;
@@ -361,51 +361,75 @@ const App = () => {
   return (
     <Page>
       <ScrollView style={{ padding: 15 }}>
-        {/* 1. 任务名称输入框 */}
-        <FieldGroup className="rounded-xl mb-4 p-4">
-          <Flex className="flex-row items-center gap-2">
-            <Text>{isEditing ? '✏️' : '🏆'}</Text>
-            <TextInput
-              placeholder={isEditing ? '修改任务名称' : '给任务起个名字'}
-              value={title}
-              placeholderTextColor={colors.text2}
-              onChange={setTitle}
-            />
-          </Flex>
-        </FieldGroup>
-
-        {/* 2. 时间选择组 */}
+        {/* 1. 计划名称 */}
         <FieldGroup className="rounded-xl mb-4">
           <FieldItem
-            title="几点开始"
-            rightText={dayjs(form.start).format('HH:mm')}
-            onPress={() => {
-              DateTimePicker.show({
-                value: form.start,
-                title: '开始时间',
-                mode: 'time',
-              }).then(({ action, value }) => {
-                if (action === 'confirm') {
-                  setInfo(value, 'start');
-                }
-              });
-            }}
+            title="计划名称"
+            rightElement={
+              <View style={{ minWidth: 140, flexShrink: 0 }}>
+                <TextInput
+                  placeholder="请输入"
+                  value={title}
+                  placeholderTextColor={colors.text3}
+                  onChange={setTitle}
+                  style={{ textAlign: 'right' }}
+                />
+              </View>
+            }
+            showArrow={false}
           />
+        </FieldGroup>
+
+        {/* 2. 起始时间 */}
+        <FieldGroup className="rounded-xl mb-4">
           <FieldItem
-            title="几点结束"
-            rightText={dayjs(form.end).format('HH:mm')}
-            onPress={() => {
-              DateTimePicker.show({
-                value: form.end,
-                title: '结束时间',
-                mode: 'time',
-              }).then(({ action, value }) => {
-                console.log('action：', action, value);
-                if (action === 'confirm') {
-                  setInfo(value, 'end');
-                }
-              });
-            }}
+            title="起始时间"
+            rightElement={
+              <Flex className="flex-row items-center gap-2">
+                <Pressable
+                  onPress={() => {
+                    DateTimePicker.show({
+                      value: form.start,
+                      title: '开始时间',
+                      mode: 'time',
+                    }).then(({ action, value }) => {
+                      if (action === 'confirm') setInfo(value, 'start');
+                    });
+                  }}
+                  style={{
+                    backgroundColor: colors.border,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 8,
+                  }}>
+                  <Text style={{ color: colors.text, fontSize: 15 }}>
+                    {dayjs(form.start).format('HH:mm')}
+                  </Text>
+                </Pressable>
+                <Text style={{ color: colors.text2 }}>至</Text>
+                <Pressable
+                  onPress={() => {
+                    DateTimePicker.show({
+                      value: form.end,
+                      title: '结束时间',
+                      mode: 'time',
+                    }).then(({ action, value }) => {
+                      if (action === 'confirm') setInfo(value, 'end');
+                    });
+                  }}
+                  style={{
+                    backgroundColor: colors.border,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 8,
+                  }}>
+                  <Text style={{ color: colors.text, fontSize: 15 }}>
+                    {dayjs(form.end).format('HH:mm')}
+                  </Text>
+                </Pressable>
+              </Flex>
+            }
+            showArrow={false}
           />
         </FieldGroup>
 
@@ -422,11 +446,12 @@ const App = () => {
           </View>
         </FieldGroup>
 
-        {/* 4. 有效时长（长期模式1个item，自定义模式3个item） */}
+        {/* 4. 有效时长（长期模式1个item，自定义模式2个item） */}
         <FieldGroup className="rounded-xl mb-4">
           <FieldItem
             title="有效时长"
             rightText={isLongTerm ? '长期有效' : '自定义'}
+            arrowDirection={!isLongTerm ? 'down' : 'right'}
             onPress={() => {
               setIsLongTerm(!isLongTerm);
               // 切换到长期有效时，自动设置结束日期为10年后
@@ -437,39 +462,56 @@ const App = () => {
             }}
           />
           {!isLongTerm && (
-            <>
-              <FieldItem
-                title="哪天开始"
-                rightText={dayjs(form.start_date).format('YYYY-MM-DD')}
-                onPress={() => {
-                  DateTimePicker.show({
-                    value: form.start_date,
-                    title: '开始日期',
-                    mode: 'date',
-                  }).then(({ action, value }) => {
-                    if (action === 'confirm') {
-                      setInfo(value, 'start_date');
-                    }
-                  });
-                }}
-              />
-              <FieldItem
-                title="哪天结束"
-                rightText={dayjs(form.end_date).format('YYYY-MM-DD')}
-                onPress={() => {
-                  DateTimePicker.show({
-                    value: form.end_date,
-                    title: '结束日期',
-                    mode: 'date',
-                    minimumDate: form.start_date,
-                  }).then(({ action, value }) => {
-                    if (action === 'confirm') {
-                      setInfo(value, 'end_date');
-                    }
-                  });
-                }}
-              />
-            </>
+            <FieldItem
+              title="起始日期"
+              rightElement={
+                <Flex className="flex-row items-center gap-2">
+                  <Pressable
+                    onPress={() => {
+                      DateTimePicker.show({
+                        value: form.start_date,
+                        title: '开始日期',
+                        mode: 'date',
+                      }).then(({ action, value }) => {
+                        if (action === 'confirm') setInfo(value, 'start_date');
+                      });
+                    }}
+                    style={{
+                      backgroundColor: colors.border,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 8,
+                    }}>
+                    <Text style={{ color: colors.text, fontSize: 15 }}>
+                      {dayjs(form.start_date).format('YYYY-MM-DD')}
+                    </Text>
+                  </Pressable>
+                  <Text style={{ color: colors.text2 }}>至</Text>
+                  <Pressable
+                    onPress={() => {
+                      DateTimePicker.show({
+                        value: form.end_date,
+                        title: '结束日期',
+                        mode: 'date',
+                        minimumDate: form.start_date,
+                      }).then(({ action, value }) => {
+                        if (action === 'confirm') setInfo(value, 'end_date');
+                      });
+                    }}
+                    style={{
+                      backgroundColor: colors.border,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 8,
+                    }}>
+                    <Text style={{ color: colors.text, fontSize: 15 }}>
+                      {dayjs(form.end_date).format('YYYY-MM-DD')}
+                    </Text>
+                  </Pressable>
+                </Flex>
+              }
+              showArrow={false}
+            />
           )}
         </FieldGroup>
 

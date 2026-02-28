@@ -43,14 +43,10 @@ const Flex = ({
   }
 
   return (
-    <View
-      className={combinedClassName}
-      style={style}
-      {...rest}>
+    <View className={combinedClassName} style={style} {...rest}>
       {children}
     </View>
   );
 };
 
 export default Flex;
-
