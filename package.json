@@ -10,7 +10,7 @@
     "build:preview:quiet": "eas build --local --platform ios --profile preview --non-interactive 2>&1 | grep -E '(error|Error|ERROR|failed|Failed|FAILED)' | head -50",
     "build:prod": "eas build --local --platform ios --profile production",
     "doctor": "npx expo-doctor",
-    "prebuild": "expo prebuild",
+    "prebuild": "expo prebuild --platform ios",
     "lint": "expo lint",
     "docs": "bash docs/docs.sh",
     "docs:quick": "bash docs/docs.sh quick",

@@ -10,7 +10,7 @@
  */
 import { Page, StripeWebView } from '@/components/business';
 import { Button, Flex, Toast } from '@/components/ui';
-import { useStripePayment } from '@/utils/stripe';
+import { type PaymentResult, useStripePayment } from '@/utils/stripe';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import React, { useState } from 'react';
@@ -179,18 +179,21 @@ const CheckoutPage = () => {
         productId: selectedProduct.id,
         productName: selectedProduct.name,
       },
-      result => {
+      (result: PaymentResult) => {
         // 支付完成回调
         if (result.success) {
           setPaymentStatus('success');
           Toast({ message: '支付成功！感谢您的购买' });
           // TODO: 更新用户 VIP 状态
-        } else if (result.canceled) {
-          setPaymentStatus('idle');
-          // 用户取消，不做任何提示
         } else {
-          setPaymentStatus('failed');
-          Toast({ message: result.error || '支付失败' });
+          const failed = result as Extract<PaymentResult, { success: false }>;
+          if (failed.canceled) {
+            setPaymentStatus('idle');
+            // 用户取消，不做任何提示
+          } else {
+            setPaymentStatus('failed');
+            Toast({ message: failed.error || '支付失败' });
+          }
         }
       },
     );
@@ -213,10 +216,10 @@ const CheckoutPage = () => {
             <Flex
               key={product.id}
               onPress={() => setSelectedProduct(product)}
-              style={[
+              style={StyleSheet.flatten([
                 styles.productCard,
-                isSelected && styles.productCardSelected,
-              ]}>
+                isSelected ? styles.productCardSelected : undefined,
+              ])}>
               <Text style={styles.productName}>{product.name}</Text>
               <Text style={styles.productDescription}>
                 {product.description}
