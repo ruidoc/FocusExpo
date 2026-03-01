@@ -92,7 +92,7 @@ const LoginPrompt = ({ onComplete }: LoginPromptProps) => {
           />
           <FeatureItem
             icon="calendar-outline"
-            title="自动化计划"
+            title="自动化契约"
             desc="创建定时任务，自动执行"
           />
           <FeatureItem

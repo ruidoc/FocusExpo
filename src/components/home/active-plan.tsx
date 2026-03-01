@@ -63,7 +63,7 @@ const FocusButton = () => {
     if (pstore.next_plan) {
       descDom = (
         <Text style={styles.descFont}>
-          下一个计划{' '}
+          下一个契约{' '}
           <Text style={styles.lightFont}>{pstore.next_plan?.start}</Text> 开始
         </Text>
       );

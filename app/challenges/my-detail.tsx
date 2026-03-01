@@ -355,7 +355,7 @@ const MyChallengeDetailScreen = () => {
               </Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>关联计划</Text>
+              <Text style={styles.infoLabel}>关联契约</Text>
               <Text style={styles.infoValue}>
                 {userChallenge.plan_ids.length} 个
               </Text>

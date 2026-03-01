@@ -188,9 +188,7 @@ const PresetsPage = () => {
     <Page>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 pt-6 pb-4">
-          <Text className="text-2xl font-bold text-white mb-2">
-            选择专注计划
-          </Text>
+          <Text className="text-2xl font-bold text-white mb-2">选择契约</Text>
           <Text className="text-sm text-white/60">
             为你推荐以下场景，选一个快速开始
           </Text>
@@ -243,7 +241,7 @@ const PresetsPage = () => {
           type="ghost"
           onPress={handleCustomPlan}
           className="mb-3"
-          text="自定义计划"
+          text="自定义契约"
         />
         {fromOnboarding && (
           <TouchableOpacity

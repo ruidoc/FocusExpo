@@ -63,13 +63,19 @@ async function callNativeMethod<T>(
 
 /**
  * 请求屏幕使用时间权限
+ * 用户拒绝时提示"用户未授权"（非错误样式），避免报错感
  */
 export async function requestScreenTimePermission(): Promise<boolean> {
-  return callNativeMethod(
-    'requestScreenTimePermission',
-    () => getNativeModule()!.requestScreenTimePermission(),
-    false,
-  );
+  if (Platform.OS !== 'ios') {
+    return false;
+  }
+  try {
+    return await getNativeModule()!.requestScreenTimePermission();
+  } catch (error) {
+    console.log('[NativeModule.requestScreenTimePermission] 用户未授权', error);
+    Toast('用户未授权', 'info');
+    return false;
+  }
 }
 
 /**

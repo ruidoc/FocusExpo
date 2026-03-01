@@ -31,7 +31,7 @@ const TrialUserGuidePlan = () => {
           <Icon name="sunny-outline" size={40} color="#F7AF5D" />
         </View>
         <Text className="text-xl font-semibold text-white mb-8 text-center">
-          暂无即将开始的计划
+          暂无即将开始的契约
         </Text>
       </View>
 
@@ -42,7 +42,7 @@ const TrialUserGuidePlan = () => {
         </Text>
 
         <Text className="text-base font-semibold text-white mb-4">
-          创建周期计划，让专注成为习惯！
+          创建周期契约，让专注成为习惯！
         </Text>
 
         <View className="mb-4">
@@ -82,7 +82,7 @@ const TrialUserGuidePlan = () => {
             />
             <Icon name="chevron-down" size={20} color="#9CA3AF" />
           </Flex>
-          <Button text="创建专注计划" onPress={handleCreatePlan} />
+          <Button text="创建契约" onPress={handleCreatePlan} />
         </View>
         <View className="w-full flex-col gap-2">
           <Text className="text-[#9CA3AF] text-[15px] text-center font-medium">

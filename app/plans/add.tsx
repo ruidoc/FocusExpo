@@ -63,7 +63,7 @@ const App = () => {
   // 动态设置页面标题
   useEffect(() => {
     navigation.setOptions({
-      title: isEditing ? '编辑专注计划' : '创建专注计划',
+      title: isEditing ? '编辑契约' : '创建契约',
     });
   }, [isEditing, navigation]);
 
@@ -204,7 +204,7 @@ const App = () => {
       name = title;
       // 验证计划名称
       if (!name.trim()) {
-        return Toast('请输入计划名称', 'error');
+        return Toast('请输入契约名称', 'error');
       }
 
       // 验证日期范围（仅在自定义时长模式下验证）
@@ -361,10 +361,10 @@ const App = () => {
   return (
     <Page>
       <ScrollView style={{ padding: 15 }}>
-        {/* 1. 计划名称 */}
+        {/* 1. 契约名称 */}
         <FieldGroup className="rounded-xl mb-4">
           <FieldItem
-            title="计划名称"
+            title="契约名称"
             rightElement={
               <View style={{ minWidth: 140, flexShrink: 0 }}>
                 <TextInput
@@ -562,7 +562,7 @@ const App = () => {
         </FieldGroup>
       </ScrollView>
       <View className="px-5 pb-10">
-        <Button onPress={submit} text={isEditing ? '保存修改' : '创建计划'} />
+        <Button onPress={submit} text={isEditing ? '保存修改' : '创建契约'} />
       </View>
     </Page>
   );

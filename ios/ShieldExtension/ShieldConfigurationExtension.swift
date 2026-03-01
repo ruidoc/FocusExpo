@@ -31,8 +31,8 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
 
     private func buildShieldConfiguration(app: Application?) -> ShieldConfiguration {
         // 颜色统一使用白色
-        var titleLabel = ShieldConfiguration.Label(text: "已被屏蔽", color: .label)
-        var subtitleLabel = ShieldConfiguration.Label(text: "该应用已被屏蔽", color: .secondaryLabel)
+        var titleLabel = ShieldConfiguration.Label(text: "已被锁定", color: .label)
+        var subtitleLabel = ShieldConfiguration.Label(text: "该应用已被锁定", color: .secondaryLabel)
         if let defaults = UserDefaults(suiteName: "group.com.focusone") {
             let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
             let endAt = defaults.double(forKey: "FocusOne.FocusEndAt")

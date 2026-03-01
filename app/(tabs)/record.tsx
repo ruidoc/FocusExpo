@@ -176,7 +176,7 @@ const App = () => {
           <View className="flex-row justify-between">
             <View className="flex-1 items-center">
               <Text className="text-xs mb-2" style={{ color: TEXT2 }}>
-                计划专注
+                契约专注
               </Text>
               {renderDuration(total?.total_blocked_mins || 0)}
             </View>

@@ -58,11 +58,11 @@ const FALLBACK_PRODUCTS: ProductConfig[] = [
 ];
 
 const TESTIMONIAL =
-  '「专注力明显提升，计划功能帮我养成了稳定习惯，强烈推荐！」';
+  '「专注力明显提升，契约功能帮我养成了稳定习惯，强烈推荐！」';
 
 // 权益列表（按参考图：闪电、目标、图表、盾牌）
 const BENEFITS = [
-  { icon: 'flash' as const, text: '无限专注计划与深度练习' },
+  { icon: 'flash' as const, text: '无限契约与深度练习' },
   { icon: 'flag' as const, text: '设定目标并实时跟踪进度' },
   { icon: 'stats-chart' as const, text: '详细数据分析与表现洞察' },
   { icon: 'shield-checkmark' as const, text: '专家精选内容，助你达成目标' },
@@ -71,7 +71,7 @@ const BENEFITS = [
 type DisplayProduct = ProductConfig & { iapProduct?: SubscriptionProduct };
 
 // 设计色板
-const BG = '#100E26';
+const BG = '#111111';
 const CARD_BG = '#1C1A32';
 const YELLOW = '#FBBF24';
 const PURPLE_LIGHT = '#8B5CF6';
@@ -287,9 +287,7 @@ const PaywallPage = () => {
         showsVerticalScrollIndicator={false}>
         {/* 标题：解锁 专业版 掌控专注（专业版高亮、居中、不大写粗） */}
         <View className="mb-6 items-center">
-          <Text
-            className="text-3xl leading-10"
-            style={{ color: WHITE }}>
+          <Text className="text-3xl leading-10" style={{ color: WHITE }}>
             解锁 <Text style={{ color: PURPLE_LIGHT }}>专业版</Text> 掌控专注
           </Text>
         </View>

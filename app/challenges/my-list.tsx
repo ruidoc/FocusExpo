@@ -185,7 +185,7 @@ const MyChallengesScreen = () => {
             {/* 关联计划 */}
             {userChallenge.plan_ids.length > 0 && (
               <Flex className="gap-1">
-                <Text style={styles.planLabel}>关联计划：</Text>
+                <Text style={styles.planLabel}>关联契约：</Text>
                 <Text style={styles.planCount}>
                   {userChallenge.plan_ids.length} 个
                 </Text>

@@ -299,7 +299,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             "plan_id": plan.id,
             "start_min": plan.start,
             "total_min": totalMinutes, // 总时长
-            "title": plan.name ?? "专注计划",
+            "title": plan.name ?? "专注契约",
             "apps": plan.apps, // apps 数组
             "mode": "shield"
         ]

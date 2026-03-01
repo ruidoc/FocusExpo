@@ -50,7 +50,7 @@ const EmptyPlan = () => {
         <View className="w-full bg-[#1C1C26] rounded-[20px] p-6 mb-6 border border-[#2C2C36]">
           <View className="flex-row justify-between items-start">
             <View>
-              <Text className="text-sm text-[#858699] mb-2">下一个计划</Text>
+              <Text className="text-sm text-[#858699] mb-2">下一个契约</Text>
               <Text className="text-2xl font-bold text-white mb-1">
                 {nextPlan.name}
               </Text>
@@ -73,7 +73,7 @@ const EmptyPlan = () => {
         <View className="bg-[#2C2C36]/50 rounded-xl p-4 flex-row items-center justify-between border border-[#3C3C46]/50">
           <View className="flex-1 mr-2">
             <Text className="text-white text-sm font-medium mb-1">
-              添加更多专注计划
+              添加更多契约
             </Text>
             <Text className="text-[#858699] text-xs">
               规律的专注安排能帮助你更高效地管理时间
@@ -101,20 +101,20 @@ const EmptyPlan = () => {
                 />
               </View>
 
-              {/* 次引导：添加更多计划 */}
+              {/* 次引导：添加更多契约 */}
               <TouchableOpacity
                 className="flex-row items-center justify-center py-3 gap-2"
                 onPress={() => router.push('/plans/add')}>
                 <Icon name="add-circle-outline" size={18} color="#858699" />
                 <Text className="text-[#858699] text-sm font-medium">
-                  添加其他计划
+                  添加其他契约
                 </Text>
               </TouchableOpacity>
             </>
           ) : (
             // 如果时间紧迫，不再引导快速开始，只提供添加计划入口
             <Button
-              text="添加新计划"
+              text="添加新契约"
               onPress={() => router.push('/plans/add')}
               style={{ backgroundColor: '#2C2C36' }} // 次级按钮样式
               textStyle={{ color: '#FFFFFF' }}
@@ -133,19 +133,16 @@ const EmptyPlan = () => {
           <Icon name="sunny-outline" size={40} color="#F7AF5D" />
         </View>
         <Text className="text-xl font-semibold text-white mt-5 mb-2 text-center">
-          暂无即将开始的计划
+          暂无即将开始的契约
         </Text>
         <Text className="text-sm text-[#858699] text-center mb-8 leading-5">
-          您现在的状态很轻松。{'\n'}创建一个计划或快速开始专注。
+          您现在的状态很轻松。{'\n'}创建一个契约或快速开始专注。
         </Text>
       </View>
 
       <View className="w-full gap-4">
-        {/* 主引导：创建专注计划 */}
-        <Button
-          text="创建专注计划"
-          onPress={() => router.push('/plans/presets')}
-        />
+        {/* 主引导：创建专注契约 */}
+        <Button text="创建契约" onPress={() => router.push('/plans/presets')} />
 
         {/* 次引导：创建一次性任务 */}
         <TouchableOpacity

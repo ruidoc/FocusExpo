@@ -14,7 +14,7 @@ const PlanBadge = ({
   count: number;
   onPress: () => void;
 }) => {
-  const labelText = count > 0 ? `今日 ${count > 99 ? '99+' : count} 个计划` : '今日无计划';
+  const labelText = count > 0 ? `今日 ${count > 99 ? '99+' : count} 个契约` : '今日无契约';
 
   return (
     <Pressable

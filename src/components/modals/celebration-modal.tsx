@@ -129,12 +129,12 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
 
           {/* 引导文案 */}
           <Text className="text-[#B3B3BA] text-center mb-6">
-            💪 创建专注计划，让专注成为习惯
+            💪 创建契约，让专注成为习惯
           </Text>
 
           {/* 按钮组 */}
           <View className="gap-3">
-            <Button text="创建我的第一个计划" onPress={handleCreatePlan} />
+            <Button text="创建我的第一个契约" onPress={handleCreatePlan} />
 
             <TouchableOpacity className="py-3" onPress={handleContinueFocus}>
               <Text className="text-[#858699] text-center font-medium">

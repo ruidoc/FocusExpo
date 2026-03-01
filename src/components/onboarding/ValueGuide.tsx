@@ -91,26 +91,29 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
     <View className="flex-1">
       <View className="flex-1 px-6">
         {/* 顶部成功提示 */}
-        <View className="items-center mb-6 pt-2">
-          <Text className="text-[50px] font-bold text-white text-center tracking-tight">
-            🔒
+        <View className="items-center mb-10 pt-2 gap-2">
+          <Text className="text-[26px] font-bold text-white text-center tracking-tight">
+            一次锁定不够
           </Text>
           <Text className="text-2xl font-bold text-white text-center tracking-tight">
-            锁定应用还不够！
+            你需要契约来约束自己！
           </Text>
         </View>
 
         {/* 问题 → 解决方案 */}
         <View className="mb-5">
-          <Text className="text-base text-white/60 mb-2 leading-6">
+          <Text className="text-base text-white/60 mb-1 leading-6">
             主动性专注，消耗意志力，很难长期坚持下去
           </Text>
-          <Text className="text-base font-semibold text-white/60 leading-7">
-            更好的方式：<Text className="text-white">创建计划，自动发生</Text>
+          <Text className="text-base  text-white/60 leading-7">
+            更好的方式：
+            <Text className="font-semibold" style={{ color: '#15b79e' }}>
+              创建契约，定时执行
+            </Text>
           </Text>
         </View>
 
-        {/* 定时计划卡片 */}
+        {/* 定时契约卡片 */}
         <View
           className="rounded-3xl p-5 mb-5"
           style={{
@@ -118,16 +121,13 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
           }}>
           <View className="flex-row items-center mb-4 gap-2">
             <Icon name="alarm-outline" size={22} color={accentColor} />
-            <Text className="text-lg font-semibold text-white">定时计划</Text>
+            <Text className="text-lg font-semibold text-white">专注契约</Text>
           </View>
 
-          <View className="gap-y-4">
+          <View className="gap-y-3">
             {scheduleItems.map((item, index) => (
-              <View
-                key={index}
-                className="flex-row items-center py-2.5 px-3 rounded-xl"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)' }}>
-                <Text className="text-sm text-[#858699] font-medium w-14 pl-2">
+              <View key={index} className="flex-row items-center">
+                <Text className="text-base text-[#858699] font-medium w-14 pl-2">
                   {item.time}
                 </Text>
                 <Icon
@@ -142,11 +142,11 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
               </View>
             ))}
           </View>
-
-          <Text className="text-sm text-white/50 mt-4">
-            到点自动执行，无需手动开启
-          </Text>
         </View>
+
+        <Text className="text-sm text-white/50 text-center">
+          到点自动执行，无需手动开启
+        </Text>
 
         {/* 功能亮点 */}
         {/* <View className="flex-row gap-4 mb-6">
@@ -174,7 +174,7 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
           type="custom"
           disabled={!agree}
           onSuccess={appleLoginResult}
-          label="登录后创建计划"
+          label="登录后创建契约"
         />
         <View className="flex-row items-center justify-center mt-4">
           <Privicy onChange={setAgree} />

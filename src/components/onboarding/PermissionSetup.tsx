@@ -1,5 +1,4 @@
 import { Button, Flex } from '@/components/ui';
-import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useHomeStore } from '@/stores';
 import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -14,7 +13,6 @@ interface PermissionSetupProps {
 const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
   const store = useHomeStore();
   const astore = useAppStore();
-  const { colors } = useCustomTheme();
 
   const step1Completed = store.ios_screen_time_permission;
   const step2Completed = astore.ios_selected_apps.length > 0;
@@ -85,32 +83,41 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
         return {
           title: '选择短视频应用',
           apps: '抖音、小红书、B站等',
-          desc: '选择 3-5 个最常刷的',
+          desc: '选择 2-3 个最常刷的',
         };
       case 'game':
         return {
           title: '选择游戏应用',
           apps: '王者荣耀、原神、和平精英等',
-          desc: '选择 3-5 个最常玩的',
+          desc: '选择 2-3 个最常玩的',
         };
       case 'study':
         return {
           title: '选择分心应用',
           apps: '短视频、游戏、社交应用',
-          desc: '选择 3-5 个最分心的',
+          desc: '选择 2-3 个最分心的',
         };
       default:
         return {
           title: '选择要屏蔽的应用',
           apps: '短视频、游戏、社交等',
-          desc: '选择 3-5 个最容易分心的',
+          desc: '选择 2-3 个最容易分心的',
         };
     }
   };
 
   const step2Guidance = getStep2Guidance();
 
-  const accentColor = colors.blue ?? '#2E90FA';
+  // 灰色系，替代原蓝色
+  const mutedColor = '#9CA3AF';
+  const mutedBg = 'rgba(156, 163, 175, 0.15)';
+  const mutedBorder = 'rgba(156, 163, 175, 0.4)';
+  // 当前待完成步骤的强调色
+  const highlightBg = 'rgba(255, 255, 255, 0.12)';
+  const highlightBorder = 'rgba(255, 255, 255, 0.35)';
+
+  const isStep1Current = !step1Completed;
+  const isStep2Current = step1Completed && !step2Completed;
 
   const StepCard = ({
     step,
@@ -119,6 +126,7 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
     isCompleted,
     onPress,
     disabled,
+    isCurrent,
   }: {
     step: number;
     title: string;
@@ -126,29 +134,36 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
     isCompleted: boolean;
     onPress: () => void;
     disabled: boolean;
+    isCurrent: boolean;
   }) => (
     <Flex
       onPress={disabled ? undefined : onPress}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
       className="w-full p-4 rounded-3xl mb-3 flex-row items-center"
       style={{
         backgroundColor: isCompleted
           ? 'rgba(255, 255, 255, 0.05)'
-          : 'rgba(46, 144, 250, 0.12)',
-        borderWidth: isCompleted ? 0 : 1,
-        borderColor: accentColor + '60',
+          : isCurrent
+            ? highlightBg
+            : mutedBg,
+        borderWidth: isCompleted ? 0 : isCurrent ? 1 : 0,
+        borderColor: isCurrent ? highlightBorder : mutedBorder,
       }}>
       <View
         className="w-9 h-9 rounded-full items-center justify-center mr-4"
         style={{
           backgroundColor: isCompleted
             ? 'rgba(255, 255, 255, 0.08)'
-            : accentColor + '30',
+            : isCurrent
+              ? 'rgba(255, 255, 255, 0.2)'
+              : 'rgba(156, 163, 175, 0.2)',
         }}>
         {isCompleted ? (
           <Icon name="checkmark-circle" size={24} color="#10b981" />
         ) : (
-          <Text className="text-base font-bold" style={{ color: accentColor }}>
+          <Text
+            className="text-base font-bold"
+            style={{ color: isCurrent ? '#FFFFFF' : mutedColor }}>
             {step}
           </Text>
         )}
@@ -159,9 +174,20 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
         {isCompleted ? (
           <Text className="text-sm text-emerald-500">已完成</Text>
         ) : (
-          <Text className="text-sm text-white/40">{desc}</Text>
+          <Text
+            className="text-sm"
+            style={{
+              color: isCurrent
+                ? 'rgba(255,255,255,0.7)'
+                : 'rgba(255,255,255,0.4)',
+            }}>
+            {desc}
+          </Text>
         )}
       </View>
+      {!isCompleted && isCurrent && (
+        <Icon name="chevron-forward" size={18} color={mutedColor} />
+      )}
     </Flex>
   );
 
@@ -187,6 +213,7 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
             isCompleted={!!step1Completed}
             onPress={handleStep1}
             disabled={!!step1Completed}
+            isCurrent={isStep1Current}
           />
         </View>
 
@@ -202,7 +229,7 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
                 <Icon
                   name="checkmark-circle"
                   size={16}
-                  color={accentColor}
+                  color={mutedColor}
                   style={{ marginTop: 2, marginRight: 8 }}
                 />
                 <View className="flex-1">
@@ -219,7 +246,7 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
                 <Icon
                   name="checkmark-circle"
                   size={16}
-                  color={accentColor}
+                  color={mutedColor}
                   style={{ marginTop: 2, marginRight: 8 }}
                 />
                 <View className="flex-1">
@@ -236,7 +263,7 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
                 <Icon
                   name="checkmark-circle"
                   size={16}
-                  color={accentColor}
+                  color={mutedColor}
                   style={{ marginTop: 2, marginRight: 8 }}
                 />
                 <View className="flex-1">
@@ -256,30 +283,22 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
         <View className="px-1">
           <StepCard
             step={2}
-            title={'点击' + step2Guidance.title}
+            title={step2Guidance.title}
             desc={step1Completed ? step2Guidance.desc : '请先完成第一步'}
             isCompleted={step2Completed}
             onPress={handleStep2}
             disabled={!step1Completed}
+            isCurrent={isStep2Current}
           />
 
-          {/* Step 2 的个性化提示 */}
-          {step1Completed && !step2Completed && (
+          {/* Step 2 的当前选择状态 */}
+          {step1Completed && (
             <View className="mx-1 mb-6 -mt-1 px-1">
-              <Text className="text-sm font-medium text-white/70 mb-3">
-                推荐选择
+              <Text className="text-sm text-white/50 mt-1">
+                {astore.ios_selected_apps.length > 0
+                  ? `已选择 ${astore.ios_selected_apps.length} 个应用`
+                  : '当前未选择'}
               </Text>
-              <View className="flex-row items-start">
-                <Icon
-                  name="apps-outline"
-                  size={16}
-                  color={accentColor}
-                  style={{ marginTop: 2, marginRight: 8 }}
-                />
-                <Text className="text-xs text-white/40 flex-1 leading-5">
-                  {step2Guidance.apps}
-                </Text>
-              </View>
             </View>
           )}
         </View>

@@ -4,7 +4,7 @@ import { useAppStore, useHomeStore, usePlanStore } from '@/stores';
 import { startAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import dayjs from 'dayjs';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Platform, Text, View } from 'react-native';
 
 interface QuickExperienceProps {
@@ -32,6 +32,7 @@ const QuickExperience = ({
   const [phase, setPhase] = useState<Phase>('ready');
   const [loading, setLoading] = useState(false);
   const [remaining, setRemaining] = useState(FOCUS_DURATION * 60); // 倒计时（秒）
+  const endTimeRef = useRef<number>(0);
 
   // 根据 problem 获取个性化文案
   const getPersonalizedCopy = () => {
@@ -65,21 +66,24 @@ const QuickExperience = ({
 
   const copy = getPersonalizedCopy();
 
-  // 倒计时逻辑
+  // 倒计时逻辑：基于结束时间戳，避免 setInterval 漂移（endTimeRef 在 handleStart 中设置）
   useEffect(() => {
-    if (phase !== 'active') return;
+    if (phase !== 'active' || endTimeRef.current === 0) return;
 
-    const timer = setInterval(() => {
-      setRemaining(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const tick = () => {
+      const sec = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+      setRemaining(sec);
+      if (sec > 0) {
+        timerRef.current = setTimeout(tick, 1000);
+      }
+    };
 
-    return () => clearInterval(timer);
+    const timerRef = { current: null as ReturnType<typeof setTimeout> | null };
+    tick();
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [phase]);
 
   // 格式化时间显示
@@ -89,8 +93,11 @@ const QuickExperience = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const MIN_LOADING_MS = 1000;
+
   const handleStart = async () => {
     setLoading(true);
+    const startTime = Date.now();
     const now = dayjs();
     const cur_minute = now.hour() * 60 + now.minute();
     const cur_secend = cur_minute * 60 + now.second();
@@ -118,6 +125,12 @@ const QuickExperience = ({
       store.startVpn();
     }
 
+    const elapsed = Date.now() - startTime;
+    if (elapsed < MIN_LOADING_MS) {
+      await new Promise(r => setTimeout(r, MIN_LOADING_MS - elapsed));
+    }
+
+    endTimeRef.current = startTime + FOCUS_DURATION * 60 * 1000;
     setLoading(false);
     setPhase('active');
     // 通知父组件进入 active 阶段，禁用返回按钮
@@ -185,6 +198,7 @@ const QuickExperience = ({
             text="立即锁定"
             onPress={handleStart}
             loading={loading}
+            loadingText="锁定中"
             className="w-full rounded-3xl h-14"
             textClassName="text-lg font-semibold"
           />
@@ -199,7 +213,7 @@ const QuickExperience = ({
       <View className="flex-1 px-6">
         {/* 庆祝区 */}
         <View className="items-center pt-12 mb-2">
-          <Icon name="checkmark-circle-outline" size={114} color="#10b981" />
+          <Icon name="checkmark-circle-outline" size={100} color="#10b981" />
           <Text className="text-2xl mt-4 font-bold text-white mb-2 text-center tracking-tight">
             🎉 恭喜，应用锁定成功！
           </Text>
@@ -211,7 +225,7 @@ const QuickExperience = ({
             <AppToken
               key={item.id || item.stableId || index}
               app={item}
-              size={28}
+              size={30}
             />
           ))}
           {astore.ios_selected_apps.length > 6 && (
@@ -228,12 +242,12 @@ const QuickExperience = ({
         {/* 倒计时 */}
         <View className="items-center mb-8">
           <Text
-            className="text-5xl font-semibold tracking-tight"
-            style={{ color: '#22D3EE' }}>
-            {formatTime(remaining)}
+            className="text-4xl font-semibold tracking-tight"
+            style={{ color: '#ffffff' }}>
+            {remaining > 0 ? formatTime(remaining) : '0:00'}
           </Text>
           <Text className="text-base text-white/60 text-center">
-            倒计时结束后，自动解锁
+            {remaining > 0 ? '倒计时结束后，自动解锁' : '已解锁'}
           </Text>
         </View>
 

@@ -47,7 +47,7 @@ const ChallengeDetailScreen = () => {
   };
 
   useEffect(() => {
-    fetchChallengeDetail()
+    fetchChallengeDetail();
   }, []);
 
   const onRefresh = () => {
@@ -89,7 +89,7 @@ const ChallengeDetailScreen = () => {
     if (planStore.all_plans.length === 0) {
       Toast({
         type: 'error',
-        message: '请先创建专注计划',
+        message: '请先创建契约',
       });
       return;
     }
@@ -100,7 +100,7 @@ const ChallengeDetailScreen = () => {
     if (selectedPlanIds.length === 0) {
       Toast({
         type: 'error',
-        message: '请选择至少一个计划',
+        message: '请选择至少一个契约',
       });
       return;
     }
@@ -328,7 +328,9 @@ const ChallengeDetailScreen = () => {
   return (
     <Page safe bgcolor={colors.background}>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}>
@@ -429,8 +431,8 @@ const ChallengeDetailScreen = () => {
         onRequestClose={() => setShowPlanModal(false)}>
         <Flex className="justify-center" style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>选择计划</Text>
-            <Text style={styles.modalSubtitle}>请选择要关联的专注计划：</Text>
+            <Text style={styles.modalTitle}>选择契约</Text>
+            <Text style={styles.modalSubtitle}>请选择要关联的契约：</Text>
 
             <ScrollView style={styles.planList}>
               {planStore.cus_plans.map(plan => (
@@ -439,7 +441,7 @@ const ChallengeDetailScreen = () => {
                   style={[
                     styles.planItem,
                     selectedPlanIds.includes(plan.id!) &&
-                    styles.planItemSelected,
+                      styles.planItemSelected,
                   ]}
                   onPress={() => togglePlanSelection(plan.id!)}>
                   <Flex className="gap-3">

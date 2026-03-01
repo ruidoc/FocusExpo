@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 
 const BENEFITS = [
-  { icon: 'infinite' as const, title: '无限计划', desc: '不限专注计划数量' },
+  { icon: 'infinite' as const, title: '无限契约', desc: '不限专注契约数量' },
   { icon: 'apps' as const, title: '更多应用位', desc: '屏蔽更多分心应用' },
   { icon: 'stats-chart' as const, title: '高级统计', desc: '多维度数据分析' },
   { icon: 'shield-checkmark' as const, title: '优先支持', desc: '专属客服通道' },
@@ -165,7 +165,7 @@ const VipPage = () => {
             <Text
               className="text-sm text-center mb-7"
               style={{ color: TEXT2, lineHeight: 22 }}>
-              不限计划数量，屏蔽更多应用，掌控你的专注时间
+              不限契约数量，屏蔽更多应用，掌控你的专注时间
             </Text>
           </>
         )}
