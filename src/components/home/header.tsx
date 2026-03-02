@@ -14,7 +14,8 @@ const PlanBadge = ({
   count: number;
   onPress: () => void;
 }) => {
-  const labelText = count > 0 ? `今日 ${count > 99 ? '99+' : count} 个契约` : '今日无契约';
+  const labelText =
+    count > 0 ? `今日 ${count > 99 ? '99+' : count} 个契约` : '今日无契约';
 
   return (
     <Pressable
@@ -62,7 +63,7 @@ const Header = () => {
     return 'Focus User';
   };
 
-  const planCount = pstore.all_plans().length;
+  const planCount = pstore.cus_plans.length;
 
   return (
     <View className="flex-row justify-between items-center px-4 py-2">
