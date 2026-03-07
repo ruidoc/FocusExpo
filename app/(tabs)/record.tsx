@@ -4,7 +4,6 @@ import type { Period } from '@/stores/statistic';
 import { useTheme } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,8 +18,6 @@ const App = () => {
   const { colors, dark } = useTheme();
   const [period, setPeriod] = useState<Period>('today');
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
   const fetchData = useCallback(async (p: Period) => {
     setLoading(true);
     try {
@@ -37,18 +34,6 @@ const App = () => {
   useEffect(() => {
     fetchData('today');
   }, [fetchData]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    try {
-      if (astore.ios_all_apps.length === 0) {
-        await astore.getIosApps();
-      }
-      await sstore.fetchAppStatis(period);
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   const periods: { key: Period; label: string }[] = useMemo(
     () => [
@@ -118,13 +103,9 @@ const App = () => {
   };
 
   return (
-    <Page safe>
-      <ScrollView
-        className="flex-1"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }>
-        <View className="px-5 pt-[18px] pb-1.5 mb-4">
+    <Page safe safeEdges={['top']}>
+      <View className="flex-1">
+        <View className="px-5 pt-[12px] pb-1.5 mb-2">
           <Text
             className="text-[22px] font-bold"
             style={{ color: colors.text }}>
@@ -167,7 +148,7 @@ const App = () => {
 
         {/* 汇总卡片 */}
         <View
-          className="mx-4 mt-1 mb-10 rounded-3xl p-5"
+          className="mx-4 mt-1 mb-4 rounded-3xl py-5"
           style={{
             backgroundColor: dark ? '#1C1C26' : '#fff',
             borderWidth: dark ? 0 : StyleSheet.hairlineWidth,
@@ -217,13 +198,13 @@ const App = () => {
                 </Text>
               </View>
             </View> */}
-            <View
+            {/* <View
               className="my-1"
               style={{
                 width: StyleSheet.hairlineWidth,
                 backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
               }}
-            />
+            /> */}
             <View className="flex-1 items-center">
               <Text className="text-xs mb-2" style={{ color: TEXT2 }}>
                 成功率
@@ -244,95 +225,102 @@ const App = () => {
             加载中...
           </Text>
         ) : items.length === 0 ? (
-          <View className="items-center justify-center py-16">
+          <View className="flex-1 items-center justify-center">
             <Text className="text-sm" style={{ color: TEXT2 }}>
               暂无数据
             </Text>
           </View>
         ) : (
-          <>
+          <View className="flex-1">
             <Text
               className="text-[15px] font-semibold px-5 mb-3"
               style={{ color: colors.text }}>
               APP锁定明细
             </Text>
             <View
-              className="mx-4 mb-8 rounded-3xl overflow-hidden"
+              className="mx-4 mb-4 rounded-3xl overflow-hidden"
               style={{
+                flexShrink: 1,
                 backgroundColor: dark ? '#1C1C26' : '#fff',
                 borderWidth: dark ? 0 : StyleSheet.hairlineWidth,
                 borderColor: '#E5E7EB',
               }}>
-              {(() => {
-                const sortedItems = items
-                  .slice()
-                  .sort((a, b) => b.actual_mins - a.actual_mins);
-                const medianMins =
-                  sortedItems.length > 0
-                    ? sortedItems[Math.floor(sortedItems.length / 2)]
-                        .actual_mins || 30
-                    : 30;
-                const maxBarWidth = 250;
-                const refMins = Math.max(medianMins * 2, 1);
-                return sortedItems.map((item, index) => {
-                  const locked = isAppCurrentlyLocked(item.app);
-                  const barWidth = Math.max(
-                    12,
-                    Math.min(
-                      maxBarWidth,
-                      (item.actual_mins / refMins) * maxBarWidth,
-                    ),
-                  );
-                  return (
-                    <View key={item.app}>
-                      {index > 0 && (
-                        <View
-                          className="h-px mx-4"
-                          style={{
-                            backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
-                          }}
-                        />
-                      )}
-                      <View className="py-3.5 px-4 flex-row items-center gap-3">
-                        <View>{getAppIcon(item.app)}</View>
-                        <View className="flex-1">
-                          <View className="flex-row items-center mb-[2px]">
-                            <View
-                              className="h-1.5 rounded-full mr-2"
-                              style={{
-                                width: barWidth,
-                                backgroundColor: dark ? '#4B5563' : '#9CA3AF',
-                              }}
-                            />
-                            <Text className="text-xs" style={{ color: TEXT2 }}>
-                              {formatMins(item.actual_mins)}
-                            </Text>
-                          </View>
-                          <View className="flex-row items-center">
-                            <Text className="text-xs" style={{ color: TEXT2 }}>
-                              共 {item.task_count} 次
-                            </Text>
-                            {locked ? (
-                              <View className="flex-row items-center gap-1.5 ml-4">
-                                <View className="w-1.5 h-1.5 rounded-full bg-[#7A5AF8]" />
-                                <Text
-                                  className="text-xs"
-                                  style={{ color: TEXT2 }}>
-                                  锁定中
-                                </Text>
-                              </View>
-                            ) : null}
+              <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+                {(() => {
+                  const sortedItems = items
+                    .slice()
+                    .sort((a, b) => b.actual_mins - a.actual_mins);
+                  const medianMins =
+                    sortedItems.length > 0
+                      ? sortedItems[Math.floor(sortedItems.length / 2)]
+                          .actual_mins || 30
+                      : 30;
+                  const maxBarWidth = 250;
+                  const refMins = Math.max(medianMins * 2, 1);
+                  return sortedItems.map((item, index) => {
+                    const locked = isAppCurrentlyLocked(item.app);
+                    const barWidth = Math.max(
+                      12,
+                      Math.min(
+                        maxBarWidth,
+                        (item.actual_mins / refMins) * maxBarWidth,
+                      ),
+                    );
+                    return (
+                      <View key={item.app}>
+                        {index > 0 && (
+                          <View
+                            className="h-px mx-4"
+                            style={{
+                              backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
+                            }}
+                          />
+                        )}
+                        <View className="py-3.5 px-4 flex-row items-center gap-3">
+                          <View>{getAppIcon(item.app)}</View>
+                          <View className="flex-1">
+                            <View className="flex-row items-center mb-[2px]">
+                              <View
+                                className="h-1.5 rounded-full mr-2"
+                                style={{
+                                  width: barWidth,
+                                  backgroundColor: dark ? '#4B5563' : '#9CA3AF',
+                                }}
+                              />
+                              <Text
+                                className="text-xs"
+                                style={{ color: TEXT2 }}>
+                                {formatMins(item.actual_mins)}
+                              </Text>
+                            </View>
+                            <View className="flex-row items-center">
+                              <Text
+                                className="text-xs"
+                                style={{ color: TEXT2 }}>
+                                共 {item.task_count} 次
+                              </Text>
+                              {locked ? (
+                                <View className="flex-row items-center gap-1.5 ml-4">
+                                  <View className="w-1.5 h-1.5 rounded-full bg-[#7A5AF8]" />
+                                  <Text
+                                    className="text-xs"
+                                    style={{ color: TEXT2 }}>
+                                    锁定中
+                                  </Text>
+                                </View>
+                              ) : null}
+                            </View>
                           </View>
                         </View>
                       </View>
-                    </View>
-                  );
-                });
-              })()}
+                    );
+                  });
+                })()}
+              </ScrollView>
             </View>
-          </>
+          </View>
         )}
-      </ScrollView>
+      </View>
     </Page>
   );
 };

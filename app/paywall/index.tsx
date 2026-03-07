@@ -1,8 +1,5 @@
 /**
- * Paywall 支付页
- *
- * 按参考图样式：深色紫蓝背景、订阅卡片、五星评价、渐变按钮
- * 使用 App Store IAP（expo-iap）订阅支付
+ * Paywall 支付页 — App Store IAP 订阅
  */
 import { Page } from '@/components/business';
 import { Checkbox, Toast } from '@/components/ui';
@@ -57,27 +54,23 @@ const FALLBACK_PRODUCTS: ProductConfig[] = [
   },
 ];
 
-const TESTIMONIAL =
-  '「专注力明显提升，契约功能帮我养成了稳定习惯，强烈推荐！」';
-
-// 权益列表（按参考图：闪电、目标、图表、盾牌）
 const BENEFITS = [
-  { icon: 'flash' as const, text: '无限契约与深度练习' },
-  { icon: 'flag' as const, text: '设定目标并实时跟踪进度' },
-  { icon: 'stats-chart' as const, text: '详细数据分析与表现洞察' },
-  { icon: 'shield-checkmark' as const, text: '专家精选内容，助你达成目标' },
+  '无限选择APP数量，可选分类',
+  '不限制每日专注时长',
+  '多维度专注数据分析',
+  '优先体验新功能',
 ];
 
 type DisplayProduct = ProductConfig & { iapProduct?: SubscriptionProduct };
 
-// 设计色板
+// 设计色板 — 金色 VIP 主题
 const BG = '#111111';
-const CARD_BG = '#1C1A32';
-const YELLOW = '#FBBF24';
-const PURPLE_LIGHT = '#8B5CF6';
-const PURPLE_DARK = '#6D28D9';
+const CARD_BG = '#1E1C16';
+const GOLD = '#D4A44A';
+const GOLD_LIGHT = '#EFCB68';
+const GOLD_DARK = '#B8862D';
 const WHITE = '#FFFFFF';
-const TEXT_MUTED = 'rgba(255,255,255,0.7)';
+const TEXT_MUTED = 'rgba(255,255,255,0.6)';
 
 const PaywallPage = () => {
   useTheme(); // 本页固定深色主题
@@ -257,59 +250,75 @@ const PaywallPage = () => {
 
   return (
     <Page bgcolor={BG}>
-      {/* 右上角关闭 */}
-      <Pressable
-        onPress={() => router.back()}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      {/* 顶部栏：左关闭 / 右恢复购买 */}
+      <View
+        className="flex-row items-center justify-between"
         style={{
           position: 'absolute',
           top: insets.top,
+          left: 16,
           right: 16,
           zIndex: 10,
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: 'rgba(255,255,255,0.12)',
-          justifyContent: 'center',
-          alignItems: 'center',
         }}>
-        <Icon name="close" size={22} color={WHITE} />
-      </Pressable>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: 'rgba(255,255,255,0.12)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <Icon name="close" size={20} color={WHITE} />
+        </Pressable>
+        <Pressable onPress={onRestore} hitSlop={12}>
+          <Text className="text-[13px]" style={{ color: TEXT_MUTED }}>
+            恢复购买
+          </Text>
+        </Pressable>
+      </View>
 
-      {/* 滚动区 */}
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: insets.top + 52,
+          paddingHorizontal: 24,
+          paddingTop: insets.top + 60,
           paddingBottom: 24,
         }}
         showsVerticalScrollIndicator={false}>
-        {/* 标题：解锁 专业版 掌控专注（专业版高亮、居中、不大写粗） */}
-        <View className="mb-6 items-center">
-          <Text className="text-3xl leading-10" style={{ color: WHITE }}>
-            解锁 <Text style={{ color: PURPLE_LIGHT }}>专业版</Text> 掌控专注
+        {/* 标题 */}
+        <View className="flex-row items-center justify-center mb-8">
+          <Text
+            className="text-[28px] font-bold mr-1"
+            style={{ color: WHITE, lineHeight: 36 }}>
+            专注契约
           </Text>
+          <LinearGradient
+            colors={[GOLD_LIGHT, GOLD_DARK]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 8,
+            }}>
+            <Text className="text-[18px] font-bold" style={{ color: WHITE }}>
+              Pro
+            </Text>
+          </LinearGradient>
         </View>
 
-        {/* 权益列表 */}
-        <View className="mb-6" style={{ gap: 16 }}>
-          {BENEFITS.map((b, i) => (
-            <View key={i} className="flex-row items-center">
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: PURPLE_LIGHT,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginRight: 14,
-                }}>
-                <Icon name={b.icon} size={18} color={WHITE} />
-              </View>
-              <Text className="flex-1 text-[15px]" style={{ color: WHITE }}>
-                {b.text}
+        {/* 权益 — 对勾 + 单行 */}
+        <View style={{ gap: 20, marginBottom: 36 }}>
+          {BENEFITS.map((text, i) => (
+            <View key={i} className="flex-row items-center" style={{ gap: 14 }}>
+              <Icon name="checkmark-circle" size={22} color={GOLD} />
+              <Text
+                className="text-[16px] font-medium"
+                style={{ color: 'rgba(255,255,255,0.75)' }}>
+                {text}
               </Text>
             </View>
           ))}
@@ -318,10 +327,10 @@ const PaywallPage = () => {
         {/* 订阅卡片 */}
         {!connected || configLoading ? (
           <View className="py-8 items-center">
-            <ActivityIndicator size="large" color={PURPLE_LIGHT} />
+            <ActivityIndicator size="large" color={GOLD} />
           </View>
         ) : (
-          <View style={{ gap: 12, marginBottom: 20 }}>
+          <View style={{ gap: 12, marginBottom: 8 }}>
             {displayProducts.map((p, idx) => {
               const selected = isSelected(p);
               const pillLabel = getPillLabel(p, idx);
@@ -335,12 +344,9 @@ const PaywallPage = () => {
                     borderRadius: 16,
                     padding: 18,
                     borderWidth: 2,
-                    borderColor: selected
-                      ? PURPLE_LIGHT
-                      : 'rgba(255,255,255,0.2)',
+                    borderColor: selected ? GOLD : 'rgba(255,255,255,0.12)',
                     overflow: 'hidden',
                   }}>
-                  {/* BEST OFFER 角标（年度） */}
                   {isYearly && (
                     <View
                       style={{
@@ -348,7 +354,7 @@ const PaywallPage = () => {
                         top: -2,
                         right: 16,
                         zIndex: 1,
-                        backgroundColor: PURPLE_DARK,
+                        backgroundColor: GOLD_DARK,
                         paddingHorizontal: 12,
                         paddingVertical: 4,
                         borderBottomLeftRadius: 8,
@@ -365,7 +371,7 @@ const PaywallPage = () => {
                     <View className="flex-1">
                       <Text
                         className="text-base font-semibold"
-                        style={{ color: WHITE }}>
+                        style={{ color: selected ? GOLD_LIGHT : WHITE }}>
                         {p.name}
                       </Text>
                       <Text
@@ -377,7 +383,7 @@ const PaywallPage = () => {
                     {pillLabel && (
                       <View
                         style={{
-                          backgroundColor: YELLOW,
+                          backgroundColor: GOLD,
                           paddingHorizontal: 10,
                           paddingVertical: 4,
                           borderRadius: 12,
@@ -385,7 +391,7 @@ const PaywallPage = () => {
                         }}>
                         <Text
                           className="text-xs font-bold"
-                          style={{ color: '#1F2937' }}>
+                          style={{ color: '#1A1200' }}>
                           {pillLabel}
                         </Text>
                       </View>
@@ -393,7 +399,7 @@ const PaywallPage = () => {
                     <View style={{ alignItems: 'flex-end' }}>
                       <Text
                         className="text-lg font-bold"
-                        style={{ color: WHITE }}>
+                        style={{ color: selected ? GOLD_LIGHT : WHITE }}>
                         {getPriceDisplay(p as DisplayProduct)}
                       </Text>
                       <Text className="text-xs" style={{ color: TEXT_MUTED }}>
@@ -406,138 +412,74 @@ const PaywallPage = () => {
             })}
           </View>
         )}
-
-        {/* 用户评价 */}
-        <View
-          style={{
-            backgroundColor: CARD_BG,
-            borderRadius: 16,
-            padding: 20,
-            marginBottom: 20,
-          }}>
-          {/* 五星 */}
-          <View className="flex-row justify-center mb-3" style={{ gap: 4 }}>
-            {[1, 2, 3, 4, 5].map(i => (
-              <Icon key={i} name="star" size={18} color={YELLOW} />
-            ))}
-          </View>
-          <Text
-            className="text-sm text-center leading-5"
-            style={{ color: TEXT_MUTED }}>
-            {TESTIMONIAL}
-          </Text>
-        </View>
-
-        {paymentStatus === 'success' && (
-          <View className="items-center mb-6">
-            <Icon name="checkmark-circle" size={40} color="#22C55E" />
-            <Text
-              className="text-base font-semibold mt-2"
-              style={{ color: '#22C55E' }}>
-              支付成功
-            </Text>
-          </View>
-        )}
-
-        {/* 立即扣款前可随时取消 - 滚动区底部 */}
-        <View
-          className="flex-row items-center justify-center pt-4 pb-2"
-          style={{ gap: 8 }}>
-          <View
-            style={{
-              width: 18,
-              height: 18,
-              borderRadius: 9,
-              backgroundColor: 'rgba(139,92,246,0.3)',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <Icon name="checkmark" size={12} color={PURPLE_LIGHT} />
-          </View>
-          <Text className="text-sm" style={{ color: TEXT_MUTED }}>
-            立即扣款前可随时取消
-          </Text>
-        </View>
       </ScrollView>
 
       {/* 底部固定区 */}
       <View
         style={{
-          paddingHorizontal: 20,
-          paddingTop: 16,
-          paddingBottom: insets.bottom,
+          paddingHorizontal: 24,
+          paddingTop: 12,
+          paddingBottom: insets.bottom + 8,
           backgroundColor: BG,
         }}>
-        {/* 勾选《会员自动续费服务协议》 */}
-        <View className="flex-row items-center mb-3 gap-1">
-          <Checkbox
-            value={agreed}
-            onChange={setAgreed}
-            size={18}
-            activeColor={PURPLE_LIGHT}
-          />
-          <View
-            className="flex-1 flex-row flex-wrap items-center"
-            style={{ gap: 0 }}>
-            <Pressable onPress={() => setAgreed(!agreed)}>
-              <Text className="text-xs" style={{ color: TEXT_MUTED }}>
-                已阅读并同意{' '}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() =>
-                Linking.openURL('https://focusone.ruidoc.cn/agreement')
-              }>
-              <Text className="text-xs text-white">
-                《会员自动续费服务协议》
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* 渐变主按钮 */}
+        {/* CTA 按钮 */}
         <TouchableOpacity
           activeOpacity={0.9}
           disabled={!connected || paymentStatus === 'processing'}
           onPress={handleCheckout}
           style={{
             opacity: !connected || paymentStatus === 'processing' ? 0.6 : 1,
-            height: 56,
-            borderRadius: 28,
+            height: 54,
+            borderRadius: 27,
             overflow: 'hidden',
-            justifyContent: 'center',
-            alignItems: 'center',
           }}>
           <LinearGradient
-            colors={[PURPLE_LIGHT, PURPLE_DARK]}
+            colors={[GOLD_LIGHT, GOLD_DARK]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
+              flex: 1,
               justifyContent: 'center',
               alignItems: 'center',
             }}>
             {paymentStatus === 'processing' ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#1A1200" />
             ) : (
-              <Text className="text-lg font-bold" style={{ color: WHITE }}>
+              <Text
+                className="text-[17px] font-bold"
+                style={{ color: '#1A1200' }}>
                 开始免费试用
               </Text>
             )}
           </LinearGradient>
         </TouchableOpacity>
-        {/* <Text
-          className="text-xs text-center mt-3 mb-4"
-          style={{ color: TEXT_MUTED }}>
-          3 天免费试用，之后{' '}
-          {selectedProduct &&
-            getPriceDisplay(selectedProduct as DisplayProduct)}
-          /周
-        </Text> */}
+
+        {/* 协议 */}
+        <View
+          className="flex-row justify-center items-center mt-3"
+          style={{ gap: 2 }}>
+          <Checkbox
+            value={agreed}
+            onChange={setAgreed}
+            size={16}
+            activeColor={GOLD}
+          />
+          <Pressable onPress={() => setAgreed(!agreed)}>
+            <Text className="text-[11px]" style={{ color: TEXT_MUTED }}>
+              同意
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() =>
+              Linking.openURL('https://focusone.ruidoc.cn/agreement')
+            }>
+            <Text
+              className="text-[11px]"
+              style={{ color: 'rgba(255,255,255,0.8)' }}>
+              《自动续费服务协议》
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </Page>
   );

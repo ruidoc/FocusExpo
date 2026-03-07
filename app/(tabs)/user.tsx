@@ -1,5 +1,10 @@
 import { FieldGroup, FieldItem, Flex } from '@/components/ui';
-import { useRecordStore, useSubscriptionStore, useUserStore } from '@/stores';
+import {
+  useBenefitStore,
+  useRecordStore,
+  useSubscriptionStore,
+  useUserStore,
+} from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
@@ -12,6 +17,7 @@ const App = () => {
   const store = useUserStore();
   const subStore = useSubscriptionStore();
   const recStore = useRecordStore();
+  const benefitStore = useBenefitStore();
   const { dark } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -133,7 +139,13 @@ const App = () => {
           className="mx-4 rounded-2xl p-[18px] overflow-hidden"
           style={
             isActive
-              ? { backgroundColor: dark ? '#2A2040' : '#F0EBFF' }
+              ? {
+                  backgroundColor: dark ? '#1C1A14' : '#FFFBF0',
+                  borderWidth: 1,
+                  borderColor: dark
+                    ? 'rgba(212,164,74,0.25)'
+                    : 'rgba(212,164,74,0.35)',
+                }
               : {
                   backgroundColor: dark ? '#1C1C26' : '#F5F7FB',
                   borderWidth: 1,
@@ -141,34 +153,49 @@ const App = () => {
                 }
           }>
           <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-1.5">
-              <Icon
-                name="diamond"
-                size={20}
-                color={isActive ? '#FFC107' : dark ? '#6B7280' : '#94A3B8'}
-              />
-              <Text
-                className="text-base font-semibold"
-                style={{
-                  color: isActive
-                    ? dark
-                      ? '#C4A6FF'
-                      : '#7A5AF8'
-                    : dark
-                      ? '#8A8A98'
-                      : '#64748B',
-                }}>
-                {isActive ? 'VIP 会员' : '未开通会员'}
-              </Text>
+            <View>
+              <View className="flex-row items-center gap-1.5">
+                <Icon
+                  name="diamond"
+                  size={18}
+                  color={isActive ? '#D4A44A' : dark ? '#6B7280' : '#94A3B8'}
+                />
+                <Text
+                  className="text-base font-semibold"
+                  style={{
+                    color: isActive ? '#D4A44A' : dark ? '#8A8A98' : '#64748B',
+                  }}>
+                  {isActive ? 'Pro 会员' : 'Pro 会员'}
+                </Text>
+              </View>
+              {!isActive && (
+                <Text
+                  className="text-[12px] mt-1"
+                  style={{ color: dark ? '#555' : '#B0B8C4' }}>
+                  今日剩余可专注：
+                  {(() => {
+                    const left = Math.max(
+                      benefitStore.day_duration - benefitStore.today_used,
+                      0,
+                    );
+                    if (left >= 60) {
+                      const h = Math.floor(left / 60);
+                      const m = left % 60;
+                      return m > 0 ? `${h}小时${m}分钟` : `${h}小时`;
+                    }
+                    return `${left}分钟`;
+                  })()}
+                </Text>
+              )}
             </View>
             {!isActive && (
               <TouchableOpacity
                 activeOpacity={0.7}
                 className="px-3.5 py-1.5 rounded-[20px]"
-                style={{ backgroundColor: '#7A5AF8' }}
+                style={{ backgroundColor: '#D4A44A' }}
                 onPress={() => toNavigate('paywall')}>
                 <Text className="text-[13px] font-semibold text-white">
-                  立即开通
+                  升级
                 </Text>
               </TouchableOpacity>
             )}
@@ -178,24 +205,24 @@ const App = () => {
               <View className="gap-0.5">
                 <Text
                   className="text-[11px]"
-                  style={{ color: dark ? '#6B7280' : '#94A3B8' }}>
+                  style={{ color: dark ? '#7A7060' : '#B8A080' }}>
                   订阅来源
                 </Text>
                 <Text
                   className="text-[13px] font-medium"
-                  style={{ color: dark ? '#C4A6FF' : '#7A5AF8' }}>
+                  style={{ color: '#D4A44A' }}>
                   {sourceLabel[sub.source] || sub.source}
                 </Text>
               </View>
               <View className="gap-0.5">
                 <Text
                   className="text-[11px]"
-                  style={{ color: dark ? '#6B7280' : '#94A3B8' }}>
+                  style={{ color: dark ? '#7A7060' : '#B8A080' }}>
                   到期时间
                 </Text>
                 <Text
                   className="text-[13px] font-medium"
-                  style={{ color: dark ? '#C4A6FF' : '#7A5AF8' }}>
+                  style={{ color: '#D4A44A' }}>
                   {formatExpiry(sub.expires_at)}
                 </Text>
               </View>
@@ -203,12 +230,12 @@ const App = () => {
                 <View className="gap-0.5">
                   <Text
                     className="text-[11px]"
-                    style={{ color: dark ? '#6B7280' : '#94A3B8' }}>
+                    style={{ color: dark ? '#7A7060' : '#B8A080' }}>
                     状态
                   </Text>
                   <Text
                     className="text-[13px] font-medium"
-                    style={{ color: dark ? '#C4A6FF' : '#7A5AF8' }}>
+                    style={{ color: '#D4A44A' }}>
                     试用中
                   </Text>
                 </View>

@@ -89,6 +89,41 @@ export const getWeekDates = () => {
   return weekDates;
 };
 
+// 将分钟数转换为 HH:mm 时间字符串
+export const minToTimeStr = (min: number): string => {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+};
+
+// 获取计划结束方式文案：长期 / 至 YYYY-MM-DD / 一次性
+export const getPlanEndDisplay = (
+  repeat: CusPlan['repeat'],
+  end_date?: string,
+): string => {
+  const r = parseRepeat(repeat);
+  if (r === 'once') return '一次性';
+  if (end_date) {
+    const d = dayjs(end_date);
+    if (d.isAfter(dayjs().add(5, 'year'))) return '长期有效';
+    return `至 ${d.format('YYYY-MM-DD')}`;
+  }
+  return '长期有效';
+};
+
+// 获取重复日文案：周一至周五 / 每天 / 周一、三、五 等
+export const getRepeatDaysLabel = (repeat: CusPlan['repeat']): string => {
+  const r = parseRepeat(repeat);
+  if (r === 'once') return '';
+  const days = [...r].sort((a, b) => a - b);
+  if (days.length === 0) return '';
+  if (days.length === 7) return '每日生效';
+  const labels = days.map(d => '周' + (staticData.repeats.find(x => x.value === d)?.label || '?'));
+  if (days.length === 5 && days[0] === 1 && days[4] === 5) return '周一至周五';
+  if (days.length === 2 && days[0] === 0 && days[1] === 6) return '周六、日';
+  return labels.join('、');
+};
+
 // 分钟转几小时几分钟
 export const minutesToHours = (minutes: number): string => {
   if (minutes < 0) return '0分钟';
