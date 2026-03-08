@@ -2,9 +2,9 @@
  * 环境变量配置
  *
  * 统一管理 API 基础 URL，根据构建环境自动切换：
- * - development: https://focus.ruidoc.cn/dev-api
- * - preview:     https://focus.ruidoc.cn/dev-api
- * - production:  https://focus.ruidoc.cn/api
+ * - development: https://focus.freeshore.cn/dev-api
+ * - preview:     https://focus.freeshore.cn/dev-api
+ * - production:  https://focus.freeshore.cn/api
  *
  * 配置方式：在 eas.json 的 env 中设置 EXPO_PUBLIC_API_BASE_URL
  */
@@ -14,7 +14,7 @@
  * 用于业务接口请求
  */
 
-const DEV_BASE_URL = 'https://focus.ruidoc.cn/dev-api';
+const DEV_BASE_URL = 'https://focus.freeshore.cn/dev-api';
 // const DEV_BASE_URL = 'http://192.168.0.5:8849';
 
 export const API_BASE_URL =

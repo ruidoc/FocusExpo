@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "专注契约",
-    "slug": "FocusVow",
+    "slug": "focusvow",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/images/logo.png",
@@ -19,11 +19,15 @@
         "NSPhotoLibraryUsageDescription": "此应用需要访问相册来保存截图",
         "NSPhotoLibraryAddUsageDescription": "此应用需要访问相册来保存截图"
       },
-      "associatedDomains": ["applinks:(focusone.ruidoc.cn)"],
+      "associatedDomains": [
+        "applinks:(focusone.ruidoc.cn)"
+      ],
       "bundleIdentifier": "com.focusone",
       "entitlements": {
         "com.apple.developer.family-controls": true,
-        "com.apple.security.application-groups": ["group.com.focusone"]
+        "com.apple.security.application-groups": [
+          "group.com.focusone"
+        ]
       },
       "usesAppleSignIn": true
     },
@@ -85,7 +89,7 @@
         "@sentry/react-native/expo",
         {
           "url": "https://sentry.io/",
-          "project": "react-native",
+          "project": "focusvow",
           "organization": "freeshore"
         }
       ],
@@ -97,9 +101,14 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "6ba49731-4a04-43da-adb9-e1e4311eebae"
-      }
+        "projectId": "17655fd0-b6e6-4f12-b988-e23ef2f0c593"
+      },
+      "appVariant": "development"
     },
-    "owner": "freeshore"
+    "owner": "freeshore",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/17655fd0-b6e6-4f12-b988-e23ef2f0c593"
+    }
   }
 }
