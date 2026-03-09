@@ -18,9 +18,6 @@ interface ConfirmationModalProps {
   message: string;
   confirmText: string;
   cancelText: string;
-  // 可选：展示经济信息（本次消耗与剩余）
-  coinCost?: number;
-  coinBalance?: number;
   // 可选：额外的警告信息（如周期任务后续不再触发的提示）
   extraWarning?: string;
   onConfirm: () => void;
@@ -38,8 +35,6 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   message,
   confirmText,
   cancelText,
-  coinCost,
-  coinBalance,
   extraWarning,
   onConfirm,
   onCancel,
@@ -191,13 +186,6 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               <View style={styles.banner}>
                 <Text style={styles.bannerText}>
                   {message}
-                  {typeof coinCost === 'number' &&
-                  typeof coinBalance === 'number'
-                    ? `\n本次将消耗：${coinCost} 自律币；预计剩余：${Math.max(
-                        0,
-                        coinBalance - coinCost,
-                      )} 自律币`
-                    : ''}
                 </Text>
               </View>
 

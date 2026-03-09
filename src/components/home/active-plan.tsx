@@ -1,17 +1,11 @@
 import { Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { pauseAppLimits, resumeAppLimits } from '@/native/ios';
-import {
-  useBenefitStore,
-  useHomeStore,
-  usePlanStore,
-  useRecordStore,
-  useUserStore,
-} from '@/stores';
-import { getIOSFocusStatus, stopAppLimits } from '@/utils/permission';
+import { usePlanStore, useUserStore } from '@/stores';
+import { stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -25,16 +19,11 @@ import TimeFlow from './time-flow';
 const FocusButton = () => {
   const ustore = useUserStore();
   const pstore = usePlanStore();
-  const store = useHomeStore();
-  const rstore = useRecordStore();
   const { colors } = useCustomTheme();
 
   // 弹窗状态
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [showStopModal, setShowStopModal] = useState(false);
-  const [stopCost, setStopCost] = useState<number>(0);
-  // 暂停倒计时
-  const [pauseRemaining, setPauseRemaining] = useState<number>(0);
 
   const styles = StyleSheet.create({
     btnFont: {
@@ -102,51 +91,17 @@ const FocusButton = () => {
   };
 
   const pauseFocus = () => {
-    if (!pstore.active_plan) return;
+    if (!pstore.active_plan || pstore.is_pause()) return;
     if (Platform.OS === 'ios') {
-      // console.log('暂停：', pstore.active_plan);
       pauseAppLimits(3);
     }
   };
 
   const resumeFocus = () => {
-    if (!pstore.active_plan) return;
+    if (!pstore.active_plan || !pstore.is_pause()) return;
     if (Platform.OS === 'ios') {
       resumeAppLimits();
     }
-  };
-
-  // 暂停倒计时逻辑
-  useEffect(() => {
-    if (!pstore.is_pause() || Platform.OS !== 'ios') {
-      setPauseRemaining(0);
-      return;
-    }
-
-    // 定时获取剩余时间
-    const timer = setInterval(async () => {
-      try {
-        const status = await getIOSFocusStatus();
-        if (status.pausedUntil) {
-          const now = Date.now() / 1000;
-          const remaining = Math.max(0, status.pausedUntil - now);
-          setPauseRemaining(remaining);
-        } else {
-          setPauseRemaining(0);
-        }
-      } catch (error) {
-        console.error('获取暂停状态失败', error);
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [pstore.paused_plan_id, pstore.active_plan?.id]);
-
-  // 格式化倒计时显示
-  const formatPauseTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -157,16 +112,6 @@ const FocusButton = () => {
       <Flex className="justify-center mt-[30px] mb-[50px]">
         <View>
           {descDom}
-          {/* 暂停倒计时显示 */}
-          {pstore.is_pause() && pauseRemaining > 0 && (
-            <Text
-              style={[
-                styles.descFont,
-                { marginTop: 8, color: '#F7AF5D', fontSize: 14 },
-              ]}>
-              暂停倒计时：{formatPauseTime(pauseRemaining)}
-            </Text>
-          )}
         </View>
       </Flex>
       <Flex
@@ -198,24 +143,7 @@ const FocusButton = () => {
         )}
         {pstore.active_plan && (
           <TouchableOpacity
-            onPress={async () => {
-              try {
-                const id = rstore.record_id;
-                let bet = 0;
-                if (id) {
-                  let rec: any = rstore.records.find((x: any) => x.id === id);
-                  if (!rec) {
-                    await rstore.getRecords();
-                    rec = rstore.records.find((x: any) => x.id === id);
-                  }
-                  if (rec && typeof rec.bet_amount === 'number') {
-                    bet = rec.bet_amount;
-                  }
-                }
-                setStopCost(bet);
-              } catch {
-                setStopCost(0);
-              }
+            onPress={() => {
               setShowStopModal(true);
             }}
             activeOpacity={0.8}
@@ -231,8 +159,6 @@ const FocusButton = () => {
         message="暂停可能会影响你的专注状态，确定要暂停吗？"
         confirmText="确认暂停"
         cancelText="继续专注"
-        coinCost={1}
-        coinBalance={useBenefitStore().balance}
         onConfirm={pauseFocus}
         onCancel={() => {}}
         onClose={() => setShowPauseModal(false)}
@@ -245,8 +171,6 @@ const FocusButton = () => {
         message="结束后将无法恢复当前任务，确定要结束吗？"
         confirmText="确认结束"
         cancelText="继续专注"
-        coinCost={stopCost}
-        coinBalance={useBenefitStore().balance}
         extraWarning={
           pstore.active_plan?.repeat !== 'once'
             ? '注意：停止后，今天该任务后续不会再触发'

@@ -4,14 +4,14 @@
 import { Page } from '@/components/business';
 import { Checkbox, Toast } from '@/components/ui';
 import { useSubscriptionStore, useUserStore } from '@/stores';
-import request from '@/utils/request';
+import type { Product } from '@/stores/subscription';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import type { Purchase, SubscriptionProduct } from 'expo-iap';
 import { ErrorCode, useIAP } from 'expo-iap';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -24,36 +24,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-interface ProductConfig {
-  id?: string;
-  name: string;
-  period: number;
-  product_id: string;
-  price_id?: string;
-  price: number;
-  original_price?: number;
-  is_subscription?: number;
-}
-
-const FALLBACK_PRODUCTS: ProductConfig[] = [
-  {
-    name: '周度会员',
-    period: 0,
-    product_id: 'com.focusone.week',
-    price: 699,
-    original_price: 999,
-    is_subscription: 1,
-  },
-  {
-    name: '年度会员',
-    period: 12,
-    product_id: 'com.focusone.vip_12',
-    price: 299,
-    original_price: 999,
-    is_subscription: 1,
-  },
-];
-
 const BENEFITS = [
   '无限选择APP数量，可选分类',
   '不限制每日专注时长',
@@ -61,7 +31,7 @@ const BENEFITS = [
   '优先体验新功能',
 ];
 
-type DisplayProduct = ProductConfig & { iapProduct?: SubscriptionProduct };
+type DisplayProduct = Product & { iapProduct?: SubscriptionProduct };
 
 // 设计色板 — 金色 VIP 主题
 const BG = '#111111';
@@ -75,13 +45,10 @@ const TEXT_MUTED = 'rgba(255,255,255,0.6)';
 const PaywallPage = () => {
   useTheme(); // 本页固定深色主题
   const insets = useSafeAreaInsets();
-  const subStore = useSubscriptionStore();
+  const { products, getProducts } = useSubscriptionStore();
   const userStore = useUserStore();
-  const [configs, setConfigs] = useState<ProductConfig[]>(FALLBACK_PRODUCTS);
-  const [selectedSku, setSelectedSku] = useState<string>(
-    FALLBACK_PRODUCTS[1].product_id,
-  );
-  const [configLoading, setConfigLoading] = useState(true);
+  const subStore = useSubscriptionStore();
+  const [selectedSku, setSelectedSku] = useState<string>('');
   const [paymentStatus, setPaymentStatus] = useState<
     'idle' | 'processing' | 'success' | 'failed'
   >('idle');
@@ -116,60 +83,38 @@ const PaywallPage = () => {
     },
   });
 
-  const fetchConfig = useCallback(async () => {
-    setConfigLoading(true);
-    try {
-      const res = (await request.get('/product/list', {
-        params: { product_class: 'iOS', is_subscription: 1 },
-      })) as { statusCode?: number; data?: ProductConfig[] };
-      if (
-        res?.statusCode === 200 &&
-        Array.isArray(res.data) &&
-        res.data.length > 0
-      ) {
-        const list = res.data.map((p: any) => ({
-          name: p.name ?? '会员',
-          period: p.period ?? 0,
-          product_id: p.product_id ?? p.id ?? '',
-          price_id: p.price_id,
-          price: p.price ?? 0,
-          original_price: p.original_price ?? p.price,
-          is_subscription: p.is_subscription ?? 1,
-        }));
-        setConfigs(list);
-        setSelectedSku(prev =>
-          list.some((c: ProductConfig) => c.product_id === prev)
-            ? prev
-            : list[0].product_id,
-        );
-      }
-    } catch (e) {
-      console.log('[Paywall] 获取商品配置失败，使用静态数据:', e);
-    } finally {
-      setConfigLoading(false);
+  useEffect(() => {
+    if (products.length === 0) {
+      getProducts();
     }
-  }, []);
+  }, [products.length, getProducts]);
+
+  // products 加载后默认选中 period 最大的套餐
+  useEffect(() => {
+    if (products.length > 0 && !selectedSku) {
+      const best = products.reduce((a, b) =>
+        a.period > b.period ? a : b,
+      );
+      setSelectedSku(best.product_id);
+    }
+  }, [products, selectedSku]);
 
   useEffect(() => {
-    fetchConfig();
-  }, [fetchConfig]);
-
-  useEffect(() => {
-    if (!connected || configs.length === 0) return;
-    const skus = configs.map(c => c.product_id);
+    if (!connected || products.length === 0) return;
+    const skus = products.map(c => c.product_id);
     fetchProducts({ skus, type: 'subs' }).catch(() => {
       Toast('商品加载失败，请检查网络与 App Store 配置');
     });
-  }, [connected, configs, fetchProducts]);
+  }, [connected, products, fetchProducts]);
 
   const displayProducts: DisplayProduct[] = useMemo(() => {
-    return configs.map(c => ({
+    return products.map(c => ({
       ...c,
       iapProduct: subscriptions.find(
         (s: SubscriptionProduct) => s.id === c.product_id,
       ),
     }));
-  }, [configs, subscriptions]);
+  }, [products, subscriptions]);
 
   const selectedProduct =
     displayProducts.find(p => p.product_id === selectedSku) ??
@@ -185,8 +130,7 @@ const PaywallPage = () => {
     return formatPrice(p.price);
   };
 
-  const getPillLabel = (p: ProductConfig, idx: number) => {
-    if (idx === 0) return '免费';
+  const getPillLabel = (p: Product) => {
     if (p.original_price && p.original_price > p.price) {
       const rate = Math.round((1 - p.price / p.original_price) * 100);
       return `省 ${rate}%`;
@@ -246,7 +190,7 @@ const PaywallPage = () => {
     }
   };
 
-  const isSelected = (p: ProductConfig) => p.product_id === selectedSku;
+  const isSelected = (p: Product) => p.product_id === selectedSku;
 
   return (
     <Page bgcolor={BG}>
@@ -325,15 +269,15 @@ const PaywallPage = () => {
         </View>
 
         {/* 订阅卡片 */}
-        {!connected || configLoading ? (
+        {!connected || products.length === 0 ? (
           <View className="py-8 items-center">
             <ActivityIndicator size="large" color={GOLD} />
           </View>
         ) : (
           <View style={{ gap: 12, marginBottom: 8 }}>
-            {displayProducts.map((p, idx) => {
+            {displayProducts.map(p => {
               const selected = isSelected(p);
-              const pillLabel = getPillLabel(p, idx);
+              const pillLabel = getPillLabel(p);
               const isYearly = p.period >= 12;
               return (
                 <Pressable
@@ -400,10 +344,14 @@ const PaywallPage = () => {
                       <Text
                         className="text-lg font-bold"
                         style={{ color: selected ? GOLD_LIGHT : WHITE }}>
-                        {getPriceDisplay(p as DisplayProduct)}
+                        {getPriceDisplay(p)}
                       </Text>
                       <Text className="text-xs" style={{ color: TEXT_MUTED }}>
-                        {isYearly ? '每周' : '每周'}
+                        {p.period >= 12
+                          ? '/年'
+                          : p.period >= 7
+                            ? '/周'
+                            : '/月'}
                       </Text>
                     </View>
                   </View>

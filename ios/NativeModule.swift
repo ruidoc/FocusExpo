@@ -955,6 +955,16 @@ class NativeModule: RCTEventEmitter {
     let now = Date()
     let calendar = Calendar.current
     
+    // 幂等检查：如果已处于暂停状态且未过期，直接返回成功
+    if let defaults = UserDefaults.groupUserDefaults() {
+      let existingPausedUntil = defaults.double(forKey: "FocusOne.PausedUntil")
+      if existingPausedUntil > 0 && now.timeIntervalSince1970 < existingPausedUntil {
+        print("【暂停】已处于暂停状态，跳过重复操作")
+        resolve(true)
+        return
+      }
+    }
+    
     // 获取暂停时长，默认为3分钟
     let minutes = durationMinutes?.intValue ?? 3
     // 校验：暂停不允许大于 10 分钟
@@ -962,9 +972,8 @@ class NativeModule: RCTEventEmitter {
       reject("PAUSE_LIMIT", "暂停不允许大于10分钟", nil)
       return
     }
-    let pauseDuration: TimeInterval = TimeInterval(minutes) * 60 // 屏蔽时长（秒）
+    let pauseDuration: TimeInterval = TimeInterval(minutes) * 60
 
-    // 初始化屏蔽时长
     let minTime: Int = 15
     let warningTime = minTime - minutes
     
@@ -980,17 +989,20 @@ class NativeModule: RCTEventEmitter {
     let pausedUntil = now.timeIntervalSince1970 + pauseDuration
     
     // 创建15分钟的 Schedule（满足最低要求）
-    // 使用 warningTime=12分钟，在3分钟后触发
-    let scheduleEndTime = now.addingTimeInterval(TimeInterval(minTime * 60))
+    // 使用 warningTime 在暂停到期后触发恢复
+    // 关键：起始时间必须加上 second 分量，避免落在当前分钟的第 0 秒（已过去）导致注册失败
+    let bufferStart = now.addingTimeInterval(2)
+    let scheduleEndTime = bufferStart.addingTimeInterval(TimeInterval(minTime * 60))
     
     let schedule = DeviceActivitySchedule(
       intervalStart: DateComponents(
         calendar: calendar,
-        year: calendar.component(.year, from: now),
-        month: calendar.component(.month, from: now),
-        day: calendar.component(.day, from: now),
-        hour: calendar.component(.hour, from: now),
-        minute: calendar.component(.minute, from: now)
+        year: calendar.component(.year, from: bufferStart),
+        month: calendar.component(.month, from: bufferStart),
+        day: calendar.component(.day, from: bufferStart),
+        hour: calendar.component(.hour, from: bufferStart),
+        minute: calendar.component(.minute, from: bufferStart),
+        second: calendar.component(.second, from: bufferStart)
       ),
       intervalEnd: DateComponents(
         calendar: calendar,
@@ -998,24 +1010,23 @@ class NativeModule: RCTEventEmitter {
         month: calendar.component(.month, from: scheduleEndTime),
         day: calendar.component(.day, from: scheduleEndTime),
         hour: calendar.component(.hour, from: scheduleEndTime),
-        minute: calendar.component(.minute, from: scheduleEndTime)
+        minute: calendar.component(.minute, from: scheduleEndTime),
+        second: calendar.component(.second, from: scheduleEndTime)
       ),
       repeats: false,
-      warningTime: DateComponents(minute: warningTime) // 15-12=3分钟后触发
+      warningTime: DateComponents(minute: warningTime)
     )
     
-    // 启动暂停恢复监控
+    // 启动暂停恢复监控；即使监控注册失败，暂停本身（清除屏蔽）已生效
     do {
       try center.startMonitoring(pauseResumeActivity, during: schedule)
     } catch {
-      print("【启动暂停监控失败】\(error)")
-      reject("MONITOR_ERROR", "启动暂停监控失败", error)
-      return
+      print("【暂停监控注册失败，暂停仍生效】\(error)")
     }
     
     if let defaults = UserDefaults.groupUserDefaults() {
       defaults.set(true, forKey: "FocusOne.IsPauseActivity")
-      defaults.set(pausedUntil, forKey: "FocusOne.PausedUntil") // 仅用于 JS 端倒计时
+      defaults.set(pausedUntil, forKey: "FocusOne.PausedUntil")
       defaults.set("paused", forKey: "FocusOne.LastFocusEvent")
     }
     
@@ -1028,6 +1039,17 @@ class NativeModule: RCTEventEmitter {
   @objc
   func resumeAppLimits(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     let now = Date().timeIntervalSince1970
+    
+    // 幂等检查：如果当前不处于暂停状态，直接返回成功
+    if let defaults = UserDefaults.groupUserDefaults() {
+      let pausedUntil = defaults.double(forKey: "FocusOne.PausedUntil")
+      let isPauseActivity = defaults.bool(forKey: "FocusOne.IsPauseActivity")
+      if pausedUntil <= 0 && !isPauseActivity {
+        print("【恢复】当前不处于暂停状态，跳过重复操作")
+        resolve(true)
+        return
+      }
+    }
     
     // 恢复前检查任务是否仍有效
     var canResume = false

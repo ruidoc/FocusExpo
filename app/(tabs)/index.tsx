@@ -168,7 +168,6 @@ const App = () => {
         visible={showCelebration}
         onClose={() => setShowCelebration(false)}
         focusDuration={15}
-        coinsEarned={20}
       />
     </Page>
   );

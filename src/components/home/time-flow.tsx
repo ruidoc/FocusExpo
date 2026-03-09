@@ -1,18 +1,18 @@
-import { useBenefitStore, usePlanStore } from '@/stores';
+import { usePlanStore } from '@/stores';
+import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
+    Platform,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 const TimeFlow = () => {
   const pstore = usePlanStore();
-  const bstore = useBenefitStore();
 
   const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -56,7 +56,35 @@ const TimeFlow = () => {
     return '当前无任务';
   };
 
-  // 旋转动画已移除（当前未使用）
+  const isPaused = pstore.is_pause();
+  const [pauseRemaining, setPauseRemaining] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isPaused || Platform.OS !== 'ios') {
+      setPauseRemaining(0);
+      return;
+    }
+    const timer = setInterval(async () => {
+      try {
+        const status = await getIOSFocusStatus();
+        if (status.pausedUntil) {
+          const now = Date.now() / 1000;
+          setPauseRemaining(Math.max(0, status.pausedUntil - now));
+        } else {
+          setPauseRemaining(0);
+        }
+      } catch {
+        setPauseRemaining(0);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isPaused, pstore.active_plan?.id]);
+
+  const formatPauseTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const progress = getProgress();
   const circumference = 2 * Math.PI * 136; // 半径136的圆周长
@@ -66,7 +94,18 @@ const TimeFlow = () => {
   // 进度动画：首帧从0到当前值，之后每次变更平滑过渡
   const [progressAnim] = useState(new Animated.Value(0));
   const didInitAnimRef = useRef(false);
+  const prevPlanIdRef = useRef<string | undefined>(pstore.active_plan?.id);
+
   useEffect(() => {
+    const planId = pstore.active_plan?.id;
+    const planChanged = planId !== prevPlanIdRef.current;
+    prevPlanIdRef.current = planId;
+
+    if (planChanged) {
+      didInitAnimRef.current = false;
+      progressAnim.setValue(0);
+    }
+
     progressAnim.stopAnimation();
     if (!didInitAnimRef.current) {
       progressAnim.setValue(0);
@@ -84,12 +123,7 @@ const TimeFlow = () => {
         useNativeDriver: false,
       }).start();
     }
-  }, [progress, progressAnim]);
-  // 当切换/重置计划时，重置首帧动画
-  useEffect(() => {
-    didInitAnimRef.current = false;
-    progressAnim.setValue(0);
-  }, [pstore.active_plan?.id, progressAnim]);
+  }, [progress, pstore.active_plan?.id, progressAnim]);
   const animatedDashoffset = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [circumference, 0],
@@ -149,12 +183,24 @@ const TimeFlow = () => {
         {/* 时间显示 */}
         <Text style={styles.timeText}>{getDisplayTime()}</Text>
 
-        {/* 连续天数 */}
-        <TouchableOpacity style={styles.streakContainer}>
-          <Icon name="flame" size={16} color="#EF6820" />
-          <Text style={styles.streakText}>{bstore.balance} coins</Text>
-          <Icon name="chevron-forward" size={14} color="#B3B3BA" />
-        </TouchableOpacity>
+        {/* 进度 / 暂停状态 */}
+        {hasPlan && (
+          isPaused && pauseRemaining > 0 ? (
+            <View style={styles.statusChip}>
+              <Icon name="pause-circle" size={15} color="#F7AF5D" />
+              <Text style={[styles.statusText, { color: '#F7AF5D' }]}>
+                暂停中 {formatPauseTime(pauseRemaining)}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.statusChip}>
+              <Icon name="checkmark-circle" size={15} color="#7A5AF8" />
+              <Text style={styles.statusText}>
+                已完成 {Math.round(progress * 100)}%
+              </Text>
+            </View>
+          )
+        )}
       </View>
     </View>
   );
@@ -193,17 +239,19 @@ const styles = StyleSheet.create({
     letterSpacing: -1.4,
     marginBottom: 12,
   },
-  streakContainer: {
+  statusChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    backgroundColor: 'rgba(133, 134, 153, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 5,
   },
-  streakText: {
+  statusText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#858699',
-    marginLeft: 4,
-    marginRight: 4,
     letterSpacing: -0.1,
   },
 });

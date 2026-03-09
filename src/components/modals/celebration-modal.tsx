@@ -14,14 +14,12 @@ interface CelebrationModalProps {
   visible: boolean;
   onClose: () => void;
   focusDuration?: number; // 专注时长（分钟）
-  coinsEarned?: number; // 获得的自律币
 }
 
 const CelebrationModal: React.FC<CelebrationModalProps> = ({
   visible,
   onClose,
   focusDuration = 15,
-  coinsEarned = 20,
 }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -105,16 +103,6 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
               </View>
               <Text className="text-white font-semibold">
                 {focusDuration} 分钟
-              </Text>
-            </View>
-
-            <View className="flex-row justify-between items-center mb-3">
-              <View className="flex-row items-center">
-                <Icon name="diamond-outline" size={18} color="#FFC107" />
-                <Text className="text-white ml-2">获得自律币</Text>
-              </View>
-              <Text className="text-[#FFC107] font-semibold">
-                +{coinsEarned}
               </Text>
             </View>
 

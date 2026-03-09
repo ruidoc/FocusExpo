@@ -13,7 +13,7 @@ const formatDate = (date: Date): string => {
 
 const BenefitStore = combine(
   {
-    balance: 0 as number, // 自律币余额
+    balance: 0 as number,
     rank: '' as string, // 当前段位
     day_duration: 0 as number, // 基础每日时长配额（分钟）
     app_count: 1 as number, // 可限制的应用数量
@@ -26,7 +26,6 @@ const BenefitStore = combine(
       set({ balance });
     },
 
-    // 扣除自律币
     subBalance: (balance: number = 1) => {
       set({ balance: get().balance - balance });
     },

@@ -3,7 +3,7 @@ import { registerApp, requestPayment } from 'expo-native-wechat';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
   period: number;
@@ -70,8 +70,8 @@ const SubscriptionStore = combine(
       try {
         const res: HttpRes = await http.get('/product/list', {
           params: {
-            platform: 'iOS',
-            is_subscription: 0,
+            product_class: 'focus',
+            is_subscription: 1,
           },
         });
         if (res.statusCode === 200) {
