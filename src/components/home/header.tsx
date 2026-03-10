@@ -71,7 +71,7 @@ const Header = () => {
         <Text className="text-base font-medium text-[#858699] leading-6 tracking-tight mb-1">
           {getGreeting()}，{getUserName()}！
         </Text>
-        <Text className="text-lg font-semibold text-white leading-7 tracking-tighter">
+        <Text className="text-lg font-semibold text-white/90 leading-7 tracking-tighter">
           {rstore.actual_mins > 0
             ? `你已专注 ${minutesToHours(rstore.actual_mins)} 👍`
             : '今天还没开始，加油！💪'}

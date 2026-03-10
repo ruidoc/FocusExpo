@@ -10,7 +10,6 @@ const EmptyPlan = () => {
   const pstore = usePlanStore();
   const [nowMinute, setNowMinute] = useState(getCurrentMinute());
 
-  // 每分钟更新一次当前时间，用于计算倒计时
   useEffect(() => {
     const timer = setInterval(() => {
       setNowMinute(getCurrentMinute());
@@ -20,9 +19,8 @@ const EmptyPlan = () => {
 
   const nextPlan = pstore.next_plan;
   const gap = nextPlan ? nextPlan.start_min - nowMinute : 0;
-  const hasLongGap = gap > 20; // 如果空闲时间超过20分钟，引导快速开始
+  const hasLongGap = gap > 20;
 
-  // 格式化倒计时文本
   const getCountdownText = (minutes: number) => {
     if (minutes < 60) {
       return `${minutes}分钟后开始`;
@@ -32,7 +30,6 @@ const EmptyPlan = () => {
     return `${h}小时${m}分后开始`;
   };
 
-  // 格式化空闲时间文本
   const getFreeTimeText = (minutes: number) => {
     if (minutes < 60) {
       return `${minutes}分钟`;
@@ -42,11 +39,9 @@ const EmptyPlan = () => {
     return `${h}小时${m}分钟`;
   };
 
-  // 渲染下一个任务卡片
   if (nextPlan) {
     return (
       <View className="w-full px-6 items-center">
-        {/* Next Plan Card */}
         <View className="w-full bg-[#1C1C26] rounded-[20px] p-6 mb-6 border border-[#2C2C36]">
           <View className="flex-row justify-between items-start">
             <View>
@@ -86,11 +81,9 @@ const EmptyPlan = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Action Buttons */}
         <View className="w-full gap-4">
           {hasLongGap ? (
             <>
-              {/* 主引导：快速开始一次性任务（填补空闲） */}
               <View>
                 <Text className="text-[#858699] text-xs mb-2 text-center">
                   您有 {getFreeTimeText(gap)} 的空闲时间
@@ -100,8 +93,6 @@ const EmptyPlan = () => {
                   onPress={() => router.push('/quick-start')}
                 />
               </View>
-
-              {/* 次引导：添加更多契约 */}
               <TouchableOpacity
                 className="flex-row items-center justify-center py-3 gap-2"
                 onPress={() => router.push('/plans/add')}>
@@ -112,11 +103,10 @@ const EmptyPlan = () => {
               </TouchableOpacity>
             </>
           ) : (
-            // 如果时间紧迫，不再引导快速开始，只提供添加计划入口
             <Button
               text="添加新契约"
               onPress={() => router.push('/plans/add')}
-              style={{ backgroundColor: '#2C2C36' }} // 次级按钮样式
+              style={{ backgroundColor: '#2C2C36' }}
               textStyle={{ color: '#FFFFFF' }}
             />
           )}
@@ -125,33 +115,29 @@ const EmptyPlan = () => {
     );
   }
 
-  // 无任务状态
   return (
     <View className="w-full px-6 items-center">
       <View className="items-center my-10">
         <View className="w-20 h-20 rounded-full bg-[#1C1C26] items-center justify-center mb-4">
-          <Icon name="sunny-outline" size={40} color="#F7AF5D" />
+          <Icon name="sunny-outline" size={54} color="#F7AF5D" />
         </View>
-        <Text className="text-xl font-semibold text-white mt-5 mb-2 text-center">
-          暂无即将开始的契约
+        <Text className="text-2xl font-semibold text-white mt-5 mb-2 text-center">
+          改变，从一个契约开始
         </Text>
-        <Text className="text-sm text-[#858699] text-center mb-8 leading-5">
-          您现在的状态很轻松。{'\n'}创建一个契约或快速开始专注。
+        <Text className="text-base text-[#858699] text-center mb-8 leading-5">
+          设定时间段，每日自动锁定分心应用
         </Text>
       </View>
 
       <View className="w-full gap-4">
-        {/* 主引导：创建专注契约 */}
         <Button text="创建契约" onPress={() => router.push('/plans/presets')} />
 
-        {/* 次引导：创建一次性任务 */}
         <TouchableOpacity
-          className="flex-row items-center justify-center py-3 gap-2"
+          className="flex-row items-center justify-center py-3 gap-[2px]"
           onPress={() => router.push('/quick-start')}>
-          <Icon name="flash-outline" size={16} color="#858699" />
-          <Text className="text-[#858699] text-sm font-medium">
-            快速开始一次性专注
-          </Text>
+          <Text className="text-sm text-[#858699] mr-1">临时使用？</Text>
+          <Icon name="flash" size={14} color="#7A5AF8" />
+          <Text className="text-[#7A5AF8] text-sm font-semibold">快速专注</Text>
         </TouchableOpacity>
       </View>
     </View>

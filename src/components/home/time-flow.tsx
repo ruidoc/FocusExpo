@@ -2,13 +2,7 @@ import { usePlanStore } from '@/stores';
 import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useEffect, useRef, useState } from 'react';
-import {
-    Animated,
-    Platform,
-    StyleSheet,
-    Text,
-    View,
-} from 'react-native';
+import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 const TimeFlow = () => {
@@ -184,8 +178,8 @@ const TimeFlow = () => {
         <Text style={styles.timeText}>{getDisplayTime()}</Text>
 
         {/* 进度 / 暂停状态 */}
-        {hasPlan && (
-          isPaused && pauseRemaining > 0 ? (
+        {hasPlan &&
+          (isPaused && pauseRemaining > 0 ? (
             <View style={styles.statusChip}>
               <Icon name="pause-circle" size={15} color="#F7AF5D" />
               <Text style={[styles.statusText, { color: '#F7AF5D' }]}>
@@ -194,13 +188,12 @@ const TimeFlow = () => {
             </View>
           ) : (
             <View style={styles.statusChip}>
-              <Icon name="checkmark-circle" size={15} color="#7A5AF8" />
+              <Icon name="hourglass-outline" size={15} color="#7A5AF8" />
               <Text style={styles.statusText}>
-                已完成 {Math.round(progress * 100)}%
+                完成 {Math.round(progress * 100)}%
               </Text>
             </View>
-          )
-        )}
+          ))}
       </View>
     </View>
   );
@@ -242,7 +235,7 @@ const styles = StyleSheet.create({
   statusChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(133, 134, 153, 0.12)',
+    backgroundColor: 'rgba(133, 134, 153, 0.1)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,

@@ -1,10 +1,8 @@
 import { Page } from '@/components/business';
 import ActivePlan from '@/components/home/active-plan';
 import EmptyPlan from '@/components/home/empty-plan';
-import FirstTimeGuidePlan from '@/components/home/first-time-guide-plan';
 import HomeHeader from '@/components/home/header';
 import ScreenTimePermissionPage from '@/components/home/screen-time';
-import TrialUserGuidePlan from '@/components/home/trial-user-guide-plan';
 import CelebrationModal from '@/components/modals/celebration-modal';
 import { NoticeBar } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
@@ -121,14 +119,14 @@ const App = () => {
   // 根据用户状态决定渲染哪个组件
   const renderMainContent = () => {
     // 首次用户（完成onboarding但0次专注）
-    if (userState.isFirstTimeUser) {
-      return <FirstTimeGuidePlan />;
-    }
+    // if (userState.isFirstTimeUser) {
+    //   return <FirstTimeGuidePlan />;
+    // }
 
     // 体验用户（1-2次专注，无计划）
-    if (userState.isTrialUser) {
-      return <TrialUserGuidePlan />;
-    }
+    // if (userState.isTrialUser) {
+    //   return <TrialUserGuidePlan />;
+    // }
 
     // 活跃用户或已有计划的用户
     return pstore.active_plan ? <ActivePlan /> : <EmptyPlan />;
