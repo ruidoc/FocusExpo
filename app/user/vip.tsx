@@ -4,6 +4,7 @@ import { useSubscriptionStore } from '@/stores';
 import { trackOpenPaywall, useSuperwall } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
+import { useIAP } from 'expo-iap';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -26,6 +27,7 @@ const VipPage = () => {
   const { dark } = useTheme();
   const subStore = useSubscriptionStore();
   const { registerPlacement } = useSuperwall();
+  const { restorePurchases } = useIAP();
   const [loading, setLoading] = useState(false);
   const isFocusedRef = useRef(true);
 
@@ -65,8 +67,15 @@ const VipPage = () => {
     }
   };
 
-  const onRestorePurchases = () => {
+  const onRestorePurchases = async () => {
     Toast('正在恢复购买记录...');
+    try {
+      await restorePurchases();
+      await subStore.getSubscription();
+      Toast('已恢复购买记录');
+    } catch {
+      Toast('恢复失败，请稍后重试');
+    }
   };
 
   const formatDate = (dateStr: string) => {

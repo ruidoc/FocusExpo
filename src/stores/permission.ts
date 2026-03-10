@@ -28,7 +28,6 @@ const PermissionStore = combine(
           let granted = await checkNotify();
           if (granted) return;
 
-          debugger;
           // 请求权限
           let result = await Notifications.requestPermissionsAsync();
           // let result = await Permissions.requestNotifications(['alert', 'sound']);

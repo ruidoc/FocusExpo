@@ -40,8 +40,8 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "your-apple-id@example.com",
-        "ascAppId": "your-app-store-connect-app-id",
+        "appleId": "admin@freeshore.cn",
+        "ascAppId": "6751099977",
         "appleTeamId": "G497923Y9M"
       }
     }
