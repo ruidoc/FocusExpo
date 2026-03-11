@@ -116,7 +116,10 @@ const RootLayout = () => {
               <Stack.Screen name="plans/add" />
               <Stack.Screen
                 name="plans/presets"
-                options={{ title: '预设契约' }}
+                options={{
+                  title: '选择契约',
+                  headerTransparent: true,
+                }}
               />
               <Stack.Screen name="apps/index" options={{ title: 'APP管理' }} />
               <Stack.Screen name="apps/add" options={{ title: '选择APP' }} />

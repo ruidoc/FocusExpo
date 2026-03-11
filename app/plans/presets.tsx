@@ -131,9 +131,9 @@ const PresetsPage = () => {
   useEffect(() => {
     if (fromOnboarding) {
       navigation.setOptions({
-        headerLeft: () => <View />, // 显式返回空组件，完全隐藏返回按钮
-        gestureEnabled: false, // 禁用手势返回
-        headerBackVisible: false, // 明确禁用返回按钮
+        headerLeft: () => null as any,
+        gestureEnabled: false,
+        headerBackVisible: false,
       });
     }
   }, [fromOnboarding, navigation]);
@@ -187,9 +187,8 @@ const PresetsPage = () => {
   return (
     <Page>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-6 pt-6 pb-4">
-          <Text className="text-2xl font-bold text-white mb-2">选择契约</Text>
-          <Text className="text-sm text-white/60">
+        <View className="px-6 pt-6 pb-4 mt-[94px]">
+          <Text className="text-sm text-white/60 text-center">
             为你推荐以下场景，选一个快速开始
           </Text>
         </View>

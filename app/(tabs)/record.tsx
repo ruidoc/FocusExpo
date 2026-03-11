@@ -146,106 +146,81 @@ const App = () => {
           })}
         </View>
 
-        {/* 汇总卡片 */}
-        <View
-          className="mx-4 mt-1 mb-4 rounded-3xl py-5"
-          style={{
-            backgroundColor: dark ? '#1C1C26' : '#fff',
-            borderWidth: dark ? 0 : StyleSheet.hairlineWidth,
-            borderColor: '#E5E7EB',
-          }}>
-          <View className="flex-row justify-between">
-            <View className="flex-1 items-center">
-              <Text className="text-xs mb-2" style={{ color: TEXT2 }}>
-                契约专注
-              </Text>
-              {renderDuration(total?.total_blocked_mins || 0)}
-            </View>
-            <View
-              className="my-1"
-              style={{
-                width: StyleSheet.hairlineWidth,
-                backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
-              }}
-            />
-            <View className="flex-1 items-center">
-              <Text className="text-xs mb-2" style={{ color: TEXT2 }}>
-                实际专注
-              </Text>
-              {renderDuration(total?.total_actual_mins || 0)}
-            </View>
-            <View
-              className="my-1"
-              style={{
-                width: StyleSheet.hairlineWidth,
-                backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
-              }}
-            />
-            {/* <View className="flex-1 items-center">
-              <Text className="text-xs mb-2" style={{ color: TEXT2 }}>
-                锁定应用
-              </Text>
-              <View className="flex-row items-baseline">
-                <Text
-                  className="text-xl font-bold"
-                  style={{ color: ACCENT }}>
-                  {items.length}
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          {/* 汇总卡片 */}
+          <View
+            className="mx-4 mt-1 mb-4 rounded-3xl py-5"
+            style={{
+              backgroundColor: dark ? '#1C1C26' : '#fff',
+              borderWidth: dark ? 0 : StyleSheet.hairlineWidth,
+              borderColor: '#E5E7EB',
+            }}>
+            <View className="flex-row justify-between">
+              <View className="flex-1 items-center">
+                <Text className="text-xs mb-2" style={{ color: TEXT2 }}>
+                  契约专注
                 </Text>
-                <Text
-                  className="text-xs ml-0.5"
-                  style={{ color: UNIT_COLOR }}>
-                  个
-                </Text>
+                {renderDuration(total?.total_blocked_mins || 0)}
               </View>
-            </View> */}
-            {/* <View
-              className="my-1"
-              style={{
-                width: StyleSheet.hairlineWidth,
-                backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
-              }}
-            /> */}
-            <View className="flex-1 items-center">
-              <Text className="text-xs mb-2" style={{ color: TEXT2 }}>
-                成功率
-              </Text>
-              <View className="flex-row items-baseline gap-[2px]">
-                <Text className="text-2xl " style={{ color: colors.text }}>
-                  {toIntPercent(total?.total_success_rate)}
+              <View
+                className="my-1"
+                style={{
+                  width: StyleSheet.hairlineWidth,
+                  backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
+                }}
+              />
+              <View className="flex-1 items-center">
+                <Text className="text-xs mb-2" style={{ color: TEXT2 }}>
+                  实际专注
                 </Text>
-                <Text className="text-sm text-white">%</Text>
+                {renderDuration(total?.total_actual_mins || 0)}
+              </View>
+              <View
+                className="my-1"
+                style={{
+                  width: StyleSheet.hairlineWidth,
+                  backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
+                }}
+              />
+              <View className="flex-1 items-center">
+                <Text className="text-xs mb-2" style={{ color: TEXT2 }}>
+                  成功率
+                </Text>
+                <View className="flex-row items-baseline gap-[2px]">
+                  <Text className="text-2xl " style={{ color: colors.text }}>
+                    {toIntPercent(total?.total_success_rate)}
+                  </Text>
+                  <Text className="text-sm text-white">%</Text>
+                </View>
               </View>
             </View>
           </View>
-        </View>
 
-        {/* 应用列表 */}
-        {loading ? (
-          <Text className="text-center text-sm mt-6" style={{ color: TEXT2 }}>
-            加载中...
-          </Text>
-        ) : items.length === 0 ? (
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-sm" style={{ color: TEXT2 }}>
-              暂无数据
+          {/* 应用列表 */}
+          {loading ? (
+            <Text className="text-center text-sm mt-6" style={{ color: TEXT2 }}>
+              加载中...
             </Text>
-          </View>
-        ) : (
-          <View className="flex-1">
-            <Text
-              className="text-[15px] font-semibold px-5 mb-3"
-              style={{ color: colors.text }}>
-              APP锁定明细
-            </Text>
-            <View
-              className="mx-4 mb-4 rounded-3xl overflow-hidden"
-              style={{
-                flexShrink: 1,
-                backgroundColor: dark ? '#1C1C26' : '#fff',
-                borderWidth: dark ? 0 : StyleSheet.hairlineWidth,
-                borderColor: '#E5E7EB',
-              }}>
-              <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+          ) : items.length === 0 ? (
+            <View className="flex-1 items-center justify-center py-20">
+              <Text className="text-sm" style={{ color: TEXT2 }}>
+                暂无数据
+              </Text>
+            </View>
+          ) : (
+            <View>
+              <Text
+                className="text-[15px] font-semibold px-5 mb-3"
+                style={{ color: colors.text }}>
+                APP锁定明细
+              </Text>
+              <View
+                className="mx-4 mb-4 rounded-3xl overflow-hidden"
+                style={{
+                  backgroundColor: dark ? '#1C1C26' : '#fff',
+                  borderWidth: dark ? 0 : StyleSheet.hairlineWidth,
+                  borderColor: '#E5E7EB',
+                }}>
                 {(() => {
                   const sortedItems = items
                     .slice()
@@ -255,7 +230,7 @@ const App = () => {
                       ? sortedItems[Math.floor(sortedItems.length / 2)]
                           .actual_mins || 30
                       : 30;
-                  const maxBarWidth = 250;
+                  const maxBarWidth = 226;
                   const refMins = Math.max(medianMins * 2, 1);
                   return sortedItems.map((item, index) => {
                     const locked = isAppCurrentlyLocked(item.app);
@@ -316,10 +291,10 @@ const App = () => {
                     );
                   });
                 })()}
-              </ScrollView>
+              </View>
             </View>
-          </View>
-        )}
+          )}
+        </ScrollView>
       </View>
     </Page>
   );

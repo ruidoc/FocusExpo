@@ -52,8 +52,7 @@ const HomeStore = combine(
         return granted;
       } catch (error) {
         console.log('检查iOS屏幕时间权限失败:', error);
-        set({ ios_screen_time_permission: false });
-        return false;
+        return get().ios_screen_time_permission;
       }
     },
 

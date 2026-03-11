@@ -110,9 +110,7 @@ const FocusButton = () => {
         <TimeFlow />
       </Flex>
       <Flex className="justify-center mt-[30px] mb-[50px]">
-        <View>
-          {descDom}
-        </View>
+        <View>{descDom}</View>
       </Flex>
       <Flex
         className="justify-center"
@@ -155,7 +153,7 @@ const FocusButton = () => {
       {/* 暂停确认弹窗 */}
       <ConfirmationModal
         visible={showPauseModal}
-        title="暂停专注任务？"
+        title="暂停专注？"
         message="暂停可能会影响你的专注状态，确定要暂停吗？"
         confirmText="确认暂停"
         cancelText="继续专注"
@@ -167,13 +165,13 @@ const FocusButton = () => {
       {/* 停止确认弹窗 */}
       <ConfirmationModal
         visible={showStopModal}
-        title="结束专注任务？"
-        message="结束后将无法恢复当前任务，确定要结束吗？"
+        title="结束专注？"
+        message="结束后将无法恢复当前专注，确定要结束吗？"
         confirmText="确认结束"
         cancelText="继续专注"
         extraWarning={
           pstore.active_plan?.repeat !== 'once'
-            ? '注意：停止后，今天该任务后续不会再触发'
+            ? '注意：停止后，今天该专注后续不会再触发'
             : undefined
         }
         onConfirm={stopFocus}

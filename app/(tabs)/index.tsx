@@ -67,6 +67,20 @@ const App = () => {
     }
   }, [ustore.uInfo]);
 
+  // 组件挂载时，如果 store 显示未授权，做一次二次验证防止冷启动误判
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    if (!store.ios_screen_time_permission) {
+      checkScreenTimePermission()
+        .then(status => {
+          if (status === 'approved') {
+            store.setIOSScreenTimePermission(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [store.ios_screen_time_permission]);
+
   // 应用回到前台时，立刻检查 iOS 屏幕时间权限
   useEffect(() => {
     if (Platform.OS !== 'ios') return;
@@ -74,9 +88,11 @@ const App = () => {
       if (state === 'active') {
         try {
           const status = await checkScreenTimePermission();
-          const isApproved = status === 'approved';
-          if (isApproved !== store.ios_screen_time_permission) {
-            store.setIOSScreenTimePermission(isApproved);
+          if (status !== 'error') {
+            const isApproved = status === 'approved';
+            if (isApproved !== store.ios_screen_time_permission) {
+              store.setIOSScreenTimePermission(isApproved);
+            }
           }
         } catch (error) {
           console.log('前台检查屏幕时间权限失败:', error);
@@ -155,7 +171,7 @@ const App = () => {
           <NoticeBar
             message="请打开通知权限"
             mode="link"
-            status="primary"
+            status="warning"
             onPress={() => pmstore.openNotify(true)}
           />
         </View>

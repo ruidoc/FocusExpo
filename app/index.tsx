@@ -14,8 +14,10 @@ const Index = () => {
     const initAction = async () => {
       try {
         const screenTimeStatus = await checkScreenTimePermission();
-        const isApproved = screenTimeStatus === 'approved';
-        hstore.setIOSScreenTimePermission(isApproved);
+        if (screenTimeStatus !== 'error') {
+          const isApproved = screenTimeStatus === 'approved';
+          hstore.setIOSScreenTimePermission(isApproved);
+        }
         await pmstore.checkNotify();
       } catch (error) {
         console.log('Index组件：iOS全局初始化失败:', error);

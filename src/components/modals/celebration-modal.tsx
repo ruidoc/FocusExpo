@@ -64,8 +64,8 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
     }, 300);
   };
 
-  const handleContinueFocus = () => {
-    trackEvent('first_plan_guide_continue');
+  const closeCelebration = () => {
+    trackEvent('first_plan_guide_close');
     markCelebrationShown();
     onClose();
   };
@@ -124,9 +124,9 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
           <View className="gap-3">
             <Button text="创建我的第一个契约" onPress={handleCreatePlan} />
 
-            <TouchableOpacity className="py-3" onPress={handleContinueFocus}>
+            <TouchableOpacity className="py-3" onPress={closeCelebration}>
               <Text className="text-[#858699] text-center font-medium">
-                继续快速专注
+                稍后再说
               </Text>
             </TouchableOpacity>
           </View>

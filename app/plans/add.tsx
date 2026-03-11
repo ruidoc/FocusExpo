@@ -263,16 +263,16 @@ const App = () => {
       if (isEditing) {
         pstore.editPlan(pstore.editing_plan.id, subinfo, async res => {
           if (res) {
-            Toast('编辑任务成功', 'success');
+            Toast('契约已更新', 'success');
             router.back();
           } else {
-            Toast('编辑任务失败', 'error');
+            Toast('契约更新失败，请稍后重试', 'error');
           }
         });
       } else {
         pstore.addPlan(subinfo, async res => {
           if (res) {
-            Toast('添加任务成功', 'success');
+            Toast('契约已签订，请务必遵守', 'success');
             trackEvent('plan_created', {
               from: fromOnboarding
                 ? 'onboarding'
@@ -289,13 +289,13 @@ const App = () => {
               router.back();
             }
           } else {
-            Toast('添加任务失败', 'error');
+            Toast('契约签订失败，请稍后重试', 'error');
           }
         });
       }
     } catch (error) {
-      Toast('添加任务出错', 'error');
-      console.log('添加任务失败：', error);
+      Toast('契约签订出错，请稍后重试', 'error');
+      console.log('契约签订失败：', error);
     }
   };
 
@@ -562,7 +562,7 @@ const App = () => {
         </FieldGroup>
       </ScrollView>
       <View className="px-5 pb-10">
-        <Button onPress={submit} text={isEditing ? '保存修改' : '创建契约'} />
+        <Button onPress={submit} text={isEditing ? '修改契约' : '签定契约'} />
       </View>
     </Page>
   );

@@ -5,7 +5,7 @@ import { useCustomTheme } from '@/config/theme';
 import { useHomeStore } from '@/stores';
 import { getScreenTimePermission } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface ScreenTimePermissionPageProps {
   colors?: any; // 兼容旧调用方式，但内部使用 useCustomTheme
@@ -65,7 +65,7 @@ const ScreenTimePermissionPage = (_props: ScreenTimePermissionPageProps) => {
   });
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <View style={styles.container}>
         <Icon name="shield-checkmark" style={styles.icon} />
         <Text style={styles.title}>需要屏幕时间权限</Text>
@@ -81,7 +81,7 @@ const ScreenTimePermissionPage = (_props: ScreenTimePermissionPageProps) => {
           获取权限
         </Button>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

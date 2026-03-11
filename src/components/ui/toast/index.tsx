@@ -158,8 +158,8 @@ const ToastGlobal: React.FC = () => {
       default:
         return {
           icon: 'information-circle',
-          color: colors.primary || '#7A5AF8',
-          bgColor: 'rgba(122, 90, 248, 0.1)',
+          color: '#2575FC',
+          bgColor: 'rgba(37, 117, 252, 0.1)',
         };
     }
   };
