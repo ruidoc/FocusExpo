@@ -237,6 +237,7 @@ const UserStore = combine(
         }
       } catch (error) {
         console.log('Apple 登录失败', error);
+        Toast('登录失败，请检查网络后重试');
         fun?.();
       }
     },

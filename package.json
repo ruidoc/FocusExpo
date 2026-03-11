@@ -12,6 +12,7 @@
     "build:prod": "eas build --local --platform ios --profile production",
     "doctor": "npx expo-doctor",
     "prebuild": "expo prebuild --platform ios",
+    "submit": "eas submit --platform ios --path",
     "lint": "expo lint",
     "docs": "bash docs/docs.sh",
     "docs:quick": "bash docs/docs.sh quick",

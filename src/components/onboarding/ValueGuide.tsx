@@ -1,4 +1,5 @@
 import { Apple, Privicy } from '@/components/business';
+import { Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useHomeStore, useUserStore } from '@/stores';
 import { markOnboardingCompleted, trackEvent } from '@/utils';
@@ -57,10 +58,18 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
   const copy = getPersonalizedCopy();
 
   const appleLoginResult = (credential: any) => {
+    trackEvent('onboarding_apple_login_start', { step: 'value_guide' });
+
     ustore.appleLogin(credential, res => {
       if (res?.statusCode === 200) {
-        ustore.loginSuccess({ token: res.data?.token }, 'apple');
+        trackEvent('onboarding_apple_login_success', { step: 'value_guide' });
         completeWithLogin();
+      } else {
+        trackEvent('onboarding_apple_login_fail', {
+          step: 'value_guide',
+          reason: res?.message || 'api_error',
+        });
+        Toast('登录失败，请重试');
       }
     });
   };
