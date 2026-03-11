@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "start:prod": "NODE_ENV=production expo start",
     "android": "expo run:android",
     "ios": "expo run:ios --device",
     "build:preview": "eas build --local --platform ios --profile preview --non-interactive 2>&1 | tee build.log",

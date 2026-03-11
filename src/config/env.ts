@@ -1,15 +1,4 @@
 /**
- * 环境变量配置
- *
- * 统一管理 API 基础 URL，根据构建环境自动切换：
- * - development: https://focus.freeshore.cn/dev-api
- * - preview:     https://focus.freeshore.cn/dev-api
- * - production:  https://focus.freeshore.cn/api
- *
- * 配置方式：在 eas.json 的 env 中设置 EXPO_PUBLIC_API_BASE_URL
- */
-
-/**
  * API 基础 URL
  * 用于业务接口请求
  */
