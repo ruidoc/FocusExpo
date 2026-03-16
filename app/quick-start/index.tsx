@@ -28,7 +28,7 @@ const QuickStartPage = () => {
   // 设置页面标题
   useLayoutEffect(() => {
     navigation.setOptions?.({
-      title: '快速开始',
+      title: '快速专注',
     });
   }, [navigation]);
 
