@@ -30,8 +30,8 @@ const PlanStore = combine(
     curplan_minute: 0 as number, // 当前任务已运行时长，退出重进后重新计时
   },
   (set, get) => ({
-    is_focus_mode() {
-      return get().active_plan && get().active_plan.mode === 'focus';
+    is_allow_mode() {
+      return get().active_plan?.mode === 'allow';
     },
     all_plans() {
       return [...get().cus_plans, ...get().once_plans];
@@ -141,6 +141,7 @@ const PlanStore = combine(
         end: plan.end_min, // Minutes
         days: repeat === 'once' ? [] : (repeat as number[]), // 一次性任务使用空数组
         apps: plan.apps || [],
+        mode: plan.mode || 'shield',
       };
       console.log('同步计划到 IOS Native:', JSON.stringify(data));
       await updatePlan(data);

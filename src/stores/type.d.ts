@@ -25,7 +25,7 @@ interface CusPlan {
   repeat_count?: number; // 计算出的重复次数
   // 定时任务：使用多选周几（0..6，0=周日, 1=周一 ... 6=周六），一次性任务仍使用 'once'
   repeat: 'once' | number[];
-  mode: 'focus' | 'shield';
+  mode: 'shield' | 'allow';
   apps?: string[]; // 选择的应用列表，格式为 "id:type"
 }
 
@@ -34,7 +34,7 @@ interface RecordInfo {
   start_plan: number;
   end_plan: number;
   exit_times: number[];
-  mode: 'focus' | 'shield';
+  mode: 'shield' | 'allow';
   start_at: Date;
   end_at: Date;
 }

@@ -59,6 +59,7 @@ export interface PlanConfig {
   end: number; // 分钟数
   days: number[]; // 0=周日, 1=周一, ..., 6=周六
   apps: string[]; // 应用 ID 数组
+  mode: 'shield' | 'allow'; // shield=黑名单屏蔽, allow=白名单放行
 }
 
 /**
@@ -107,6 +108,7 @@ export interface NativeModuleInterface {
   startAppLimits(
     durationMinutes: number,
     planId: string | null,
+    mode: string,
   ): Promise<boolean>;
 
   // 停止应用限制（通用）

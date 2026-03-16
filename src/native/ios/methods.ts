@@ -129,15 +129,17 @@ export async function selectAppsToLimit(
  * 开始应用限制（仅一次性任务屏蔽）
  * @param durationMinutes 任务时长（分钟），0 表示全天重复
  * @param planId 计划 ID（可选）
+ * @param mode 屏蔽模式：shield=黑名单, allow=白名单
  */
 export async function startAppLimits(
   durationMinutes?: number,
   planId?: string,
+  mode: 'shield' | 'allow' = 'shield',
 ): Promise<boolean> {
   return callNativeMethod(
     'startAppLimits',
     () =>
-      getNativeModule()!.startAppLimits(durationMinutes ?? 0, planId ?? null),
+      getNativeModule()!.startAppLimits(durationMinutes ?? 0, planId ?? null, mode),
     false,
   );
 }

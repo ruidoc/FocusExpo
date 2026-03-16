@@ -20,6 +20,21 @@ struct PlanConfig: Codable {
     let days: [Int]
     let apps: [String] // 应用 ID 数组，格式为 ["stableId:type", ...]
     let token: String // FamilyActivitySelection 的 JSON/Base64 字符串
+    let mode: String? // shield=黑名单屏蔽, allow=白名单放行
+}
+
+/// 根据 mode 应用不同的屏蔽策略（与 NativeModule.applyShield 保持一致）
+func applyShield(store: ManagedSettingsStore, selection: FamilyActivitySelection, mode: String) {
+    if mode == "allow" {
+        store.shield.applicationCategories = .all(except: selection.applicationTokens)
+        store.shield.webDomainCategories = .all(except: selection.webDomainTokens)
+        store.shield.applications = nil
+        store.shield.webDomains = nil
+    } else {
+        store.shield.applications = selection.applicationTokens
+        store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
+        store.shield.webDomains = selection.webDomainTokens
+    }
 }
 
 // Optionally override any of the functions below.
@@ -109,10 +124,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 }
                 
                 if let selection = selection {
+                    let shieldMode = defaults.string(forKey: "FocusOne.ShieldMode") ?? "shield"
                     let store = ManagedSettingsStore()
-                    store.shield.applications = selection.applicationTokens
-                    store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
-                    store.shield.webDomains = selection.webDomainTokens
+                    applyShield(store: store, selection: selection, mode: shieldMode)
                     
                     notifyResume()
                     
@@ -190,10 +204,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             defaults.set(selectionData, forKey: "FocusOne.CurrentShieldSelection")
         }
 
+        let shieldMode = plan.mode ?? "shield"
         let store = ManagedSettingsStore()
-        store.shield.applications = selection.applicationTokens
-        store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
-        store.shield.webDomains = selection.webDomainTokens
+        applyShield(store: store, selection: selection, mode: shieldMode)
+        defaults.set(shieldMode, forKey: "FocusOne.ShieldMode")
 
         // ✅ 埋点: 屏蔽应用成功
         let planType = plan.id.hasPrefix("once_") ? "quick_start" : "scheduled"
@@ -298,10 +312,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         let requestBody: [String: Any] = [
             "plan_id": plan.id,
             "start_min": plan.start,
-            "total_min": totalMinutes, // 总时长
+            "total_min": totalMinutes,
             "title": plan.name ?? "专注契约",
-            "apps": plan.apps, // apps 数组
-            "mode": "shield"
+            "apps": plan.apps,
+            "mode": plan.mode ?? "shield"
         ]
         
         logToJS(level: "log", message: "创建后端记录", data: ["planId": plan.id, "totalMinutes": totalMinutes])
@@ -376,6 +390,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             defaults.removeObject(forKey: "FocusOne.TotalMinutes")
             defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
             defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
+            defaults.removeObject(forKey: "FocusOne.ShieldMode")
         }
     }
 

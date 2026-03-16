@@ -112,6 +112,7 @@ class NativeModule: RCTEventEmitter {
     let days: [Int]
     let apps: [String] // 应用 ID 数组，格式为 ["stableId:type", ...]
     let token: String // FamilyActivitySelection 的 JSON/Base64 字符串
+    let mode: String? // shield=黑名单屏蔽, allow=白名单放行
   }
   
   // 计划配置输入结构 (用于接收 JS 传递的原始数据)
@@ -122,6 +123,25 @@ class NativeModule: RCTEventEmitter {
     let end: Int
     let days: [Int]
     let apps: [String] // JS 传来的 ID 数组
+    let mode: String? // shield=黑名单屏蔽, allow=白名单放行
+  }
+  
+  /// 根据 mode 应用不同的屏蔽策略
+  /// - shield: 黑名单模式，屏蔽指定应用
+  /// - allow: 白名单模式，屏蔽所有应用，但放行指定应用
+  static func applyShield(store: ManagedSettingsStore, selection: FamilyActivitySelection, mode: String) {
+    if mode == "allow" {
+      // 白名单：屏蔽所有分类，但放行用户选择的应用
+      store.shield.applicationCategories = .all(except: selection.applicationTokens)
+      store.shield.webDomainCategories = .all(except: selection.webDomainTokens)
+      store.shield.applications = nil
+      store.shield.webDomains = nil
+    } else {
+      // 黑名单（默认）：只屏蔽用户选择的应用
+      store.shield.applications = selection.applicationTokens
+      store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
+      store.shield.webDomains = selection.webDomainTokens
+    }
   }
   
   // C 回调：用于 Darwin 通知（不能捕获 self）
@@ -198,7 +218,7 @@ class NativeModule: RCTEventEmitter {
         }
 
         // 创建 PlanConfig，apps 直接存储 ID 数组，token 存储 Token 字符串
-        finalPlan = PlanConfig(id: input.id, name: input.name, start: input.start, end: input.end, days: input.days, apps: input.apps, token: token)
+        finalPlan = PlanConfig(id: input.id, name: input.name, start: input.start, end: input.end, days: input.days, apps: input.apps, token: token, mode: input.mode)
     }
 
     guard let plan = finalPlan else {
@@ -599,7 +619,7 @@ class NativeModule: RCTEventEmitter {
   
   // 开始限制选中的应用（durationMinutes: 任务时长，单位：分钟）
   @objc
-  func startAppLimits(_ durationMinutes: NSNumber, planId: NSString?, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  func startAppLimits(_ durationMinutes: NSNumber, planId: NSString?, mode: NSString, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     guard let selection = self.loadSelection() else {
       reject("NO_SELECTION", "没有选择需要限制的应用", nil)
       return
@@ -701,10 +721,9 @@ class NativeModule: RCTEventEmitter {
       }
       
       // 立即激活屏蔽
+      let shieldMode = (mode as String?) ?? "shield"
       let store = ManagedSettingsStore()
-      store.shield.applications = selection.applicationTokens
-      store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
-      store.shield.webDomains = selection.webDomainTokens
+      NativeModule.applyShield(store: store, selection: selection, mode: shieldMode)
 
       // 初始化进度事件源（JS侧每分钟监听）
       let startDate = Date()
@@ -716,6 +735,7 @@ class NativeModule: RCTEventEmitter {
         defaults.set(self.endTimestamp, forKey: "FocusOne.FocusEndAt")
         defaults.set(self.totalMinutes, forKey: "FocusOne.TotalMinutes")
         defaults.set("once", forKey: "FocusOne.FocusType")
+        defaults.set(shieldMode, forKey: "FocusOne.ShieldMode")
         if let pid = planId as String? {
           defaults.set(pid, forKey: "FocusOne.CurrentPlanId")
         }
@@ -778,6 +798,7 @@ class NativeModule: RCTEventEmitter {
       defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
       defaults.removeObject(forKey: "FocusOne.TaskFailed")
       defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
+      defaults.removeObject(forKey: "FocusOne.ShieldMode")
       defaults.removeObject(forKey: "FocusOne.FailedReason")
       defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
       defaults.removeObject(forKey: "FocusOne.PausedUntil")
@@ -1074,14 +1095,13 @@ class NativeModule: RCTEventEmitter {
     }
     
     // 恢复屏蔽设置
+    let shieldMode = UserDefaults.groupUserDefaults()?.string(forKey: "FocusOne.ShieldMode") ?? "shield"
     let store = ManagedSettingsStore()
-    store.shield.applications = sel.applicationTokens
-    store.shield.applicationCategories = sel.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(sel.categoryTokens)
-    store.shield.webDomains = sel.webDomainTokens
+    NativeModule.applyShield(store: store, selection: sel, mode: shieldMode)
     
     if let defaults = UserDefaults.groupUserDefaults() {
       defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
-      defaults.removeObject(forKey: "FocusOne.PausedUntil") // 清理倒计时数据
+      defaults.removeObject(forKey: "FocusOne.PausedUntil")
       defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
     }
     

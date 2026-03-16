@@ -1,5 +1,6 @@
 import { Page, SelectApps, SelectedApps } from '@/components/business';
 import { Button, FieldGroup, FieldItem } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import {
   useAppStore,
   useBenefitStore,
@@ -11,12 +12,14 @@ import { startAppLimits } from '@/utils/permission';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import React, { useLayoutEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import TimeSlider from './time-slider';
 
 const QuickStartPage = () => {
   const [minute, setMinute] = useState(15);
+  const [mode, setMode] = useState<'shield' | 'allow'>('shield');
   const navigation = useNavigation();
+  const { colors } = useCustomTheme();
   const pstore = usePlanStore();
   const rstore = useRecordStore();
   const astore = useAppStore();
@@ -47,7 +50,7 @@ const QuickStartPage = () => {
       end_min: cur_minute + Number(minute),
       end_sec: cur_secend + Number(minute) * 60,
       repeat: 'once',
-      mode: 'shield',
+      mode,
     };
     pstore.addOncePlan(from_data);
     rstore.addRecord(from_data, 0); // 下注设为 0
@@ -73,7 +76,7 @@ const QuickStartPage = () => {
     let plan_id = `once_${Math.floor(Math.random() * 99999999)}`;
     // iOS: 使用屏幕时间限制开始屏蔽
     try {
-      const ok = await startAppLimits(minute, plan_id);
+      const ok = await startAppLimits(minute, plan_id, mode);
       if (ok) {
         setOncePlan(plan_id);
         // 立刻刷新当前计划，避免等待 AppState/原生事件导致 active_plan 为空
@@ -96,10 +99,42 @@ const QuickStartPage = () => {
   return (
     <Page>
       <View className="p-5">
+        {/* 屏蔽模式 */}
+        <FieldGroup divider={false} className="rounded-xl mb-4">
+          <FieldItem title="屏蔽模式" className="pb-2" showArrow={false} />
+          <View className="px-4 pb-4 flex-row gap-3">
+            {([
+              { key: 'shield', label: '屏蔽指定应用' },
+              { key: 'allow', label: '仅允许指定应用' },
+            ] as const).map(item => (
+              <Pressable
+                key={item.key}
+                onPress={() => setMode(item.key)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 10,
+                  borderRadius: 10,
+                  alignItems: 'center',
+                  backgroundColor:
+                    mode === item.key ? colors.primary : colors.border,
+                }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: mode === item.key ? '600' : '400',
+                    color: mode === item.key ? colors.primaryForeground : colors.text2,
+                  }}>
+                  {item.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </FieldGroup>
+
         {/* 选择APP */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
-            title="要锁定的应用"
+            title={mode === 'allow' ? '允许使用的应用' : '要锁定的应用'}
             className="pt-3 pb-2"
             rightElement={
               <SelectApps

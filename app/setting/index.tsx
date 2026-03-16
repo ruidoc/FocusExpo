@@ -48,8 +48,7 @@ const App = () => {
   const toLogout = () => {
     const pstore = usePlanStore.getState();
     const rstore = useRecordStore.getState();
-    const hasFocus =
-      !!rstore.record_id || (!!pstore.active_plan && pstore.is_focus_mode());
+    const hasFocus = !!rstore.record_id || !!pstore.active_plan;
 
     ActionSheet({
       actions: ['确认'],

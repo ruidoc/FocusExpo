@@ -25,7 +25,7 @@ type FormState = {
   start_date: Date;
   end_date: Date;
   repeat: number[] | 'once';
-  mode: 'focus' | 'shield';
+  mode: 'shield' | 'allow';
   apps: string[];
 };
 
@@ -380,7 +380,42 @@ const App = () => {
           />
         </FieldGroup>
 
-        {/* 2. 起始时间 */}
+        {/* 2. 屏蔽模式 */}
+        <FieldGroup divider={false} className="rounded-xl mb-4">
+          <FieldItem title="屏蔽模式" className="pb-2" showArrow={false} />
+          <View className="px-4 pb-4 flex-row gap-3">
+            {([
+              { key: 'shield', label: '屏蔽指定应用' },
+              { key: 'allow', label: '仅允许指定应用' },
+            ] as const).map(item => (
+              <Pressable
+                key={item.key}
+                onPress={() => setInfo(item.key, 'mode')}
+                style={{
+                  flex: 1,
+                  paddingVertical: 10,
+                  borderRadius: 10,
+                  alignItems: 'center',
+                  backgroundColor:
+                    form.mode === item.key ? colors.primary : colors.border,
+                }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: form.mode === item.key ? '600' : '400',
+                    color:
+                      form.mode === item.key
+                        ? colors.primaryForeground
+                        : colors.text2,
+                  }}>
+                  {item.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </FieldGroup>
+
+        {/* 3. 起始时间 */}
         <FieldGroup className="rounded-xl mb-4">
           <FieldItem
             title="起始时间"
@@ -433,10 +468,10 @@ const App = () => {
           />
         </FieldGroup>
 
-        {/* 3. 应用选择 */}
+        {/* 4. 应用选择 */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
-            title="要锁定的应用"
+            title={form.mode === 'allow' ? '允许使用的应用' : '要锁定的应用'}
             className="pb-2"
             rightElement={<SelectApps apps={form.apps} onFinish={selectApps} />}
             showArrow={false}
@@ -446,7 +481,7 @@ const App = () => {
           </View>
         </FieldGroup>
 
-        {/* 4. 有效时长（长期模式1个item，自定义模式2个item） */}
+        {/* 5. 有效时长（长期模式1个item，自定义模式2个item） */}
         <FieldGroup className="rounded-xl mb-4">
           <FieldItem
             title="有效时长"
@@ -515,7 +550,7 @@ const App = () => {
           )}
         </FieldGroup>
 
-        {/* 5. 重复规则 */}
+        {/* 6. 重复规则 */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
             className="pb-2"

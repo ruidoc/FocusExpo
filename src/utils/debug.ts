@@ -33,7 +33,7 @@ export const debugUtils = {
   async resetOnboarding() {
     const defaultState: {
       problem: 'short_video' | 'game' | 'study' | null;
-      mode: 'shield' | 'focus';
+      mode: 'shield' | 'allow';
       selected_apps: string[];
       isComplete: boolean;
       unloginComplete: boolean;

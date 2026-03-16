@@ -53,8 +53,9 @@ export async function selectAppsToLimit(
 export async function startAppLimits(
   durationMinutes?: number,
   planId?: string,
+  mode: 'shield' | 'allow' = 'shield',
 ): Promise<boolean> {
-  const result = await nativeStartAppLimits(durationMinutes, planId);
+  const result = await nativeStartAppLimits(durationMinutes, planId, mode);
   console.log('startAppLimits result', result);
   return result;
 }
