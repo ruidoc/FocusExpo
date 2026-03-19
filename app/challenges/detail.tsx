@@ -455,7 +455,7 @@ const ChallengeDetailScreen = () => {
                         {dayjs(plan.end, 'HH:mm').format('HH:mm')}
                       </Text>
                       <Text style={styles.planDetail}>
-                        {plan.mode === 'focus' ? '专注模式' : '限制模式'} •{' '}
+                        {plan.mode === 'allow' ? '专注模式' : '限制模式'} •{' '}
                         {Array.isArray(plan.repeat)
                           ? `周${plan.repeat.join(',')}`
                           : '一次性'}

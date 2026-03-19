@@ -16,7 +16,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
 type FormState = {
   name: string;
@@ -381,38 +381,19 @@ const App = () => {
         </FieldGroup>
 
         {/* 2. 屏蔽模式 */}
-        <FieldGroup divider={false} className="rounded-xl mb-4">
-          <FieldItem title="屏蔽模式" className="pb-2" showArrow={false} />
-          <View className="px-4 pb-4 flex-row gap-3">
-            {([
-              { key: 'shield', label: '屏蔽指定应用' },
-              { key: 'allow', label: '仅允许指定应用' },
-            ] as const).map(item => (
-              <Pressable
-                key={item.key}
-                onPress={() => setInfo(item.key, 'mode')}
-                style={{
-                  flex: 1,
-                  paddingVertical: 10,
-                  borderRadius: 10,
-                  alignItems: 'center',
-                  backgroundColor:
-                    form.mode === item.key ? colors.primary : colors.border,
-                }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: form.mode === item.key ? '600' : '400',
-                    color:
-                      form.mode === item.key
-                        ? colors.primaryForeground
-                        : colors.text2,
-                  }}>
-                  {item.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+        <FieldGroup className="rounded-xl mb-4">
+          <FieldItem
+            title={form.mode === 'shield' ? '锁定模式' : '允许模式'}
+            rightElement={
+              <Switch
+                value={form.mode === 'allow'}
+                onValueChange={val =>
+                  setInfo(val ? 'allow' : 'shield', 'mode')
+                }
+              />
+            }
+            showArrow={false}
+          />
         </FieldGroup>
 
         {/* 3. 起始时间 */}

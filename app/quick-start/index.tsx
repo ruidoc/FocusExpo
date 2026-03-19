@@ -9,10 +9,11 @@ import {
 } from '@/stores';
 import { toast, trackStartFocus } from '@/utils';
 import { startAppLimits } from '@/utils/permission';
+import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import React, { useLayoutEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import TimeSlider from './time-slider';
 
 const QuickStartPage = () => {
@@ -100,36 +101,21 @@ const QuickStartPage = () => {
     <Page>
       <View className="p-5">
         {/* 屏蔽模式 */}
-        <FieldGroup divider={false} className="rounded-xl mb-4">
-          <FieldItem title="屏蔽模式" className="pb-2" showArrow={false} />
-          <View className="px-4 pb-4 flex-row gap-3">
-            {([
-              { key: 'shield', label: '屏蔽指定应用' },
-              { key: 'allow', label: '仅允许指定应用' },
-            ] as const).map(item => (
-              <Pressable
-                key={item.key}
-                onPress={() => setMode(item.key)}
-                style={{
-                  flex: 1,
-                  paddingVertical: 10,
-                  borderRadius: 10,
-                  alignItems: 'center',
-                  backgroundColor:
-                    mode === item.key ? colors.primary : colors.border,
-                }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: mode === item.key ? '600' : '400',
-                    color: mode === item.key ? colors.primaryForeground : colors.text2,
-                  }}>
-                  {item.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </FieldGroup>
+        <View className="mb-4 flex-row justify-center">
+          <SegmentedControl
+            values={['锁定模式', '允许模式']}
+            selectedIndex={mode === 'shield' ? 0 : 1}
+            style={{ height: 40, width: 220 }}
+            tintColor={'#85869950'}
+            sliderStyle={{ backgroundColor: colors.primary }}
+            appearance="dark"
+            fontStyle={{ fontSize: 14 }}
+            onChange={event => {
+              const idx = event.nativeEvent.selectedSegmentIndex;
+              setMode(idx === 0 ? 'shield' : 'allow');
+            }}
+          />
+        </View>
 
         {/* 选择APP */}
         <FieldGroup divider={false} className="rounded-xl mb-4">

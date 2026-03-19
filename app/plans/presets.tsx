@@ -202,8 +202,6 @@ const PresetsPage = () => {
               className="rounded-3xl p-5"
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.08)',
               }}>
               <Flex className="justify-between items-start mb-2">
                 <Flex className="items-center gap-x-2">
