@@ -20,6 +20,7 @@ const BenefitStore = combine(
     category_count: undefined as number | undefined, // 可限制的分类数量（IOS）
     is_subscribed: false as boolean, // 是否已订阅
     today_used: 0 as number, // 今日已使用时长（分钟）
+    features: '' as string, // 功能开关，多个功能用逗号分隔
   },
   (set, get) => ({
     setBalance: (balance: number) => {
@@ -42,6 +43,7 @@ const BenefitStore = combine(
             category_count,
             is_subscribed,
             today_used,
+            features,
           } = res.data;
           // console.log('获取权益', res.data);
           set({
@@ -52,6 +54,7 @@ const BenefitStore = combine(
             category_count,
             is_subscribed: !!is_subscribed,
             today_used: today_used || 0,
+            features: features || '',
           });
 
           // 写入 App Groups，供 Extension 读取

@@ -25,6 +25,7 @@ const QuickStartPage = () => {
   const rstore = useRecordStore();
   const astore = useAppStore();
   const bstore = useBenefitStore();
+  const allowModeEnabled = bstore.features.includes('allow-mode');
 
   // 设置页面标题
   useLayoutEffect(() => {
@@ -101,26 +102,28 @@ const QuickStartPage = () => {
     <Page>
       <View className="p-5">
         {/* 屏蔽模式 */}
-        <View className="mb-4 flex-row justify-center">
-          <SegmentedControl
-            values={['锁定模式', '允许模式']}
-            selectedIndex={mode === 'shield' ? 0 : 1}
-            style={{ height: 40, width: 220 }}
-            tintColor={'#85869950'}
-            sliderStyle={{ backgroundColor: colors.primary }}
-            appearance="dark"
-            fontStyle={{ fontSize: 14 }}
-            onChange={event => {
-              const idx = event.nativeEvent.selectedSegmentIndex;
-              setMode(idx === 0 ? 'shield' : 'allow');
-            }}
-          />
-        </View>
+        {allowModeEnabled && (
+          <View className="mb-4 flex-row justify-center">
+            <SegmentedControl
+              values={['锁定模式', '允许模式']}
+              selectedIndex={mode === 'shield' ? 0 : 1}
+              style={{ height: 40, width: 220 }}
+              tintColor={'#85869950'}
+              sliderStyle={{ backgroundColor: colors.primary }}
+              appearance="dark"
+              fontStyle={{ fontSize: 14 }}
+              onChange={event => {
+                const idx = event.nativeEvent.selectedSegmentIndex;
+                setMode(idx === 0 ? 'shield' : 'allow');
+              }}
+            />
+          </View>
+        )}
 
         {/* 选择APP */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
-            title={mode === 'allow' ? '允许使用的应用' : '要锁定的应用'}
+            title={allowModeEnabled && mode === 'allow' ? '允许使用的应用' : '要锁定的应用'}
             className="pt-3 pb-2"
             rightElement={
               <SelectApps

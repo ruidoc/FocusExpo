@@ -10,7 +10,7 @@ import {
 } from '@/components/ui';
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
-import { useAppStore, usePlanStore } from '@/stores';
+import { useAppStore, useBenefitStore, usePlanStore } from '@/stores';
 import { parseRepeat, trackEvent } from '@/utils';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
@@ -32,7 +32,9 @@ type FormState = {
 const App = () => {
   const pstore = usePlanStore();
   const astore = useAppStore();
+  const bstore = useBenefitStore();
   const { colors } = useCustomTheme();
+  const allowModeEnabled = bstore.features.includes('allow-mode');
   const navigation = useNavigation();
   const params = useLocalSearchParams();
 
@@ -381,20 +383,22 @@ const App = () => {
         </FieldGroup>
 
         {/* 2. 屏蔽模式 */}
-        <FieldGroup className="rounded-xl mb-4">
-          <FieldItem
-            title={form.mode === 'shield' ? '锁定模式' : '允许模式'}
-            rightElement={
-              <Switch
-                value={form.mode === 'allow'}
-                onValueChange={val =>
-                  setInfo(val ? 'allow' : 'shield', 'mode')
-                }
-              />
-            }
-            showArrow={false}
-          />
-        </FieldGroup>
+        {allowModeEnabled && (
+          <FieldGroup className="rounded-xl mb-4">
+            <FieldItem
+              title={form.mode === 'shield' ? '锁定模式' : '允许模式'}
+              rightElement={
+                <Switch
+                  value={form.mode === 'allow'}
+                  onValueChange={val =>
+                    setInfo(val ? 'allow' : 'shield', 'mode')
+                  }
+                />
+              }
+              showArrow={false}
+            />
+          </FieldGroup>
+        )}
 
         {/* 3. 起始时间 */}
         <FieldGroup className="rounded-xl mb-4">
@@ -452,7 +456,7 @@ const App = () => {
         {/* 4. 应用选择 */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
-            title={form.mode === 'allow' ? '允许使用的应用' : '要锁定的应用'}
+            title={allowModeEnabled && form.mode === 'allow' ? '允许使用的应用' : '要锁定的应用'}
             className="pb-2"
             rightElement={<SelectApps apps={form.apps} onFinish={selectApps} />}
             showArrow={false}
