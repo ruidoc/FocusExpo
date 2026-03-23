@@ -83,3 +83,27 @@ export function createExtensionLogListener(
     },
   };
 }
+
+/**
+ * 创建 quota-exhausted 事件监听器
+ * 当 iOS Extension 检测到今日配额耗尽时触发（App 在前台时实时响应）
+ * 后台场景：用户点击推送通知 → App 唤醒 → AppState active → sync.ts 中 getFocusStatus 检测 quotaExhausted 标记
+ * @param callback 事件回调函数
+ * @returns 事件订阅对象，调用 remove() 方法取消监听
+ */
+export function createQuotaExhaustedListener(
+  callback: () => void,
+): EventSubscription {
+  if (Platform.OS !== 'ios') {
+    return { remove: () => {} };
+  }
+
+  const emitter = new NativeEventEmitter(NativeModule);
+  const subscription = emitter.addListener('quota-exhausted', callback);
+
+  return {
+    remove: () => {
+      subscription.remove();
+    },
+  };
+}

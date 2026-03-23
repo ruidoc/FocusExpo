@@ -3,8 +3,8 @@
  * 用于业务接口请求
  */
 
-const DEV_BASE_URL = 'https://focus.freeshore.cn/dev-api';
-// const DEV_BASE_URL = 'http://192.168.0.5:8849';
+// const DEV_BASE_URL = 'https://focus.freeshore.cn/dev-api';
+const DEV_BASE_URL = 'http://172.20.10.8:8849';
 
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || DEV_BASE_URL;

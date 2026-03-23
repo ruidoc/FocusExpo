@@ -117,6 +117,9 @@ const PlanStore = combine(
       (get() as any).pauseCurPlan(false);
       (get() as any).setCurPlanMinute(0);
       (get() as any).resetPlan();
+      record.getState().getStatis();
+      // 同步权益数据，更新 today_used
+      benefit.getState().getBenefit();
     },
 
     // 专注计划终止

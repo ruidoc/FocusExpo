@@ -1,4 +1,5 @@
 import { usePlanStore, useRecordStore, useUserStore } from '@/stores';
+import { addLiveFocusDelta, getLiveFocusDelta } from '@/utils/live-focus';
 import { minutesToHours } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
@@ -47,6 +48,17 @@ const Header = () => {
   const ustore = useUserStore();
   const rstore = useRecordStore();
   const pstore = usePlanStore();
+  const liveActualMins = addLiveFocusDelta(
+    rstore.actual_mins,
+    getLiveFocusDelta({
+      active: !!pstore.active_plan,
+      paused: !!pstore.is_pause(),
+      curplanMinute: pstore.curplan_minute,
+      currentRecordId: rstore.record_id,
+      snapshotRecordId: rstore.actual_mins_snapshot_record_id,
+      snapshotCurplanMinute: rstore.actual_mins_snapshot_curplan_minute,
+    }),
+  );
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -72,8 +84,8 @@ const Header = () => {
           {getGreeting()}，{getUserName()}！
         </Text>
         <Text className="text-lg font-semibold text-white/90 leading-7 tracking-tighter">
-          {rstore.actual_mins > 0
-            ? `你已专注 ${minutesToHours(rstore.actual_mins)} 👍`
+          {liveActualMins > 0
+            ? `你已专注 ${minutesToHours(liveActualMins)} 👍`
             : '今天还没开始，加油！💪'}
         </Text>
       </View>

@@ -39,10 +39,12 @@ const StatisticStore = combine(
         });
         if (res.statusCode === 200) {
           (get() as any).setAppStatis(res.data);
+          return res.data;
         }
       } catch (error) {
         console.log(error);
       }
+      return null;
     },
   }),
 );

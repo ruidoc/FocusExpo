@@ -1,9 +1,11 @@
 import { AppToken, Page } from '@/components/business';
-import { useAppStore, usePlanStore, useStatisticStore } from '@/stores';
+import { useAppStore, usePlanStore, useRecordStore, useStatisticStore } from '@/stores';
 import type { Period } from '@/stores/statistic';
+import { addLiveFocusDelta, getLiveFocusDelta } from '@/utils/live-focus';
 import { useTheme } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,19 +17,37 @@ const App = () => {
   const sstore = useStatisticStore();
   const astore = useAppStore();
   const pstore = usePlanStore();
+  const rstore = useRecordStore();
   const { colors, dark } = useTheme();
   const [period, setPeriod] = useState<Period>('today');
   const [loading, setLoading] = useState(true);
-  const fetchData = useCallback(async (p: Period) => {
-    setLoading(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [statsSnapshot, setStatsSnapshot] = useState({
+    curplanMinute: 0,
+    recordId: '',
+  });
+  const fetchData = useCallback(async (p: Period, options?: { silent?: boolean }) => {
+    if (!options?.silent) {
+      setLoading(true);
+    }
     try {
       const astore = useAppStore.getState();
       if (astore.ios_all_apps.length === 0) {
         await astore.getIosApps();
       }
-      await useStatisticStore.getState().fetchAppStatis(p);
+      const data = await useStatisticStore.getState().fetchAppStatis(p);
+      if (data) {
+        const latestRecord = useRecordStore.getState();
+        const latestPlan = usePlanStore.getState();
+        setStatsSnapshot({
+          curplanMinute: latestPlan.curplan_minute,
+          recordId: latestRecord.record_id,
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!options?.silent) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -65,8 +85,36 @@ const App = () => {
     return Math.round(n);
   };
 
-  const items = sstore.app_statis?.items || [];
   const total = sstore.app_statis;
+  const items = useMemo(() => total?.items || [], [total?.items]);
+  const currentRecordId = rstore.record_id;
+  const currentApps = useMemo(
+    () => new Set(pstore.active_plan?.apps || []),
+    [pstore.active_plan?.apps],
+  );
+  const liveDelta = getLiveFocusDelta({
+    active: !!pstore.active_plan,
+    paused: !!pstore.is_pause(),
+    curplanMinute: pstore.curplan_minute,
+    currentRecordId,
+    snapshotRecordId: statsSnapshot.recordId,
+    snapshotCurplanMinute: statsSnapshot.curplanMinute,
+  });
+  const displayTotalActualMins = addLiveFocusDelta(
+    total?.total_actual_mins || 0,
+    liveDelta,
+  );
+  const displayItems = useMemo(() => {
+    if (!liveDelta || currentApps.size === 0) {
+      return items;
+    }
+    return items.map(item => ({
+      ...item,
+      actual_mins: currentApps.has(item.app)
+        ? addLiveFocusDelta(item.actual_mins, liveDelta)
+        : item.actual_mins,
+    }));
+  }, [currentApps, items, liveDelta]);
   const TEXT2 = dark ? '#6B7280' : '#94A3B8';
   const ACCENT = '#7A5AF8';
 
@@ -101,6 +149,15 @@ const App = () => {
       </View>
     );
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchData(period, { silent: true });
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchData, period]);
 
   return (
     <Page safe safeEdges={['top']}>
@@ -146,7 +203,13 @@ const App = () => {
           })}
         </View>
 
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
           {/* 汇总卡片 */}
           <View
             className="mx-4 mt-1 mb-4 rounded-3xl py-5"
@@ -173,7 +236,7 @@ const App = () => {
                 <Text className="text-xs mb-2" style={{ color: TEXT2 }}>
                   实际专注
                 </Text>
-                {renderDuration(total?.total_actual_mins || 0)}
+                {renderDuration(displayTotalActualMins)}
               </View>
               <View
                 className="my-1"
@@ -201,7 +264,7 @@ const App = () => {
             <Text className="text-center text-sm mt-6" style={{ color: TEXT2 }}>
               加载中...
             </Text>
-          ) : items.length === 0 ? (
+          ) : displayItems.length === 0 ? (
             <View className="flex-1 items-center justify-center py-20">
               <Text className="text-sm" style={{ color: TEXT2 }}>
                 暂无数据
@@ -222,7 +285,7 @@ const App = () => {
                   borderColor: '#E5E7EB',
                 }}>
                 {(() => {
-                  const sortedItems = items
+                  const sortedItems = displayItems
                     .slice()
                     .sort((a, b) => b.actual_mins - a.actual_mins);
                   const medianMins =

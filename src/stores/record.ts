@@ -3,7 +3,7 @@ import { storage } from '@/utils';
 import http from '@/utils/request';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
-import { useBenefitStore } from '.';
+import { useBenefitStore, usePlanStore } from '.';
 
 const RecordStore = combine(
   {
@@ -11,6 +11,8 @@ const RecordStore = combine(
     record_id: '' as string, // 当前记录Id
     total_mins: 0 as number, // 计划专注时长（分钟数）
     actual_mins: 0 as number, // 实际专注时长（分钟数）
+    actual_mins_snapshot_curplan_minute: 0 as number,
+    actual_mins_snapshot_record_id: '' as string,
     success_rate: '0%' as string, // 专注成功率
   },
   (set, get) => ({
@@ -82,9 +84,12 @@ const RecordStore = combine(
       try {
         let res: HttpRes = await http.get('/record/statis');
         if (res.statusCode === 200) {
+          const pstore = usePlanStore.getState();
           // console.log('统计数据：', res.data);
           set({
             actual_mins: res.data.actual_mins,
+            actual_mins_snapshot_curplan_minute: pstore.curplan_minute,
+            actual_mins_snapshot_record_id: get().record_id,
             success_rate: res.data.success_rate,
             total_mins: res.data.total_mins,
           });
@@ -126,6 +131,7 @@ const RecordStore = combine(
         let res: HttpRes = await http.post('/record/complete/' + id);
         if (res.statusCode === 200) {
           (get() as any).getRecords();
+          (get() as any).getStatis();
         }
       } catch (error) {
         console.log(error);
@@ -152,6 +158,7 @@ const RecordStore = combine(
         });
         if (res.statusCode === 200) {
           (get() as any).getRecords();
+          (get() as any).getStatis();
           useBenefitStore.getState().getBenefit();
         }
       } catch (error) {

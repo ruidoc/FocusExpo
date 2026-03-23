@@ -1,10 +1,6 @@
+import { DayDurationBar } from '@/components/business';
 import { FieldGroup, FieldItem, Flex } from '@/components/ui';
-import {
-  useBenefitStore,
-  useRecordStore,
-  useSubscriptionStore,
-  useUserStore,
-} from '@/stores';
+import { useBenefitStore, useSubscriptionStore, useUserStore } from '@/stores';
 import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
@@ -16,10 +12,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const App = () => {
   const store = useUserStore();
   const subStore = useSubscriptionStore();
-  const recStore = useRecordStore();
-  const benefitStore = useBenefitStore();
+  const bstore = useBenefitStore();
   const { dark } = useTheme();
   const insets = useSafeAreaInsets();
+  const showVip = bstore.features.includes('show-vip');
 
   const toLogin = () => {
     if (!store.uInfo) {
@@ -36,13 +32,6 @@ const App = () => {
     if (route) {
       router.push(route);
     }
-  };
-
-  const formatMins = (m: number) => {
-    const h = Math.floor((m || 0) / 60);
-    const mm = (m || 0) % 60;
-    if (h) return `${h}h${mm}m`;
-    return `${mm}m`;
   };
 
   const formatExpiry = (dateStr: string) => {
@@ -132,7 +121,7 @@ const App = () => {
       </Flex>
 
       {/* 会员卡片 */}
-      {store.uInfo && (
+      {store.uInfo && showVip && (
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => toNavigate('paywall')}
@@ -168,25 +157,6 @@ const App = () => {
                   {isActive ? 'Pro 会员' : 'Pro 会员'}
                 </Text>
               </View>
-              {!isActive && (
-                <Text
-                  className="text-[12px] mt-1"
-                  style={{ color: dark ? '#555' : '#B0B8C4' }}>
-                  今日剩余可专注：
-                  {(() => {
-                    const left = Math.max(
-                      benefitStore.day_duration - benefitStore.today_used,
-                      0,
-                    );
-                    if (left >= 60) {
-                      const h = Math.floor(left / 60);
-                      const m = left % 60;
-                      return m > 0 ? `${h}小时${m}分钟` : `${h}小时`;
-                    }
-                    return `${left}分钟`;
-                  })()}
-                </Text>
-              )}
             </View>
             {!isActive && (
               <TouchableOpacity
@@ -244,6 +214,11 @@ const App = () => {
           )}
         </TouchableOpacity>
       )}
+
+      {/* 今日专注时长进度条（仅免费用户显示） */}
+      <View className="ml-6 mr-8 mt-1">
+        <DayDurationBar />
+      </View>
 
       {/* 菜单列表 */}
       <Flex className="flex-col items-stretch mt-7 gap-2 opacity-85">

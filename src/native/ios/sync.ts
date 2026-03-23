@@ -3,11 +3,47 @@
  * 封装所有与 iOS 专注状态相关的同步逻辑、事件监听和定时器管理
  */
 
-import { usePlanStore, useRecordStore } from '@/stores';
+import { useBenefitStore, usePlanStore, useRecordStore } from '@/stores';
 import { AppState, Platform } from 'react-native';
 import type { ExtensionLogEvent, FocusStateEvent } from '../type';
-import { createExtensionLogListener, createFocusStateListener } from './events';
+import {
+  createExtensionLogListener,
+  createFocusStateListener,
+  createQuotaExhaustedListener,
+} from './events';
 import { getFocusStatus } from './methods';
+
+// 全局配额耗尽处理函数（由 DayDoneModal 注册，避免循环依赖）
+let _onQuotaExhausted: (() => void) | null = null;
+
+export function registerQuotaExhaustedHandler(fn: () => void) {
+  _onQuotaExhausted = fn;
+}
+
+function cleanupLocalFocusState() {
+  const pstore = usePlanStore.getState();
+  const rstore = useRecordStore.getState();
+
+  stopFocusTimer();
+
+  if (pstore.active_plan?.repeat === 'once') {
+    pstore.rmOncePlan(pstore.active_plan.id);
+  } else if (pstore.active_plan) {
+    pstore.addExitPlanIds(pstore.active_plan.id);
+  }
+
+  pstore.pauseCurPlan(false);
+  rstore.removeRecordId();
+  pstore.setCurPlanMinute(0);
+  pstore.resetPlan();
+  rstore.getStatis();
+}
+
+function handleQuotaExhausted() {
+  cleanupLocalFocusState();
+  useBenefitStore.getState().getBenefit();
+  _onQuotaExhausted?.();
+}
 
 // 内部定时器引用
 let timerRef: ReturnType<typeof setTimeout> | null = null;
@@ -64,6 +100,12 @@ async function syncIOSStatus() {
     const status = await getFocusStatus();
     console.log('【当前屏蔽状态】', status);
 
+    // 检测配额耗尽标记（单次消费，处理用户点击推送通知唤醒 App 的场景）
+    if (status.quotaExhausted) {
+      handleQuotaExhausted();
+      return;
+    }
+
     const pstore = usePlanStore.getState();
     const rstore = useRecordStore.getState();
 
@@ -85,6 +127,8 @@ async function syncIOSStatus() {
       if (pstore.active_plan?.id === status.plan_id) {
         pstore.pauseCurPlan(status.paused || false);
       }
+    } else if (status.failed) {
+      cleanupLocalFocusState();
     } else if (pstore.active_plan) {
       console.log('【专注同步错误】');
     } else {
@@ -140,7 +184,7 @@ function handleFocusStateChange(payload: FocusStateEvent) {
     }
   } else if (payload?.state === 'ended') {
     stopFocusTimer();
-    // 正常完成
+    // 正常完成（complatePlan 内部已调用 getBenefit 同步 today_used）
     pstore.complatePlan();
   }
 }
@@ -160,6 +204,11 @@ export function setupIOSFocusSync(): () => void {
   const focusStateSubscription = createFocusStateListener(
     handleFocusStateChange,
   );
+
+  // 创建配额耗尽监听器（App 在前台时 Extension 发出 Darwin 通知后实时响应）
+  const quotaExhaustedSubscription = createQuotaExhaustedListener(() => {
+    handleQuotaExhausted();
+  });
 
   // 创建 Extension 日志监听器
   const extensionLogSubscription = createExtensionLogListener(
@@ -190,6 +239,7 @@ export function setupIOSFocusSync(): () => void {
   return () => {
     focusStateSubscription.remove();
     extensionLogSubscription.remove();
+    quotaExhaustedSubscription.remove();
     appStateSubscription?.remove?.();
     stopFocusTimer();
   };

@@ -1,4 +1,5 @@
 import { DebugBall } from '@/components/debug/debug-ball';
+import DayDoneModal from '@/components/modals/day-done-modal';
 import { PostHogProviderWrapper } from '@/components/providers/PostHogProvider';
 import { SuperwallProviderWrapper } from '@/components/providers/SuperwallProvider';
 import { ActionSheet, DateTimePicker, Dialog, Toast } from '@/components/ui';
@@ -67,6 +68,7 @@ const RootLayout = () => {
           <DateTimePicker.Global />
           <Dialog.Global />
           <Toast.Global />
+          <DayDoneModal />
           <View className="flex-1">
             <Stack screenOptions={ScreenOptions}>
               <Stack.Screen
