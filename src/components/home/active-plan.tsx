@@ -1,7 +1,7 @@
 import { Flex } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { pauseAppLimits, resumeAppLimits } from '@/native/ios';
-import { usePlanStore, useUserStore } from '@/stores';
+import { useBenefitStore, usePlanStore, useUserStore } from '@/stores';
 import { stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
@@ -19,6 +19,7 @@ import TimeFlow from './time-flow';
 const FocusButton = () => {
   const ustore = useUserStore();
   const pstore = usePlanStore();
+  const bstore = useBenefitStore();
   const { colors } = useCustomTheme();
 
   // 弹窗状态
@@ -123,21 +124,25 @@ const FocusButton = () => {
             <Icon name="play" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {pstore.active_plan && !pstore.is_pause() && (
-          <TouchableOpacity
-            onPress={() => setShowPauseModal(true)}
-            activeOpacity={0.8}
-            style={styles.circleButton}>
-            <Icon name="pause" size={24} color="#B3B3BA" />
-          </TouchableOpacity>
-        )}
-        {pstore.is_pause() && (
-          <TouchableOpacity
-            onPress={resumeFocus}
-            activeOpacity={0.8}
-            style={styles.circleButton}>
-            <Icon name="play" size={24} color="#B3B3BA" />
-          </TouchableOpacity>
+        {bstore.features.includes('show-pause') && (
+          <>
+            {pstore.active_plan && !pstore.is_pause() && (
+              <TouchableOpacity
+                onPress={() => setShowPauseModal(true)}
+                activeOpacity={0.8}
+                style={styles.circleButton}>
+                <Icon name="pause" size={24} color="#B3B3BA" />
+              </TouchableOpacity>
+            )}
+            {pstore.is_pause() && (
+              <TouchableOpacity
+                onPress={resumeFocus}
+                activeOpacity={0.8}
+                style={styles.circleButton}>
+                <Icon name="play" size={24} color="#B3B3BA" />
+              </TouchableOpacity>
+            )}
+          </>
         )}
         {pstore.active_plan && (
           <TouchableOpacity

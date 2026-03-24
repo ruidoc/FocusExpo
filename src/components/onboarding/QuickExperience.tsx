@@ -71,7 +71,10 @@ const QuickExperience = ({
     if (phase !== 'active' || endTimeRef.current === 0) return;
 
     const tick = () => {
-      const sec = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+      const sec = Math.max(
+        0,
+        Math.ceil((endTimeRef.current - Date.now()) / 1000),
+      );
       setRemaining(sec);
       if (sec > 0) {
         timerRef.current = setTimeout(tick, 1000);

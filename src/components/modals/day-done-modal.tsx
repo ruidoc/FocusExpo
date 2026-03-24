@@ -1,11 +1,9 @@
 /**
  * DayDoneModal - 今日配额耗尽鼓励弹窗
- * 当用户今日专注时长全部使用完毕时展示，传递积极正向的信息
- * 触发路径：iOS Extension → Darwin 通知 → JS quota-exhausted 事件 → showDayDoneModal()
+ * 预留组件，后续可在其它时机手动展示
  */
 
 import { useBenefitStore } from '@/stores';
-import { registerQuotaExhaustedHandler } from '@/native/ios/sync';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Modal, Text, TouchableOpacity, View } from 'react-native';
 import { create } from 'zustand';
@@ -36,11 +34,6 @@ const DayDoneModal: React.FC = () => {
   const benefitStore = useBenefitStore();
   const scaleAnim = useRef(new Animated.Value(0)).current;
 
-  // 注册到 sync.ts，避免循环依赖
-  useEffect(() => {
-    registerQuotaExhaustedHandler(showDayDoneModal);
-  }, []);
-
   useEffect(() => {
     if (visible) {
       scaleAnim.setValue(0);
@@ -51,7 +44,7 @@ const DayDoneModal: React.FC = () => {
         useNativeDriver: true,
       }).start();
     }
-  }, [visible]);
+  }, [scaleAnim, visible]);
 
   const formatMinutes = (min: number) => {
     if (min >= 60) {

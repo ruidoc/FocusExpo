@@ -1,5 +1,5 @@
 import { Page, SelectApps, SelectedApps } from '@/components/business';
-import { Button, FieldGroup, FieldItem } from '@/components/ui';
+import { Button, FieldGroup, FieldItem, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import {
   useAppStore,
@@ -7,7 +7,7 @@ import {
   usePlanStore,
   useRecordStore,
 } from '@/stores';
-import { toast, trackStartFocus } from '@/utils';
+import { trackStartFocus } from '@/utils';
 import { startAppLimits } from '@/utils/permission';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { useNavigation } from '@react-navigation/native';
@@ -65,18 +65,31 @@ const QuickStartPage = () => {
   // 开始一次性任务
   const handleStart = async () => {
     if (pstore.active_plan) {
-      toast('已有专注任务正在进行中', 'info');
+      Toast('已有专注任务正在进行中', 'info');
       return;
     }
 
     // iOS: 验证应用选择
     if (astore.ios_selected_apps.length === 0) {
-      toast('请先选择要限制的应用', 'info');
+      Toast('请先选择要限制 的应用', 'info');
       return;
     }
 
+    await useBenefitStore.getState().getBenefit();
+    const latestBenefit = useBenefitStore.getState();
+    if (
+      !latestBenefit.is_subscribed &&
+      latestBenefit.day_duration > 0 &&
+      Math.abs(latestBenefit.today_used - latestBenefit.day_duration) <= 3
+    ) {
+      Toast('今日专注时长已用完', 'info');
+      return;
+    }
+    debugger;
+
     let plan_id = `once_${Math.floor(Math.random() * 99999999)}`;
     // iOS: 使用屏幕时间限制开始屏蔽
+    console.log('startAppLimits', minute, plan_id, mode);
     try {
       const ok = await startAppLimits(minute, plan_id, mode);
       if (ok) {
@@ -87,14 +100,14 @@ const QuickStartPage = () => {
 
         // PostHog埋点：记录专注开始
         trackStartFocus(plan_id, minute);
-        toast('专注已开始', 'success');
+        Toast('专注已开始', 'success');
         navigation.goBack();
       } else {
-        toast('启动专注失败，请重试', 'error');
+        Toast('启动专注失败，请重试', 'error');
       }
     } catch (error) {
       console.error('启动专注失败:', error);
-      toast('启动专注失败，请检查权限设置', 'error');
+      Toast('启动专注失败，请检查权限设置', 'error');
     }
   };
 
@@ -123,7 +136,11 @@ const QuickStartPage = () => {
         {/* 选择APP */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
-            title={allowModeEnabled && mode === 'allow' ? '允许使用的应用' : '要锁定的应用'}
+            title={
+              allowModeEnabled && mode === 'allow'
+                ? '允许使用的应用'
+                : '要锁定的应用'
+            }
             className="pt-3 pb-2"
             rightElement={
               <SelectApps

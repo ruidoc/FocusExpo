@@ -94,7 +94,6 @@ class NativeModule: RCTEventEmitter {
   private let center = DeviceActivityCenter()
   private let activityName = DeviceActivityName("FocusOne.ScreenTime")
   private let pauseResumeActivity = DeviceActivityName("FocusOne.PauseResume")
-  private let quotaStopActivity = DeviceActivityName("FocusOne.QuotaStop")
   private var hasListeners: Bool = false
   private var tickTimer: Timer?
   private var darwinObserverAdded: Bool = false
@@ -168,11 +167,6 @@ class NativeModule: RCTEventEmitter {
       } else if n == "com.focusone.extension.log" {
         // 日志处理不受前台状态限制，始终处理（因为日志已持久化）
         instance.processExtensionLogs()
-      } else if n == "com.focusone.quota.exhausted" {
-        // 配额耗尽：无论前台/后台均转发（App 在前台时 JS 实时响应）
-        if instance.hasListeners {
-          instance.sendEvent(withName: "quota-exhausted", body: nil)
-        }
       }
     }
   }
@@ -392,7 +386,7 @@ class NativeModule: RCTEventEmitter {
   // Event Emitter
   override static func requiresMainQueueSetup() -> Bool { true }
   override func supportedEvents() -> [String]! {
-    return ["focus-state", "extension-log", "quota-exhausted"]
+    return ["focus-state", "extension-log"]
   }
   override func startObserving() {
     hasListeners = true
@@ -419,13 +413,11 @@ class NativeModule: RCTEventEmitter {
       let startedName = "com.focusone.focus.started" as CFString
       let resumedName = "com.focusone.focus.resumed" as CFString
       let logName = "com.focusone.extension.log" as CFString
-      let quotaExhaustedName = "com.focusone.quota.exhausted" as CFString
       let observer = Unmanaged.passUnretained(self).toOpaque()
       CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, endedName, nil, .deliverImmediately)
       CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, startedName, nil, .deliverImmediately)
       CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, resumedName, nil, .deliverImmediately)
       CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, logName, nil, .deliverImmediately)
-      CFNotificationCenterAddObserver(center, observer, NativeModule.darwinCallback, quotaExhaustedName, nil, .deliverImmediately)
   }
   private func removeDarwinObserverIfNeeded() {
     guard darwinObserverAdded else { return }
@@ -632,6 +624,7 @@ class NativeModule: RCTEventEmitter {
       reject("NO_SELECTION", "没有选择需要限制的应用", nil)
       return
     }
+
     // 重叠校验：禁止与当前任务或周期计划时间重叠
     let nowTs = Date().timeIntervalSince1970
     if let defaults = UserDefaults.groupUserDefaults() {
@@ -646,15 +639,6 @@ class NativeModule: RCTEventEmitter {
     if let window = currentPlannedWindow() {
       if nowTs >= window.start && nowTs < window.end {
         reject("OVERLAP_ERROR", "已处于周期计划窗口内，禁止重叠创建一次性任务", nil)
-        return
-      }
-    }
-    if let defaults = UserDefaults.groupUserDefaults() {
-      let isSubscribed = defaults.string(forKey: "is_subscribed") == "true"
-      let dayDuration = defaults.integer(forKey: "day_duration")
-      let todayUsed = defaults.integer(forKey: "today_used")
-      if !isSubscribed && dayDuration > 0 && todayUsed >= dayDuration {
-        reject("QUOTA_EXHAUSTED", "今日专注时长已用完", nil)
         return
       }
     }
@@ -717,7 +701,7 @@ class NativeModule: RCTEventEmitter {
     
     do {
       // 停止一次性与暂停恢复监控，保留周期性计划
-      center.stopMonitoring([activityName, pauseResumeActivity, quotaStopActivity])
+      center.stopMonitoring([activityName, pauseResumeActivity])
       
       // 开始新的监控
       try center.startMonitoring(
@@ -797,7 +781,7 @@ class NativeModule: RCTEventEmitter {
       defaults.set("user_exit", forKey: "FocusOne.FailedReason")
     }
     // 仅停止一次性任务与暂停恢复活动，保留周期性计划监控，确保下个周期继续生效
-    center.stopMonitoring([activityName, pauseResumeActivity, quotaStopActivity])
+    center.stopMonitoring([activityName, pauseResumeActivity])
 
     // 清除所有限制
     let store = ManagedSettingsStore()
@@ -832,15 +816,9 @@ class NativeModule: RCTEventEmitter {
       return
     }
     
-    // 检查任务是否已失败（暂停超时等）
-    let quotaExhausted = defaults.bool(forKey: "FocusOne.QuotaExhausted")
-    if quotaExhausted {
-      defaults.removeObject(forKey: "FocusOne.QuotaExhausted")
-    }
-
     let taskFailed = defaults.bool(forKey: "FocusOne.TaskFailed")
     if taskFailed {
-      resolve(["active": false, "failed": true, "quotaExhausted": quotaExhausted])
+      resolve(["active": false, "failed": true])
       return
     }
     
@@ -988,8 +966,7 @@ class NativeModule: RCTEventEmitter {
       "totalMinutes": total,
       "elapsedMinutes": elapsedMin,
       "focusType": ftype ?? NSNull(),
-      "pausedUntil": (pausedUntil > 0 && isPaused) ? pausedUntil : NSNull(),
-      "quotaExhausted": quotaExhausted
+      "pausedUntil": (pausedUntil > 0 && isPaused) ? pausedUntil : NSNull()
     ])
   }
 

@@ -47,7 +47,6 @@ export interface FocusStatus {
   elapsedMinutes?: number;
   focusType?: 'once' | 'periodic' | null;
   pausedUntil?: number | null; // 暂停结束时间戳（仅用于 JS 端倒计时显示）
-  quotaExhausted?: boolean; // 今日配额已耗尽（单次消费标记，读取后原生侧自动清除）
 }
 
 /**

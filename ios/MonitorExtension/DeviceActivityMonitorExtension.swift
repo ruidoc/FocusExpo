@@ -42,7 +42,6 @@ func applyShield(store: ManagedSettingsStore, selection: FamilyActivitySelection
 class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     
     private let kPlansMap = "FocusOne.PlansMap"
-    private let quotaStopActivity = DeviceActivityName("FocusOne.QuotaStop")
     
     /// 当 DeviceActivity 监控区间开始时触发
     override func intervalDidStart(for activity: DeviceActivityName) {
@@ -56,11 +55,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             return
         }
 
-        if activity.rawValue == "FocusOne.QuotaStop" {
-            logToJS(level: "log", message: "配额停止活动开始，等待到点停止")
-            return
-        }
-        
         // 2. 一次性任务：检查跨日、配额，发送通知
         if activity.rawValue == "FocusOne.ScreenTime" {
             logToJS(level: "log", message: "一次性任务开始，发送通知")
@@ -73,13 +67,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 if remaining <= 0 {
                     handleQuotaExceeded(defaults: defaults, reason: "quota_exhausted")
                     return
-                }
-                if remaining < totalMin {
-                    defaults.set(remaining, forKey: "FocusOne.TotalMinutes")
-                    defaults.set(Date().addingTimeInterval(TimeInterval(remaining * 60)).timeIntervalSince1970, forKey: "FocusOne.FocusEndAt")
-                    scheduleQuotaStop(after: remaining, defaults: defaults)
-                } else {
-                    stopQuotaStopMonitoring()
                 }
             }
             
@@ -102,11 +89,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // 检查是否是暂停恢复活动，如果是则跳过处理
         if activity.rawValue == "FocusOne.PauseResume" { return }
 
-        if activity.rawValue == "FocusOne.QuotaStop" {
-            handleQuotaExceeded(defaults: defaults, reason: "quota_exhausted")
-            return
-        }
-        
         // 到点自动清理屏蔽
         let store = ManagedSettingsStore()
         store.clearAllSettings()
@@ -160,8 +142,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 logToJS(level: "log", message: "已手动恢复，跳过自动恢复")
             }
             
-        } else if activity.rawValue == "FocusOne.QuotaStop" {
-            handleQuotaExceeded(defaults: defaults, reason: "quota_exhausted")
         } else {
             // ===== 正常任务结束逻辑 =====
             // 在警告阶段（区间结束前 warningTime 分钟）提前清理，支持 <15 分钟的"有效时长"
@@ -269,12 +249,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             handleQuotaExceeded(defaults: defaults, reason: "quota_exhausted")
             return
         }
-
-        let effectiveMinutes = min(totalMin, remaining)
-        let effectiveEndTime = now.addingTimeInterval(TimeInterval(effectiveMinutes * 60))
         defaults.set(now.timeIntervalSince1970, forKey: "FocusOne.FocusStartAt")
-        defaults.set(effectiveEndTime.timeIntervalSince1970, forKey: "FocusOne.FocusEndAt")
-        defaults.set(effectiveMinutes, forKey: "FocusOne.TotalMinutes")
+        defaults.set(sessionEndTime.timeIntervalSince1970, forKey: "FocusOne.FocusEndAt")
+        defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
         defaults.set("periodic", forKey: "FocusOne.FocusType")
         defaults.set(plan.id, forKey: "FocusOne.CurrentPlanId")
 
@@ -304,17 +281,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
         logToJS(level: "log", message: "屏蔽已应用", data: ["planId": plan.id])
 
-        if effectiveMinutes < totalMin {
-            scheduleQuotaStop(after: effectiveMinutes, defaults: defaults)
-        } else {
-            stopQuotaStopMonitoring()
-        }
-
         // 5. 发送通知
         notifyStart()
         
         // 6. 创建后端记录 (异步，不阻塞屏蔽)
-        createRecord(for: plan, totalMinutes: effectiveMinutes, defaults: defaults)
+        createRecord(for: plan, totalMinutes: totalMin, defaults: defaults)
     }
     
     private func findPlan(by activityName: String, defaults: UserDefaults) -> PlanConfig? {
@@ -430,7 +401,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             defaults.removeObject(forKey: "FocusOne.ShieldMode")
         }
 
-        stopQuotaStopMonitoring()
     }
 
     private func notifyResume() {
@@ -608,58 +578,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         return remaining
     }
 
-    private func scheduleQuotaStop(after remaining: Int, defaults: UserDefaults) {
-        let safeRemaining = max(1, remaining)
-        let now = Date()
-        let realDuration = max(safeRemaining, 15)
-        let warningTime = max(0, realDuration - safeRemaining)
-        let endDate = now.addingTimeInterval(TimeInterval(realDuration * 60))
-        let calendar = Calendar.current
-        let schedule = DeviceActivitySchedule(
-            intervalStart: DateComponents(
-                calendar: calendar,
-                year: calendar.component(.year, from: now),
-                month: calendar.component(.month, from: now),
-                day: calendar.component(.day, from: now),
-                hour: calendar.component(.hour, from: now),
-                minute: calendar.component(.minute, from: now),
-                second: calendar.component(.second, from: now)
-            ),
-            intervalEnd: DateComponents(
-                calendar: calendar,
-                year: calendar.component(.year, from: endDate),
-                month: calendar.component(.month, from: endDate),
-                day: calendar.component(.day, from: endDate),
-                hour: calendar.component(.hour, from: endDate),
-                minute: calendar.component(.minute, from: endDate),
-                second: calendar.component(.second, from: endDate)
-            ),
-            repeats: false,
-            warningTime: warningTime > 0 ? DateComponents(minute: warningTime) : nil
-        )
-
-        let deviceActivityCenter = DeviceActivityCenter()
-        do {
-            deviceActivityCenter.stopMonitoring([quotaStopActivity])
-            try deviceActivityCenter.startMonitoring(quotaStopActivity, during: schedule)
-            logToJS(level: "log", message: "已创建配额停止监控", data: ["remaining": safeRemaining, "realDuration": realDuration, "warningTime": warningTime])
-        } catch {
-            logToJS(level: "error", message: "创建配额停止监控失败", data: ["remaining": safeRemaining, "error": error.localizedDescription])
-        }
-    }
-
-    private func stopQuotaStopMonitoring() {
-        let deviceActivityCenter = DeviceActivityCenter()
-        deviceActivityCenter.stopMonitoring([quotaStopActivity])
-    }
-
     private func handleQuotaExceeded(defaults: UserDefaults, reason: String) {
         let store = ManagedSettingsStore()
         store.clearAllSettings()
 
         defaults.set(true, forKey: "FocusOne.TaskFailed")
         defaults.set(reason, forKey: "FocusOne.FailedReason")
-        defaults.set(true, forKey: "FocusOne.QuotaExhausted")
         defaults.removeObject(forKey: "FocusOne.FocusStartAt")
         defaults.removeObject(forKey: "FocusOne.FocusEndAt")
         defaults.removeObject(forKey: "FocusOne.TotalMinutes")
@@ -668,7 +592,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults.removeObject(forKey: "FocusOne.ShieldMode")
         defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
         defaults.removeObject(forKey: "FocusOne.PausedUntil")
-        stopQuotaStopMonitoring()
 
         if let recordId = defaults.string(forKey: "record_id"), !recordId.isEmpty {
             let requestBody: [String: Any] = ["reason": reason]
@@ -677,31 +600,15 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             }
         }
 
-        notifyQuotaExhausted(defaults: defaults)
-        logToJS(level: "warn", message: "今日配额已耗尽，已强制停止专注", data: ["reason": reason])
-    }
-    
-    /// 发送配额耗尽通知
-    private func notifyQuotaExhausted(defaults: UserDefaults) {
-        let today = formatDate(Date())
-        let notifiedDate = defaults.string(forKey: "FocusOne.QuotaExhaustedNotifiedDate")
-        if notifiedDate == today {
-            return
-        }
-        defaults.set(today, forKey: "FocusOne.QuotaExhaustedNotifiedDate")
-
-        // 写入标记，供 App 唤醒后检测（单次消费，由 getFocusStatus 读取后清除）
-        // 发送 Darwin 通知，供 App 在前台时实时响应
-        CFNotificationCenterPostNotification(
-            CFNotificationCenterGetDarwinNotifyCenter(),
-            CFNotificationName("com.focusone.quota.exhausted" as CFString),
-            nil, nil, true
-        )
-        
         let content = UNMutableNotificationContent()
         content.title = "今日时长已用完"
-        content.body = "完成的很棒！明天再来吧"
-        enqueueNotification(identifier: "QuotaExhausted_\(today)", content: content)
+        content.body = "已停止本次专注，明天再来吧"
+        enqueueNotification(
+            identifier: "QuotaExceeded_\(Int(Date().timeIntervalSince1970))",
+            content: content
+        )
+
+        logToJS(level: "warn", message: "今日配额已耗尽，已强制停止专注", data: ["reason": reason])
     }
     
     /// 发送配额不足警告
