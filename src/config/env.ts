@@ -3,8 +3,8 @@
  * 用于业务接口请求
  */
 
-// const DEV_BASE_URL = 'https://focus.freeshore.cn/dev-api';
-const DEV_BASE_URL = 'http://172.20.10.8:8849';
+const DEV_BASE_URL = 'https://focus.freeshore.cn/dev-api';
+// const DEV_BASE_URL = 'http://172.20.10.8:8849';
 
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || DEV_BASE_URL;
@@ -19,7 +19,15 @@ export const POSTHOG_HOST = `${API_BASE_URL}/i`;
  * 当前环境标识
  * development | preview | production
  */
-export const APP_VARIANT = process.env.APP_VARIANT || 'development';
+export type AppEnv = 'development' | 'preview' | 'production';
+
+function normalizeAppEnv(value?: string): AppEnv {
+  if (value === 'production') return 'production';
+  if (value === 'preview') return 'preview';
+  return 'development';
+}
+
+export const APP_VARIANT: AppEnv = normalizeAppEnv(process.env.APP_VARIANT);
 
 /**
  * 是否为生产环境

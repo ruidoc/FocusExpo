@@ -44,6 +44,7 @@ class Analytics {
     finalProperties["distinct_id"] = finalUserId
     finalProperties["user_id"] = finalUserId
     finalProperties["app_version"] = getAppVersion()
+    finalProperties["app_env"] = getAppEnv()
     finalProperties["platform"] = "ios"
     finalProperties["event_origin"] = isRunningInExtension() ? "ios_extension" : "ios_native"
     finalProperties["$lib"] = "ios-native"
@@ -114,6 +115,20 @@ class Analytics {
       return version
     }
     return "unknown"
+  }
+
+  private func getAppEnv() -> String {
+    guard let defaults = UserDefaults(suiteName: groupSuite) else {
+      return "development"
+    }
+
+    let appEnv = defaults.string(forKey: "app_env") ?? "development"
+    switch appEnv {
+    case "production", "preview":
+      return appEnv
+    default:
+      return "development"
+    }
   }
 
   private func isRunningInExtension() -> Bool {

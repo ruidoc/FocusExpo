@@ -11,6 +11,7 @@ import Constants from 'expo-constants';
 import { useSuperwallStore } from 'expo-superwall';
 import { PostHog, usePostHog } from 'posthog-react-native';
 import { Platform } from 'react-native';
+import { APP_VARIANT } from '@/config/env';
 import { objectIdToUuid, isObjectId } from './uuid-mapper';
 import { storage } from './storage';
 
@@ -48,6 +49,8 @@ export const getAppVersion = () =>
   Constants.expoConfig?.version ||
   'unknown';
 
+export const getAppEnv = () => APP_VARIANT;
+
 export const syncNativeTrackingContext = (userId?: string) => {
   if (Platform.OS !== 'ios') return;
 
@@ -62,6 +65,7 @@ export const syncNativeTrackingContext = (userId?: string) => {
   }
 
   storage.setGroup('app_version', getAppVersion());
+  storage.setGroup('app_env', getAppEnv());
   storage.setGroup('posthog_api_key', POSTHOG_API_KEY);
 };
 
@@ -72,6 +76,7 @@ function buildBaseProperties(
   return {
     user_id: getTrackingUserId(),
     app_version: getAppVersion(),
+    app_env: getAppEnv(),
     platform: Platform.OS,
     event_origin: eventOrigin,
     is_logged_in: !!storage.getString('access_token'),
@@ -193,6 +198,7 @@ export const identifyUser = async (
     client.identify(userId, {
       user_id: userId,
       app_version: getAppVersion(),
+      app_env: getAppEnv(),
       platform: Platform.OS,
       ...properties,
     });
@@ -294,6 +300,7 @@ export const setUserProperties = (
   client.identify(undefined, {
     user_id: getTrackingUserId(),
     app_version: getAppVersion(),
+    app_env: getAppEnv(),
     ...properties,
   });
   console.log('[PostHog] 用户属性更新:', properties);
