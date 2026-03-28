@@ -12,10 +12,32 @@ import type {
   AppSelectionResult,
   FocusStatus,
 } from '@/native/type';
+import {
+  type FocusType,
+  storage,
+  trackBlockAppsSelected,
+  trackBlockAppsSelectionStarted,
+  trackPermissionRequestClicked,
+  trackPermissionResult,
+  trackStartClicked,
+} from '@/utils/analytics';
+
+type TrackingOptions = {
+  entry_source?: string;
+  screen_name?: string;
+};
+
+type StartTrackingOptions = TrackingOptions & {
+  focus_type?: FocusType;
+};
 
 // 请求屏幕时间权限
-export async function getScreenTimePermission(): Promise<boolean> {
+export async function getScreenTimePermission(
+  options?: TrackingOptions,
+): Promise<boolean> {
+  trackPermissionRequestClicked('screen_time', options);
   const res = await nativeRequestScreenTimePermission();
+  trackPermissionResult('screen_time', res ? 'approved' : 'denied', options);
   console.log('getScreenTimePermission res', res);
   return res;
 }
@@ -34,17 +56,21 @@ export type { AppDetail, AppSelectionResult };
 export async function selectAppsToLimit(
   maxCount: number = 0,
   apps?: string[],
+  options?: TrackingOptions,
 ): Promise<AppSelectionResult> {
   try {
+    trackBlockAppsSelectionStarted(options);
     const result = await nativeSelectAppsToLimit(maxCount, apps);
     console.log('selectAppsToLimit result', result);
     if (result.success) {
+      trackBlockAppsSelected(result.apps?.length || 0, options);
       return result;
     } else {
       throw { success: false };
     }
   } catch (error) {
     console.log('selectAppsToLimit error', error);
+    trackBlockAppsSelected(0, { ...options, result: 'failed' });
     throw { success: false };
   }
 }
@@ -54,7 +80,17 @@ export async function startAppLimits(
   durationMinutes?: number,
   planId?: string,
   mode: 'shield' | 'allow' = 'shield',
+  options?: StartTrackingOptions,
 ): Promise<boolean> {
+  const entrySource = options?.entry_source || '';
+  if (entrySource) {
+    storage.setGroup('FocusOne.FocusEntrySource', entrySource);
+  }
+  trackStartClicked(planId || '', options?.focus_type || 'once', {
+    duration_minutes: durationMinutes,
+    mode,
+    ...options,
+  });
   const result = await nativeStartAppLimits(durationMinutes, planId, mode);
   console.log('startAppLimits result', result);
   return result;

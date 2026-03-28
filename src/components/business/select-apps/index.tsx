@@ -6,6 +6,7 @@ import { Platform, Text } from 'react-native';
 
 interface SelectAppsProps {
   maxCount?: number;
+  entrySource?: string;
   /** 已选应用：支持 string[]（stableId:type）或对象数组 { stableId, type } */
   apps: string[] | { stableId: string; type?: string }[];
   onFinish: (apps: any[]) => void;
@@ -13,6 +14,7 @@ interface SelectAppsProps {
 
 const SelectApps: React.FC<SelectAppsProps> = ({
   maxCount = 0,
+  entrySource,
   apps,
   onFinish,
 }) => {
@@ -26,7 +28,9 @@ const SelectApps: React.FC<SelectAppsProps> = ({
 
   const selectApps = () => {
     if (Platform.OS !== 'ios') return;
-    selectAppsToLimit(maxCount, appIds).then(data => {
+    selectAppsToLimit(maxCount, appIds, {
+      entry_source: entrySource,
+    }).then(data => {
       if (data.success && data.apps) {
         // 同时存储到AppStore和当前组件状态
         onFinish(data.apps);

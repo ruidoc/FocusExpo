@@ -2,6 +2,7 @@ import { Toast } from '@/components/ui';
 import {
   getPostHogClient,
   identifyUser,
+  syncNativeTrackingContext,
   storage,
   trackLogin,
   trackLogout,
@@ -60,15 +61,18 @@ const UserStore = combine(
         if (token && userInfoStr) {
           const userInfo = JSON.parse(userInfoStr);
           (get() as any).setUinfo(userInfo);
+          syncNativeTrackingContext(userInfo.id);
           console.log('[UserStore] 恢复已登录用户:', userInfo.id);
           return true;
         } else {
           // 匿名用户：仅 PostHog 识别
           const posthog = getPostHogClient();
           posthog?.identify(deviceId, {
+            user_id: deviceId,
             device_id: deviceId,
             is_anonymous: true,
           });
+          syncNativeTrackingContext(deviceId);
           console.log('[UserStore] 匿名用户，deviceId:', deviceId);
           return false;
         }
@@ -103,7 +107,7 @@ const UserStore = combine(
         }
         Toast(res?.message || '发送失败');
         return false;
-      } catch (error) {
+      } catch {
         return false;
       }
     },
@@ -111,18 +115,19 @@ const UserStore = combine(
     loginByCode: async (
       form: { phone: string; code: string },
       fun?: (data?: HttpRes) => void,
+      trackingProps?: Record<string, any>,
     ) => {
       try {
         const res: any = await http.post('/user/login-by-code', form);
         if (res?.statusCode === 200) {
           const loginRes = { token: res.data?.token };
-          (get() as any).loginSuccess(loginRes, 'phone');
+          (get() as any).loginSuccess(loginRes, 'phone', trackingProps);
           fun?.(res);
         } else {
           Toast(res?.message || '登录失败');
           fun?.();
         }
-      } catch (error) {
+      } catch {
         fun?.();
       }
     },
@@ -131,6 +136,7 @@ const UserStore = combine(
       form: Record<string, string>,
       wxInfo: any,
       fun?: (data?: HttpRes) => void,
+      trackingProps?: Record<string, any>,
     ) => {
       try {
         const body = {
@@ -145,13 +151,13 @@ const UserStore = combine(
         const res: any = await http.post('/user/wechat-bind-by-code', body);
         if (res?.statusCode === 200) {
           const loginRes = { token: res.data?.token };
-          (get() as any).loginSuccess(loginRes, 'wechat');
+          (get() as any).loginSuccess(loginRes, 'wechat', trackingProps);
           fun?.(res);
         } else {
           Toast(res?.message || '绑定失败');
           fun?.();
         }
-      } catch (error) {
+      } catch {
         fun?.();
       }
     },
@@ -170,7 +176,7 @@ const UserStore = combine(
           Toast(res?.message || '绑定失败');
         }
         fun?.(res);
-      } catch (error) {
+      } catch {
         Toast('绑定失败，请重试');
         fun?.();
       }
@@ -179,6 +185,7 @@ const UserStore = combine(
     login: async (
       form: Record<string, string>,
       fun?: (data?: HttpRes) => void,
+      trackingProps?: Record<string, any>,
     ) => {
       try {
         let res: any;
@@ -189,7 +196,7 @@ const UserStore = combine(
           res = await http.post('/user/login', form);
         }
         if (res.statusCode === 200) {
-          (get() as any).loginSuccess(res, loginMethod);
+          (get() as any).loginSuccess(res, loginMethod, trackingProps);
           fun?.(res);
         } else {
           Toast(res.message);
@@ -215,6 +222,7 @@ const UserStore = combine(
         };
       },
       fun?: (data?: HttpRes) => void,
+      trackingProps?: Record<string, any>,
     ) => {
       try {
         const body: any = {
@@ -229,7 +237,7 @@ const UserStore = combine(
         const res = (await http.post('/user/apple-login', body)) as HttpRes;
         if (res.statusCode === 200) {
           const loginRes = { token: res.data.token };
-          (get() as any).loginSuccess(loginRes, 'apple');
+          (get() as any).loginSuccess(loginRes, 'apple', trackingProps);
           fun?.(res);
         } else {
           Toast(res.message);
@@ -383,7 +391,7 @@ const UserStore = combine(
 
           // 同步 user_id 到 App Groups (供 iOS Extension 读取)
           if (Platform.OS === 'ios' && res.data.id) {
-            storage.setGroup('user_id', res.data.id);
+            syncNativeTrackingContext(res.data.id);
           }
 
           // PostHog: 更新用户信息
@@ -404,16 +412,11 @@ const UserStore = combine(
     loginSuccess: (
       res: any,
       loginMethod: 'phone' | 'wechat' | 'apple' = 'phone',
+      trackingProps?: Record<string, any>,
     ) => {
       storage.set('access_token', res.token);
       storage.setGroup('access_token', res.token);
-
-      // 同步 PostHog API Key 到 App Groups (供 iOS Extension 使用)
-      if (Platform.OS === 'ios') {
-        const POSTHOG_API_KEY =
-          'phc_A4Pt2WQHEQLedNR9wyLMxSHrpdnOdUTCiR8LHNGT5QG';
-        storage.setGroup('posthog_api_key', POSTHOG_API_KEY);
-      }
+      syncNativeTrackingContext();
 
       useHomeStore.getState().loadApps();
       useAppStore.getState().getCurapp();
@@ -422,7 +425,7 @@ const UserStore = combine(
       (get() as any).getInfo();
 
       // PostHog埋点：记录登录事件
-      trackLogin(loginMethod);
+      trackLogin(loginMethod, trackingProps);
     },
 
     // 退出登录后处理
@@ -443,9 +446,11 @@ const UserStore = combine(
       const deviceId = storage.getString('device_id') || '';
       if (deviceId) {
         identifyUser(deviceId, {
+          user_id: deviceId,
           device_id: deviceId,
           is_anonymous: true,
         });
+        syncNativeTrackingContext(deviceId);
         console.log('[UserStore] 退出登录，切换回匿名用户:', deviceId);
       }
     },

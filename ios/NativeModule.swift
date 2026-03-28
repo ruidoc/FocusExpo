@@ -744,6 +744,19 @@ class NativeModule: RCTEventEmitter {
         defaults.removeObject(forKey: "FocusOne.TaskFailed")
         defaults.removeObject(forKey: "FocusOne.FailedReason")
       }
+      let entrySource = UserDefaults.groupUserDefaults()?.string(forKey: "FocusOne.FocusEntrySource") ?? "unknown"
+      Analytics.shared.track(
+        event: "session_started",
+        properties: [
+          "plan_id": planId as Any,
+          "focus_type": "once",
+          "duration_minutes": self.totalMinutes,
+          "mode": shieldMode,
+          "entry_source": entrySource,
+          "app_count": selection.applicationTokens.count,
+          "category_count": selection.categoryTokens.count
+        ]
+      )
       // 不再直接向 JS 发送 started，由扩展发 Darwin 事件统一驱动
       self.emitProgress()
       // 发送开始通知（一次性）
@@ -763,12 +776,28 @@ class NativeModule: RCTEventEmitter {
   @objc
   func stopAppLimits(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     // 标记任务失败（手动停止），阻止 Extension 调用 complete
+    var trackProperties: [String: Any] = [:]
     if let defaults = UserDefaults.groupUserDefaults() {
       // 【P0修复】累加已用时长（手动退出时）
       let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
+      let focusType = defaults.string(forKey: "FocusOne.FocusType") == "once" ? "once" : "repeat"
+      let targetMinutes = defaults.integer(forKey: "FocusOne.TotalMinutes")
+      let planId = defaults.string(forKey: "FocusOne.CurrentPlanId") ?? ""
+      let recordId = defaults.string(forKey: "record_id") ?? ""
+      let entrySource = defaults.string(forKey: "FocusOne.FocusEntrySource") ?? "unknown"
+      trackProperties = [
+        "plan_id": planId,
+        "record_id": recordId,
+        "focus_type": focusType,
+        "result": "failed",
+        "reason": "user_exit",
+        "target_minutes": targetMinutes,
+        "entry_source": entrySource
+      ]
       if startAt > 0 {
         let now = Date().timeIntervalSince1970
         let elapsedMin = Int((now - startAt) / 60)
+        trackProperties["elapsed_minutes"] = max(elapsedMin, 0)
         if elapsedMin > 0 {
           let currentUsed = defaults.integer(forKey: "today_used")
           let newUsed = currentUsed + elapsedMin
@@ -780,6 +809,7 @@ class NativeModule: RCTEventEmitter {
       defaults.set(true, forKey: "FocusOne.TaskFailed")
       defaults.set("user_exit", forKey: "FocusOne.FailedReason")
     }
+    Analytics.shared.track(event: "session_finished", properties: trackProperties)
     // 仅停止一次性任务与暂停恢复活动，保留周期性计划监控，确保下个周期继续生效
     center.stopMonitoring([activityName, pauseResumeActivity])
 
@@ -800,6 +830,7 @@ class NativeModule: RCTEventEmitter {
       defaults.removeObject(forKey: "FocusOne.TaskFailed")
       defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
       defaults.removeObject(forKey: "FocusOne.ShieldMode")
+      defaults.removeObject(forKey: "FocusOne.FocusEntrySource")
       defaults.removeObject(forKey: "FocusOne.FailedReason")
       defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
       defaults.removeObject(forKey: "FocusOne.PausedUntil")

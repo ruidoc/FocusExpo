@@ -4,6 +4,7 @@
 import { Page } from '@/components/business';
 import { Checkbox, Toast } from '@/components/ui';
 import { useSubscriptionStore, useUserStore } from '@/stores';
+import { trackPaywallOpened, trackPurchaseCompleted, trackPurchaseFailed } from '@/utils';
 import type { Product } from '@/stores/subscription';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
@@ -63,6 +64,13 @@ const PaywallPage = () => {
   } = useIAP({
     onPurchaseSuccess: async (_purchase: Purchase) => {
       setPaymentStatus('success');
+      trackPurchaseCompleted(selectedProduct?.product_id, {
+        entry_source: 'paywall',
+        screen_name: 'paywall_index',
+        product_period: selectedProduct?.period,
+        price: selectedProduct?.price,
+        currency: 'CNY',
+      });
       Toast('订阅成功，感谢您的购买');
       // Webhook 入库可能有延迟，短轮询获取订阅后再关闭
       await subStore.getSubscription();
@@ -79,9 +87,22 @@ const PaywallPage = () => {
         return;
       }
       setPaymentStatus('failed');
+      trackPurchaseFailed(selectedProduct?.product_id, {
+        entry_source: 'paywall',
+        screen_name: 'paywall_index',
+        error_code: error?.code,
+        error_message: error?.message,
+      });
       Toast(error?.message ?? '购买失败');
     },
   });
+
+  useEffect(() => {
+    trackPaywallOpened('paywall_index', {
+      entry_source: 'paywall',
+      screen_name: 'paywall_index',
+    });
+  }, []);
 
   useEffect(() => {
     if (products.length === 0) {

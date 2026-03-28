@@ -2,8 +2,8 @@ import { Page } from '@/components/business';
 import { FieldGroup, FieldItem, Switch } from '@/components/ui';
 import {
   checkScreenTimePermission,
-  requestScreenTimePermission,
-} from '@/native/ios/methods';
+  getScreenTimePermission,
+} from '@/utils/permission';
 import { usePermisStore } from '@/stores';
 import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
@@ -21,7 +21,10 @@ const App = () => {
 
   const requestScreenTime = async () => {
     if (screenTimeGranted) return;
-    const result = await requestScreenTimePermission();
+    const result = await getScreenTimePermission({
+      entry_source: 'setting_permission',
+      screen_name: 'setting_permission',
+    });
     if (result) {
       setScreenTimeGranted(true);
     }

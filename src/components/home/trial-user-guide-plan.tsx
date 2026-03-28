@@ -4,15 +4,13 @@
  */
 
 import { Button, Flex } from '@/components/ui';
-import { storage, trackEvent } from '@/utils';
+import { trackEvent } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 const TrialUserGuidePlan = () => {
-  const focusCount = storage.getNumber('focus_count') || 0;
-
   const handleCreatePlan = () => {
     trackEvent('trial_user_create_plan');
     router.push('/plans/add');

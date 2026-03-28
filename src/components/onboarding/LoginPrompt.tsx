@@ -1,6 +1,11 @@
 import { Privicy, Wechat } from '@/components/business';
 import { useHomeStore, useUserStore } from '@/stores';
-import { markOnboardingCompleted, trackEvent } from '@/utils';
+import {
+  markOnboardingCompleted,
+  trackLoginFailed,
+  trackLoginStarted,
+  trackOnboardingCompleted,
+} from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -21,13 +26,26 @@ const LoginPrompt = ({ onComplete }: LoginPromptProps) => {
   }, []);
 
   const loginResult = (result: any) => {
+    trackLoginStarted('wechat', {
+      entry_source: 'onboarding',
+      screen_name: 'onboarding_login_prompt',
+    });
     if (result.statusCode === 20003) {
       return toRegister(result.data);
     }
     ustore.login(result as Record<string, any>, val => {
       if (val) {
         completeOnboarding(true);
+      } else {
+        trackLoginFailed('wechat', {
+          entry_source: 'onboarding',
+          screen_name: 'onboarding_login_prompt',
+          error_message: 'login_failed',
+        });
       }
+    }, {
+      entry_source: 'onboarding',
+      screen_name: 'onboarding_login_prompt',
     });
   };
 
@@ -37,7 +55,11 @@ const LoginPrompt = ({ onComplete }: LoginPromptProps) => {
 
   const completeOnboarding = (withLogin: boolean) => {
     markOnboardingCompleted();
-    trackEvent('onboarding_completed', { with_login: withLogin });
+    trackOnboardingCompleted({
+      with_login: withLogin,
+      entry_source: 'onboarding',
+      screen_name: 'onboarding_login_prompt',
+    });
     router.replace('/(tabs)');
     onComplete();
   };

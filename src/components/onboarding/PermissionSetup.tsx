@@ -29,7 +29,10 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
   const checkIOSPermission = async () => {
     const status = await store.checkIOSScreenTimePermission();
     if (!status) {
-      const granted = await getScreenTimePermission();
+      const granted = await getScreenTimePermission({
+        entry_source: 'onboarding',
+        screen_name: 'onboarding_permission_setup',
+      });
       if (granted) {
         store.setIOSScreenTimePermission(true);
       } else {
@@ -46,7 +49,10 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
 
   const handleStep2 = () => {
     if (Platform.OS === 'ios') {
-      selectAppsToLimit().then(data => {
+      selectAppsToLimit(0, undefined, {
+        entry_source: 'onboarding',
+        screen_name: 'onboarding_permission_setup',
+      }).then(data => {
         // 在 onboarding 期间只本地保存，不调用接口
         // 登录后再上报到服务器
         astore.setIosSelectedApps(data.apps);

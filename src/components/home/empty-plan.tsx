@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui';
-import { usePlanStore } from '@/stores';
+import { useBenefitStore, usePlanStore } from '@/stores';
 import { getCurrentMinute } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
@@ -8,6 +8,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 
 const EmptyPlan = () => {
   const pstore = usePlanStore();
+  const bstore = useBenefitStore();
   const [nowMinute, setNowMinute] = useState(getCurrentMinute());
 
   useEffect(() => {
@@ -19,7 +20,9 @@ const EmptyPlan = () => {
 
   const nextPlan = pstore.next_plan;
   const gap = nextPlan ? nextPlan.start_min - nowMinute : 0;
-  const hasLongGap = gap > 20;
+  const remainingMinutes = bstore.day_duration - bstore.today_used;
+  const isQuotaExhausted =
+    !bstore.is_subscribed && bstore.day_duration > 0 && remainingMinutes <= 3;
 
   const getCountdownText = (minutes: number) => {
     if (minutes < 60) {
@@ -28,15 +31,6 @@ const EmptyPlan = () => {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
     return `${h}小时${m}分后开始`;
-  };
-
-  const getFreeTimeText = (minutes: number) => {
-    if (minutes < 60) {
-      return `${minutes}分钟`;
-    }
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${h}小时${m}分钟`;
   };
 
   return (
@@ -92,13 +86,26 @@ const EmptyPlan = () => {
       <View className="w-full gap-4">
         <Button text="创建契约" onPress={() => router.push('/plans/presets')} />
 
-        <TouchableOpacity
-          className="flex-row items-center justify-center py-3 gap-[2px]"
-          onPress={() => router.push('/quick-start')}>
-          <Text className="text-sm text-[#858699] mr-1">临时使用？</Text>
-          <Icon name="flash" size={14} color="#7A5AF8" />
-          <Text className="text-[#7A5AF8] text-sm font-semibold">快速专注</Text>
-        </TouchableOpacity>
+        {isQuotaExhausted ? (
+          <View className="items-center py-3">
+            <Text className="text-sm text-[#B3B3BA] text-center">
+              今日额度已用完，明天再来吧
+            </Text>
+            <Text className="text-[12px] text-[#85869990] text-center mt-1">
+              自律需要长期坚持，保持节奏
+            </Text>
+          </View>
+        ) : (
+          <TouchableOpacity
+            className="flex-row items-center justify-center py-3 gap-[2px]"
+            onPress={() => router.push('/quick-start')}>
+            <Text className="text-sm text-[#858699] mr-1">临时使用？</Text>
+            <Icon name="flash" size={14} color="#7A5AF8" />
+            <Text className="text-[#7A5AF8] text-sm font-semibold">
+              快速专注
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

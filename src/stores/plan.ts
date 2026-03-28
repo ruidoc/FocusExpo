@@ -6,7 +6,6 @@ import {
   incrementFocusCount,
   parseRepeat,
   storage,
-  trackEvent,
 } from '@/utils';
 import http from '@/utils/request';
 import dayjs from 'dayjs';
@@ -110,8 +109,7 @@ const PlanStore = combine(
     complatePlan: async () => {
       console.log('【专注计划完成】');
       // 增加专注次数
-      const newCount = incrementFocusCount();
-      trackEvent('focus_completed', { focus_count: newCount });
+      incrementFocusCount();
 
       record.getState().removeRecordId();
       (get() as any).pauseCurPlan(false);

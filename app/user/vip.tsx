@@ -1,7 +1,7 @@
 import { Page } from '@/components/business';
 import { Toast } from '@/components/ui';
 import { useSubscriptionStore } from '@/stores';
-import { trackOpenPaywall, useSuperwall } from '@/utils';
+import { trackPaywallOpened, useSuperwall } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { useIAP } from 'expo-iap';
@@ -46,7 +46,10 @@ const VipPage = () => {
 
   const handleUpgrade = async () => {
     setLoading(true);
-    trackOpenPaywall('show_paywall');
+    trackPaywallOpened('show_paywall', {
+      entry_source: 'vip_page',
+      screen_name: 'user_vip',
+    });
     try {
       if (!isFocusedRef.current) return;
       await registerPlacement({ placement: 'show_paywall' });

@@ -11,7 +11,7 @@ import {
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useBenefitStore, usePlanStore } from '@/stores';
-import { parseRepeat, trackEvent } from '@/utils';
+import { parseRepeat, trackPlanCreated } from '@/utils';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -262,6 +262,12 @@ const App = () => {
       subinfo.end_date = dayjs(end_date).format('YYYY-MM-DD');
 
       // 根据模式调用不同的接口
+      const entrySource = fromOnboarding
+        ? 'onboarding'
+        : fromPresets
+          ? 'presets'
+          : 'normal';
+
       if (isEditing) {
         pstore.editPlan(pstore.editing_plan.id, subinfo, async res => {
           if (res) {
@@ -275,12 +281,13 @@ const App = () => {
         pstore.addPlan(subinfo, async res => {
           if (res) {
             Toast('契约已签订，请务必遵守', 'success');
-            trackEvent('plan_created', {
-              from: fromOnboarding
-                ? 'onboarding'
-                : fromPresets
-                  ? 'presets'
-                  : 'normal',
+            trackPlanCreated(form.repeat === 'once' ? 'once' : 'repeat', {
+              plan_id: res.data?.id,
+              duration_minutes: subinfo.end_min - subinfo.start_min,
+              app_count: subinfo.apps.length,
+              mode: subinfo.mode,
+              entry_source: entrySource,
+              screen_name: 'plans_add',
             });
 
             // 从 onboarding 或 presets 进入：清空路由栈，直接进入首页
@@ -458,7 +465,13 @@ const App = () => {
           <FieldItem
             title={allowModeEnabled && form.mode === 'allow' ? '允许使用的应用' : '要锁定的应用'}
             className="pb-2"
-            rightElement={<SelectApps apps={form.apps} onFinish={selectApps} />}
+            rightElement={
+              <SelectApps
+                apps={form.apps}
+                onFinish={selectApps}
+                entrySource={fromOnboarding ? 'onboarding' : fromPresets ? 'presets' : 'normal'}
+              />
+            }
             showArrow={false}
           />
           <View className="px-4 pb-4">

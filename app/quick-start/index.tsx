@@ -7,7 +7,6 @@ import {
   usePlanStore,
   useRecordStore,
 } from '@/stores';
-import { trackStartFocus } from '@/utils';
 import { startAppLimits } from '@/utils/permission';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { useNavigation } from '@react-navigation/native';
@@ -91,15 +90,16 @@ const QuickStartPage = () => {
     // iOS: 使用屏幕时间限制开始屏蔽
     console.log('startAppLimits', minute, plan_id, mode);
     try {
-      const ok = await startAppLimits(minute, plan_id, mode);
+      const ok = await startAppLimits(minute, plan_id, mode, {
+        entry_source: 'quick_start',
+        screen_name: 'quick_start',
+        focus_type: 'once',
+      });
       if (ok) {
         setOncePlan(plan_id);
         // 立刻刷新当前计划，避免等待 AppState/原生事件导致 active_plan 为空
         pstore.setCurPlanMinute(0);
         pstore.resetPlan();
-
-        // PostHog埋点：记录专注开始
-        trackStartFocus(plan_id, minute);
         Toast('专注已开始', 'success');
         navigation.goBack();
       } else {
@@ -146,6 +146,7 @@ const QuickStartPage = () => {
               <SelectApps
                 apps={astore.ios_selected_apps}
                 onFinish={selectApps}
+                entrySource="quick_start"
               />
             }
             showArrow={false}

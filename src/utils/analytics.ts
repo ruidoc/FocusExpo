@@ -6,13 +6,78 @@
  * 这里提供事件追踪的工具函数
  */
 
+import * as Application from 'expo-application';
+import Constants from 'expo-constants';
 import { useSuperwallStore } from 'expo-superwall';
 import { PostHog, usePostHog } from 'posthog-react-native';
 import { Platform } from 'react-native';
 import { objectIdToUuid, isObjectId } from './uuid-mapper';
+import { storage } from './storage';
 
 // 全局 PostHog 实例（由 PostHogProviderWrapper 设置）
 let globalPostHogInstance: PostHog | null = null;
+
+export const POSTHOG_API_KEY = 'phc_A4Pt2WQHEQLedNR9wyLMxSHrpdnOdUTCiR8LHNGT5QG';
+
+type TrackProperties = Record<string, any>;
+export type FocusType = 'once' | 'repeat';
+export type TrackingOrigin = 'app_js' | 'ios_native' | 'ios_extension';
+
+function normalizeEventName(eventName: string) {
+  return eventName.startsWith('focus_') ? eventName : `focus_${eventName}`;
+}
+
+function getStoredUserId() {
+  try {
+    const userInfo = storage.getString('user_info');
+    if (userInfo) {
+      const parsed = JSON.parse(userInfo);
+      if (parsed?.id) return String(parsed.id);
+    }
+  } catch (error) {
+    console.warn('[PostHog] 解析 user_info 失败:', error);
+  }
+
+  return storage.getString('user_id') || storage.getString('device_id') || '';
+}
+
+export const getTrackingUserId = () => getStoredUserId() || 'anonymous';
+
+export const getAppVersion = () =>
+  Application.nativeApplicationVersion ||
+  Constants.expoConfig?.version ||
+  'unknown';
+
+export const syncNativeTrackingContext = (userId?: string) => {
+  if (Platform.OS !== 'ios') return;
+
+  const finalUserId = userId || getTrackingUserId();
+  if (finalUserId) {
+    storage.setGroup('user_id', finalUserId);
+  }
+
+  const deviceId = storage.getString('device_id');
+  if (deviceId) {
+    storage.setGroup('device_id', deviceId);
+  }
+
+  storage.setGroup('app_version', getAppVersion());
+  storage.setGroup('posthog_api_key', POSTHOG_API_KEY);
+};
+
+function buildBaseProperties(
+  properties?: TrackProperties,
+  eventOrigin: TrackingOrigin = 'app_js',
+) {
+  return {
+    user_id: getTrackingUserId(),
+    app_version: getAppVersion(),
+    platform: Platform.OS,
+    event_origin: eventOrigin,
+    is_logged_in: !!storage.getString('access_token'),
+    ...properties,
+  };
+}
 
 /**
  * 等待 Superwall SDK 配置完成
@@ -119,13 +184,15 @@ export const getPostHogClient = (): PostHog | null => {
  */
 export const identifyUser = async (
   userId: string,
-  properties?: Record<string, any>,
+  properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
   // 1. PostHog 识别
   const client = posthog || getPostHogClient();
   if (client) {
     client.identify(userId, {
+      user_id: userId,
+      app_version: getAppVersion(),
       platform: Platform.OS,
       ...properties,
     });
@@ -133,6 +200,8 @@ export const identifyUser = async (
   } else {
     console.warn('[PostHog] 客户端未初始化');
   }
+
+  syncNativeTrackingContext(userId);
 
   // 2. Superwall 识别（关键：确保 Webhook 能关联到正确的用户）
   identifySuperwall(userId, properties);
@@ -173,7 +242,7 @@ export const resetUser = async (posthog?: PostHog | null) => {
  */
 export const trackEvent = (
   eventName: string,
-  properties?: Record<string, any>,
+  properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
   const client = posthog || getPostHogClient();
@@ -182,9 +251,8 @@ export const trackEvent = (
     return;
   }
 
-  client.capture(eventName, {
-    platform: Platform.OS,
-    ...properties,
+  client.capture(normalizeEventName(eventName), {
+    ...buildBaseProperties(properties),
   });
   console.log('[PostHog] 事件记录:', eventName, properties);
 };
@@ -197,13 +265,13 @@ export const trackEvent = (
  */
 export const trackScreen = (
   screenName: string,
-  properties?: Record<string, any>,
+  properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
   trackEvent(
-    '$screen',
+    'screen_view',
     {
-      $screen_name: screenName,
+      screen_name: screenName,
       ...properties,
     },
     posthog,
@@ -217,13 +285,17 @@ export const trackScreen = (
  * 2. 在非组件代码中：不传参数，自动获取全局实例
  */
 export const setUserProperties = (
-  properties: Record<string, any>,
+  properties: TrackProperties,
   posthog?: PostHog | null,
 ) => {
   const client = posthog || getPostHogClient();
   if (!client) return;
   // posthog-react-native 使用 identify 来设置用户属性
-  client.identify(undefined, properties);
+  client.identify(undefined, {
+    user_id: getTrackingUserId(),
+    app_version: getAppVersion(),
+    ...properties,
+  });
   console.log('[PostHog] 用户属性更新:', properties);
 };
 
@@ -307,129 +379,196 @@ export const reloadFeatureFlags = async (
 /**
  * 用户登录
  */
-export const trackLogin = (
+export const trackLoginCompleted = (
   method: 'phone' | 'wechat' | 'apple',
+  properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
-  trackEvent('user_login', { login_method: method }, posthog);
+  trackEvent(
+    'login_completed',
+    { login_method: method, ...properties },
+    posthog,
+  );
+};
+
+export const trackLoginStarted = (
+  method: 'phone' | 'wechat' | 'apple',
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'login_started',
+    { login_method: method, ...properties },
+    posthog,
+  );
+};
+
+export const trackLoginFailed = (
+  method: 'phone' | 'wechat' | 'apple',
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'login_failed',
+    { login_method: method, ...properties },
+    posthog,
+  );
 };
 
 /**
  * 用户注册
  */
-export const trackRegister = (
+export const trackRegisterCompleted = (
   method: 'phone' | 'wechat' | 'apple',
+  properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
-  trackEvent('user_register', { register_method: method }, posthog);
+  trackEvent(
+    'register_completed',
+    { register_method: method, ...properties },
+    posthog,
+  );
 };
 
 /**
  * 用户登出
  */
 export const trackLogout = (posthog?: PostHog | null) => {
-  trackEvent('user_logout', undefined, posthog);
+  trackEvent('logout', undefined, posthog);
   resetUser(posthog);
 };
 
 /**
  * 创建专注计划
  */
-export const trackCreatePlan = (
-  planType: 'once' | 'repeat',
-  duration: number,
+export const trackPlanCreated = (
+  planType: FocusType,
+  properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
   trackEvent(
-    'plan_create',
+    'plan_created',
     {
-      plan_type: planType,
-      duration_minutes: duration,
+      focus_type: planType,
+      ...properties,
     },
     posthog,
   );
 };
 
 /**
- * 启动专注
+ * 权限点击
  */
-export const trackStartFocus = (
+export const trackPermissionRequestClicked = (
+  permission: 'screen_time' | 'notification',
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'permission_request_clicked',
+    {
+      permission_type: permission,
+      ...properties,
+    },
+    posthog,
+  );
+};
+
+/**
+ * 权限结果
+ */
+export const trackPermissionResult = (
+  permission: 'screen_time' | 'notification',
+  result: string,
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'permission_result',
+    {
+      permission_type: permission,
+      result,
+      ...properties,
+    },
+    posthog,
+  );
+};
+
+/**
+ * 选择应用点击
+ */
+export const trackBlockAppsSelectionStarted = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'block_apps_selection_started',
+    properties,
+    posthog,
+  );
+};
+
+/**
+ * 选择应用结果
+ */
+export const trackBlockAppsSelected = (
+  appCount: number,
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'block_apps_selected',
+    {
+      selected_app_count: appCount,
+      ...properties,
+    },
+    posthog,
+  );
+};
+
+/**
+ * 点击开始专注
+ */
+export const trackStartClicked = (
   planId: string,
-  duration: number,
+  focusType: FocusType,
+  properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
   trackEvent(
-    'focus_start',
+    'start_clicked',
     {
       plan_id: planId,
-      duration_minutes: duration,
+      focus_type: focusType,
+      ...properties,
     },
     posthog,
   );
 };
 
 /**
- * 完成专注
+ * Onboarding 完成
  */
-export const trackCompleteFocus = (
-  planId: string,
-  duration: number,
-  isSuccess: boolean,
+export const trackOnboardingCompleted = (
+  properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
-  trackEvent(
-    'focus_complete',
-    {
-      plan_id: planId,
-      duration_minutes: duration,
-      is_success: isSuccess,
-    },
-    posthog,
-  );
-};
-
-/**
- * 暂停专注
- */
-export const trackPauseFocus = (
-  planId: string,
-  remainingMinutes: number,
-  posthog?: PostHog | null,
-) => {
-  trackEvent(
-    'focus_pause',
-    {
-      plan_id: planId,
-      remaining_minutes: remainingMinutes,
-    },
-    posthog,
-  );
-};
-
-/**
- * 恢复专注
- */
-export const trackResumeFocus = (planId: string, posthog?: PostHog | null) => {
-  trackEvent(
-    'focus_resume',
-    {
-      plan_id: planId,
-    },
-    posthog,
-  );
+  trackEvent('onboarding_completed', properties, posthog);
 };
 
 /**
  * 打开Superwall Paywall
  */
-export const trackOpenPaywall = (
+export const trackPaywallOpened = (
   placement: string,
+  properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
   trackEvent(
-    'paywall_open',
+    'paywall_opened',
     {
       placement,
+      ...properties,
     },
     posthog,
   );
@@ -438,63 +577,56 @@ export const trackOpenPaywall = (
 /**
  * Superwall购买成功
  */
-export const trackPurchaseSuccess = (
+export const trackPurchaseCompleted = (
   productId?: string,
+  properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
   trackEvent(
-    'purchase_success',
+    'purchase_completed',
     {
       product_id: productId,
+      ...properties,
     },
     posthog,
   );
 };
 
-/**
- * 添加屏蔽应用
- */
+export const trackPurchaseFailed = (
+  productId: string | undefined,
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'purchase_failed',
+    {
+      product_id: productId,
+      ...properties,
+    },
+    posthog,
+  );
+};
+
+// 兼容旧调用名，统一映射到新事件
+export const trackLogin = trackLoginCompleted;
+export const trackRegister = trackRegisterCompleted;
+export const trackCreatePlan = trackPlanCreated;
+export const trackStartFocus = (
+  planId: string,
+  duration: number,
+  posthog?: PostHog | null,
+) => trackStartClicked(planId, 'once', { duration_minutes: duration }, posthog);
+export const trackOpenPaywall = trackPaywallOpened;
+export const trackPurchaseSuccess = trackPurchaseCompleted;
 export const trackAddBlockApps = (
   appCount: number,
   posthog?: PostHog | null,
-) => {
-  trackEvent(
-    'apps_add',
-    {
-      app_count: appCount,
-    },
-    posthog,
-  );
-};
-
-/**
- * 权限授予
- */
+) => trackBlockAppsSelected(appCount, undefined, posthog);
 export const trackPermissionGrant = (
   permission: 'screen_time' | 'notification',
   posthog?: PostHog | null,
-) => {
-  trackEvent(
-    'permission_grant',
-    {
-      permission_type: permission,
-    },
-    posthog,
-  );
-};
-
-/**
- * 权限拒绝
- */
+) => trackPermissionResult(permission, 'approved', undefined, posthog);
 export const trackPermissionDeny = (
   permission: 'screen_time' | 'notification',
   posthog?: PostHog | null,
-) => {
-  trackEvent(
-    'permission_deny',
-    {
-      permission_type: permission,
-    },
-    posthog,
-  );
-};
+) => trackPermissionResult(permission, 'denied', undefined, posthog);

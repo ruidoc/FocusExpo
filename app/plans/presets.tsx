@@ -3,7 +3,6 @@ import { Button, Flex } from '@/components/ui';
 import { trackEvent } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
-import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -143,14 +142,8 @@ const PresetsPage = () => {
     trackEvent('preset_selected', {
       preset_id: preset.id,
       preset_name: preset.name,
-      from: fromOnboarding ? 'onboarding' : 'normal',
+      entry_source: fromOnboarding ? 'onboarding' : 'normal',
     });
-
-    // 构建时间参数
-    const today = dayjs();
-    const startTime = dayjs(preset.startTime, 'HH:mm').toDate();
-    const endTime = dayjs(preset.endTime, 'HH:mm').toDate();
-
     // 跳转到创建计划页面，携带预设参数
     router.push({
       pathname: '/plans/add',
@@ -166,7 +159,7 @@ const PresetsPage = () => {
 
   const handleCustomPlan = () => {
     trackEvent('custom_plan_clicked', {
-      from: fromOnboarding ? 'onboarding' : 'normal',
+      entry_source: fromOnboarding ? 'onboarding' : 'normal',
     });
     router.push({
       pathname: '/plans/add',
@@ -178,7 +171,7 @@ const PresetsPage = () => {
 
   const handleSkip = () => {
     trackEvent('plan_creation_skipped', {
-      from: 'presets',
+      entry_source: 'presets',
       step: 'preset_selection',
     });
     router.replace('/(tabs)');

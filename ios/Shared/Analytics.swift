@@ -7,6 +7,7 @@ class Analytics {
 
   private let posthogHost = "https://us.i.posthog.com"
   private let groupSuite = "group.com.focusone"
+  private let fallbackPostHogAPIKey = "phc_A4Pt2WQHEQLedNR9wyLMxSHrpdnOdUTCiR8LHNGT5QG"
 
   private init() {}
 
@@ -20,6 +21,7 @@ class Analytics {
     properties: [String: Any] = [:],
     userId: String? = nil
   ) {
+    let normalizedEvent = normalizeEventName(event)
     // 1. 获取 PostHog API Key
     guard let apiKey = getPostHogAPIKey(), !apiKey.isEmpty else {
       print("【Analytics】缺少 PostHog API Key，跳过埋点")
@@ -40,13 +42,17 @@ class Analytics {
     // 3. 构造 PostHog 事件格式
     var finalProperties = properties
     finalProperties["distinct_id"] = finalUserId
+    finalProperties["user_id"] = finalUserId
+    finalProperties["app_version"] = getAppVersion()
+    finalProperties["platform"] = "ios"
+    finalProperties["event_origin"] = isRunningInExtension() ? "ios_extension" : "ios_native"
     finalProperties["$lib"] = "ios-native"
     finalProperties["$lib_version"] = "1.0.0"
     finalProperties["timestamp"] = ISO8601DateFormatter().string(from: Date())
 
     let payload: [String: Any] = [
       "api_key": apiKey,
-      "event": event,
+      "event": normalizedEvent,
       "properties": finalProperties,
       "timestamp": ISO8601DateFormatter().string(from: Date())
     ]
@@ -94,11 +100,27 @@ class Analytics {
 
   private func getPostHogAPIKey() -> String? {
     guard let defaults = UserDefaults(suiteName: groupSuite) else { return nil }
-    return defaults.string(forKey: "posthog_api_key")
+    return defaults.string(forKey: "posthog_api_key") ?? fallbackPostHogAPIKey
   }
 
   private func getUserId() -> String? {
     guard let defaults = UserDefaults(suiteName: groupSuite) else { return nil }
-    return defaults.string(forKey: "user_id")
+    return defaults.string(forKey: "user_id") ?? defaults.string(forKey: "device_id")
+  }
+
+  private func getAppVersion() -> String {
+    if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+       !version.isEmpty {
+      return version
+    }
+    return "unknown"
+  }
+
+  private func isRunningInExtension() -> Bool {
+    Bundle.main.bundlePath.hasSuffix(".appex")
+  }
+
+  private func normalizeEventName(_ event: String) -> String {
+    event.hasPrefix("focus_") ? event : "focus_\(event)"
   }
 }

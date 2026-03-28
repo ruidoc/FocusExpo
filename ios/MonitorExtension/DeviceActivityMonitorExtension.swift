@@ -170,12 +170,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             // ❌ 埋点: 计划未找到
             // 从 activity name 尝试提取 plan_id 以判断类型
             let planIdMatch = raw.replacingOccurrences(of: "FocusOne.Plan.", with: "").split(separator: "_").first ?? ""
-            let planType = String(planIdMatch).hasPrefix("once") ? "quick_start" : "scheduled"
+            let focusType = String(planIdMatch).hasPrefix("once") ? "once" : "repeat"
             Analytics.shared.track(
-                event: "plan_shield_failed",
+                event: "session_failed",
                 properties: [
                     "activity_name": raw,
-                    "plan_type": planType,
+                    "focus_type": focusType,
+                    "failure_stage": "shield_start",
                     "error_type": "plan_not_found"
                 ]
             )
@@ -189,12 +190,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         guard let data = Data(base64Encoded: plan.token),
               let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else {
             // ❌ 埋点: Token 解码失败
-            let planType = plan.id.hasPrefix("once_") ? "quick_start" : "scheduled"
+            let focusType = plan.id.hasPrefix("once_") ? "once" : "repeat"
             Analytics.shared.track(
-                event: "plan_shield_failed",
+                event: "session_failed",
                 properties: [
                     "plan_id": plan.id,
-                    "plan_type": planType,
+                    "focus_type": focusType,
+                    "failure_stage": "token_decode",
                     "error_type": "token_decode_error",
                     "token_length": plan.token.count
                 ]
@@ -254,6 +256,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
         defaults.set("periodic", forKey: "FocusOne.FocusType")
         defaults.set(plan.id, forKey: "FocusOne.CurrentPlanId")
+        defaults.set("schedule", forKey: "FocusOne.FocusEntrySource")
 
         // 保存屏蔽设置到本地，供暂停恢复使用
         if let selectionData = try? JSONEncoder().encode(selection) {
@@ -266,16 +269,18 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults.set(shieldMode, forKey: "FocusOne.ShieldMode")
 
         // ✅ 埋点: 屏蔽应用成功
-        let planType = plan.id.hasPrefix("once_") ? "quick_start" : "scheduled"
+        let focusType = plan.id.hasPrefix("once_") ? "once" : "repeat"
+        let entrySource = defaults.string(forKey: "FocusOne.FocusEntrySource") ?? "schedule"
         Analytics.shared.track(
-            event: "plan_shield_success",
+            event: "session_started",
             properties: [
                 "plan_id": plan.id,
-                "plan_name": plan.name ?? "",
-                "plan_type": planType,
-                "apps_count": selection.applicationTokens.count,
-                "categories_count": selection.categoryTokens.count,
-                "activity_name": raw
+                "focus_type": focusType,
+                "duration_minutes": totalMin,
+                "mode": shieldMode,
+                "entry_source": entrySource,
+                "app_count": selection.applicationTokens.count,
+                "category_count": selection.categoryTokens.count
             ]
         )
 
@@ -399,6 +404,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
             defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
             defaults.removeObject(forKey: "FocusOne.ShieldMode")
+            defaults.removeObject(forKey: "FocusOne.FocusEntrySource")
         }
 
     }
@@ -453,9 +459,25 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         // 更新今日已使用时长
         let totalMin = defaults.integer(forKey: "FocusOne.TotalMinutes")
+        let planId = defaults.string(forKey: "FocusOne.CurrentPlanId") ?? ""
+        let focusType = defaults.string(forKey: "FocusOne.FocusType") == "once" ? "once" : "repeat"
+        let entrySource = defaults.string(forKey: "FocusOne.FocusEntrySource") ?? "schedule"
         if totalMin > 0 {
             updateTodayUsed(minutes: totalMin, defaults: defaults)
         }
+        Analytics.shared.track(
+            event: "session_finished",
+            properties: [
+                "plan_id": planId,
+                "record_id": recordId,
+                "focus_type": focusType,
+                "result": "completed",
+                "elapsed_minutes": totalMin,
+                "target_minutes": totalMin,
+                "completion_rate": 1,
+                "entry_source": entrySource
+            ]
+        )
         
         NetworkManager.shared.post(path: "/record/complete/\(recordId)") { result in
             switch result {
@@ -581,6 +603,26 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     private func handleQuotaExceeded(defaults: UserDefaults, reason: String) {
         let store = ManagedSettingsStore()
         store.clearAllSettings()
+        let planId = defaults.string(forKey: "FocusOne.CurrentPlanId") ?? ""
+        let recordId = defaults.string(forKey: "record_id") ?? ""
+        let focusType = defaults.string(forKey: "FocusOne.FocusType") == "once" ? "once" : "repeat"
+        let totalMin = defaults.integer(forKey: "FocusOne.TotalMinutes")
+        let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
+        let elapsedMin = startAt > 0 ? max(Int((Date().timeIntervalSince1970 - startAt) / 60), 0) : 0
+        let entrySource = defaults.string(forKey: "FocusOne.FocusEntrySource") ?? "schedule"
+        Analytics.shared.track(
+            event: "session_finished",
+            properties: [
+                "plan_id": planId,
+                "record_id": recordId,
+                "focus_type": focusType,
+                "result": "failed",
+                "reason": reason,
+                "elapsed_minutes": elapsedMin,
+                "target_minutes": totalMin,
+                "entry_source": entrySource
+            ]
+        )
 
         defaults.set(true, forKey: "FocusOne.TaskFailed")
         defaults.set(reason, forKey: "FocusOne.FailedReason")
@@ -590,6 +632,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
         defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
         defaults.removeObject(forKey: "FocusOne.ShieldMode")
+        defaults.removeObject(forKey: "FocusOne.FocusEntrySource")
         defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
         defaults.removeObject(forKey: "FocusOne.PausedUntil")
 

@@ -1,7 +1,7 @@
 import { AppToken } from '@/components/business';
 import { Button } from '@/components/ui';
 import { useAppStore, useHomeStore, usePlanStore } from '@/stores';
-import { startAppLimits } from '@/utils/permission';
+import { startAppLimits, stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
@@ -33,6 +33,7 @@ const QuickExperience = ({
   const [loading, setLoading] = useState(false);
   const [remaining, setRemaining] = useState(FOCUS_DURATION * 60); // 倒计时（秒）
   const endTimeRef = useRef<number>(0);
+  const onboardingOncePlanIdRef = useRef<string | null>(null);
 
   // 根据 problem 获取个性化文案
   const getPersonalizedCopy = () => {
@@ -117,9 +118,14 @@ const QuickExperience = ({
       repeat: 'once',
       mode: 'shield',
     });
+    onboardingOncePlanIdRef.current = newId;
 
     if (Platform.OS === 'ios') {
-      await startAppLimits(FOCUS_DURATION, newId);
+      await startAppLimits(FOCUS_DURATION, newId, 'shield', {
+        entry_source: 'onboarding',
+        screen_name: 'onboarding_quick_experience',
+        focus_type: 'once',
+      });
       // 设置应用名称供后续使用
       if (astore.ios_selected_apps.length > 0) {
         setSelectedAppName(astore.ios_selected_apps[0].name || '');
@@ -138,6 +144,29 @@ const QuickExperience = ({
     setPhase('active');
     // 通知父组件进入 active 阶段，禁用返回按钮
     onPhaseChange?.('active');
+  };
+
+  const handleConfirm = async () => {
+    try {
+      if (Platform.OS === 'ios') {
+        await stopAppLimits();
+      } else {
+        store.stopVpn();
+      }
+    } catch (e) {
+      console.log('QuickExperience handleConfirm stop error', e);
+    }
+
+    const id = onboardingOncePlanIdRef.current;
+    if (id) {
+      pstore.rmOncePlan(id);
+      onboardingOncePlanIdRef.current = null;
+    }
+    pstore.resetPlan();
+
+    endTimeRef.current = 0;
+    onPhaseChange?.('ready');
+    onNext();
   };
 
   // 准备阶段
@@ -287,7 +316,7 @@ const QuickExperience = ({
       {/* 底部按钮 */}
       <View className="px-6 pb-8">
         <Button
-          onPress={onNext}
+          onPress={handleConfirm}
           text="我已确认"
           type="ghost"
           className="w-full rounded-3xl h-14 border-2"

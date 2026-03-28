@@ -2,7 +2,12 @@ import { Apple, Privicy } from '@/components/business';
 import { Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useHomeStore, useUserStore } from '@/stores';
-import { markOnboardingCompleted, trackEvent } from '@/utils';
+import {
+  trackLoginStarted,
+  markOnboardingCompleted,
+  trackLoginFailed,
+  trackOnboardingCompleted,
+} from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -58,27 +63,33 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
   const copy = getPersonalizedCopy();
 
   const appleLoginResult = (credential: any) => {
-    trackEvent('onboarding_apple_login_start', { step: 'value_guide' });
-
+    trackLoginStarted('apple', {
+      entry_source: 'onboarding',
+      screen_name: 'onboarding_value_guide',
+    });
     ustore.appleLogin(credential, res => {
       if (res?.statusCode === 200) {
-        trackEvent('onboarding_apple_login_success', { step: 'value_guide' });
         completeWithLogin();
       } else {
-        trackEvent('onboarding_apple_login_fail', {
-          step: 'value_guide',
-          reason: res?.message || 'api_error',
+        trackLoginFailed('apple', {
+          entry_source: 'onboarding',
+          screen_name: 'onboarding_value_guide',
+          error_message: res?.message || 'api_error',
         });
         Toast('登录失败，请重试');
       }
+    }, {
+      entry_source: 'onboarding',
+      screen_name: 'onboarding_value_guide',
     });
   };
 
   const completeWithLogin = () => {
     markOnboardingCompleted();
-    trackEvent('onboarding_completed', {
+    trackOnboardingCompleted({
       with_login: true,
-      step: 'value_guide',
+      entry_source: 'onboarding',
+      screen_name: 'onboarding_value_guide',
     });
     router.replace('/plans/presets?from=onboarding');
     onComplete();
@@ -89,12 +100,6 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
     { time: '14:00', label: copy.example2 },
     { time: '21:00', label: copy.example3 },
   ];
-
-  const features = [
-    { icon: 'calendar-outline', label: '设置一次' },
-    { icon: 'time-outline', label: '每天自动' },
-    { icon: 'flash-outline', label: '不用纠结' },
-  ] as const;
 
   return (
     <View className="flex-1">
