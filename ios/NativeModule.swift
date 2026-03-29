@@ -113,6 +113,8 @@ class NativeModule: RCTEventEmitter {
     let apps: [String] // 应用 ID 数组，格式为 ["stableId:type", ...]
     let token: String // FamilyActivitySelection 的 JSON/Base64 字符串
     let mode: String? // shield=黑名单屏蔽, allow=白名单放行
+    let start_date: String? // 开始日期 YYYY-MM-DD
+    let end_date: String? // 结束日期 YYYY-MM-DD，nil 表示长期有效
   }
   
   // 计划配置输入结构 (用于接收 JS 传递的原始数据)
@@ -124,6 +126,8 @@ class NativeModule: RCTEventEmitter {
     let days: [Int]
     let apps: [String] // JS 传来的 ID 数组
     let mode: String? // shield=黑名单屏蔽, allow=白名单放行
+    let start_date: String?
+    let end_date: String?
   }
   
   /// 根据 mode 应用不同的屏蔽策略
@@ -218,7 +222,18 @@ class NativeModule: RCTEventEmitter {
         }
 
         // 创建 PlanConfig，apps 直接存储 ID 数组，token 存储 Token 字符串
-        finalPlan = PlanConfig(id: input.id, name: input.name, start: input.start, end: input.end, days: input.days, apps: input.apps, token: token, mode: input.mode)
+        finalPlan = PlanConfig(
+          id: input.id,
+          name: input.name,
+          start: input.start,
+          end: input.end,
+          days: input.days,
+          apps: input.apps,
+          token: token,
+          mode: input.mode,
+          start_date: input.start_date,
+          end_date: input.end_date
+        )
     }
 
     guard let plan = finalPlan else {

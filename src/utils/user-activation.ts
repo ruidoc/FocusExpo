@@ -99,13 +99,12 @@ export const markPlanCreated = () => {
 /**
  * 检查是否应该显示首次完成庆祝弹窗
  */
-export const shouldShowCelebration = (): boolean => {
-  const focusCount = storage.getNumber(USER_ACTIVATION_KEYS.FOCUS_COUNT) || 0;
+export const shouldShowCelebration = (focusMinutes: number = 0): boolean => {
   const hasShown =
     storage.getBoolean(USER_ACTIVATION_KEYS.SHOW_CELEBRATION) || false;
 
-  // 只在首次完成专注时显示，且之前未显示过
-  return focusCount === 1 && !hasShown;
+  // 只要已有专注时长且之前未显示过，就展示一次庆祝弹窗
+  return focusMinutes > 0 && !hasShown;
 };
 
 /**

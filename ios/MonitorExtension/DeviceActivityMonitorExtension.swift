@@ -21,6 +21,8 @@ struct PlanConfig: Codable {
     let apps: [String] // 应用 ID 数组，格式为 ["stableId:type", ...]
     let token: String // FamilyActivitySelection 的 JSON/Base64 字符串
     let mode: String? // shield=黑名单屏蔽, allow=白名单放行
+    let start_date: String? // 开始日期 YYYY-MM-DD
+    let end_date: String? // 结束日期 YYYY-MM-DD，nil 表示长期有效
 }
 
 /// 根据 mode 应用不同的屏蔽策略（与 NativeModule.applyShield 保持一致）
@@ -35,6 +37,15 @@ func applyShield(store: ManagedSettingsStore, selection: FamilyActivitySelection
         store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
         store.shield.webDomains = selection.webDomainTokens
     }
+}
+
+private func parsePlanDate(_ value: String?) -> Date? {
+    guard let value, !value.isEmpty else { return nil }
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = TimeZone.current
+    return formatter.date(from: value)
 }
 
 // Optionally override any of the functions below.
@@ -189,6 +200,36 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             return
         }
 
+        let today = Calendar.current.startOfDay(for: Date())
+        if let startDate = parsePlanDate(plan.start_date),
+           today < Calendar.current.startOfDay(for: startDate) {
+            logToJS(
+                level: "log",
+                message: "计划尚未开始，跳过本次自动执行",
+                data: [
+                    "planId": plan.id,
+                    "start_date": plan.start_date ?? "",
+                    "end_date": plan.end_date ?? ""
+                ]
+            )
+            return
+        }
+
+        if let endDate = parsePlanDate(plan.end_date),
+           today > Calendar.current.startOfDay(for: endDate) {
+            removePlan(plan, defaults: defaults)
+            logToJS(
+                level: "log",
+                message: "计划已过期，已自动清理本地监控",
+                data: [
+                    "planId": plan.id,
+                    "start_date": plan.start_date ?? "",
+                    "end_date": plan.end_date ?? ""
+                ]
+            )
+            return
+        }
+
         logToJS(level: "log", message: "找到计划: \(plan.id), 开始执行 shielding", data: ["planId": plan.id, "planName": plan.name ?? ""])
 
         // 2. 解析 Selection Token
@@ -330,6 +371,39 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         }
         
         return nil
+    }
+
+    private func monitorNames(for plan: PlanConfig) -> [DeviceActivityName] {
+        var names: [DeviceActivityName] = []
+        let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
+
+        if plan.start > plan.end {
+            for d in days {
+                names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1_D\(d)"))
+                names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2_D\(d)"))
+            }
+        } else {
+            for d in days {
+                names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_D\(d)"))
+            }
+        }
+
+        return names
+    }
+
+    private func removePlan(_ plan: PlanConfig, defaults: UserDefaults) {
+        let center = DeviceActivityCenter()
+        center.stopMonitoring(monitorNames(for: plan))
+
+        guard let data = defaults.data(forKey: kPlansMap),
+              var plans = try? JSONDecoder().decode([String: PlanConfig].self, from: data) else {
+            return
+        }
+
+        plans.removeValue(forKey: plan.id)
+        if let updatedData = try? JSONEncoder().encode(plans) {
+            defaults.set(updatedData, forKey: kPlansMap)
+        }
     }
 
     private func createRecord(for plan: PlanConfig, totalMinutes: Int, defaults: UserDefaults) {

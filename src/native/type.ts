@@ -62,6 +62,8 @@ export interface PlanConfig {
   days: number[]; // 0=周日, 1=周一, ..., 6=周六
   apps: string[]; // 应用 ID 数组
   mode: 'shield' | 'allow'; // shield=黑名单屏蔽, allow=白名单放行
+  start_date?: string | null; // 开始日期 YYYY-MM-DD
+  end_date?: string | null; // 结束日期 YYYY-MM-DD，null 表示长期有效
 }
 
 /**

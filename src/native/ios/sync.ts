@@ -3,7 +3,7 @@
  * 封装所有与 iOS 专注状态相关的同步逻辑、事件监听和定时器管理
  */
 
-import { usePlanStore, useRecordStore } from '@/stores';
+import { useBenefitStore, usePlanStore, useRecordStore, useUserStore } from '@/stores';
 import { AppState, Platform } from 'react-native';
 import type { ExtensionLogEvent, FocusStateEvent } from '../type';
 import {
@@ -37,6 +37,12 @@ function cleanupLocalFocusState() {
   pstore.setCurPlanMinute(0);
   pstore.resetPlan();
   rstore.getStatis();
+}
+
+function refreshBenefitIfLoggedIn() {
+  const { uInfo } = useUserStore.getState();
+  if (!uInfo) return;
+  useBenefitStore.getState().getBenefit();
 }
 
 // 内部定时器引用
@@ -210,11 +216,13 @@ export function setupIOSFocusSync(): () => void {
   // 创建 AppState 监听器
   const appStateSubscription = AppState.addEventListener('change', state => {
     if (state === 'active') {
+      refreshBenefitIfLoggedIn();
       syncIOSStatus();
     }
   });
 
   // 首次同步状态（仅 iOS 执行）
+  refreshBenefitIfLoggedIn();
   syncIOSStatus();
 
   // 返回清理函数

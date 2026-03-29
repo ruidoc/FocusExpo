@@ -3,7 +3,6 @@ import { deletePlan, updatePlan } from '@/native/ios';
 import type { FocusStatus, PlanConfig } from '@/native/type';
 import {
   getCurrentMinute,
-  incrementFocusCount,
   parseRepeat,
   storage,
 } from '@/utils';
@@ -137,9 +136,6 @@ const PlanStore = combine(
     // 专注计划完成
     complatePlan: async () => {
       console.log('【专注计划完成】');
-      // 增加专注次数
-      incrementFocusCount();
-
       (get() as any).clearNativeFocus();
       record.getState().removeRecordId();
       (get() as any).pauseCurPlan(false);
@@ -174,6 +170,8 @@ const PlanStore = combine(
         days: repeat === 'once' ? [] : (repeat as number[]), // 一次性任务使用空数组
         apps: plan.apps || [],
         mode: plan.mode || 'shield',
+        start_date: plan.start_date || null,
+        end_date: plan.end_date || null,
       };
       console.log('同步计划到 IOS Native:', JSON.stringify(data));
       await updatePlan(data);

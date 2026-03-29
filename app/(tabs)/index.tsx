@@ -108,22 +108,22 @@ const App = () => {
       pmstore.checkNotify();
 
       // 每次app回到前台时检查是否应该显示庆祝弹窗
-      if (shouldShowCelebration()) {
+      if (shouldShowCelebration(rstore.actual_mins)) {
         setTimeout(() => {
           setShowCelebration(true);
         }, 500);
       }
     }
-  }, [store.app_state]);
+  }, [rstore.actual_mins, store.app_state]);
 
   // 组件挂载时也检查一次
   useEffect(() => {
-    if (shouldShowCelebration()) {
+    if (shouldShowCelebration(rstore.actual_mins)) {
       setTimeout(() => {
         setShowCelebration(true);
       }, 500);
     }
-  }, []);
+  }, [rstore.actual_mins]);
 
   if (shouldShowPermissionPage) {
     return <ScreenTimePermissionPage colors={colors} />;
@@ -181,7 +181,7 @@ const App = () => {
       <CelebrationModal
         visible={showCelebration}
         onClose={() => setShowCelebration(false)}
-        focusDuration={15}
+        focusDuration={rstore.actual_mins || 15}
       />
     </Page>
   );

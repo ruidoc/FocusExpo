@@ -23,7 +23,7 @@ type FormState = {
   start: Date;
   end: Date;
   start_date: Date;
-  end_date: Date;
+  end_date: Date | null;
   repeat: number[] | 'once';
   mode: 'shield' | 'allow';
   apps: string[];
@@ -96,10 +96,8 @@ const App = () => {
         setSelectedApps(apps);
       }
 
-      // 检测是否为长期有效（结束日期大于 5 年后）
-      const endDate = dayjs(plan.end_date);
-      const fiveYearsLater = dayjs().add(5, 'year');
-      const isLong = endDate.isAfter(fiveYearsLater);
+      // 没有结束日期时，视为长期有效
+      const isLong = !plan.end_date;
       setIsLongTerm(isLong);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -123,7 +121,7 @@ const App = () => {
         .minute(plan.end_min % 60)
         .toDate();
       const start_date = dayjs(plan.start_date).toDate();
-      const end_date = dayjs(plan.end_date).toDate();
+      const end_date = plan.end_date ? dayjs(plan.end_date).toDate() : null;
 
       return {
         name: plan.name,
@@ -160,8 +158,6 @@ const App = () => {
         .toDate();
 
       const today = new Date();
-      // 默认长期有效（10年后）
-      const longTermDate = dayjs(today).add(10, 'year').toDate();
 
       let repeat: number[] | 'once' = [1, 2, 3, 4, 5];
       try {
@@ -175,7 +171,7 @@ const App = () => {
         start,
         end,
         start_date: today,
-        end_date: longTermDate,
+        end_date: null,
         repeat,
         mode: 'shield',
         apps: [],
@@ -186,14 +182,12 @@ const App = () => {
     const start = new Date();
     const end = dayjs(start).add(20, 'minute').toDate();
     const today = new Date();
-    // 默认长期有效（10年后）
-    const longTermDate = dayjs(today).add(10, 'year').toDate();
     return {
       name: '',
       start,
       end,
       start_date: today,
-      end_date: longTermDate,
+      end_date: null,
       repeat: [1, 2, 3, 4, 5],
       mode: 'shield',
       apps: [],
@@ -210,7 +204,10 @@ const App = () => {
       }
 
       // 验证日期范围（仅在自定义时长模式下验证）
-      if (!isLongTerm && !dayjs(end_date).isAfter(dayjs(start_date), 'day')) {
+      if (
+        !isLongTerm &&
+        (!end_date || !dayjs(end_date).isAfter(dayjs(start_date), 'day'))
+      ) {
         return Toast('结束日期必须大于开始日期', 'error');
       }
       // 验证应用选择（仅iOS）
@@ -259,7 +256,7 @@ const App = () => {
       subinfo.start_min = start_day.hour() * 60 + start_day.minute();
       subinfo.end_min = end_day.hour() * 60 + end_day.minute();
       subinfo.start_date = dayjs(start_date).format('YYYY-MM-DD');
-      subinfo.end_date = dayjs(end_date).format('YYYY-MM-DD');
+      subinfo.end_date = isLongTerm || !end_date ? null : dayjs(end_date).format('YYYY-MM-DD');
 
       // 根据模式调用不同的接口
       const entrySource = fromOnboarding
@@ -335,11 +332,18 @@ const App = () => {
         start_date: val,
       };
       // 如果开始日期晚于结束日期，自动调整结束日期
-      if (dayjs(val).isAfter(dayjs(form.end_date), 'day')) {
+      if (form.end_date && dayjs(val).isAfter(dayjs(form.end_date), 'day')) {
         newForm.end_date = dayjs(val).add(1, 'day').toDate();
       }
       setForm(newForm);
     } else if (key === 'end_date') {
+      if (!val) {
+        setForm({
+          ...form,
+          end_date: null,
+        });
+        return;
+      }
       // 确保结束日期不早于开始日期
       if (dayjs(val).isBefore(dayjs(form.start_date), 'day')) {
         Toast('结束日期不能早于开始日期', 'error');
@@ -486,11 +490,12 @@ const App = () => {
             rightText={isLongTerm ? '长期有效' : '自定义'}
             arrowDirection={!isLongTerm ? 'down' : 'right'}
             onPress={() => {
-              setIsLongTerm(!isLongTerm);
-              // 切换到长期有效时，自动设置结束日期为10年后
-              if (!isLongTerm) {
-                const longTermDate = dayjs().add(10, 'year').toDate();
-                setInfo(longTermDate, 'end_date');
+              const nextIsLongTerm = !isLongTerm;
+              setIsLongTerm(nextIsLongTerm);
+              if (nextIsLongTerm) {
+                setInfo(null, 'end_date');
+              } else if (!form.end_date) {
+                setInfo(dayjs(form.start_date).add(1, 'day').toDate(), 'end_date');
               }
             }}
           />
@@ -523,7 +528,7 @@ const App = () => {
                   <Pressable
                     onPress={() => {
                       DateTimePicker.show({
-                        value: form.end_date,
+                        value: form.end_date || dayjs(form.start_date).add(1, 'day').toDate(),
                         title: '结束日期',
                         mode: 'date',
                         minimumDate: form.start_date,
@@ -538,7 +543,9 @@ const App = () => {
                       borderRadius: 8,
                     }}>
                     <Text style={{ color: colors.text, fontSize: 15 }}>
-                      {dayjs(form.end_date).format('YYYY-MM-DD')}
+                      {form.end_date
+                        ? dayjs(form.end_date).format('YYYY-MM-DD')
+                        : ''}
                     </Text>
                   </Pressable>
                 </Flex>
