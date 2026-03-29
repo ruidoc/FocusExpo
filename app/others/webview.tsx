@@ -30,7 +30,7 @@ const WebScreen = () => {
   useEffect(() => {
     let curl = (route.params as any)?.url || '';
     if (!curl) {
-      curl = 'https://focusone.ruidoc.cn/privacy';
+      curl = 'https://focus.freeshore.cn/privacy';
     }
     setUrl(curl);
   }, []);

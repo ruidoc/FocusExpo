@@ -40,13 +40,15 @@ export interface FocusStatus {
   failed?: boolean;
   paused?: boolean;
   plan_id?: string | null;
+  plan_name?: string | null;
   record_id?: string | null;
-  startAt?: number;
-  endAt?: number;
-  totalMinutes?: number;
-  elapsedMinutes?: number;
-  focusType?: 'once' | 'periodic' | null;
-  pausedUntil?: number | null; // 暂停结束时间戳（仅用于 JS 端倒计时显示）
+  start_at?: number;
+  end_at?: number;
+  total_minutes?: number;
+  actual_mins?: number;
+  focus_type?: 'once' | 'periodic' | null;
+  mode?: 'shield' | 'allow' | null;
+  paused_until?: number | null; // 暂停结束时间戳（仅用于 JS 端倒计时显示）
 }
 
 /**

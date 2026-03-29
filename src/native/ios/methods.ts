@@ -139,7 +139,11 @@ export async function startAppLimits(
   return callNativeMethod(
     'startAppLimits',
     () =>
-      getNativeModule()!.startAppLimits(durationMinutes ?? 0, planId ?? null, mode),
+      getNativeModule()!.startAppLimits(
+        durationMinutes ?? 0,
+        planId ?? null,
+        mode,
+      ),
     false,
   );
 }

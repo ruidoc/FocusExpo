@@ -145,7 +145,7 @@ const App = () => {
     // }
 
     // 活跃用户或已有计划的用户
-    return pstore.active_plan ? <ActivePlan /> : <EmptyPlan />;
+    return pstore.has_active_task() ? <ActivePlan /> : <EmptyPlan />;
   };
 
   return (

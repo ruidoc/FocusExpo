@@ -65,12 +65,17 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             if totalMin > 0 {
                 let remaining = checkFreeUserQuota(totalMinutes: totalMin, defaults: defaults)
                 if remaining <= 0 {
-                    handleQuotaExceeded(defaults: defaults, reason: "quota_exhausted")
+                    let content = UNMutableNotificationContent()
+                    content.title = "今日时长已用完"
+                    content.body = "已停止本次专注，明天再来吧"
+                    enqueueNotification(
+                        identifier: "QuotaExceeded_\(Int(Date().timeIntervalSince1970))",
+                        content: content
+                    )
                     return
                 }
             }
             
-            notifyStart()
             return
         }
         
@@ -242,55 +247,61 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             sessionEndTime = planEndTime
         }
         
-        defaults.set(now.timeIntervalSince1970, forKey: "FocusOne.FocusStartAt")
-        defaults.set(sessionEndTime.timeIntervalSince1970, forKey: "FocusOne.FocusEndAt")
-        
         let totalMin = max(1, Int(ceil((sessionEndTime.timeIntervalSince1970 - now.timeIntervalSince1970) / 60)))
-        let remaining = checkFreeUserQuota(totalMinutes: totalMin, defaults: defaults)
-        if remaining <= 0 {
-            handleQuotaExceeded(defaults: defaults, reason: "quota_exhausted")
-            return
-        }
-        defaults.set(now.timeIntervalSince1970, forKey: "FocusOne.FocusStartAt")
-        defaults.set(sessionEndTime.timeIntervalSince1970, forKey: "FocusOne.FocusEndAt")
-        defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
-        defaults.set("periodic", forKey: "FocusOne.FocusType")
-        defaults.set(plan.id, forKey: "FocusOne.CurrentPlanId")
-        defaults.set("schedule", forKey: "FocusOne.FocusEntrySource")
-
-        // 保存屏蔽设置到本地，供暂停恢复使用
-        if let selectionData = try? JSONEncoder().encode(selection) {
-            defaults.set(selectionData, forKey: "FocusOne.CurrentShieldSelection")
-        }
-
         let shieldMode = plan.mode ?? "shield"
-        let store = ManagedSettingsStore()
-        applyShield(store: store, selection: selection, mode: shieldMode)
-        defaults.set(shieldMode, forKey: "FocusOne.ShieldMode")
 
-        // ✅ 埋点: 屏蔽应用成功
-        let focusType = plan.id.hasPrefix("once_") ? "once" : "repeat"
-        let entrySource = defaults.string(forKey: "FocusOne.FocusEntrySource") ?? "schedule"
-        Analytics.shared.track(
-            event: "session_started",
-            properties: [
-                "plan_id": plan.id,
-                "focus_type": focusType,
-                "duration_minutes": totalMin,
-                "mode": shieldMode,
-                "entry_source": entrySource,
-                "app_count": selection.applicationTokens.count,
-                "category_count": selection.categoryTokens.count
-            ]
-        )
+        // 4. 周期任务启动前同步权益，不足则整次跳过
+        syncBenefitStatus(defaults: defaults) { [self] in
+            let isSubscribed = defaults.string(forKey: "is_subscribed") == "true"
+            let dayDuration = defaults.integer(forKey: "day_duration")
+            let todayUsed = defaults.integer(forKey: "today_used")
+            let remaining = dayDuration - todayUsed
 
-        logToJS(level: "log", message: "屏蔽已应用", data: ["planId": plan.id])
+            if !isSubscribed && remaining < totalMin {
+                handlePeriodicQuotaSkip(
+                    defaults: defaults,
+                    plan: plan,
+                    remaining: max(remaining, 0),
+                    required: totalMin
+                )
+                return
+            }
 
-        // 5. 发送通知
-        notifyStart()
-        
-        // 6. 创建后端记录 (异步，不阻塞屏蔽)
-        createRecord(for: plan, totalMinutes: totalMin, defaults: defaults)
+            defaults.set(now.timeIntervalSince1970, forKey: "FocusOne.FocusStartAt")
+            defaults.set(sessionEndTime.timeIntervalSince1970, forKey: "FocusOne.FocusEndAt")
+            defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
+            defaults.set("periodic", forKey: "FocusOne.FocusType")
+            defaults.set(plan.id, forKey: "FocusOne.CurrentPlanId")
+            defaults.set("schedule", forKey: "FocusOne.FocusEntrySource")
+
+            // 保存屏蔽设置到本地，供暂停恢复使用
+            if let selectionData = try? JSONEncoder().encode(selection) {
+                defaults.set(selectionData, forKey: "FocusOne.CurrentShieldSelection")
+            }
+
+            let store = ManagedSettingsStore()
+            applyShield(store: store, selection: selection, mode: shieldMode)
+            defaults.set(shieldMode, forKey: "FocusOne.ShieldMode")
+
+            let focusType = plan.id.hasPrefix("once_") ? "once" : "repeat"
+            let entrySource = defaults.string(forKey: "FocusOne.FocusEntrySource") ?? "schedule"
+            Analytics.shared.track(
+                event: "session_started",
+                properties: [
+                    "plan_id": plan.id,
+                    "focus_type": focusType,
+                    "duration_minutes": totalMin,
+                    "mode": shieldMode,
+                    "entry_source": entrySource,
+                    "app_count": selection.applicationTokens.count,
+                    "category_count": selection.categoryTokens.count
+                ]
+            )
+
+            logToJS(level: "log", message: "屏蔽已应用", data: ["planId": plan.id])
+            notifyStart("\(plan.name ?? "专注契约")，\(totalMin)分钟")
+            createRecord(for: plan, totalMinutes: totalMin, defaults: defaults)
+        }
     }
     
     private func findPlan(by activityName: String, defaults: UserDefaults) -> PlanConfig? {
@@ -392,7 +403,8 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         let content = UNMutableNotificationContent()
         content.title = "专注结束"
-        content.body = "屏蔽已自动结束，做得很好！"
+        let totalMin = UserDefaults(suiteName: "group.com.focusone")?.integer(forKey: "FocusOne.TotalMinutes") ?? 0
+        content.body = "已完成\(totalMin)分钟专注，太棒了！"
         let request = UNNotificationRequest(identifier: "FocusEnd", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
         
@@ -431,14 +443,14 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         deviceActivityCenter.stopMonitoring([pauseResumeActivity])
     }
     
-    private func notifyStart() {
+    private func notifyStart(_ body: String) {
         let dCenter = CFNotificationCenterGetDarwinNotifyCenter()
         let dName = CFNotificationName("com.focusone.focus.started" as CFString)
         CFNotificationCenterPostNotification(dCenter, dName, nil, nil, true)
 
         let content = UNMutableNotificationContent()
-        content.title = "专注契约"
-        content.body = "屏蔽已开启，保持专注"
+        content.title = "专注开始"
+        content.body = body
         enqueueNotification(identifier: "FocusStartPeriodic", content: content)
     }
     
@@ -517,7 +529,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     }
     
     /// 从后端同步权益状态
-    private func syncBenefitStatus(defaults: UserDefaults) {
+    private func syncBenefitStatus(defaults: UserDefaults, completion: (() -> Void)? = nil) {
         NetworkManager.shared.get(path: "/benefit") { result in
             switch result {
             case .success(let response):
@@ -548,9 +560,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                     }
                     
                     self.logToJS(level: "log", message: "权益同步成功", data: data)
+                } else {
+                    self.logToJS(level: "warn", message: "权益同步成功但返回数据异常")
                 }
+                completion?()
             case .failure(let error):
                 self.logToJS(level: "error", message: "权益同步失败: \(error.localizedDescription)")
+                completion?()
             }
         }
     }
@@ -589,85 +605,68 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             return 0
         }
         
-        // 4. 如果剩余配额不足以完成本次计划，发送提醒
-        if remaining < totalMinutes {
-            notifyQuotaWarning(remaining: remaining)
-        } else if remaining <= 15 {
-            // 剩余15分钟以内，发送提醒
-            notifyQuotaLow(remaining: remaining)
-        }
-        
         return remaining
     }
 
-    private func handleQuotaExceeded(defaults: UserDefaults, reason: String) {
-        let store = ManagedSettingsStore()
-        store.clearAllSettings()
-        let planId = defaults.string(forKey: "FocusOne.CurrentPlanId") ?? ""
-        let recordId = defaults.string(forKey: "record_id") ?? ""
-        let focusType = defaults.string(forKey: "FocusOne.FocusType") == "once" ? "once" : "repeat"
-        let totalMin = defaults.integer(forKey: "FocusOne.TotalMinutes")
-        let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
-        let elapsedMin = startAt > 0 ? max(Int((Date().timeIntervalSince1970 - startAt) / 60), 0) : 0
-        let entrySource = defaults.string(forKey: "FocusOne.FocusEntrySource") ?? "schedule"
+    private func handlePeriodicQuotaSkip(
+        defaults: UserDefaults,
+        plan: PlanConfig,
+        remaining: Int,
+        required: Int
+    ) {
+        let mode = plan.mode ?? "shield"
+        let focusType = plan.id.hasPrefix("once_") ? "once" : "repeat"
+
         Analytics.shared.track(
-            event: "session_finished",
+            event: "session_skipped",
             properties: [
-                "plan_id": planId,
-                "record_id": recordId,
+                "plan_id": plan.id,
+                "plan_name": plan.name ?? "",
                 "focus_type": focusType,
-                "result": "failed",
-                "reason": reason,
-                "elapsed_minutes": elapsedMin,
-                "target_minutes": totalMin,
-                "entry_source": entrySource
+                "reason": "quota_insufficient",
+                "remaining_minutes": remaining,
+                "required_minutes": required,
+                "day_duration": defaults.integer(forKey: "day_duration"),
+                "today_used": defaults.integer(forKey: "today_used"),
+                "mode": mode,
+                "entry_source": "schedule"
             ]
         )
 
-        defaults.set(true, forKey: "FocusOne.TaskFailed")
-        defaults.set(reason, forKey: "FocusOne.FailedReason")
-        defaults.removeObject(forKey: "FocusOne.FocusStartAt")
-        defaults.removeObject(forKey: "FocusOne.FocusEndAt")
-        defaults.removeObject(forKey: "FocusOne.TotalMinutes")
-        defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
-        defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
-        defaults.removeObject(forKey: "FocusOne.ShieldMode")
-        defaults.removeObject(forKey: "FocusOne.FocusEntrySource")
-        defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
-        defaults.removeObject(forKey: "FocusOne.PausedUntil")
-
-        if let recordId = defaults.string(forKey: "record_id"), !recordId.isEmpty {
-            let requestBody: [String: Any] = ["reason": reason]
-            NetworkManager.shared.post(path: "/record/fail/\(recordId)", body: requestBody) { _ in
-                defaults.removeObject(forKey: "record_id")
-            }
+        let pendingEvent: [String: Any] = [
+            "type": "quota_skip",
+            "plan_id": plan.id,
+            "plan_name": plan.name ?? "",
+            "remaining_minutes": remaining,
+            "required_minutes": required,
+            "timestamp": Int(Date().timeIntervalSince1970)
+        ]
+        if let pendingData = try? JSONSerialization.data(withJSONObject: pendingEvent) {
+            defaults.set(pendingData, forKey: "FocusOne.PendingEvent")
         }
 
         let content = UNMutableNotificationContent()
-        content.title = "今日时长已用完"
-        content.body = "已停止本次专注，明天再来吧"
+        if remaining <= 0 {
+            content.title = "时长耗尽提醒"
+            content.body = "今日时长已用完，已跳过本次专注"
+        } else {
+            content.title = "时长不足提醒"
+            content.body = "剩余时长不足，已跳过本次专注"
+        }
         enqueueNotification(
-            identifier: "QuotaExceeded_\(Int(Date().timeIntervalSince1970))",
+            identifier: "QuotaSkip_\(plan.id)_\(Int(Date().timeIntervalSince1970))",
             content: content
         )
 
-        logToJS(level: "warn", message: "今日配额已耗尽，已强制停止专注", data: ["reason": reason])
-    }
-    
-    /// 发送配额不足警告
-    private func notifyQuotaWarning(remaining: Int) {
-        let content = UNMutableNotificationContent()
-        content.title = "时长提醒"
-        content.body = "今日还剩 \(remaining) 分钟专注时长，到点会自动结束"
-        enqueueNotification(identifier: "QuotaWarning_\(remaining)_\(Int(Date().timeIntervalSince1970))", content: content)
-    }
-    
-    /// 发送配额即将耗尽提醒
-    private func notifyQuotaLow(remaining: Int) {
-        let content = UNMutableNotificationContent()
-        content.title = "时长即将耗尽"
-        content.body = "今日还剩 \(remaining) 分钟专注时长"
-        enqueueNotification(identifier: "QuotaLow_\(remaining)_\(Int(Date().timeIntervalSince1970))", content: content)
+        logToJS(
+            level: "warn",
+            message: "剩余时长不足，已跳过本次周期专注",
+            data: [
+                "plan_id": plan.id,
+                "remaining_minutes": remaining,
+                "required_minutes": required
+            ]
+        )
     }
 
     private func enqueueNotification(identifier: String, content: UNMutableNotificationContent) {

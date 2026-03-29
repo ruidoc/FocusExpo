@@ -22,7 +22,7 @@ const EmptyPlan = () => {
   const gap = nextPlan ? nextPlan.start_min - nowMinute : 0;
   const remainingMinutes = bstore.day_duration - bstore.today_used;
   const isQuotaExhausted =
-    !bstore.is_subscribed && bstore.day_duration > 0 && remainingMinutes <= 3;
+    !bstore.is_subscribed && bstore.day_duration > 0 && remainingMinutes <= 0;
 
   const getCountdownText = (minutes: number) => {
     if (minutes < 60) {

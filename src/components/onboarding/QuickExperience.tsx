@@ -1,5 +1,5 @@
 import { AppToken } from '@/components/business';
-import { Button } from '@/components/ui';
+import { Button, Toast } from '@/components/ui';
 import { useAppStore, useHomeStore, usePlanStore } from '@/stores';
 import { startAppLimits, stopAppLimits } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -34,6 +34,15 @@ const QuickExperience = ({
   const [remaining, setRemaining] = useState(FOCUS_DURATION * 60); // 倒计时（秒）
   const endTimeRef = useRef<number>(0);
   const onboardingOncePlanIdRef = useRef<string | null>(null);
+
+  const clearOnboardingOncePlan = () => {
+    const id = onboardingOncePlanIdRef.current;
+    if (!id) return;
+
+    pstore.rmOncePlan(id);
+    onboardingOncePlanIdRef.current = null;
+    pstore.resetPlan();
+  };
 
   // 根据 problem 获取个性化文案
   const getPersonalizedCopy = () => {
@@ -120,30 +129,37 @@ const QuickExperience = ({
     });
     onboardingOncePlanIdRef.current = newId;
 
-    if (Platform.OS === 'ios') {
-      await startAppLimits(FOCUS_DURATION, newId, 'shield', {
+    try {
+      const started = await startAppLimits(FOCUS_DURATION, newId, 'shield', {
         entry_source: 'onboarding',
         screen_name: 'onboarding_quick_experience',
         focus_type: 'once',
       });
+      if (!started) {
+        clearOnboardingOncePlan();
+        return;
+      }
       // 设置应用名称供后续使用
       if (astore.ios_selected_apps.length > 0) {
         setSelectedAppName(astore.ios_selected_apps[0].name || '');
       }
-    } else {
-      store.startVpn();
-    }
 
-    const elapsed = Date.now() - startTime;
-    if (elapsed < MIN_LOADING_MS) {
-      await new Promise(r => setTimeout(r, MIN_LOADING_MS - elapsed));
-    }
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_LOADING_MS) {
+        await new Promise(r => setTimeout(r, MIN_LOADING_MS - elapsed));
+      }
 
-    endTimeRef.current = startTime + FOCUS_DURATION * 60 * 1000;
-    setLoading(false);
-    setPhase('active');
-    // 通知父组件进入 active 阶段，禁用返回按钮
-    onPhaseChange?.('active');
+      endTimeRef.current = startTime + FOCUS_DURATION * 60 * 1000;
+      setPhase('active');
+      // 通知父组件进入 active 阶段，禁用返回按钮
+      onPhaseChange?.('active');
+    } catch (error) {
+      console.log('QuickExperience handleStart error', error);
+      clearOnboardingOncePlan();
+      Toast('启动锁定失败，请重试', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleConfirm = async () => {
@@ -157,12 +173,7 @@ const QuickExperience = ({
       console.log('QuickExperience handleConfirm stop error', e);
     }
 
-    const id = onboardingOncePlanIdRef.current;
-    if (id) {
-      pstore.rmOncePlan(id);
-      onboardingOncePlanIdRef.current = null;
-    }
-    pstore.resetPlan();
+    clearOnboardingOncePlan();
 
     endTimeRef.current = 0;
     onPhaseChange?.('ready');

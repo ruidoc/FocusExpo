@@ -7,7 +7,7 @@ import {
   usePlanStore,
   useRecordStore,
 } from '@/stores';
-import { startAppLimits } from '@/utils/permission';
+import { getIOSFocusStatus, startAppLimits } from '@/utils/permission';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
@@ -63,7 +63,14 @@ const QuickStartPage = () => {
 
   // 开始一次性任务
   const handleStart = async () => {
-    if (pstore.active_plan) {
+    if (pstore.has_active_task()) {
+      Toast('已有专注任务正在进行中', 'info');
+      return;
+    }
+
+    const nativeFocus = await getIOSFocusStatus();
+    if (nativeFocus.active) {
+      pstore.setNativeFocus(nativeFocus);
       Toast('已有专注任务正在进行中', 'info');
       return;
     }
@@ -76,13 +83,18 @@ const QuickStartPage = () => {
 
     await useBenefitStore.getState().getBenefit();
     const latestBenefit = useBenefitStore.getState();
-    if (
-      !latestBenefit.is_subscribed &&
-      latestBenefit.day_duration > 0 &&
-      Math.abs(latestBenefit.today_used - latestBenefit.day_duration) <= 3
-    ) {
-      Toast('今日专注时长已用完', 'info');
-      return;
+    const remainingMinutes =
+      latestBenefit.day_duration - latestBenefit.today_used;
+    if (!latestBenefit.is_subscribed && latestBenefit.day_duration > 0) {
+      if (remainingMinutes <= 0) {
+        Toast('今日专注时长已用完', 'info');
+        return;
+      }
+
+      if (remainingMinutes < minute) {
+        Toast(`今日剩余专注时长仅 ${remainingMinutes} 分钟`, 'info');
+        return;
+      }
     }
     debugger;
 

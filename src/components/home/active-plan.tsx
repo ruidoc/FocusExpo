@@ -21,6 +21,25 @@ const FocusButton = () => {
   const pstore = usePlanStore();
   const bstore = useBenefitStore();
   const { colors } = useCustomTheme();
+  const nativeFocus = pstore.native_focus;
+  const hasActiveTask = pstore.has_active_task();
+  const isPaused = pstore.is_pause();
+  const isPeriodicFocus = pstore.active_plan
+    ? pstore.active_plan.repeat !== 'once'
+    : nativeFocus.focus_type === 'periodic';
+  const displayPlanName =
+    pstore.active_plan?.name ||
+    nativeFocus.plan_name ||
+    (nativeFocus.focus_type === 'once' ? '一次性任务' : '进行中的任务');
+  const displayPlanEnd = pstore.active_plan?.end
+    ? pstore.active_plan.end
+    : nativeFocus.end_at
+      ? new Date(nativeFocus.end_at * 1000).toLocaleTimeString('zh-CN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        })
+      : '';
 
   // 弹窗状态
   const [showPauseModal, setShowPauseModal] = useState(false);
@@ -49,7 +68,7 @@ const FocusButton = () => {
   });
 
   let descDom: React.ReactNode;
-  if (!pstore.active_plan) {
+  if (!hasActiveTask) {
     if (pstore.next_plan) {
       descDom = (
         <Text style={styles.descFont}>
@@ -67,8 +86,8 @@ const FocusButton = () => {
   } else {
     descDom = (
       <Text style={styles.descFont}>
-        {pstore.active_plan.name || '一次性任务'}
-        {` · ${pstore.active_plan.end} 结束`}
+        {displayPlanName}
+        {displayPlanEnd ? ` · ${displayPlanEnd} 结束` : ''}
       </Text>
     );
   }
@@ -81,7 +100,7 @@ const FocusButton = () => {
   };
 
   const stopFocus = async () => {
-    if (!pstore.active_plan) return;
+    if (!hasActiveTask) return;
     try {
       if (Platform.OS === 'ios') {
         await stopAppLimits();
@@ -92,14 +111,14 @@ const FocusButton = () => {
   };
 
   const pauseFocus = () => {
-    if (!pstore.active_plan || pstore.is_pause()) return;
+    if (!hasActiveTask || isPaused) return;
     if (Platform.OS === 'ios') {
       pauseAppLimits(3);
     }
   };
 
   const resumeFocus = () => {
-    if (!pstore.active_plan || !pstore.is_pause()) return;
+    if (!hasActiveTask || !isPaused) return;
     if (Platform.OS === 'ios') {
       resumeAppLimits();
     }
@@ -116,7 +135,7 @@ const FocusButton = () => {
       <Flex
         className="justify-center"
         style={{ marginTop: 0, marginBottom: 20, gap: 30 }}>
-        {!pstore.active_plan && (
+        {!hasActiveTask && (
           <TouchableOpacity
             onPress={quickStart}
             activeOpacity={0.8}
@@ -126,7 +145,7 @@ const FocusButton = () => {
         )}
         {bstore.features.includes('show-pause') && (
           <>
-            {pstore.active_plan && !pstore.is_pause() && (
+            {hasActiveTask && !isPaused && (
               <TouchableOpacity
                 onPress={() => setShowPauseModal(true)}
                 activeOpacity={0.8}
@@ -134,7 +153,7 @@ const FocusButton = () => {
                 <Icon name="pause" size={24} color="#B3B3BA" />
               </TouchableOpacity>
             )}
-            {pstore.is_pause() && (
+            {isPaused && (
               <TouchableOpacity
                 onPress={resumeFocus}
                 activeOpacity={0.8}
@@ -144,7 +163,7 @@ const FocusButton = () => {
             )}
           </>
         )}
-        {pstore.active_plan && (
+        {hasActiveTask && (
           <TouchableOpacity
             onPress={() => {
               setShowStopModal(true);
@@ -175,7 +194,7 @@ const FocusButton = () => {
         confirmText="确认结束"
         cancelText="继续专注"
         extraWarning={
-          pstore.active_plan?.repeat !== 'once'
+          isPeriodicFocus
             ? '注意：停止后，今天该专注后续不会再触发'
             : undefined
         }

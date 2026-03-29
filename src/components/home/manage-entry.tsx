@@ -44,7 +44,7 @@ const ManageEntry = () => {
     router.push(path as never);
   };
 
-  if (pstore.active_plan) return null;
+  if (pstore.has_active_task()) return null;
 
   return (
     <Flex className="justify-between py-1">

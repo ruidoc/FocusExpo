@@ -1,6 +1,6 @@
 import { Toast } from '@/components/ui';
 import { deletePlan, updatePlan } from '@/native/ios';
-import type { PlanConfig } from '@/native/type';
+import type { FocusStatus, PlanConfig } from '@/native/type';
 import {
   getCurrentMinute,
   incrementFocusCount,
@@ -9,6 +9,7 @@ import {
 } from '@/utils';
 import http from '@/utils/request';
 import dayjs from 'dayjs';
+import { Platform } from 'react-native';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
 import {
@@ -27,16 +28,44 @@ const PlanStore = combine(
     paused_plan_id: '' as string, // 暂停中的任务
     exit_plan_ids: [] as string[], // 退出任务ID列表
     curplan_minute: 0 as number, // 当前任务已运行时长，退出重进后重新计时
+    native_focus: { active: false } as FocusStatus, // iOS 原生专注快照
   },
   (set, get) => ({
     is_allow_mode() {
-      return get().active_plan?.mode === 'allow';
+      return (
+        get().active_plan?.mode === 'allow' ||
+        get().native_focus.mode === 'allow'
+      );
     },
     all_plans() {
       return [...get().cus_plans, ...get().once_plans];
     },
+    has_active_task() {
+      if (Platform.OS === 'ios') {
+        return !!get().native_focus.active;
+      }
+      return !!get().active_plan;
+    },
     is_pause() {
-      return get().active_plan && get().active_plan.id === get().paused_plan_id;
+      return (
+        !!(get().active_plan && get().active_plan.id === get().paused_plan_id) ||
+        !!get().native_focus.paused
+      );
+    },
+    setNativeFocus: (focus: FocusStatus) => {
+      set({ native_focus: focus });
+    },
+    clearNativeFocus: () => {
+      set({ native_focus: { active: false } });
+    },
+    syncActivePlanWithNative: (planId?: string | null) => {
+      if (!planId) return;
+      const target =
+        [...get().cus_plans, ...get().once_plans].find(p => p.id === planId) ||
+        null;
+      if (target) {
+        set({ active_plan: target });
+      }
     },
 
     setCusPlans: (plans: any[]) => {
@@ -111,6 +140,7 @@ const PlanStore = combine(
       // 增加专注次数
       incrementFocusCount();
 
+      (get() as any).clearNativeFocus();
       record.getState().removeRecordId();
       (get() as any).pauseCurPlan(false);
       (get() as any).setCurPlanMinute(0);
@@ -123,6 +153,7 @@ const PlanStore = combine(
     // 专注计划终止
     exitPlan: async () => {
       let record_id = storage.getString('record_id');
+      (get() as any).clearNativeFocus();
       if (record_id) {
         await record.getState().exitRecord(record_id);
         record.getState().removeRecordId();

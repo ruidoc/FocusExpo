@@ -51,7 +51,7 @@ const Header = () => {
   const liveActualMins = addLiveFocusDelta(
     rstore.actual_mins,
     getLiveFocusDelta({
-      active: !!pstore.active_plan,
+      active: pstore.has_active_task(),
       paused: !!pstore.is_pause(),
       curplanMinute: pstore.curplan_minute,
       currentRecordId: rstore.record_id,

@@ -1,26 +1,22 @@
-import * as Notifications from 'expo-notifications';
 import {
-  requestScreenTimePermission as nativeRequestScreenTimePermission,
   checkScreenTimePermission as nativeCheckScreenTimePermission,
+  getFocusStatus as nativeGetFocusStatus,
+  requestScreenTimePermission as nativeRequestScreenTimePermission,
   selectAppsToLimit as nativeSelectAppsToLimit,
   startAppLimits as nativeStartAppLimits,
   stopAppLimits as nativeStopAppLimits,
-  getFocusStatus as nativeGetFocusStatus,
 } from '@/native/ios';
-import type {
-  AppDetail,
-  AppSelectionResult,
-  FocusStatus,
-} from '@/native/type';
+import type { AppDetail, AppSelectionResult, FocusStatus } from '@/native/type';
 import {
-  type FocusType,
-  storage,
   trackBlockAppsSelected,
   trackBlockAppsSelectionStarted,
   trackPermissionRequestClicked,
   trackPermissionResult,
   trackStartClicked,
+  type FocusType,
 } from '@/utils/analytics';
+import { storage } from '@/utils/storage';
+import * as Notifications from 'expo-notifications';
 
 type TrackingOptions = {
   entry_source?: string;
@@ -108,7 +104,6 @@ export async function getIOSFocusStatus(): Promise<FocusStatus> {
   const result = await nativeGetFocusStatus();
   return result;
 }
-
 
 export async function checkNotify() {
   try {

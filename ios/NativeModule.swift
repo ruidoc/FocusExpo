@@ -761,8 +761,8 @@ class NativeModule: RCTEventEmitter {
       self.emitProgress()
       // 发送开始通知（一次性）
       let content = UNMutableNotificationContent()
-      content.title = "专注契约"
-      content.body = "屏蔽已开启，保持专注"
+      content.title = "专注开始"
+      content.body = "快速专注，\(self.totalMinutes)分钟"
       let request = UNNotificationRequest(identifier: "FocusStartOnce", content: content, trigger: nil)
       UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
       
@@ -810,7 +810,7 @@ class NativeModule: RCTEventEmitter {
       defaults.set("user_exit", forKey: "FocusOne.FailedReason")
     }
     Analytics.shared.track(event: "session_finished", properties: trackProperties)
-    // 仅停止一次性任务与暂停恢复活动，保留周期性计划监控，确保下个周期继续生效
+    // 仅停止一次性任务和暂停恢复活动，保留周期性计划监控，确保下个周期继续生效
     center.stopMonitoring([activityName, pauseResumeActivity])
 
     // 清除所有限制
@@ -892,15 +892,20 @@ class NativeModule: RCTEventEmitter {
     let active = inWindow || (pausedUntil > 0)
 
     let ftype = defaults.string(forKey: "FocusOne.FocusType")
-    // 简单序列化：key=value 以逗号连接（按 key 排序，便于稳定）
-    // let blockedAppsSerialized = blockedAppsDict
-    //   .map { "\($0.key)=\($0.value)" }
-    //   .sorted()
-    //   .joined(separator: ",")
-    // print("blockedAppsSerialized: \(blockedAppsSerialized)")
+    var planId: String? = defaults.string(forKey: "FocusOne.CurrentPlanId")
+    var planName: String? = nil
+    var focusMode: String? = defaults.string(forKey: "FocusOne.ShieldMode")
+
+    if let storedData = defaults.data(forKey: kPlansMap),
+       let plansMap = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) {
+      if let currentPlanId = planId, let plan = plansMap[currentPlanId] {
+        planName = plan.name
+        focusMode = plan.mode ?? focusMode
+      }
+    }
+
     // 计算当前命中的周期计划的 plan_id（从增量更新的 kPlansMap 读取）
-    var planId: String? = nil
-    if ftype == "periodic" {
+    if (planId == nil || planName == nil), ftype == "periodic" {
       // 从增量更新的 PlansMap 读取所有计划
       if let storedData = defaults.data(forKey: kPlansMap),
          let plansMap = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) {
@@ -948,6 +953,8 @@ class NativeModule: RCTEventEmitter {
                 eTs = eTsNextDay
                 if now < eTs {
                   planId = id
+                  planName = plan.name
+                  focusMode = plan.mode ?? focusMode
                   break
                 }
               } else {
@@ -958,6 +965,8 @@ class NativeModule: RCTEventEmitter {
                   eTs = eTsNextDay
                   if now >= finalSTs && now < eTs {
                     planId = id
+                    planName = plan.name
+                    focusMode = plan.mode ?? focusMode
                     break
                   }
                 }
@@ -971,6 +980,8 @@ class NativeModule: RCTEventEmitter {
             eTs = eDate.timeIntervalSince1970
             if now >= sTs && now < eTs {
               planId = id
+              planName = plan.name
+              focusMode = plan.mode ?? focusMode
               break
             }
           }
@@ -983,6 +994,9 @@ class NativeModule: RCTEventEmitter {
         planId = pid
       }
     }
+    if planName == nil, ftype == "once" {
+      planName = "一次性任务"
+    }
 
     // 读取 record_id
     let recordId = defaults.string(forKey: "record_id")
@@ -991,13 +1005,15 @@ class NativeModule: RCTEventEmitter {
       "active": active,
       "paused": paused,
       "plan_id": planId ?? NSNull(),
+      "plan_name": planName ?? NSNull(),
       "record_id": recordId ?? NSNull(),
-      "startAt": startAt,
-      "endAt": endAt,
-      "totalMinutes": total,
-      "elapsedMinutes": elapsedMin,
-      "focusType": ftype ?? NSNull(),
-      "pausedUntil": (pausedUntil > 0 && isPaused) ? pausedUntil : NSNull()
+      "start_at": startAt,
+      "end_at": endAt,
+      "total_minutes": total,
+      "actual_mins": elapsedMin,
+      "focus_type": ftype ?? NSNull(),
+      "mode": focusMode ?? NSNull(),
+      "paused_until": (pausedUntil > 0 && isPaused) ? pausedUntil : NSNull()
     ])
   }
 

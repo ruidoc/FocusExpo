@@ -15,15 +15,23 @@ import { getFocusStatus } from './methods';
 function cleanupLocalFocusState() {
   const pstore = usePlanStore.getState();
   const rstore = useRecordStore.getState();
+  const nativeFocus = pstore.native_focus;
 
   stopFocusTimer();
 
-  if (pstore.active_plan?.repeat === 'once') {
-    pstore.rmOncePlan(pstore.active_plan.id);
-  } else if (pstore.active_plan) {
-    pstore.addExitPlanIds(pstore.active_plan.id);
+  if (pstore.active_plan?.repeat === 'once' || nativeFocus.focus_type === 'once') {
+    const oncePlanId = pstore.active_plan?.id || nativeFocus.plan_id;
+    if (oncePlanId) {
+      pstore.rmOncePlan(oncePlanId);
+    }
+  } else if (pstore.active_plan || nativeFocus.plan_id) {
+    const activePlanId = pstore.active_plan?.id || nativeFocus.plan_id;
+    if (activePlanId) {
+      pstore.addExitPlanIds(activePlanId);
+    }
   }
 
+  pstore.clearNativeFocus();
   pstore.pauseCurPlan(false);
   rstore.removeRecordId();
   pstore.setCurPlanMinute(0);
@@ -88,14 +96,18 @@ async function syncIOSStatus() {
 
     const pstore = usePlanStore.getState();
     const rstore = useRecordStore.getState();
+    pstore.setNativeFocus(status);
 
     if (status.active) {
       // 同步 record_id（优先使用 iOS 的）
       if (status.record_id !== rstore.record_id) {
         rstore.setRecordId(status.record_id || '');
       }
-      pstore.setCurPlanMinute(status.elapsedMinutes || 0);
-      startElapsedTimer(status.elapsedMinutes || 0);
+      pstore.setCurPlanMinute(status.actual_mins || 0);
+      startElapsedTimer(status.actual_mins || 0);
+      if (status.plan_id) {
+        pstore.syncActivePlanWithNative(status.plan_id);
+      }
       if (!pstore.active_plan) {
         // 确保数据已初始化后再调用 resetPlan
         const cus_plans = pstore.cus_plans;
@@ -110,10 +122,12 @@ async function syncIOSStatus() {
     } else if (status.failed) {
       cleanupLocalFocusState();
     } else if (pstore.active_plan) {
-      console.log('【专注同步错误】');
+      console.log('【专注同步纠正】iOS 无任务，清理本地状态');
+      cleanupLocalFocusState();
     } else {
       // 专注已结束，停止定时器
       stopFocusTimer();
+      pstore.clearNativeFocus();
       rstore.removeRecordId();
       pstore.setCurPlanMinute(0);
       // 确保数据已初始化后再调用 resetPlan
@@ -138,32 +152,25 @@ function handleFocusStateChange(payload: FocusStateEvent) {
   const pstore = usePlanStore.getState();
 
   if (payload?.state === 'started') {
-    pstore.setCurPlanMinute(0);
-    pstore.resetPlan();
+    syncIOSStatus();
   } else if (payload?.state === 'paused') {
     // 暂停时停止定时器
     stopFocusTimer();
-    pstore.pauseCurPlan(true);
+    syncIOSStatus();
   } else if (payload?.state === 'resumed') {
     // 恢复时重启定时器
     stopFocusTimer(); // 先停止旧定时器
-    pstore.pauseCurPlan(false);
-    // 重新同步状态并启动定时器
     syncIOSStatus();
   } else if (payload?.state === 'failed') {
     stopFocusTimer();
-    // 清理本地的一次性任务
-    if (pstore.active_plan?.repeat === 'once') {
-      pstore.rmOncePlan(pstore.active_plan.id);
-    } else {
-      pstore.addExitPlanIds(pstore.active_plan.id);
-    }
+    pstore.clearNativeFocus();
     pstore.exitPlan();
     if (payload.reason === 'user_exit') {
       console.log('【手动停止任务】');
     }
   } else if (payload?.state === 'ended') {
     stopFocusTimer();
+    pstore.clearNativeFocus();
     // 正常完成（complatePlan 内部已调用 getBenefit 同步 today_used）
     pstore.complatePlan();
   }
