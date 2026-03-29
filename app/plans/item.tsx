@@ -1,5 +1,5 @@
 import { AppToken } from '@/components/business';
-import { Dialog } from '@/components/ui';
+import { Dialog, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useAppStore, usePlanStore } from '@/stores';
 import {
@@ -20,7 +20,7 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
   const toRemove = (id: string) => {
     Dialog.confirm({
       title: '操作提示',
-      message: '确定删除该任务？',
+      message: '确定删除该契约？',
       buttonReverse: true,
     }).then(action => {
       if (action === 'confirm') {
@@ -34,14 +34,26 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
   };
 
   const toEdit = (task: any) => {
+    if (store.has_active_task()) {
+      Toast('专注进行中，不可以修改契约', 'info');
+      return;
+    }
     store.setEditingPlan(task);
     router.push('/plans/add');
   };
 
   if (plans.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center p-10">
-        <Text style={{ color: colors.text3, fontSize: 14 }}>暂无任务</Text>
+      <View
+        className="flex-1 items-center justify-center px-10"
+        style={{ paddingVertical: 72, minHeight: 320 }}>
+        <Icon
+          name="hourglass-outline"
+          size={50}
+          color={colors.text3}
+          style={{ marginBottom: 20, opacity: 0.85 }}
+        />
+        <Text style={{ color: colors.text3, fontSize: 14 }}>暂无契约</Text>
       </View>
     );
   }

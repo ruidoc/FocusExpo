@@ -143,9 +143,9 @@ const FocusButton = () => {
             <Icon name="play" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {bstore.features.includes('show-pause') && (
+        {hasActiveTask && (
           <>
-            {hasActiveTask && !isPaused && (
+            {!isPaused && (
               <TouchableOpacity
                 onPress={() => setShowPauseModal(true)}
                 activeOpacity={0.8}
@@ -163,7 +163,7 @@ const FocusButton = () => {
             )}
           </>
         )}
-        {hasActiveTask && (
+        {bstore.features.includes('allow-break') && hasActiveTask && (
           <TouchableOpacity
             onPress={() => {
               setShowStopModal(true);
@@ -194,9 +194,7 @@ const FocusButton = () => {
         confirmText="确认结束"
         cancelText="继续专注"
         extraWarning={
-          isPeriodicFocus
-            ? '注意：停止后，今天该专注后续不会再触发'
-            : undefined
+          isPeriodicFocus ? '注意：停止后，今天该专注后续不会再触发' : undefined
         }
         onConfirm={stopFocus}
         onCancel={() => {}}

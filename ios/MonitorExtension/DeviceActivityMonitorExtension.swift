@@ -41,11 +41,21 @@ func applyShield(store: ManagedSettingsStore, selection: FamilyActivitySelection
 
 private func parsePlanDate(_ value: String?) -> Date? {
     guard let value, !value.isEmpty else { return nil }
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    // 接口可能给 ISO8601（含 T），仅取日期段再按本地日历解析，避免解析失败导致跳过 start_date 校验
+    let datePart: String
+    if let t = trimmed.firstIndex(of: "T") {
+        datePart = String(trimmed[..<t])
+    } else if trimmed.count >= 10 {
+        datePart = String(trimmed.prefix(10))
+    } else {
+        datePart = trimmed
+    }
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"
     formatter.locale = Locale(identifier: "en_US_POSIX")
     formatter.timeZone = TimeZone.current
-    return formatter.date(from: value)
+    return formatter.date(from: datePart)
 }
 
 // Optionally override any of the functions below.
@@ -104,6 +114,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         // 检查是否是暂停恢复活动，如果是则跳过处理
         if activity.rawValue == "FocusOne.PauseResume" { return }
+        if consumeQuotaSkipEventIfNeeded(activity: activity, defaults: defaults) { return }
 
         // 到点自动清理屏蔽
         let store = ManagedSettingsStore()
@@ -160,6 +171,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             
         } else {
             // ===== 正常任务结束逻辑 =====
+            if consumeQuotaSkipEventIfNeeded(activity: activity, defaults: defaults) { return }
             // 在警告阶段（区间结束前 warningTime 分钟）提前清理，支持 <15 分钟的"有效时长"
             let store = ManagedSettingsStore()
             store.clearAllSettings()
@@ -254,7 +266,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // 3. 记录时间和状态
         let now = Date()
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: now)
+        let currentDayStart = calendar.startOfDay(for: now)
         
         // 计算实际的 Start/End 时间
         // 注意：这里的 plan.start/end 是分钟数。我们需要根据当前日期构建 Date。
@@ -267,7 +279,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // 重新计算当前段的结束时间
         var sessionEndTime: Date
         
-        var planEndTime = today.addingTimeInterval(TimeInterval(plan.end * 60))
+        var planEndTime = currentDayStart.addingTimeInterval(TimeInterval(plan.end * 60))
         if plan.end <= plan.start {
             planEndTime = planEndTime.addingTimeInterval(24 * 3600)
         }
@@ -299,11 +311,14 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             let remaining = dayDuration - todayUsed
 
             if !isSubscribed && remaining < totalMin {
+                let window = computeWindowIdentity(plan: plan, activityRawValue: raw, now: now)
                 handlePeriodicQuotaSkip(
                     defaults: defaults,
                     plan: plan,
                     remaining: max(remaining, 0),
-                    required: totalMin
+                    required: totalMin,
+                    windowStart: window?.start,
+                    windowEnd: window?.end
                 )
                 return
             }
@@ -686,7 +701,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults: UserDefaults,
         plan: PlanConfig,
         remaining: Int,
-        required: Int
+        required: Int,
+        windowStart: TimeInterval?,
+        windowEnd: TimeInterval?
     ) {
         let mode = plan.mode ?? "shield"
         let focusType = plan.id.hasPrefix("once_") ? "once" : "repeat"
@@ -713,6 +730,8 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             "plan_name": plan.name ?? "",
             "remaining_minutes": remaining,
             "required_minutes": required,
+            "window_start": Int(windowStart ?? 0),
+            "window_end": Int(windowEnd ?? 0),
             "timestamp": Int(Date().timeIntervalSince1970)
         ]
         if let pendingData = try? JSONSerialization.data(withJSONObject: pendingEvent) {
@@ -753,5 +772,50 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 self.logToJS(level: "log", message: "通知已发送", data: ["identifier": identifier])
             }
         }
+    }
+
+    private func computeWindowIdentity(
+        plan: PlanConfig,
+        activityRawValue: String,
+        now: Date
+    ) -> (start: TimeInterval, end: TimeInterval)? {
+        let calendar = Calendar.current
+        let currentDayStart = calendar.startOfDay(for: now)
+        let startDate = currentDayStart.addingTimeInterval(TimeInterval(plan.start * 60))
+        let endDate = currentDayStart.addingTimeInterval(TimeInterval(plan.end * 60))
+
+        if plan.end <= plan.start {
+            if activityRawValue.contains("_P2_") {
+                let previousStart = startDate.addingTimeInterval(-24 * 3600)
+                return (start: previousStart.timeIntervalSince1970, end: endDate.timeIntervalSince1970)
+            }
+
+            return (
+                start: startDate.timeIntervalSince1970,
+                end: endDate.addingTimeInterval(24 * 3600).timeIntervalSince1970
+            )
+        }
+
+        return (start: startDate.timeIntervalSince1970, end: endDate.timeIntervalSince1970)
+    }
+
+    private func consumeQuotaSkipEventIfNeeded(
+        activity: DeviceActivityName,
+        defaults: UserDefaults
+    ) -> Bool {
+        guard activity.rawValue.starts(with: "FocusOne.Plan."),
+              let pendingData = defaults.data(forKey: "FocusOne.PendingEvent"),
+              let json = try? JSONSerialization.jsonObject(with: pendingData) as? [String: Any],
+              let type = json["type"] as? String,
+              type == "quota_skip",
+              let pendingPlanId = json["plan_id"] as? String,
+              let plan = findPlan(by: activity.rawValue, defaults: defaults),
+              plan.id == pendingPlanId else {
+            return false
+        }
+
+        defaults.removeObject(forKey: "FocusOne.PendingEvent")
+        logToJS(level: "log", message: "检测到配额跳过，忽略本次结束回调", data: ["plan_id": pendingPlanId])
+        return true
     }
 }

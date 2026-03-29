@@ -6,6 +6,7 @@ import {
   parseRepeat,
   storage,
 } from '@/utils';
+import { getPlansByPeriod } from '@/utils/date';
 import http from '@/utils/request';
 import dayjs from 'dayjs';
 import { Platform } from 'react-native';
@@ -162,6 +163,12 @@ const PlanStore = combine(
     // 更新iOS专注计划
     updateIOSPlan: async (plan: CusPlan) => {
       const repeat = parseRepeat(plan.repeat);
+      // 原生 parsePlanDate 只认 yyyy-MM-dd；接口常为 ISO 字符串，不规范化会导致解析失败、跳过「尚未开始」校验误触 shield
+      const toYmd = (d: string | undefined) => {
+        if (!d) return null;
+        const t = dayjs(d);
+        return t.isValid() ? t.format('YYYY-MM-DD') : null;
+      };
       const data: PlanConfig = {
         id: plan.id,
         name: plan.name,
@@ -170,8 +177,8 @@ const PlanStore = combine(
         days: repeat === 'once' ? [] : (repeat as number[]), // 一次性任务使用空数组
         apps: plan.apps || [],
         mode: plan.mode || 'shield',
-        start_date: plan.start_date || null,
-        end_date: plan.end_date || null,
+        start_date: toYmd(plan.start_date),
+        end_date: toYmd(plan.end_date),
       };
       console.log('同步计划到 IOS Native:', JSON.stringify(data));
       await updatePlan(data);
@@ -183,36 +190,41 @@ const PlanStore = combine(
       const cus_plans = get().cus_plans || [];
       const once_plans = get().once_plans || [];
 
-      // 获取当前时间的分钟数（当天从0点开始的总分钟数）
       const minutes = getCurrentMinute();
-      // 今天是周几（0=周日, 1=周一 ... 6=周六）
-      const jsDay = new Date().getDay(); // 0=周日 ... 6=周六
-      const today = jsDay; // 直接使用，0=周日, 1=周一 ... 6=周六
+      const dateKey = dayjs().format('YYYY-MM-DD');
 
-      // 仅保留：一次性任务，或周期任务且今天在 repeat 中
-      const allPlans = [...cus_plans, ...once_plans];
-      const filteredPlans = allPlans.filter((p: CusPlan) => {
-        const r = parseRepeat((p as any).repeat);
-        if (r === 'once') return true;
-        // 若没有有效 repeat 数组，默认认为不匹配（避免误触发）
-        if (!Array.isArray(r) || r.length === 0) return false;
-        return r.includes(today);
-      });
+      // 与契约页「今日」一致：周期任务按 start_date / end_date / repeat 交集
+      const todayPeriodic = getPlansByPeriod(cus_plans, 'today');
+      const todayPeriodicIds = new Set(todayPeriodic.map(p => p.id));
 
-      // 查找当前正在进行中的计划
-      const active_plan =
-        filteredPlans.find(
-          (p: CusPlan) =>
-            minutes >= p.start_min &&
-            minutes < p.end_min &&
-            !get().exit_plan_ids.includes(
-              `${dayjs().format('YYYY-MM-DD')}:${p.id}`,
-            ),
-        ) || null;
+      const inFocusWindow = (p: CusPlan) =>
+        minutes >= p.start_min &&
+        minutes < p.end_min &&
+        !get().exit_plan_ids.includes(`${dateKey}:${p.id}`);
 
-      // 查找下一个计划（同日内开始时间在当前之后的第一个）
+      // 当前进行中：先扫 cus（顺序与列表一致），仅认「今日」周期契约；再扫一次性任务
+      let active_plan: CusPlan | null = null;
+      for (const p of cus_plans) {
+        if (todayPeriodicIds.has(p.id) && inFocusWindow(p)) {
+          active_plan = p;
+          break;
+        }
+      }
+      if (!active_plan) {
+        for (const p of once_plans) {
+          if (parseRepeat((p as any).repeat) === 'once' && inFocusWindow(p)) {
+            active_plan = p;
+            break;
+          }
+        }
+      }
+
+      // 下一个契约：仅今日周期契约中，按开始时间排序后取「尚未开始」的第一个
+      const sortedToday = [...todayPeriodic].sort(
+        (a, b) => a.start_min - b.start_min,
+      );
       const next_plan =
-        filteredPlans.find((p: CusPlan) => minutes < p.start_min) || null;
+        sortedToday.find((p: CusPlan) => minutes < p.start_min) || null;
 
       set({ active_plan, next_plan });
 

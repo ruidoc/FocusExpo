@@ -1,4 +1,5 @@
 import { usePlanStore, useRecordStore, useUserStore } from '@/stores';
+import { getPlansByPeriod } from '@/utils/date';
 import { addLiveFocusDelta, getLiveFocusDelta } from '@/utils/live-focus';
 import { minutesToHours } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -75,7 +76,7 @@ const Header = () => {
     return 'Focus User';
   };
 
-  const planCount = pstore.cus_plans.length;
+  const planCount = getPlansByPeriod(pstore.cus_plans, 'today').length;
 
   return (
     <View className="flex-row justify-between items-center px-4 py-2">

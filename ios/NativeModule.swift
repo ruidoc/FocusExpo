@@ -652,7 +652,11 @@ class NativeModule: RCTEventEmitter {
       }
     }
     if let window = currentPlannedWindow() {
-      if nowTs >= window.start && nowTs < window.end {
+      if isQuotaSkippedWindow(window) {
+        if let defaults = UserDefaults.groupUserDefaults() {
+          defaults.removeObject(forKey: "FocusOne.PendingEvent")
+        }
+      } else {
         reject("OVERLAP_ERROR", "已处于周期计划窗口内，禁止重叠创建一次性任务", nil)
         return
       }
@@ -1179,7 +1183,7 @@ class NativeModule: RCTEventEmitter {
   // 计算"当前时刻"命中的周期计划窗口（若存在）
   // 返回当日窗口的开始/结束时间戳（秒）
   // 从增量更新的 kPlansMap 读取计划
-  private func currentPlannedWindow() -> (start: TimeInterval, end: TimeInterval)? {
+  private func currentPlannedWindow() -> (planId: String, start: TimeInterval, end: TimeInterval)? {
     guard let defaults = UserDefaults.groupUserDefaults(),
           let storedData = defaults.data(forKey: kPlansMap),
           let plansMap = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) else {
@@ -1231,7 +1235,7 @@ class NativeModule: RCTEventEmitter {
             // 在当天的 start 之后，结束时间是第二天的 end
             eTs = eTsNextDay
             if nowTs < eTs {
-              return (start: sTs, end: eTs)
+              return (planId: plan.id, start: sTs, end: eTs)
             }
           } else {
             // 在当天的 start 之前，可能是从昨天的 start 开始的
@@ -1240,7 +1244,7 @@ class NativeModule: RCTEventEmitter {
               finalSTs = yesterdayStart.timeIntervalSince1970
               eTs = eTsNextDay
               if nowTs >= finalSTs && nowTs < eTs {
-                return (start: finalSTs, end: eTs)
+                return (planId: plan.id, start: finalSTs, end: eTs)
               }
             }
           }
@@ -1252,12 +1256,30 @@ class NativeModule: RCTEventEmitter {
         }
         eTs = eDate.timeIntervalSince1970
         if nowTs >= sTs && nowTs < eTs {
-          return (start: sTs, end: eTs)
+          return (planId: plan.id, start: sTs, end: eTs)
         }
       }
     }
     
     return nil
+  }
+
+  private func isQuotaSkippedWindow(_ window: (planId: String, start: TimeInterval, end: TimeInterval)) -> Bool {
+    guard let defaults = UserDefaults.groupUserDefaults(),
+          let pendingData = defaults.data(forKey: "FocusOne.PendingEvent"),
+          let json = try? JSONSerialization.jsonObject(with: pendingData) as? [String: Any],
+          let type = json["type"] as? String,
+          type == "quota_skip",
+          let planId = json["plan_id"] as? String else {
+      return false
+    }
+
+    let windowStart = (json["window_start"] as? NSNumber)?.doubleValue ?? 0
+    let windowEnd = (json["window_end"] as? NSNumber)?.doubleValue ?? 0
+
+    return planId == window.planId
+      && Int(windowStart) == Int(window.start)
+      && Int(windowEnd) == Int(window.end)
   }
   
   // 获取选择应用的详细信息

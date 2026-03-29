@@ -35,7 +35,6 @@ const App = () => {
     if (type === 'all') {
       return store.getPlans();
     } else {
-      // 全部：获取今天的计划，前端会显示所有任务
       return store.getPlans({ period: type });
     }
   };
@@ -47,19 +46,19 @@ const App = () => {
     });
   };
 
-  // 处理筛选类型切换
+  // 处理筛选类型切换：同步拉取对应周期数据并刷新列表
   const handleFilterChange = async (type: FilterType) => {
     setFilterType(type);
-    // setRefreshing(true);
-    // try {
-    //   await fetchPlans(type);
-    // } finally {
-    //   setRefreshing(false);
-    // }
+    setRefreshing(true);
+    try {
+      await fetchPlans(type);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
-    fetchPlans('all');
+    fetchPlans('today');
   }, []);
 
   // 同步计划到 iOS 原生侧
@@ -81,18 +80,21 @@ const App = () => {
 
   useEffect(() => {
     navigation.setOptions({
+      // 避免 header 右侧 flex 布局把 Pressable 拉满剩余宽度（偶现长条）
       headerRight: ({ tintColor }: { tintColor?: string }) => (
-        <Pressable onPress={() => toRoute('plans/add')}>
-          <Icon
-            name="add"
-            size={27}
-            className="ml-1"
-            color={tintColor ?? colors.text}
-          />
+        <Pressable
+          onPress={() => toRoute('plans/add')}
+          style={{
+            width: 36,
+            height: 36,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <Icon name="add" size={27} color={tintColor ?? colors.text} />
         </Pressable>
       ),
     });
-  }, []);
+  }, [navigation]);
 
   // 根据筛选类型过滤任务
   const getFilteredPlans = () => {
