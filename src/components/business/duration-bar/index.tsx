@@ -13,6 +13,8 @@ import { addLiveFocusDelta, getLiveFocusDelta } from '@/utils/live-focus';
 import React from 'react';
 import { Text, View } from 'react-native';
 
+const UNLIMITED_DAY_DURATION_MINUTES = 24 * 60;
+
 const formatMinutes = (min: number): string => {
   if (min >= 60) {
     const h = Math.floor(min / 60);
@@ -26,6 +28,8 @@ const DayDurationBar: React.FC = () => {
   const { is_subscribed, day_duration } = useBenefitStore();
   const pstore = usePlanStore();
   const rstore = useRecordStore();
+  const totalDuration =
+    day_duration > 0 ? day_duration : UNLIMITED_DAY_DURATION_MINUTES;
   const displayUsed = addLiveFocusDelta(
     rstore.actual_mins,
     getLiveFocusDelta({
@@ -38,14 +42,14 @@ const DayDurationBar: React.FC = () => {
     }),
   );
 
-  // 订阅用户或未配置配额时不显示
-  if (is_subscribed || day_duration <= 0) {
+  // 订阅用户不显示；day_duration=0 视为不限时，按 24 小时展示
+  if (is_subscribed) {
     return null;
   }
 
-  const used = Math.min(displayUsed, day_duration);
-  const progress = day_duration > 0 ? used / day_duration : 0;
-  const isExhausted = displayUsed >= day_duration;
+  const used = Math.min(displayUsed, totalDuration);
+  const progress = used / totalDuration;
+  const isExhausted = displayUsed >= totalDuration;
 
   const trackColor = isExhausted ? '#EF4444' : '#7A5AF8';
   const bgColor = '#2A2A3A';
@@ -60,7 +64,7 @@ const DayDurationBar: React.FC = () => {
         <Text
           className="text-[12px]"
           style={{ color: isExhausted ? '#EF4444' : '#858699' }}>
-          {formatMinutes(displayUsed)} / {formatMinutes(day_duration)}
+          {formatMinutes(displayUsed)} / {formatMinutes(totalDuration)}
         </Text>
       </View>
 

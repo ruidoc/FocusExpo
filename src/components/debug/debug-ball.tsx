@@ -4,9 +4,9 @@
  * 支持拖拽和边缘吸附
  */
 
+import { APP_ENV } from '@/config/env';
 import { useDebugStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
-import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
@@ -16,9 +16,6 @@ import {
   Pressable,
   View,
 } from 'react-native';
-
-// 获取应用构建类型：development | preview | production
-const appVariant = Constants.expoConfig?.extra?.appVariant || 'development';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BALL_SIZE = 56;
@@ -157,10 +154,8 @@ export const DebugBall = () => {
     }),
   ).current;
 
-  // 仅在开发环境和 preview 构建中显示，production 构建中隐藏
-  // __DEV__ 在开发模式为 true
-  // appVariant 在 preview 构建中为 'preview'，在 production 构建中为 'production'
-  const shouldShow = __DEV__ || appVariant !== 'production';
+  // 统一使用 APP_ENV 判断环境，避免与 Expo extra 字段出现多套口径。
+  const shouldShow = APP_ENV !== 'production';
   if (!shouldShow || !showDebugBall) return null;
 
   return (

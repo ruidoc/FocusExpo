@@ -103,8 +103,7 @@
       "router": {},
       "eas": {
         "projectId": "17655fd0-b6e6-4f12-b988-e23ef2f0c593"
-      },
-      "appVariant": "development"
+      }
     },
     "owner": "freeshore",
     "runtimeVersion": "1.0.0",

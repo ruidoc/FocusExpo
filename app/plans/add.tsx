@@ -398,7 +398,7 @@ const App = () => {
         {allowModeEnabled && (
           <FieldGroup className="rounded-xl mb-4">
             <FieldItem
-              title={form.mode === 'shield' ? '锁定模式' : '允许模式'}
+              title={form.mode === 'shield' ? '锁定模式' : '放行模式'}
               rightElement={
                 <Switch
                   value={form.mode === 'allow'}

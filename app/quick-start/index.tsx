@@ -97,13 +97,14 @@ const QuickStartPage = () => {
     if (conflictPlan) {
       const now = dayjs();
       const currentMinute = now.hour() * 60 + now.minute();
-      const minutesUntilPlan = Math.max(conflictPlan.start_min - currentMinute, 0);
-      if (minutesUntilPlan <= 0) {
-        Toast('当前已进入契约时间，不可创建', 'info');
-      } else {
+      const minutesUntilPlan = Math.max(
+        conflictPlan.start_min - currentMinute,
+        0,
+      );
+      if (minutesUntilPlan > 0) {
         Toast(`${minutesUntilPlan}分钟后契约开始，不可超时`, 'info');
+        return;
       }
-      return;
     }
 
     await useBenefitStore.getState().getBenefit();
@@ -159,7 +160,7 @@ const QuickStartPage = () => {
         {allowModeEnabled && (
           <View className="mb-4 flex-row justify-center">
             <SegmentedControl
-              values={['锁定模式', '允许模式']}
+              values={['锁定模式', '放行模式']}
               selectedIndex={mode === 'shield' ? 0 : 1}
               style={{ height: 40, width: 220 }}
               tintColor={'#85869950'}
