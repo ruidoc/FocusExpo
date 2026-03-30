@@ -517,7 +517,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         let content = UNMutableNotificationContent()
         content.title = "专注恢复"
-        content.body = "屏蔽已自动恢复，继续加油！"
+        content.body = "暂时结束，已恢复锁定状态"
         let request = UNNotificationRequest(identifier: "FocusResume", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
         

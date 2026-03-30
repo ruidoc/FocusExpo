@@ -39,6 +39,24 @@ function getErrorMessage(error: unknown): string {
   return '操作失败，请重试';
 }
 
+function getNativeErrorCode(error: unknown): string | undefined {
+  if (error && typeof error === 'object' && 'code' in error) {
+    const c = (error as { code?: string }).code;
+    return typeof c === 'string' ? c : undefined;
+  }
+  return undefined;
+}
+
+/** Device Activity 监控数量/密度超限（系统 localizedDescription 因语言而异，不能与 MONITOR_ERROR 划等号） */
+function isDeviceActivityExcessiveError(error: unknown): boolean {
+  const msg = getErrorMessage(error);
+  return (
+    msg.includes('过度活动') ||
+    /excessive/i.test(msg) ||
+    /too many activities/i.test(msg)
+  );
+}
+
 /**
  * 统一错误处理和平台检查
  */
@@ -136,16 +154,25 @@ export async function startAppLimits(
   planId?: string,
   mode: 'shield' | 'allow' = 'shield',
 ): Promise<boolean> {
-  return callNativeMethod(
-    'startAppLimits',
-    () =>
-      getNativeModule()!.startAppLimits(
-        durationMinutes ?? 0,
-        planId ?? null,
-        mode,
-      ),
-    false,
-  );
+  if (Platform.OS !== 'ios') {
+    return false;
+  }
+  try {
+    await getNativeModule()!.startAppLimits(
+      durationMinutes ?? 0,
+      planId ?? null,
+      mode,
+    );
+    return true;
+  } catch (error) {
+    console.error('[NativeModule.startAppLimits]', error);
+    if (getNativeErrorCode(error) === 'OVERLAP_ERROR') {
+      Toast('专注进行中，不可重复创建', 'info');
+      return false;
+    }
+    Toast(getErrorMessage(error), 'error');
+    return false;
+  }
 }
 
 /**
@@ -201,11 +228,21 @@ export async function getFocusStatus(): Promise<FocusStatus> {
  * @param plan 计划配置对象
  */
 export async function updatePlan(plan: PlanConfig): Promise<boolean> {
-  return callNativeMethod(
-    'updatePlan',
-    () => getNativeModule()!.updatePlan(JSON.stringify(plan)),
-    false,
-  );
+  if (Platform.OS !== 'ios') {
+    return false;
+  }
+  try {
+    await getNativeModule()!.updatePlan(JSON.stringify(plan));
+    return true;
+  } catch (error) {
+    console.error('[NativeModule.updatePlan]', error);
+    if (isDeviceActivityExcessiveError(error)) {
+      Toast('锁定过于频繁，请适当使用', 'info');
+      return false;
+    }
+    Toast(getErrorMessage(error), 'error');
+    return false;
+  }
 }
 
 /**

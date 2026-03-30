@@ -156,7 +156,7 @@ const FocusButton = () => {
             <Icon name="play" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {hasActiveTask && (
+        {bstore.features.includes('allow-pause') && hasActiveTask && (
           <>
             {!isPaused && (
               <TouchableOpacity
