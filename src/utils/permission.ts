@@ -99,10 +99,13 @@ export async function stopAppLimits(): Promise<boolean> {
   return result;
 }
 
-// iOS 查询当前屏蔽状态
+// iOS 查询当前屏蔽状态（失败时返回未激活，不影响 UI 层调用方）
 export async function getIOSFocusStatus(): Promise<FocusStatus> {
-  const result = await nativeGetFocusStatus();
-  return result;
+  try {
+    return await nativeGetFocusStatus();
+  } catch {
+    return { active: false };
+  }
 }
 
 export async function checkNotify() {

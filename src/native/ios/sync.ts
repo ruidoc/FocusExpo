@@ -90,12 +90,16 @@ function startElapsedTimer(elapsedMinutes: number) {
   schedule();
 }
 
+let isSyncing = false;
+
 /**
- * 同步 iOS 专注状态
+ * 同步 iOS 专注状态（串行化：并发调用时跳过，下次触发时获取最新状态）
  */
 async function syncIOSStatus() {
   if (Platform.OS !== 'ios') return;
+  if (isSyncing) return;
 
+  isSyncing = true;
   try {
     const status = await getFocusStatus();
     console.log('【当前屏蔽状态】', status);
@@ -145,6 +149,8 @@ async function syncIOSStatus() {
     }
   } catch (error) {
     console.error('【同步iOS状态失败】', error);
+  } finally {
+    isSyncing = false;
   }
 }
 

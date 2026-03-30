@@ -186,14 +186,14 @@ export async function resumeAppLimits(): Promise<boolean> {
 
 /**
  * 获取专注状态，返回当前屏蔽信息
- * 对应现有的 getIOSFocusStatus 函数
+ * 注意：原生调用失败时会抛出异常而非静默返回默认值，
+ * 以便调用方（如 syncIOSStatus）区分「真正无任务」和「查询失败」。
  */
 export async function getFocusStatus(): Promise<FocusStatus> {
-  return callNativeMethod(
-    'getFocusStatus',
-    () => getNativeModule()!.getFocusStatus(),
-    { active: false },
-  );
+  if (Platform.OS !== 'ios') {
+    return { active: false };
+  }
+  return await getNativeModule()!.getFocusStatus();
 }
 
 /**

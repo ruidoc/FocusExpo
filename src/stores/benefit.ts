@@ -28,7 +28,7 @@ const BenefitStore = combine(
     },
 
     subBalance: (balance: number = 1) => {
-      set({ balance: get().balance - balance });
+      set({ balance: Math.max(0, get().balance - balance) });
     },
 
     getBenefit: async () => {

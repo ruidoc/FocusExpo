@@ -120,17 +120,20 @@ const PlanStore = combine(
 
     // 设置当前任务的暂停状态，并同步到列表中
     pauseCurPlan: async (paused: boolean) => {
+      const activePlanId = get().active_plan?.id;
+
+      // 幂等：已在目标状态则跳过副作用，避免重复扣币和重复调用 pauseRecord
+      const alreadyPaused = !!(activePlanId && activePlanId === get().paused_plan_id);
+      if (paused && alreadyPaused) return;
+      if (!paused && !alreadyPaused) return;
+
       let record_id = record.getState().record_id;
       if (paused && record_id) {
-        benefit.getState().subBalance();
         await record.getState().pauseRecord(record_id);
+        benefit.getState().subBalance();
       }
-      if (get().active_plan) {
-        if (paused) {
-          (get() as any).setPaused(get().active_plan.id);
-        } else {
-          (get() as any).setPaused('');
-        }
+      if (activePlanId) {
+        (get() as any).setPaused(paused ? activePlanId : '');
       }
     },
 
@@ -149,7 +152,7 @@ const PlanStore = combine(
 
     // 专注计划终止
     exitPlan: async () => {
-      let record_id = storage.getString('record_id');
+      const record_id = record.getState().record_id || storage.getString('record_id');
       (get() as any).clearNativeFocus();
       if (record_id) {
         await record.getState().exitRecord(record_id);

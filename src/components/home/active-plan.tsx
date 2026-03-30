@@ -103,24 +103,37 @@ const FocusButton = () => {
     if (!hasActiveTask) return;
     try {
       if (Platform.OS === 'ios') {
-        await stopAppLimits();
+        const stopped = await stopAppLimits();
+        if (stopped) {
+          // 显式清理本地状态，不完全依赖原生 focus-state 事件
+          // exitPlan 内部通过 record_id 做幂等保护，即使原生事件也触发 exitPlan 也不会重复执行
+          await usePlanStore.getState().exitPlan();
+        }
       }
     } catch (error) {
       console.log('stopFocus error', error);
     }
   };
 
-  const pauseFocus = () => {
+  const pauseFocus = async () => {
     if (!hasActiveTask || isPaused) return;
     if (Platform.OS === 'ios') {
-      pauseAppLimits(3);
+      try {
+        await pauseAppLimits(3);
+      } catch (error) {
+        console.log('pauseFocus error', error);
+      }
     }
   };
 
-  const resumeFocus = () => {
+  const resumeFocus = async () => {
     if (!hasActiveTask || !isPaused) return;
     if (Platform.OS === 'ios') {
-      resumeAppLimits();
+      try {
+        await resumeAppLimits();
+      } catch (error) {
+        console.log('resumeFocus error', error);
+      }
     }
   };
 

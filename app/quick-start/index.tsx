@@ -96,7 +96,6 @@ const QuickStartPage = () => {
         return;
       }
     }
-    debugger;
 
     let plan_id = `once_${Math.floor(Math.random() * 99999999)}`;
     // iOS: 使用屏幕时间限制开始屏蔽
