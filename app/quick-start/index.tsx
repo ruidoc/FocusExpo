@@ -108,7 +108,14 @@ const QuickStartPage = () => {
       });
       if (ok) {
         setOncePlan(plan_id);
-        // 立刻刷新当前计划，避免等待 AppState/原生事件导致 active_plan 为空
+        // 立即设置 native_focus，避免返回首页时 has_active_task() 因等待异步事件而为 false
+        pstore.setNativeFocus({
+          active: true,
+          plan_id,
+          focus_type: 'once',
+          mode,
+          total_minutes: minute,
+        });
         pstore.setCurPlanMinute(0);
         pstore.resetPlan();
         Toast('专注已开始', 'success');
