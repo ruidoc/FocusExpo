@@ -20,7 +20,7 @@
         "simulator": false
       },
       "env": {
-        "APP_VARIANT": "preview",
+        "EXPO_PUBLIC_APP_ENV": "preview",
         "EXPO_PUBLIC_API_BASE_URL": "https://focus.freeshore.cn/dev-api"
       },
       "channel": "preview"
@@ -32,7 +32,7 @@
       },
       "autoIncrement": true,
       "env": {
-        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_APP_ENV": "production",
         "EXPO_PUBLIC_API_BASE_URL": "https://focus.freeshore.cn/api"
       },
       "channel": "production"

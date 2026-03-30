@@ -11,7 +11,7 @@ import Constants from 'expo-constants';
 import { useSuperwallStore } from 'expo-superwall';
 import { PostHog, usePostHog } from 'posthog-react-native';
 import { Platform } from 'react-native';
-import { APP_VARIANT } from '@/config/env';
+import { APP_ENV } from '@/config/env';
 import { objectIdToUuid, isObjectId } from './uuid-mapper';
 import { storage } from './storage';
 
@@ -49,7 +49,7 @@ export const getAppVersion = () =>
   Constants.expoConfig?.version ||
   'unknown';
 
-export const getAppEnv = () => APP_VARIANT;
+export const getAppEnv = () => APP_ENV;
 
 export const syncNativeTrackingContext = (userId?: string) => {
   if (Platform.OS !== 'ios') return;

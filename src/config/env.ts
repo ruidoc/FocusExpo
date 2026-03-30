@@ -1,40 +1,24 @@
+export type AppEnv = 'development' | 'preview' | 'production';
+
 /**
- * API 基础 URL
- * 用于业务接口请求
+ * 当前环境标识，由 eas.json 中 EXPO_PUBLIC_APP_ENV 控制。
+ * 本地 expo start 时环境变量不存在，回退为 development。
  */
+export const APP_ENV: AppEnv =
+  (process.env.EXPO_PUBLIC_APP_ENV as AppEnv) || 'development';
+
+/**
+ * API 基础 URL，由 eas.json 中 EXPO_PUBLIC_API_BASE_URL 控制。
+ * 本地 expo start 时回退为 dev-api。
+ */
+const PROD_BASE_URL = 'https://focus.freeshore.cn/api';
 
 const DEV_BASE_URL = 'https://focus.freeshore.cn/dev-api';
 // const DEV_BASE_URL = 'http://172.20.10.8:8849';
 
 export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || DEV_BASE_URL;
+  process.env.EXPO_PUBLIC_API_BASE_URL ||
+  (APP_ENV === 'production' ? PROD_BASE_URL : DEV_BASE_URL);
 
-/**
- * PostHog 代理 URL
- * 基于 API_BASE_URL 拼接 /i 路径
- */
+/** PostHog 代理 URL，基于 API_BASE_URL 拼接 */
 export const POSTHOG_HOST = `${API_BASE_URL}/i`;
-
-/**
- * 当前环境标识
- * development | preview | production
- */
-export type AppEnv = 'development' | 'preview' | 'production';
-
-function normalizeAppEnv(value?: string): AppEnv {
-  if (value === 'production') return 'production';
-  if (value === 'preview') return 'preview';
-  return 'development';
-}
-
-export const APP_VARIANT: AppEnv = normalizeAppEnv(process.env.APP_VARIANT);
-
-/**
- * 是否为生产环境
- */
-export const IS_PRODUCTION = APP_VARIANT === 'production';
-
-/**
- * 是否为开发环境
- */
-export const IS_DEVELOPMENT = APP_VARIANT === 'development';
