@@ -91,6 +91,30 @@ struct CustomFamilyActivityPicker: View {
 @objc(NativeModule)
 @MainActor
 class NativeModule: RCTEventEmitter {
+  private typealias PlannedWindow = (planId: String, start: TimeInterval, end: TimeInterval)
+
+  // 统一归一化专注状态，避免 startAppLimits/getFocusStatus 各自维护一套判断。
+  private struct FocusSnapshot {
+    let taskFailed: Bool
+    let hasActiveSession: Bool
+    let isPaused: Bool
+    let isShielding: Bool
+    let isWindowLocked: Bool
+    let lockReason: String?
+    let isQuotaSkippedWindow: Bool
+    let windowPlanId: String?
+    let startAt: TimeInterval
+    let endAt: TimeInterval
+    let totalMinutes: Int
+    let actualMinutes: Int
+    let focusType: String?
+    let planId: String?
+    let planName: String?
+    let focusMode: String?
+    let recordId: String?
+    let pausedUntil: TimeInterval?
+  }
+
   private let center = DeviceActivityCenter()
   private let activityName = DeviceActivityName("FocusOne.ScreenTime")
   private let pauseResumeActivity = DeviceActivityName("FocusOne.PauseResume")
@@ -313,6 +337,17 @@ class NativeModule: RCTEventEmitter {
           "error_message": error.localizedDescription
         ]
       )
+      if isExcessiveActivitiesError(error) {
+        Analytics.shared.track(
+          event: "error_locked_excessive",
+          properties: [
+            "source": "update_plan",
+            "plan_id": plan.id,
+            "plan_type": planType,
+            "error_message": error.localizedDescription
+          ]
+        )
+      }
       reject("MONITOR_ERROR", "监控注册失败: \(error.localizedDescription)", nil)
     }
   }
@@ -459,6 +494,148 @@ class NativeModule: RCTEventEmitter {
     var body: [String: Any] = ["state": state]
     for (k, v) in extra { body[k] = v }
     sendEvent(withName: "focus-state", body: body)
+  }
+
+  private func loadPlansMap(from defaults: UserDefaults) -> [String: PlanConfig]? {
+    guard let storedData = defaults.data(forKey: kPlansMap) else {
+      return nil
+    }
+    return try? JSONDecoder().decode([String: PlanConfig].self, from: storedData)
+  }
+
+  // active session 代表“已有正在管理的专注任务”，window locked 代表“当前窗口禁止再创建一次性任务”。
+  private func resolveFocusSnapshot(defaults: UserDefaults? = UserDefaults.groupUserDefaults()) -> FocusSnapshot {
+    guard let defaults else {
+      return FocusSnapshot(
+        taskFailed: false,
+        hasActiveSession: false,
+        isPaused: false,
+        isShielding: false,
+        isWindowLocked: false,
+        lockReason: nil,
+        isQuotaSkippedWindow: false,
+        windowPlanId: nil,
+        startAt: 0,
+        endAt: 0,
+        totalMinutes: 0,
+        actualMinutes: 0,
+        focusType: nil,
+        planId: nil,
+        planName: nil,
+        focusMode: nil,
+        recordId: nil,
+        pausedUntil: nil
+      )
+    }
+
+    let now = Date().timeIntervalSince1970
+    let taskFailed = defaults.bool(forKey: "FocusOne.TaskFailed")
+    let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
+    let endAt = defaults.double(forKey: "FocusOne.FocusEndAt")
+    let total = defaults.integer(forKey: "FocusOne.TotalMinutes")
+    let focusType = defaults.string(forKey: "FocusOne.FocusType")
+    let pausedUntilRaw = defaults.double(forKey: "FocusOne.PausedUntil")
+
+    let hasStoredSession = startAt > 0 && endAt > 0 && total > 0
+    let inWindow = hasStoredSession && now < endAt
+
+    let store = ManagedSettingsStore()
+    let hasApps = !(store.shield.applications?.isEmpty ?? true)
+    let hasDomains = !(store.shield.webDomains?.isEmpty ?? true)
+    let hasCats = (store.shield.applicationCategories != nil)
+    let isShielding = hasApps || hasDomains || hasCats
+
+    let pauseWindowActive = pausedUntilRaw > 0 && now < pausedUntilRaw
+    let hasActiveSession = !taskFailed && (inWindow || pausedUntilRaw > 0)
+    let isPaused = !taskFailed && inWindow && !isShielding && pauseWindowActive
+
+    // 周期计划窗口和运行中的 session 不是同一个概念，这里统一折叠成可复用快照。
+    let plannedWindow = currentPlannedWindow()
+    let quotaSkippedWindow = plannedWindow.map { isQuotaSkippedWindow($0) } ?? false
+    let planWindowLocked = plannedWindow != nil && !quotaSkippedWindow
+    let isWindowLocked = hasActiveSession || planWindowLocked
+    let lockReason: String? = hasActiveSession
+      ? "active_session"
+      : (planWindowLocked ? "plan_window" : nil)
+
+    let elapsedMinRaw = hasStoredSession
+      ? Int(floor(now / 60.0) - floor(startAt / 60.0))
+      : 0
+    let actualMinutes = max(0, min(total, elapsedMinRaw))
+
+    let plansMap = loadPlansMap(from: defaults)
+    var planId: String? = defaults.string(forKey: "FocusOne.CurrentPlanId")
+    var planName: String? = nil
+    var focusMode: String? = defaults.string(forKey: "FocusOne.ShieldMode")
+
+    if let currentPlanId = planId, let plan = plansMap?[currentPlanId] {
+      planName = plan.name
+      focusMode = plan.mode ?? focusMode
+    }
+
+    if let windowPlanId = plannedWindow?.planId {
+      if planId == nil {
+        planId = windowPlanId
+      }
+      if let plan = plansMap?[windowPlanId] {
+        if planName == nil {
+          planName = plan.name
+        }
+        focusMode = plan.mode ?? focusMode
+      }
+    }
+
+    if planId == nil, focusType == "once",
+       let storedPlanId = defaults.string(forKey: "FocusOne.CurrentPlanId"),
+       !storedPlanId.isEmpty {
+      planId = storedPlanId
+    }
+
+    if planName == nil, focusType == "once" {
+      planName = "一次性任务"
+    }
+
+    return FocusSnapshot(
+      taskFailed: taskFailed,
+      hasActiveSession: hasActiveSession,
+      isPaused: isPaused,
+      isShielding: isShielding,
+      isWindowLocked: isWindowLocked,
+      lockReason: lockReason,
+      isQuotaSkippedWindow: quotaSkippedWindow,
+      windowPlanId: plannedWindow?.planId,
+      startAt: startAt,
+      endAt: endAt,
+      totalMinutes: total,
+      actualMinutes: actualMinutes,
+      focusType: focusType,
+      planId: planId,
+      planName: planName,
+      focusMode: focusMode,
+      recordId: defaults.string(forKey: "record_id"),
+      pausedUntil: pauseWindowActive ? pausedUntilRaw : nil
+    )
+  }
+
+  private func focusStatusPayload(from snapshot: FocusSnapshot) -> [String: Any] {
+    return [
+      "active": snapshot.hasActiveSession,
+      "failed": snapshot.taskFailed,
+      "paused": snapshot.isPaused,
+      "plan_id": snapshot.planId ?? NSNull(),
+      "plan_name": snapshot.planName ?? NSNull(),
+      "record_id": snapshot.recordId ?? NSNull(),
+      "start_at": snapshot.startAt,
+      "end_at": snapshot.endAt,
+      "total_minutes": snapshot.totalMinutes,
+      "actual_mins": snapshot.actualMinutes,
+      "focus_type": snapshot.focusType ?? NSNull(),
+      "mode": snapshot.focusMode ?? NSNull(),
+      "paused_until": snapshot.pausedUntil ?? NSNull(),
+      "window_locked": snapshot.isWindowLocked,
+      "lock_reason": snapshot.lockReason ?? NSNull(),
+      "is_shielding": snapshot.isShielding
+    ]
   }
   
   /// 处理 Extension 发送的日志
@@ -640,24 +817,25 @@ class NativeModule: RCTEventEmitter {
       return
     }
 
-    // 重叠校验：禁止与当前任务或周期计划时间重叠
-    let nowTs = Date().timeIntervalSince1970
-    if let defaults = UserDefaults.groupUserDefaults() {
-      let startAtExist = defaults.double(forKey: "FocusOne.FocusStartAt")
-      let endAtExist = defaults.double(forKey: "FocusOne.FocusEndAt")
-      let totalExist = defaults.integer(forKey: "FocusOne.TotalMinutes")
-      if startAtExist > 0 && endAtExist > nowTs && totalExist > 0 {
-        reject("OVERLAP_ERROR", "已有任务进行中，禁止重叠创建", nil)
+    // 创建前只读共享快照，保证和 getFocusStatus 使用同一套状态定义。
+    let snapshot = resolveFocusSnapshot()
+    if snapshot.isWindowLocked {
+      if snapshot.lockReason == "active_session" {
+        reject("ACTIVE_ERROR", "已有任务进行中，禁止重叠创建", nil)
         return
       }
-    }
-    if let window = currentPlannedWindow() {
-      if isQuotaSkippedWindow(window) {
-        if let defaults = UserDefaults.groupUserDefaults() {
-          defaults.removeObject(forKey: "FocusOne.PendingEvent")
-        }
-      } else {
-        reject("OVERLAP_ERROR", "已处于周期计划窗口内，禁止重叠创建一次性任务", nil)
+      if snapshot.lockReason == "plan_window" {
+        Analytics.shared.track(
+          event: "error_locked_overlap",
+          properties: [
+            "reason": "plan_window",
+            "plan_id": planId as Any,
+            "conflict_plan_id": snapshot.windowPlanId as Any,
+            "duration_minutes": Int(truncating: durationMinutes),
+            "mode": mode as String
+          ]
+        )
+        reject("OVERLAP_ERROR", "已处于周期计划窗口内，禁止重叠创建", nil)
         return
       }
     }
@@ -787,6 +965,18 @@ class NativeModule: RCTEventEmitter {
       
       resolve(true)
     } catch {
+      if isExcessiveActivitiesError(error) {
+        Analytics.shared.track(
+          event: "error_locked_excessive",
+          properties: [
+            "source": "start_app_limits",
+            "plan_id": planId as Any,
+            "duration_minutes": Int(truncating: durationMinutes),
+            "mode": mode as String,
+            "error_message": error.localizedDescription
+          ]
+        )
+      }
       reject("MONITORING_ERROR", "无法开始监控应用: \(error.localizedDescription)", error)
     }
   }
@@ -827,6 +1017,12 @@ class NativeModule: RCTEventEmitter {
 
       defaults.set(true, forKey: "FocusOne.TaskFailed")
       defaults.set("user_exit", forKey: "FocusOne.FailedReason")
+
+      // 周期任务手动结束后，将当前窗口标记为已跳过，
+      // 这样窗口剩余时间内允许创建一次性任务，并避免结束回调重复收尾。
+      if focusType == "repeat" {
+        markCurrentPlannedWindowAsSkipped(defaults: defaults)
+      }
     }
     Analytics.shared.track(event: "session_finished", properties: trackProperties)
     // 仅停止一次性任务和暂停恢复活动，保留周期性计划监控，确保下个周期继续生效
@@ -861,179 +1057,9 @@ class NativeModule: RCTEventEmitter {
   // 查询当前屏蔽状态与进度
   @objc
   func getFocusStatus(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-    guard let defaults = UserDefaults.groupUserDefaults() else {
-      resolve(["active": false])
-      return
-    }
-    
-    let taskFailed = defaults.bool(forKey: "FocusOne.TaskFailed")
-    if taskFailed {
-      resolve(["active": false, "failed": true])
-      return
-    }
-    
-    let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
-    let endAt = defaults.double(forKey: "FocusOne.FocusEndAt")
-    let total = defaults.integer(forKey: "FocusOne.TotalMinutes")
-
-    print("startAt: \(startAt), endAt: \(endAt), total: \(total)")
-
-    // 若没有一次性/周期任务的时间信息，则认为未激活
-    if startAt <= 0 || endAt <= 0 || total <= 0 {
-      resolve(["active": false])
-      return
-    }
-
-    let now = Date().timeIntervalSince1970
-    // 按整分对齐：以"分钟桶"计算，确保在每个自然分钟边界（秒=0）才变更
-    let elapsedMinRaw = Int(floor(now / 60.0) - floor(startAt / 60.0))
-    let elapsedMin = max(0, min(total, elapsedMinRaw))
-
-    // 是否处于我们定义的专注任务窗口内（一次性或周期）
-    let inWindow = now < endAt
-
-    // 读取 iOS 当前是否正在屏蔽（依据 ManagedSettings 当前设置是否为空）
-    let store = ManagedSettingsStore()
-    let hasApps = !(store.shield.applications?.isEmpty ?? true)
-    let hasDomains = !(store.shield.webDomains?.isEmpty ?? true)
-    let hasCats = (store.shield.applicationCategories != nil)
-    let isShielding = hasApps || hasDomains || hasCats
-
-    // 检查暂停状态
-    let pausedUntil = defaults.double(forKey: "FocusOne.PausedUntil")
-    let isPaused = pausedUntil > 0 && now < pausedUntil
-
-    // 暂停：当仍在专注窗口，但系统未在屏蔽（清空了 ManagedSettings）
-    let paused = inWindow && !isShielding && isPaused
-
-    // 业务上的 active：在窗口内即为 true，即使暂停中也为 true
-    // 如果有暂停状态（无论是否超时），都应该返回 active
-    let active = inWindow || (pausedUntil > 0)
-
-    let ftype = defaults.string(forKey: "FocusOne.FocusType")
-    var planId: String? = defaults.string(forKey: "FocusOne.CurrentPlanId")
-    var planName: String? = nil
-    var focusMode: String? = defaults.string(forKey: "FocusOne.ShieldMode")
-
-    if let storedData = defaults.data(forKey: kPlansMap),
-       let plansMap = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) {
-      if let currentPlanId = planId, let plan = plansMap[currentPlanId] {
-        planName = plan.name
-        focusMode = plan.mode ?? focusMode
-      }
-    }
-
-    // 计算当前命中的周期计划的 plan_id（从增量更新的 kPlansMap 读取）
-    if (planId == nil || planName == nil), ftype == "periodic" {
-      // 从增量更新的 PlansMap 读取所有计划
-      if let storedData = defaults.data(forKey: kPlansMap),
-         let plansMap = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) {
-        let cal = Calendar.current
-        let comp = cal.dateComponents([.weekday, .hour, .minute], from: Date())
-        let weekdayApple = comp.weekday ?? 1 // 1=周日
-        // 转换为 0=周日, 1=周一..6=周六
-        let mondayFirst = (weekdayApple == 1) ? 0 : (weekdayApple - 1)
-        func hm(_ min: Int) -> (Int, Int) { return (min / 60, min % 60) }
-        
-        // 遍历所有计划，查找当前时间命中的计划
-        for (id, plan) in plansMap {
-          let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
-          if !days.contains(mondayFirst) { continue }
-          
-          let (sh, sm) = hm(plan.start)
-          let (eh, em) = hm(plan.end)
-          let endHM = eh * 60 + em
-          let startHM = sh * 60 + sm
-          
-          // 构建开始和结束时间
-          guard let sDate = cal.date(bySettingHour: sh, minute: sm, second: 0, of: Date()) else {
-            continue
-          }
-          let sTs = sDate.timeIntervalSince1970
-          
-          // 处理跨日和非跨日情况
-          let isCrossDay = endHM <= startHM
-          var eTs: TimeInterval
-          var finalSTs = sTs
-          
-          if isCrossDay {
-            // 跨日：结束时间在第二天
-            guard let eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: Date()) else {
-              continue
-            }
-            let eTsNextDay = eDate.addingTimeInterval(24 * 3600).timeIntervalSince1970
-            
-            // 对于跨日，需要判断当前时间是在当天的 start 之后，还是在第二天的 end 之前
-            // 如果当前时间 < end（第二天的），说明可能是从昨天的 start 开始的
-            if now < eTsNextDay {
-              // 检查是否在当天的 start 之后
-              if now >= sTs {
-                // 在当天的 start 之后，结束时间是第二天的 end
-                eTs = eTsNextDay
-                if now < eTs {
-                  planId = id
-                  planName = plan.name
-                  focusMode = plan.mode ?? focusMode
-                  break
-                }
-              } else {
-                // 在当天的 start 之前，可能是从昨天的 start 开始的
-                // 计算昨天的 start
-                if let yesterdayStart = cal.date(byAdding: .day, value: -1, to: sDate) {
-                  finalSTs = yesterdayStart.timeIntervalSince1970
-                  eTs = eTsNextDay
-                  if now >= finalSTs && now < eTs {
-                    planId = id
-                    planName = plan.name
-                    focusMode = plan.mode ?? focusMode
-                    break
-                  }
-                }
-              }
-            }
-          } else {
-            // 非跨日：正常判断
-            guard let eDate = cal.date(bySettingHour: eh, minute: em, second: 0, of: Date()) else {
-              continue
-            }
-            eTs = eDate.timeIntervalSince1970
-            if now >= sTs && now < eTs {
-              planId = id
-              planName = plan.name
-              focusMode = plan.mode ?? focusMode
-              break
-            }
-          }
-        }
-      }
-    }
-    // 若为一次性任务，读取启动时保存的planId
-    if planId == nil, ftype == "once" {
-      if let pid = defaults.string(forKey: "FocusOne.CurrentPlanId"), !pid.isEmpty {
-        planId = pid
-      }
-    }
-    if planName == nil, ftype == "once" {
-      planName = "一次性任务"
-    }
-
-    // 读取 record_id
-    let recordId = defaults.string(forKey: "record_id")
-    
-    resolve([
-      "active": active,
-      "paused": paused,
-      "plan_id": planId ?? NSNull(),
-      "plan_name": planName ?? NSNull(),
-      "record_id": recordId ?? NSNull(),
-      "start_at": startAt,
-      "end_at": endAt,
-      "total_minutes": total,
-      "actual_mins": elapsedMin,
-      "focus_type": ftype ?? NSNull(),
-      "mode": focusMode ?? NSNull(),
-      "paused_until": (pausedUntil > 0 && isPaused) ? pausedUntil : NSNull()
-    ])
+    let snapshot = resolveFocusSnapshot()
+    print("focus snapshot active=\(snapshot.hasActiveSession), lock=\(snapshot.isWindowLocked), reason=\(snapshot.lockReason ?? "none")")
+    resolve(focusStatusPayload(from: snapshot))
   }
 
   // 暂停当前屏蔽（指定分钟数，超时自动恢复）
@@ -1183,10 +1209,9 @@ class NativeModule: RCTEventEmitter {
   // 计算"当前时刻"命中的周期计划窗口（若存在）
   // 返回当日窗口的开始/结束时间戳（秒）
   // 从增量更新的 kPlansMap 读取计划
-  private func currentPlannedWindow() -> (planId: String, start: TimeInterval, end: TimeInterval)? {
+  private func currentPlannedWindow() -> PlannedWindow? {
     guard let defaults = UserDefaults.groupUserDefaults(),
-          let storedData = defaults.data(forKey: kPlansMap),
-          let plansMap = try? JSONDecoder().decode([String: PlanConfig].self, from: storedData) else {
+          let plansMap = loadPlansMap(from: defaults) else {
       return nil
     }
     
@@ -1280,6 +1305,31 @@ class NativeModule: RCTEventEmitter {
     return planId == window.planId
       && Int(windowStart) == Int(window.start)
       && Int(windowEnd) == Int(window.end)
+  }
+
+  private func markCurrentPlannedWindowAsSkipped(defaults: UserDefaults) {
+    guard let window = currentPlannedWindow() else { return }
+
+    let pendingEvent: [String: Any] = [
+      "type": "quota_skip",
+      "plan_id": window.planId,
+      "window_start": Int(window.start),
+      "window_end": Int(window.end),
+      "timestamp": Int(Date().timeIntervalSince1970)
+    ]
+
+    guard let pendingData = try? JSONSerialization.data(withJSONObject: pendingEvent) else {
+      return
+    }
+
+    defaults.set(pendingData, forKey: "FocusOne.PendingEvent")
+  }
+
+  private func isExcessiveActivitiesError(_ error: Error) -> Bool {
+    let message = error.localizedDescription.lowercased()
+    return message.contains("过度活动")
+      || message.contains("excessive")
+      || message.contains("too many activities")
   }
   
   // 获取选择应用的详细信息

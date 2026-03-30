@@ -246,7 +246,7 @@ const App = () => {
         });
       console.log('overlap：', pstore.all_plans);
       if (overlap) {
-        return Toast('任务时间不能重叠', 'error');
+        return Toast('与其他契约时间重叠', 'error');
       }
 
       let subinfo: any = { ...form };
@@ -256,7 +256,8 @@ const App = () => {
       subinfo.start_min = start_day.hour() * 60 + start_day.minute();
       subinfo.end_min = end_day.hour() * 60 + end_day.minute();
       subinfo.start_date = dayjs(start_date).format('YYYY-MM-DD');
-      subinfo.end_date = isLongTerm || !end_date ? null : dayjs(end_date).format('YYYY-MM-DD');
+      subinfo.end_date =
+        isLongTerm || !end_date ? null : dayjs(end_date).format('YYYY-MM-DD');
 
       // 根据模式调用不同的接口
       const entrySource = fromOnboarding
@@ -467,13 +468,23 @@ const App = () => {
         {/* 4. 应用选择 */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
-            title={allowModeEnabled && form.mode === 'allow' ? '允许使用的应用' : '要锁定的应用'}
+            title={
+              allowModeEnabled && form.mode === 'allow'
+                ? '允许使用的应用'
+                : '要锁定的应用'
+            }
             className="pb-2"
             rightElement={
               <SelectApps
                 apps={form.apps}
                 onFinish={selectApps}
-                entrySource={fromOnboarding ? 'onboarding' : fromPresets ? 'presets' : 'normal'}
+                entrySource={
+                  fromOnboarding
+                    ? 'onboarding'
+                    : fromPresets
+                      ? 'presets'
+                      : 'normal'
+                }
               />
             }
             showArrow={false}
@@ -495,7 +506,10 @@ const App = () => {
               if (nextIsLongTerm) {
                 setInfo(null, 'end_date');
               } else if (!form.end_date) {
-                setInfo(dayjs(form.start_date).add(1, 'day').toDate(), 'end_date');
+                setInfo(
+                  dayjs(form.start_date).add(1, 'day').toDate(),
+                  'end_date',
+                );
               }
             }}
           />
@@ -528,7 +542,9 @@ const App = () => {
                   <Pressable
                     onPress={() => {
                       DateTimePicker.show({
-                        value: form.end_date || dayjs(form.start_date).add(1, 'day').toDate(),
+                        value:
+                          form.end_date ||
+                          dayjs(form.start_date).add(1, 'day').toDate(),
                         title: '结束日期',
                         mode: 'date',
                         minimumDate: form.start_date,

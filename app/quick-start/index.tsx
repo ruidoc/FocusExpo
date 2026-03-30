@@ -7,6 +7,7 @@ import {
   usePlanStore,
   useRecordStore,
 } from '@/stores';
+import { getPlansByPeriod } from '@/utils/date';
 import { getIOSFocusStatus, startAppLimits } from '@/utils/permission';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { useNavigation } from '@react-navigation/native';
@@ -61,6 +62,17 @@ const QuickStartPage = () => {
     astore.addIosApps(apps);
   };
 
+  const getConflictPlan = () => {
+    const now = dayjs();
+    const startMinute = now.hour() * 60 + now.minute();
+    const endMinute = startMinute + Number(minute);
+    const todayPlans = getPlansByPeriod(pstore.cus_plans, 'today');
+
+    return [...todayPlans]
+      .sort((a, b) => a.start_min - b.start_min)
+      .find(plan => startMinute < plan.end_min && endMinute > plan.start_min);
+  };
+
   // 开始一次性任务
   const handleStart = async () => {
     if (pstore.has_active_task()) {
@@ -78,6 +90,19 @@ const QuickStartPage = () => {
     // iOS: 验证应用选择
     if (astore.ios_selected_apps.length === 0) {
       Toast('请先选择要限制 的应用', 'info');
+      return;
+    }
+
+    const conflictPlan = getConflictPlan();
+    if (conflictPlan) {
+      const now = dayjs();
+      const currentMinute = now.hour() * 60 + now.minute();
+      const minutesUntilPlan = Math.max(conflictPlan.start_min - currentMinute, 0);
+      if (minutesUntilPlan <= 0) {
+        Toast('当前已进入契约时间，不可创建', 'info');
+      } else {
+        Toast(`${minutesUntilPlan}分钟后契约开始，不可超时`, 'info');
+      }
       return;
     }
 
@@ -120,8 +145,6 @@ const QuickStartPage = () => {
         pstore.resetPlan();
         Toast('专注已开始', 'success');
         navigation.goBack();
-      } else {
-        Toast('启动专注失败，请重试', 'error');
       }
     } catch (error) {
       console.error('启动专注失败:', error);

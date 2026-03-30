@@ -27,8 +27,12 @@ const App = () => {
   const [filterType, setFilterType] = useState<FilterType>('today');
   const { colors } = useCustomTheme();
 
-  const toRoute = (path: string) => {
-    router.push(path as never);
+  const toCreatePlan = () => {
+    if (store.has_active_task()) {
+      Toast('专注进行中，不可以创建契约', 'info');
+      return;
+    }
+    router.push('plans/add' as never);
   };
 
   const fetchPlans = async (type: FilterType = filterType) => {
@@ -83,7 +87,7 @@ const App = () => {
       // 避免 header 右侧 flex 布局把 Pressable 拉满剩余宽度（偶现长条）
       headerRight: ({ tintColor }: { tintColor?: string }) => (
         <Pressable
-          onPress={() => toRoute('plans/add')}
+          onPress={toCreatePlan}
           style={{
             width: 36,
             height: 36,

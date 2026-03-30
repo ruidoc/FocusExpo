@@ -814,7 +814,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             return false
         }
 
-        defaults.removeObject(forKey: "FocusOne.PendingEvent")
+        // 不在这里清空 PendingEvent：
+        // quota_skip 代表“当前命中的这个窗口已跳过”，需要让主 App 在窗口结束前
+        // 仍能识别该窗口已跳过，从而允许创建一次性任务。
+        // 该标记会在窗口变化后自然失效，或在新的 quota_skip 到来时被覆盖。
         logToJS(level: "log", message: "检测到配额跳过，忽略本次结束回调", data: ["plan_id": pendingPlanId])
         return true
     }

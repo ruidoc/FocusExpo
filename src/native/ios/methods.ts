@@ -165,11 +165,19 @@ export async function startAppLimits(
     );
     return true;
   } catch (error) {
-    console.error('[NativeModule.startAppLimits]', error);
     if (getNativeErrorCode(error) === 'OVERLAP_ERROR') {
-      Toast('专注进行中，不可重复创建', 'info');
+      Toast('与契约时间冲突，请调整时长', 'info');
       return false;
     }
+    if (getNativeErrorCode(error) === 'ACTIVE_ERROR') {
+      Toast('专注进行中，不可创建新任务', 'info');
+      return false;
+    }
+    if (isDeviceActivityExcessiveError(error)) {
+      Toast('锁定过于频繁，触发系统限制', 'error');
+      return false;
+    }
+    console.error('[NativeModule.startAppLimits]', error);
     Toast(getErrorMessage(error), 'error');
     return false;
   }
@@ -235,11 +243,11 @@ export async function updatePlan(plan: PlanConfig): Promise<boolean> {
     await getNativeModule()!.updatePlan(JSON.stringify(plan));
     return true;
   } catch (error) {
-    console.error('[NativeModule.updatePlan]', error);
     if (isDeviceActivityExcessiveError(error)) {
-      Toast('锁定过于频繁，请适当使用', 'info');
+      Toast('锁定过于频繁，触发系统限制', 'error');
       return false;
     }
+    console.error('[NativeModule.updatePlan]', error);
     Toast(getErrorMessage(error), 'error');
     return false;
   }
