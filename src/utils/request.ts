@@ -75,7 +75,7 @@ instance.interceptors.response.use(
     } else {
       console.log('【网络错误】', error.message);
       if (!silent) {
-        Toast('网络连接失败，请稍后重试');
+        Toast('网络连接失败');
       }
     }
     return Promise.reject(error);

@@ -15,7 +15,8 @@ const BenefitStore = combine(
   {
     balance: 0 as number,
     rank: '' as string, // 当前段位
-    day_duration: 0 as number, // 基础每日时长配额（分钟）
+    /** 每日时长配额（分钟）；0 表示不校验日额度 */
+    day_duration: 0 as number,
     app_count: 1 as number, // 可限制的应用数量
     category_count: undefined as number | undefined, // 可限制的分类数量（IOS）
     is_subscribed: false as boolean, // 是否已订阅
@@ -62,7 +63,10 @@ const BenefitStore = combine(
           storage.setGroup('is_subscribed', is_subscribed ? 'true' : 'false');
           storage.setGroup('app_count', String(app_count || 5));
           storage.setGroup('category_count', String(category_count || 0));
-          storage.setGroup('day_duration', String(day_duration || 60));
+          storage.setGroup(
+            'day_duration',
+            String(typeof day_duration === 'number' ? day_duration : 0),
+          );
           storage.setGroup('today_used', String(today_used || 0));
           storage.setGroup('today_date', formatDate(new Date()));
         }

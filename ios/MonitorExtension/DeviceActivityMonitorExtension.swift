@@ -338,7 +338,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             let todayUsed = defaults.integer(forKey: "today_used")
             let remaining = dayDuration - todayUsed
 
-            if !isSubscribed && remaining < totalMin {
+            if !isSubscribed && dayDuration > 0 && remaining < totalMin {
                 let window = computeWindowIdentity(plan: plan, activityRawValue: raw, now: now)
                 handlePeriodicQuotaSkip(
                     defaults: defaults,
@@ -705,8 +705,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             return totalMinutes
         }
         
-        // 2. 免费用户，检查配额
+        // 2. 免费用户：day_duration ≤ 0 与 JS/后端一致，表示不校验日额度
         let dayDuration = defaults.integer(forKey: "day_duration")
+        if dayDuration <= 0 {
+            logToJS(level: "log", message: "日额度未启用(≤0)，不限制配额", data: ["dayDuration": dayDuration])
+            return totalMinutes
+        }
+        
         let todayUsed = defaults.integer(forKey: "today_used")
         let remaining = dayDuration - todayUsed
         
