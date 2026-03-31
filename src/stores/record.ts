@@ -1,5 +1,5 @@
 import { Toast } from '@/components/ui';
-import { storage } from '@/utils';
+import { incrementFocusCount, storage } from '@/utils';
 import http from '@/utils/request';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
@@ -122,6 +122,7 @@ const RecordStore = combine(
       try {
         let res: HttpRes = await http.post('/record/complete/' + id);
         if (res.statusCode === 200) {
+          incrementFocusCount();
           (get() as any).getRecords();
           (get() as any).getStatis();
         }

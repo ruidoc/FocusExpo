@@ -106,19 +106,12 @@ const App = () => {
     if (store.app_state === 'active') {
       pmstore.checkBattery();
       pmstore.checkNotify();
-
-      // 每次app回到前台时检查是否应该显示庆祝弹窗
-      if (shouldShowCelebration(rstore.actual_mins)) {
-        setTimeout(() => {
-          setShowCelebration(true);
-        }, 500);
-      }
     }
-  }, [rstore.actual_mins, store.app_state]);
+  }, [store.app_state]);
 
-  // 组件挂载时也检查一次
+  // actual_mins 变化时检查是否刚完成首次专注
   useEffect(() => {
-    if (shouldShowCelebration(rstore.actual_mins)) {
+    if (shouldShowCelebration()) {
       setTimeout(() => {
         setShowCelebration(true);
       }, 500);

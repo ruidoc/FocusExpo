@@ -12,7 +12,7 @@ import {
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useBenefitStore, usePlanStore } from '@/stores';
-import { parseRepeat, trackPlanCreated } from '@/utils';
+import { getCurrentMinute, parseRepeat, trackPlanCreated } from '@/utils';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -287,6 +287,23 @@ const App = () => {
         pstore.editPlan(pstore.editing_plan.id, subinfo, async res => {
           if (res) {
             Toast('契约已更新', 'success');
+
+            const nowMin = getCurrentMinute();
+            const inWindow = nowMin >= subinfo.start_min && nowMin < subinfo.end_min;
+            if (inWindow && !latestBenefit.is_subscribed && latestBenefit.day_duration > 0) {
+              const remaining = latestBenefit.day_duration - latestBenefit.today_used;
+              if (remaining < planDuration) {
+                setTimeout(() => {
+                  Toast(
+                    remaining <= 0
+                      ? '今日时长已用完，本次专注未生效'
+                      : `今日剩余时长仅 ${remaining} 分钟，本次专注未生效`,
+                    'info',
+                  );
+                }, 1500);
+              }
+            }
+
             router.back();
           } else {
             Toast('契约更新失败，请稍后重试', 'error');
@@ -296,6 +313,24 @@ const App = () => {
         pstore.addPlan(subinfo, async res => {
           if (res) {
             Toast('契约已签订，请务必遵守', 'success');
+
+            // 如果当前处于契约时间窗口内，检查剩余时长是否足够激活
+            const nowMin = getCurrentMinute();
+            const inWindow = nowMin >= subinfo.start_min && nowMin < subinfo.end_min;
+            if (inWindow && !latestBenefit.is_subscribed && latestBenefit.day_duration > 0) {
+              const remaining = latestBenefit.day_duration - latestBenefit.today_used;
+              if (remaining < planDuration) {
+                setTimeout(() => {
+                  Toast(
+                    remaining <= 0
+                      ? '今日时长已用完，本次专注未生效'
+                      : `今日剩余时长仅 ${remaining} 分钟，本次专注未生效`,
+                    'info',
+                  );
+                }, 1500);
+              }
+            }
+
             trackPlanCreated(form.repeat === 'once' ? 'once' : 'repeat', {
               plan_id: res.data?.id,
               duration_minutes: subinfo.end_min - subinfo.start_min,
