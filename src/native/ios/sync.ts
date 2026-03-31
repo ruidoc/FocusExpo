@@ -3,13 +3,15 @@
  * 封装所有与 iOS 专注状态相关的同步逻辑、事件监听和定时器管理
  */
 
-import { useBenefitStore, usePlanStore, useRecordStore, useUserStore } from '@/stores';
+import {
+  useBenefitStore,
+  usePlanStore,
+  useRecordStore,
+  useUserStore,
+} from '@/stores';
 import { AppState, Platform } from 'react-native';
 import type { ExtensionLogEvent, FocusStateEvent } from '../type';
-import {
-  createExtensionLogListener,
-  createFocusStateListener,
-} from './events';
+import { createExtensionLogListener, createFocusStateListener } from './events';
 import { getFocusStatus } from './methods';
 
 function cleanupLocalFocusState() {
@@ -19,7 +21,10 @@ function cleanupLocalFocusState() {
 
   stopFocusTimer();
 
-  if (pstore.active_plan?.repeat === 'once' || nativeFocus.focus_type === 'once') {
+  if (
+    pstore.active_plan?.repeat === 'once' ||
+    nativeFocus.focus_type === 'once'
+  ) {
     const oncePlanId = pstore.active_plan?.id || nativeFocus.plan_id;
     if (oncePlanId) {
       pstore.rmOncePlan(oncePlanId);
@@ -61,25 +66,19 @@ function stopFocusTimer() {
 
 /**
  * 启动定时器（整分对齐，链式 setTimeout 防漂移）
+ * 仅更新本地 UI 状态，不发网络请求。时长上报由 Native/Extension 层在关键时刻处理。
  * @param elapsedMinutes 已用分钟数
  */
 function startElapsedTimer(elapsedMinutes: number) {
-  stopFocusTimer(); // 先停止旧定时器
+  stopFocusTimer();
 
-  const rstore = useRecordStore.getState();
   const pstore = usePlanStore.getState();
-  let record_id = rstore.record_id;
 
   console.log('当前屏蔽时长：', elapsedMinutes);
 
   const schedule = () => {
-    // 用获取分钟的方法，计算到下一个整分的秒数
     const now = new Date();
     const remain = 60 - now.getSeconds();
-    // console.log('【剩余时间】', remain);
-    if (elapsedMinutes > 0) {
-      rstore.updateActualMins(record_id, elapsedMinutes);
-    }
     timerRef = setTimeout(() => {
       elapsedMinutes += 1;
       pstore.setCurPlanMinute(elapsedMinutes);
@@ -128,6 +127,10 @@ async function syncIOSStatus() {
       }
       if (pstore.active_plan?.id === status.plan_id) {
         pstore.pauseCurPlan(status.paused || false);
+      }
+      // 前台兜底：静默同步一次 actual_mins 到后端
+      if (status.record_id && status.actual_mins > 0) {
+        rstore.updateActualMins(status.record_id, status.actual_mins);
       }
     } else if (status.failed) {
       cleanupLocalFocusState();

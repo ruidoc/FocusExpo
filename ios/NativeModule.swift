@@ -1012,6 +1012,11 @@ class NativeModule: RCTEventEmitter {
           let newUsed = currentUsed + elapsedMin
           defaults.set(newUsed, forKey: "today_used")
           print("【手动退出】累加已用时长: \(elapsedMin) 分钟，总计: \(newUsed) 分钟")
+          // 写入 pending，供 Extension 下次回调时兜底补报
+          if !recordId.isEmpty {
+            defaults.set(elapsedMin, forKey: "FocusOne.PendingActualMin")
+            defaults.set(recordId, forKey: "FocusOne.PendingRecordId")
+          }
         }
       }
 

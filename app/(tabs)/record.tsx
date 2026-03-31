@@ -1,5 +1,10 @@
 import { AppToken, Page } from '@/components/business';
-import { useAppStore, usePlanStore, useRecordStore, useStatisticStore } from '@/stores';
+import {
+  useAppStore,
+  usePlanStore,
+  useRecordStore,
+  useStatisticStore,
+} from '@/stores';
 import type { Period } from '@/stores/statistic';
 import { addLiveFocusDelta, getLiveFocusDelta } from '@/utils/live-focus';
 import { useTheme } from '@react-navigation/native';
@@ -26,30 +31,33 @@ const App = () => {
     curplanMinute: 0,
     recordId: '',
   });
-  const fetchData = useCallback(async (p: Period, options?: { silent?: boolean }) => {
-    if (!options?.silent) {
-      setLoading(true);
-    }
-    try {
-      const astore = useAppStore.getState();
-      if (astore.ios_all_apps.length === 0) {
-        await astore.getIosApps();
-      }
-      const data = await useStatisticStore.getState().fetchAppStatis(p);
-      if (data) {
-        const latestRecord = useRecordStore.getState();
-        const latestPlan = usePlanStore.getState();
-        setStatsSnapshot({
-          curplanMinute: latestPlan.curplan_minute,
-          recordId: latestRecord.record_id,
-        });
-      }
-    } finally {
+  const fetchData = useCallback(
+    async (p: Period, options?: { silent?: boolean }) => {
       if (!options?.silent) {
-        setLoading(false);
+        setLoading(true);
       }
-    }
-  }, []);
+      try {
+        const astore = useAppStore.getState();
+        if (astore.ios_all_apps.length === 0) {
+          await astore.getIosApps();
+        }
+        const data = await useStatisticStore.getState().fetchAppStatis(p);
+        if (data) {
+          const latestRecord = useRecordStore.getState();
+          const latestPlan = usePlanStore.getState();
+          setStatsSnapshot({
+            curplanMinute: latestPlan.curplan_minute,
+            recordId: latestRecord.record_id,
+          });
+        }
+      } finally {
+        if (!options?.silent) {
+          setLoading(false);
+        }
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     fetchData('today');
@@ -338,13 +346,13 @@ const App = () => {
                                 共 {item.task_count} 次
                               </Text>
                               {locked ? (
-                                <View className="flex-row items-center gap-1.5 ml-4">
-                                  <View className="w-1.5 h-1.5 rounded-full bg-[#7A5AF8]" />
+                                <View className="flex-row items-center">
+                                  {/* <View className="w-1.5 h-1.5 rounded-full bg-[#7A5AF8]" />
                                   <Text
                                     className="text-xs"
                                     style={{ color: TEXT2 }}>
                                     锁定中
-                                  </Text>
+                                  </Text> */}
                                 </View>
                               ) : null}
                             </View>

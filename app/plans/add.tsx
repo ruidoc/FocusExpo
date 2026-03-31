@@ -249,6 +249,18 @@ const App = () => {
         return Toast('与其他契约时间重叠', 'error');
       }
 
+      const planDuration = end_day.diff(start_day, 'minute');
+      await useBenefitStore.getState().getBenefit();
+      const latestBenefit = useBenefitStore.getState();
+      if (!latestBenefit.is_subscribed && latestBenefit.day_duration > 0) {
+        if (planDuration > latestBenefit.day_duration) {
+          return Toast(
+            `每日可用时长为 ${latestBenefit.day_duration} 分钟，请调整时间`,
+            'info',
+          );
+        }
+      }
+
       let subinfo: any = { ...form };
       subinfo.name = name.trim();
       subinfo.start = start_day.format('HH:mm');

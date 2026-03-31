@@ -55,27 +55,28 @@ instance.interceptors.request.use(async request => {
 });
 
 // 响应拦截器，全局错误处理
+// 请求配置中传 silent: true 可静默错误（不弹 Toast），用于后台自动请求
 instance.interceptors.response.use(
   response => {
-    // console.log('【响应结果】', response.data);
     return response.data;
   },
   error => {
+    const silent = (error.config as any)?.silent === true;
     if (error.response) {
       let response = error.response;
       console.log('【请求错误】', response.status, response.data);
       if (response.status === 401) {
-        // 静默处理 401，清除过期 token 即可
-        // 不显示 Toast，避免在 welcome/onboarding 等页面打扰用户
         storage.delete('access_token');
         storage.delete('user_info');
         useUserStore.setState({ uInfo: null });
-      } else {
-        // console.log('错误信息：', response.data);
+      } else if (!silent) {
         Toast(response.data.message);
       }
     } else {
-      Toast(error.message);
+      console.log('【网络错误】', error.message);
+      if (!silent) {
+        Toast('网络连接失败，请稍后重试');
+      }
     }
     return Promise.reject(error);
   },

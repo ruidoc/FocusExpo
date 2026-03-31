@@ -70,6 +70,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
         
+        // 补报上一次 pending 的 actual_min
+        flushPendingActualMin(defaults: defaults)
+        
         // 1. 暂停恢复活动：不处理
         if activity.rawValue == "FocusOne.PauseResume" {
             logToJS(level: "log", message: "暂停恢复活动开始，无需处理")
@@ -180,6 +183,31 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             completeRecord()
             
             notifyEnd()
+        }
+    }
+
+    // MARK: - Pending Flush
+    
+    /// 补报上一次未成功同步的 actual_min（覆盖式，只存最新值）
+    private func flushPendingActualMin(defaults: UserDefaults) {
+        let pendingMin = defaults.integer(forKey: "FocusOne.PendingActualMin")
+        let pendingRecordId = defaults.string(forKey: "FocusOne.PendingRecordId") ?? ""
+        
+        guard pendingMin > 0, !pendingRecordId.isEmpty else { return }
+        
+        defaults.removeObject(forKey: "FocusOne.PendingActualMin")
+        defaults.removeObject(forKey: "FocusOne.PendingRecordId")
+        
+        NetworkManager.shared.post(
+            path: "/record/update/\(pendingRecordId)",
+            body: ["actual_min": pendingMin]
+        ) { result in
+            switch result {
+            case .success:
+                self.logToJS(level: "log", message: "pending 时长补报成功", data: ["recordId": pendingRecordId, "actualMin": pendingMin])
+            case .failure(let error):
+                self.logToJS(level: "warn", message: "pending 时长补报失败: \(error.localizedDescription)", data: ["recordId": pendingRecordId, "actualMin": pendingMin])
+            }
         }
     }
 

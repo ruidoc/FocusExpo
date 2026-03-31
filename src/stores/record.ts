@@ -99,29 +99,21 @@ const RecordStore = combine(
       }
     },
 
-    // 每分钟更新专注时长（带重试）
+    // 静默同步 actual_min 到后端（仅在前台兜底等关键时刻调用，失败不弹 Toast）
     updateActualMins: async (id: string, actual_min: number) => {
       try {
         if (!id) return;
         let res: HttpRes = await http.post(
           '/record/update/' + id,
-          {
-            actual_min,
-          },
-          // {
-          //   'axios-retry': {
-          //     retries: 2,
-          //   },
-          // },
+          { actual_min },
+          { silent: true } as any,
         );
         if (res.statusCode !== 200) {
           throw new Error('更新失败');
         }
         return res;
       } catch (error) {
-        console.log('上报失败:', error);
-        // 失败后本地缓存，下次补偿上报
-        // TODO: 可以在下次成功时补偿上报缺失的分钟数
+        console.log('【静默上报失败】', error);
       }
     },
 
@@ -150,11 +142,13 @@ const RecordStore = combine(
       }
     },
 
-    // 退出专注
+    // 退出专注（携带当前已用时长，后端一并更新）
     exitRecord: async (record_id: string) => {
       try {
+        const actual_min = usePlanStore.getState().curplan_minute;
         let res: HttpRes = await http.post('/record/fail/' + record_id, {
           reason: 'user_exit',
+          actual_min: actual_min > 0 ? actual_min : undefined,
         });
         if (res.statusCode === 200) {
           (get() as any).getRecords();
