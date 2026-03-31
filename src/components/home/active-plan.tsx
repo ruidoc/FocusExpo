@@ -27,6 +27,7 @@ const FocusButton = () => {
   const isPeriodicFocus = pstore.active_plan
     ? pstore.active_plan.repeat !== 'once'
     : nativeFocus.focus_type === 'periodic';
+  const noStop = pstore.active_plan?.flags?.includes('no-stop');
   const displayPlanName =
     pstore.active_plan?.name ||
     nativeFocus.plan_name ||
@@ -156,27 +157,29 @@ const FocusButton = () => {
             <Icon name="play" size={24} color="#B3B3BA" />
           </TouchableOpacity>
         )}
-        {bstore.features.includes('allow-pause') && hasActiveTask && (
-          <>
-            {!isPaused && (
-              <TouchableOpacity
-                onPress={() => setShowPauseModal(true)}
-                activeOpacity={0.8}
-                style={styles.circleButton}>
-                <Icon name="pause" size={24} color="#B3B3BA" />
-              </TouchableOpacity>
-            )}
-            {isPaused && (
-              <TouchableOpacity
-                onPress={resumeFocus}
-                activeOpacity={0.8}
-                style={styles.circleButton}>
-                <Icon name="play" size={24} color="#B3B3BA" />
-              </TouchableOpacity>
-            )}
-          </>
-        )}
-        {bstore.features.includes('allow-break') && hasActiveTask && (
+        {bstore.features.includes('allow-pause') &&
+          hasActiveTask &&
+          !noStop && (
+            <>
+              {!isPaused && (
+                <TouchableOpacity
+                  onPress={() => setShowPauseModal(true)}
+                  activeOpacity={0.8}
+                  style={styles.circleButton}>
+                  <Icon name="pause" size={24} color="#B3B3BA" />
+                </TouchableOpacity>
+              )}
+              {isPaused && (
+                <TouchableOpacity
+                  onPress={resumeFocus}
+                  activeOpacity={0.8}
+                  style={styles.circleButton}>
+                  <Icon name="play" size={24} color="#B3B3BA" />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        {hasActiveTask && !noStop && (
           <TouchableOpacity
             onPress={() => {
               setShowStopModal(true);

@@ -27,6 +27,7 @@ interface CusPlan {
   repeat: 'once' | number[];
   mode: 'shield' | 'allow';
   apps?: string[]; // 选择的应用列表，格式为 "id:type"
+  flags?: string; // 计划标记（逗号分隔，如 no-stop,no-pause）
 }
 
 interface RecordInfo {

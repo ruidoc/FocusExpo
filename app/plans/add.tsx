@@ -5,6 +5,7 @@ import {
   FieldGroup,
   FieldItem,
   Flex,
+  Tag,
   TextInput,
   Toast,
 } from '@/components/ui';
@@ -27,6 +28,7 @@ type FormState = {
   repeat: number[] | 'once';
   mode: 'shield' | 'allow';
   apps: string[];
+  flags: string;
 };
 
 const App = () => {
@@ -134,6 +136,7 @@ const App = () => {
           ? plan.repeat
           : (parseRepeat(plan.repeat) as number[]),
         mode: plan.mode || 'shield',
+        flags: plan.flags || '',
       };
     }
 
@@ -175,6 +178,7 @@ const App = () => {
         repeat,
         mode: 'shield',
         apps: [],
+        flags: '',
       };
     }
 
@@ -191,6 +195,7 @@ const App = () => {
       repeat: [1, 2, 3, 4, 5],
       mode: 'shield',
       apps: [],
+      flags: '',
     };
   });
 
@@ -627,6 +632,39 @@ const App = () => {
               })}
             </Flex>
           </View>
+        </FieldGroup>
+        {/* 7. 全程专注 */}
+        <FieldGroup divider={false} className="rounded-xl mb-8">
+          <FieldItem
+            title={
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ color: colors.text, fontSize: 16 }}>
+                  全程专注
+                </Text>
+                <Tag
+                  color="#FF6B00"
+                  textStyle={{ fontSize: 10, fontWeight: '700' }}>
+                  NEW
+                </Tag>
+              </View>
+            }
+            rightElement={
+              <Switch
+                value={form.flags.includes('no-stop')}
+                onValueChange={val => setInfo(val ? 'no-stop' : '', 'flags')}
+              />
+            }
+            showArrow={false}
+          />
+          {form.flags.includes('no-stop') && (
+            <View className="px-4 pb-5">
+              <Text
+                style={{ color: colors.text3, fontSize: 13, lineHeight: 18 }}>
+                开启后，专注期间无法手动结束，只能等待时间自然结束
+              </Text>
+            </View>
+          )}
         </FieldGroup>
       </ScrollView>
       <View className="px-5 pb-10">

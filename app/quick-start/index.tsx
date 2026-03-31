@@ -1,5 +1,5 @@
 import { Page, SelectApps, SelectedApps } from '@/components/business';
-import { Button, FieldGroup, FieldItem, Toast } from '@/components/ui';
+import { Button, FieldGroup, FieldItem, Tag, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import {
   useAppStore,
@@ -13,12 +13,13 @@ import SegmentedControl from '@react-native-segmented-control/segmented-control'
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import React, { useLayoutEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Switch, Text, View } from 'react-native';
 import TimeSlider from './time-slider';
 
 const QuickStartPage = () => {
   const [minute, setMinute] = useState(15);
   const [mode, setMode] = useState<'shield' | 'allow'>('shield');
+  const [noStop, setNoStop] = useState(false);
   const navigation = useNavigation();
   const { colors } = useCustomTheme();
   const pstore = usePlanStore();
@@ -53,6 +54,7 @@ const QuickStartPage = () => {
       end_sec: cur_secend + Number(minute) * 60,
       repeat: 'once',
       mode,
+      flags: noStop ? 'no-stop' : '',
     };
     pstore.addOncePlan(from_data);
     rstore.addRecord(from_data, 0); // 下注设为 0
@@ -204,6 +206,35 @@ const QuickStartPage = () => {
           <View className="px-4 pb-4">
             <TimeSlider minute={minute} setMinute={setMinute} />
           </View>
+        </FieldGroup>
+
+        {/* 全程专注 */}
+        <FieldGroup divider={false} className="rounded-xl mb-4">
+          <FieldItem
+            title={
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ color: colors.text, fontSize: 16 }}>
+                  全程专注
+                </Text>
+                <Tag
+                  color="#FF6B00"
+                  textStyle={{ fontSize: 10, fontWeight: '700' }}>
+                  NEW
+                </Tag>
+              </View>
+            }
+            rightElement={<Switch value={noStop} onValueChange={setNoStop} />}
+            showArrow={false}
+          />
+          {noStop && (
+            <View className="px-4 pb-5">
+              <Text
+                style={{ color: colors.text3, fontSize: 13, lineHeight: 18 }}>
+                开启后，专注期间无法手动结束，只能等待时间自然结束
+              </Text>
+            </View>
+          )}
         </FieldGroup>
       </View>
       <View className="px-8">

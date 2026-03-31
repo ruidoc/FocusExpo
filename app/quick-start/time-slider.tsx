@@ -25,7 +25,8 @@ const TimeSlider: React.FC<Props> = ({ minute, setMinute }) => {
 
   return (
     <View className="mb-2">
-      <Text className={`text-base font-bold mb-0 text-center ${dark ? 'text-white' : 'text-[#222]'}`}>
+      <Text
+        className={`text-base font-bold mb-0 text-center ${dark ? 'text-white' : 'text-[#222]'}`}>
         <Text
           className={`text-lg font-bold`}
           style={{ color: dark ? colors.primary : '#0065FE' }}>
@@ -43,7 +44,7 @@ const TimeSlider: React.FC<Props> = ({ minute, setMinute }) => {
         maximumTrackTintColor={dark ? '#444' : '#ccc'}
         thumbTintColor={dark ? colors.primary : '#0065FE'}
         useThemeColors={false}
-        style={{ marginTop: 24 }}
+        style={{ marginTop: 20 }}
       />
       <Flex className="justify-between px-0.5">
         <Text className={`text-[13px] ${dark ? 'text-[#aaa]' : 'text-[#888]'}`}>

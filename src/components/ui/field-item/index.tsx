@@ -36,9 +36,9 @@ interface FieldItemProps {
    */
   imageSize?: number;
   /**
-   * 标题文字
+   * 标题文字或自定义元素
    */
-  title: string;
+  title: string | React.ReactNode;
   /**
    * 标题文字样式
    */
@@ -206,11 +206,17 @@ const FieldItem: React.FC<FieldItemProps> = ({
             resizeMode="cover"
           />
         )}
-        <Text
-          className={`text-base flex-1 ${titleClassName || ''}`.trim()}
-          style={[{ color: colors.text }, titleStyle]}>
-          {title}
-        </Text>
+        {typeof title === 'string' ? (
+          <Text
+            className={`text-base flex-1 ${titleClassName || ''}`.trim()}
+            style={[{ color: colors.text }, titleStyle]}>
+            {title}
+          </Text>
+        ) : (
+          <View className={`flex-1 ${titleClassName || ''}`.trim()}>
+            {title}
+          </View>
+        )}
       </View>
 
       {/* 右侧：文字或自定义元素 */}
