@@ -3,7 +3,6 @@ import { Keyboard } from '@/components/system';
 import { Button, TextInput, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useUserStore } from '@/stores';
-import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -76,7 +75,7 @@ const App = () => {
 
   const toLogin = async () => {
     if (!agree) {
-      return toast('请阅读并勾选下方隐私政策');
+      return Toast('请阅读并勾选下方隐私政策');
     }
     if (!form.phone || !form.code) return;
     if (form.code.length < 4) {

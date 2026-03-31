@@ -1,5 +1,4 @@
-import { Dialog } from '@/components/ui';
-import { toast } from '@/utils';
+import { Dialog, Toast } from '@/components/ui';
 import { checkNotify } from '@/utils/permission';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
@@ -45,7 +44,7 @@ const PermissionStore = combine(
               if (action === 'confirm') {
                 console.log('用户确认打开设置');
                 Notifications.requestPermissionsAsync().catch(() => {
-                  toast('请手动打开设置页面并允许通知');
+                  Toast('请手动打开设置页面并允许通知');
                 });
               }
             });
@@ -55,7 +54,7 @@ const PermissionStore = combine(
         }
       } catch (error) {
         console.error('请求通知权限失败:', error);
-        toast('请求通知权限失败，请稍后重试');
+        Toast('请求通知权限失败，请稍后重试');
       }
     },
   }),

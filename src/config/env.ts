@@ -14,7 +14,7 @@ export const APP_ENV: AppEnv =
 const PROD_BASE_URL = 'https://focus.freeshore.cn/api';
 
 const DEV_BASE_URL = 'https://focus.freeshore.cn/dev-api';
-// const DEV_BASE_URL = 'http://172.20.10.8:8849';
+// const DEV_BASE_URL = 'http://172.20.10.9:8849';
 
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ||

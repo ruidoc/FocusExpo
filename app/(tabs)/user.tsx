@@ -1,7 +1,6 @@
 import { DayDurationBar } from '@/components/business';
-import { FieldGroup, FieldItem, Flex } from '@/components/ui';
+import { FieldGroup, FieldItem, Flex, Toast } from '@/components/ui';
 import { useBenefitStore, useSubscriptionStore, useUserStore } from '@/stores';
-import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
@@ -27,7 +26,7 @@ const App = () => {
 
   const toNavigate = (route: any) => {
     if (route === 'Vip') {
-      return toast('VIP功能暂未开放');
+      return Toast('VIP功能暂未开放');
     }
     if (route) {
       router.push(route);

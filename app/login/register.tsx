@@ -2,7 +2,6 @@ import { Privicy } from '@/components/business';
 import { Keyboard } from '@/components/system';
 import { Button, Flex, TextInput, Toast } from '@/components/ui';
 import { useUserStore } from '@/stores';
-import { toast } from '@/utils';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
@@ -41,7 +40,7 @@ const App = () => {
 
   const toSubmit = () => {
     if (!agree) {
-      return toast('请阅读并勾选下方隐私政策');
+      return Toast('请阅读并勾选下方隐私政策');
     }
     setLoading(true);
     console.log(form);

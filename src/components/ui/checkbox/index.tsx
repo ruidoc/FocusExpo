@@ -19,17 +19,28 @@ const CheckboxIcon = ({
   const { colors } = useCustomTheme();
   const iconColor = activeColor || colors.primary;
 
+  const icon = active ? (
+    <Icon name="checkmark-circle" size={size} color={iconColor} />
+  ) : (
+    <Icon name="ellipse-outline" size={size} color={'#FFFFFF90'} />
+  );
+
+  // 无 onPress 时不能用 Pressable：会抢走外层 Pressable 的点击（如图标区域点不动）
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        className="items-center justify-center">
+        {icon}
+      </Pressable>
+    );
+  }
+
   return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-      className="items-center justify-center">
-      {active ? (
-        <Icon name="checkmark-circle" size={size} color={iconColor} />
-      ) : (
-        <Icon name="ellipse-outline" size={size} color={'#FFFFFF90'} />
-      )}
-    </Pressable>
+    <View className="items-center justify-center" pointerEvents="none">
+      {icon}
+    </View>
   );
 };
 

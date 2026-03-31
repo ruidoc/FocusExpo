@@ -1,7 +1,6 @@
-import { Flex } from '@/components/ui';
+import { Flex, Toast } from '@/components/ui';
 import { BottomTabOptions } from '@/config/navigation';
 import { useCustomTheme } from '@/config/theme';
-import { toast } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Tabs, useNavigation } from 'expo-router';
@@ -48,7 +47,7 @@ const TabLayout = () => {
   const toRoute = async (path: string) => {
     let res = await AsyncStorage.getItem('user_info');
     if (!res) {
-      return toast('请先登录');
+      return Toast('请先登录');
     }
     navigation.navigate(path as never);
   };

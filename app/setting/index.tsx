@@ -1,5 +1,11 @@
 import { Page } from '@/components/business';
-import { ActionSheet, FieldGroup, FieldItem, Switch } from '@/components/ui';
+import {
+  ActionSheet,
+  FieldGroup,
+  FieldItem,
+  Switch,
+  Toast,
+} from '@/components/ui';
 import {
   useHomeStore,
   usePlanStore,
@@ -7,7 +13,6 @@ import {
   useUserStore,
 } from '@/stores';
 import { stopAppLimits } from '@/utils/permission';
-import { toast } from '@/utils';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react';
 import { Appearance, Linking, Platform, View } from 'react-native';
@@ -20,7 +25,7 @@ const App = () => {
   const onClick = (tag: string) => {
     switch (tag) {
       case 'check':
-        return toast('已是最新版本');
+        return Toast('已是最新版本');
       case 'privicy':
         return navigation.navigate('others/webview' as never);
       case 'evaluate':
@@ -28,7 +33,7 @@ const App = () => {
       case 'logoff':
         return navigation.navigate('setting/logoff' as never);
       case 'clear':
-        return toast('已清理');
+        return Toast('已清理');
     }
   };
 
@@ -39,10 +44,10 @@ const App = () => {
         if (supported) {
           return Linking.openURL(storeUrl!);
         } else {
-          toast('无法打开应用市场');
+          Toast('无法打开应用市场');
         }
       })
-      .catch(() => toast('打开应用市场失败'));
+      .catch(() => Toast('打开应用市场失败'));
   };
 
   const toLogout = () => {

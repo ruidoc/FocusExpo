@@ -1,5 +1,4 @@
-import { Button, TextInput } from '@/components/ui';
-import { toast } from '@/utils';
+import { Button, TextInput, Toast } from '@/components/ui';
 import { useTheme } from '@react-navigation/native';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
@@ -10,7 +9,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
 
   const logOff = () => {
-    toast('申请成功，稍后我们会联系您');
+    Toast('申请成功，稍后我们会联系您');
   };
 
   return (

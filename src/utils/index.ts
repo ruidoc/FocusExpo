@@ -1,13 +1,5 @@
 import staticData from '@/config/static.json';
 import dayjs from 'dayjs';
-import Toast from 'react-native-toast-message';
-
-export const toast = (
-  message: string,
-  type: 'info' | 'error' | 'success' = 'info',
-) => {
-  Toast.show({ text1: message, type: type });
-};
 
 export const checkCodePushUpdate = async () => {
   try {
@@ -118,7 +110,9 @@ export const getRepeatDaysLabel = (repeat: CusPlan['repeat']): string => {
   const days = [...r].sort((a, b) => a - b);
   if (days.length === 0) return '';
   if (days.length === 7) return '每日生效';
-  const labels = days.map(d => '周' + (staticData.repeats.find(x => x.value === d)?.label || '?'));
+  const labels = days.map(
+    d => '周' + (staticData.repeats.find(x => x.value === d)?.label || '?'),
+  );
   if (days.length === 5 && days[0] === 1 && days[4] === 5) return '周一至周五';
   if (days.length === 2 && days[0] === 0 && days[1] === 6) return '周六、日';
   return labels.join('、');
