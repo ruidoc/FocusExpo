@@ -20,6 +20,7 @@ const QuickStartPage = () => {
   const [minute, setMinute] = useState(15);
   const [mode, setMode] = useState<'shield' | 'allow'>('shield');
   const [noStop, setNoStop] = useState(false);
+  const [starting, setStarting] = useState(false);
   const navigation = useNavigation();
   const { colors } = useCustomTheme();
   const pstore = usePlanStore();
@@ -27,6 +28,7 @@ const QuickStartPage = () => {
   const astore = useAppStore();
   const bstore = useBenefitStore();
   const allowModeEnabled = bstore.features.includes('allow-mode');
+  const forceFocusEnabled = bstore.features.includes('force-focus');
 
   // 设置页面标题
   useLayoutEffect(() => {
@@ -128,6 +130,7 @@ const QuickStartPage = () => {
     let plan_id = `once_${Math.floor(Math.random() * 99999999)}`;
     // iOS: 使用屏幕时间限制开始屏蔽
     console.log('startAppLimits', minute, plan_id, mode);
+    setStarting(true);
     try {
       const ok = await startAppLimits(minute, plan_id, mode, {
         entry_source: 'quick_start',
@@ -148,8 +151,11 @@ const QuickStartPage = () => {
         pstore.resetPlan();
         Toast('专注已开始', 'success');
         navigation.goBack();
+      } else {
+        setStarting(false);
       }
     } catch (error) {
+      setStarting(false);
       console.error('启动专注失败:', error);
       Toast('启动专注失败，请检查权限设置', 'error');
     }
@@ -180,11 +186,7 @@ const QuickStartPage = () => {
         {/* 选择APP */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
-            title={
-              allowModeEnabled && mode === 'allow'
-                ? '允许使用的应用'
-                : '要锁定的应用'
-            }
+            title={mode === 'allow' ? '允许使用的应用' : '要锁定的应用'}
             className="pt-3 pb-2"
             rightElement={
               <SelectApps
@@ -209,36 +211,42 @@ const QuickStartPage = () => {
         </FieldGroup>
 
         {/* 全程专注 */}
-        <FieldGroup divider={false} className="rounded-xl mb-4">
-          <FieldItem
-            title={
-              <View
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ color: colors.text, fontSize: 16 }}>
-                  全程专注
+        {forceFocusEnabled && (
+          <FieldGroup divider={false} className="rounded-xl mb-4">
+            <FieldItem
+              title={
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}>
+                  <Text style={{ color: colors.text, fontSize: 16 }}>
+                    全程专注
+                  </Text>
+                  <Tag
+                    color="#FF6B00"
+                    textStyle={{ fontSize: 10, fontWeight: '700' }}>
+                    NEW
+                  </Tag>
+                </View>
+              }
+              rightElement={<Switch value={noStop} onValueChange={setNoStop} />}
+              showArrow={false}
+            />
+            {noStop && (
+              <View className="px-4 pb-5">
+                <Text
+                  style={{ color: colors.text3, fontSize: 13, lineHeight: 18 }}>
+                  开启后，专注期间无法手动结束，只能等待时间自然结束
                 </Text>
-                <Tag
-                  color="#FF6B00"
-                  textStyle={{ fontSize: 10, fontWeight: '700' }}>
-                  NEW
-                </Tag>
               </View>
-            }
-            rightElement={<Switch value={noStop} onValueChange={setNoStop} />}
-            showArrow={false}
-          />
-          {noStop && (
-            <View className="px-4 pb-5">
-              <Text
-                style={{ color: colors.text3, fontSize: 13, lineHeight: 18 }}>
-                开启后，专注期间无法手动结束，只能等待时间自然结束
-              </Text>
-            </View>
-          )}
-        </FieldGroup>
+            )}
+          </FieldGroup>
+        )}
       </View>
       <View className="px-8">
-        <Button onPress={handleStart} text="开始专注" />
+        <Button onPress={handleStart} text="开始专注" loading={starting} />
       </View>
     </Page>
   );

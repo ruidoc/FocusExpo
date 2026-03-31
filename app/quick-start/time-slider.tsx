@@ -28,7 +28,7 @@ const TimeSlider: React.FC<Props> = ({ minute, setMinute }) => {
       <Text
         className={`text-base font-bold mb-0 text-center ${dark ? 'text-white' : 'text-[#222]'}`}>
         <Text
-          className={`text-lg font-bold`}
+          className={`text-[18px] font-bold`}
           style={{ color: dark ? colors.primary : '#0065FE' }}>
           {formatTime(localMinute)}
         </Text>

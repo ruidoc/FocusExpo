@@ -37,6 +37,7 @@ const App = () => {
   const bstore = useBenefitStore();
   const { colors } = useCustomTheme();
   const allowModeEnabled = bstore.features.includes('allow-mode');
+  const forceFocusEnabled = bstore.features.includes('force-focus');
   const navigation = useNavigation();
   const params = useLocalSearchParams();
 
@@ -107,6 +108,7 @@ const App = () => {
 
   // 单独管理选择的应用状态
   const [selectedApps, setSelectedApps] = useState<any[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   // 时长模式：true = 长期有效，false = 自定义时长
   const [isLongTerm, setIsLongTerm] = useState(true);
@@ -219,6 +221,9 @@ const App = () => {
       if (selectedApps.length === 0) {
         return Toast('请先选择要限制的应用', 'error');
       }
+
+      setSubmitting(true);
+
       if (astore.ios_all_apps.length === 0) {
         await astore.getIosApps();
       }
@@ -289,9 +294,15 @@ const App = () => {
             Toast('契约已更新', 'success');
 
             const nowMin = getCurrentMinute();
-            const inWindow = nowMin >= subinfo.start_min && nowMin < subinfo.end_min;
-            if (inWindow && !latestBenefit.is_subscribed && latestBenefit.day_duration > 0) {
-              const remaining = latestBenefit.day_duration - latestBenefit.today_used;
+            const inWindow =
+              nowMin >= subinfo.start_min && nowMin < subinfo.end_min;
+            if (
+              inWindow &&
+              !latestBenefit.is_subscribed &&
+              latestBenefit.day_duration > 0
+            ) {
+              const remaining =
+                latestBenefit.day_duration - latestBenefit.today_used;
               if (remaining < planDuration) {
                 setTimeout(() => {
                   Toast(
@@ -306,6 +317,7 @@ const App = () => {
 
             router.back();
           } else {
+            setSubmitting(false);
             Toast('契约更新失败，请稍后重试', 'error');
           }
         });
@@ -316,9 +328,15 @@ const App = () => {
 
             // 如果当前处于契约时间窗口内，检查剩余时长是否足够激活
             const nowMin = getCurrentMinute();
-            const inWindow = nowMin >= subinfo.start_min && nowMin < subinfo.end_min;
-            if (inWindow && !latestBenefit.is_subscribed && latestBenefit.day_duration > 0) {
-              const remaining = latestBenefit.day_duration - latestBenefit.today_used;
+            const inWindow =
+              nowMin >= subinfo.start_min && nowMin < subinfo.end_min;
+            if (
+              inWindow &&
+              !latestBenefit.is_subscribed &&
+              latestBenefit.day_duration > 0
+            ) {
+              const remaining =
+                latestBenefit.day_duration - latestBenefit.today_used;
               if (remaining < planDuration) {
                 setTimeout(() => {
                   Toast(
@@ -348,11 +366,13 @@ const App = () => {
               router.back();
             }
           } else {
+            setSubmitting(false);
             Toast('契约签订失败，请稍后重试', 'error');
           }
         });
       }
     } catch (error) {
+      setSubmitting(false);
       Toast('契约签订出错，请稍后重试', 'error');
       console.log('契约签订失败：', error);
     }
@@ -446,25 +466,7 @@ const App = () => {
           />
         </FieldGroup>
 
-        {/* 2. 屏蔽模式 */}
-        {allowModeEnabled && (
-          <FieldGroup className="rounded-xl mb-4">
-            <FieldItem
-              title={form.mode === 'shield' ? '锁定模式' : '放行模式'}
-              rightElement={
-                <Switch
-                  value={form.mode === 'allow'}
-                  onValueChange={val =>
-                    setInfo(val ? 'allow' : 'shield', 'mode')
-                  }
-                />
-              }
-              showArrow={false}
-            />
-          </FieldGroup>
-        )}
-
-        {/* 3. 起始时间 */}
+        {/* 2. 起始时间 */}
         <FieldGroup className="rounded-xl mb-4">
           <FieldItem
             title="起始时间"
@@ -517,6 +519,24 @@ const App = () => {
           />
         </FieldGroup>
 
+        {/* 3. 屏蔽模式 */}
+        {allowModeEnabled && (
+          <FieldGroup className="rounded-xl mb-4">
+            <FieldItem
+              title={form.mode === 'shield' ? '锁定模式' : '放行模式'}
+              rightElement={
+                <Switch
+                  value={form.mode === 'allow'}
+                  onValueChange={val =>
+                    setInfo(val ? 'allow' : 'shield', 'mode')
+                  }
+                />
+              }
+              showArrow={false}
+            />
+          </FieldGroup>
+        )}
+
         {/* 4. 应用选择 */}
         <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
@@ -546,8 +566,92 @@ const App = () => {
           </View>
         </FieldGroup>
 
-        {/* 5. 有效时长（长期模式1个item，自定义模式2个item） */}
-        <FieldGroup className="rounded-xl mb-4">
+        {/* 5. 重复规则 */}
+        <FieldGroup divider={false} className="rounded-xl mb-4">
+          <FieldItem
+            className="pb-2"
+            title="每周几重复"
+            rightText={`已选${Array.isArray(form.repeat) ? form.repeat.length : 0}天`}
+            rightTextStyle={{ fontSize: 14 }}
+            showArrow={false}
+          />
+          <View className="px-4 pb-5">
+            <Flex className="flex-1 gap-2 pt-2">
+              {staticData.repeats.map(item => {
+                const isSelected =
+                  Array.isArray(form.repeat) &&
+                  form.repeat.includes(item.value);
+                return (
+                  <Flex
+                    className="items-center justify-center w-[38px] h-[38px] rounded-full"
+                    key={item.value}
+                    onPress={() => {
+                      if (Array.isArray(form.repeat)) {
+                        const newRepeat = isSelected
+                          ? form.repeat.filter(day => day !== item.value)
+                          : [...form.repeat, item.value];
+                        setInfo(newRepeat, 'repeat');
+                      }
+                    }}
+                    style={{
+                      backgroundColor: isSelected
+                        ? colors.primary
+                        : colors.border,
+                    }}>
+                    <Text
+                      style={{
+                        color: colors.primaryForeground,
+                        fontSize: 15,
+                      }}>
+                      {item.label}
+                    </Text>
+                  </Flex>
+                );
+              })}
+            </Flex>
+          </View>
+        </FieldGroup>
+        {/* 6. 全程专注 */}
+        {forceFocusEnabled && (
+          <FieldGroup divider={false} className="rounded-xl mb-4">
+            <FieldItem
+              title={
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}>
+                  <Text style={{ color: colors.text, fontSize: 16 }}>
+                    全程专注
+                  </Text>
+                  <Tag
+                    color="#FF6B00"
+                    textStyle={{ fontSize: 10, fontWeight: '700' }}>
+                    NEW
+                  </Tag>
+                </View>
+              }
+              rightElement={
+                <Switch
+                  value={form.flags.includes('no-stop')}
+                  onValueChange={val => setInfo(val ? 'no-stop' : '', 'flags')}
+                />
+              }
+              showArrow={false}
+            />
+            {form.flags.includes('no-stop') && (
+              <View className="px-4 pb-5">
+                <Text
+                  style={{ color: colors.text3, fontSize: 13, lineHeight: 18 }}>
+                  开启后，专注期间无法手动结束，只能等待时间自然结束
+                </Text>
+              </View>
+            )}
+          </FieldGroup>
+        )}
+        {/* 7. 有效时长（长期模式1个item，自定义模式2个item） */}
+        <FieldGroup className="rounded-xl mb-8">
           <FieldItem
             title="有效时长"
             rightText={isLongTerm ? '长期有效' : '自定义'}
@@ -622,88 +726,13 @@ const App = () => {
             />
           )}
         </FieldGroup>
-
-        {/* 6. 重复规则 */}
-        <FieldGroup divider={false} className="rounded-xl mb-4">
-          <FieldItem
-            className="pb-2"
-            title="每周几重复"
-            rightText={`已选${Array.isArray(form.repeat) ? form.repeat.length : 0}天`}
-            rightTextStyle={{ fontSize: 14 }}
-            showArrow={false}
-          />
-          <View className="px-4 pb-5">
-            <Flex className="flex-1 gap-2 pt-2">
-              {staticData.repeats.map(item => {
-                const isSelected =
-                  Array.isArray(form.repeat) &&
-                  form.repeat.includes(item.value);
-                return (
-                  <Flex
-                    className="items-center justify-center w-[38px] h-[38px] rounded-full"
-                    key={item.value}
-                    onPress={() => {
-                      if (Array.isArray(form.repeat)) {
-                        const newRepeat = isSelected
-                          ? form.repeat.filter(day => day !== item.value)
-                          : [...form.repeat, item.value];
-                        setInfo(newRepeat, 'repeat');
-                      }
-                    }}
-                    style={{
-                      backgroundColor: isSelected
-                        ? colors.primary
-                        : colors.border,
-                    }}>
-                    <Text
-                      style={{
-                        color: colors.primaryForeground,
-                        fontSize: 15,
-                      }}>
-                      {item.label}
-                    </Text>
-                  </Flex>
-                );
-              })}
-            </Flex>
-          </View>
-        </FieldGroup>
-        {/* 7. 全程专注 */}
-        <FieldGroup divider={false} className="rounded-xl mb-8">
-          <FieldItem
-            title={
-              <View
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ color: colors.text, fontSize: 16 }}>
-                  全程专注
-                </Text>
-                <Tag
-                  color="#FF6B00"
-                  textStyle={{ fontSize: 10, fontWeight: '700' }}>
-                  NEW
-                </Tag>
-              </View>
-            }
-            rightElement={
-              <Switch
-                value={form.flags.includes('no-stop')}
-                onValueChange={val => setInfo(val ? 'no-stop' : '', 'flags')}
-              />
-            }
-            showArrow={false}
-          />
-          {form.flags.includes('no-stop') && (
-            <View className="px-4 pb-5">
-              <Text
-                style={{ color: colors.text3, fontSize: 13, lineHeight: 18 }}>
-                开启后，专注期间无法手动结束，只能等待时间自然结束
-              </Text>
-            </View>
-          )}
-        </FieldGroup>
       </ScrollView>
       <View className="px-5 pb-10">
-        <Button onPress={submit} text={isEditing ? '修改契约' : '签定契约'} />
+        <Button
+          onPress={submit}
+          text={isEditing ? '修改契约' : '签定契约'}
+          loading={submitting}
+        />
       </View>
     </Page>
   );
