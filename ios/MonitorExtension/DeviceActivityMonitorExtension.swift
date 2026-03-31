@@ -357,6 +357,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             defaults.set("periodic", forKey: "FocusOne.FocusType")
             defaults.set(plan.id, forKey: "FocusOne.CurrentPlanId")
             defaults.set("schedule", forKey: "FocusOne.FocusEntrySource")
+            defaults.removeObject(forKey: "FocusOne.EndNotified")
 
             // 保存屏蔽设置到本地，供暂停恢复使用
             if let selectionData = try? JSONEncoder().encode(selection) {
@@ -514,6 +515,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     }
     
     private func notifyEnd() {
+        if let defaults = UserDefaults(suiteName: "group.com.focusone"),
+           defaults.bool(forKey: "FocusOne.EndNotified") {
+            return
+        }
+        
         let center = CFNotificationCenterGetDarwinNotifyCenter()
         let name = CFNotificationName("com.focusone.focus.ended" as CFString)
         CFNotificationCenterPostNotification(center, name, nil, nil, true)
@@ -526,6 +532,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
         
         if let defaults = UserDefaults(suiteName: "group.com.focusone") {
+            defaults.set(true, forKey: "FocusOne.EndNotified")
             defaults.set("ended", forKey: "FocusOne.LastFocusEvent")
             defaults.removeObject(forKey: "FocusOne.FocusStartAt")
             defaults.removeObject(forKey: "FocusOne.FocusEndAt")
@@ -576,6 +583,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         let taskFailed = defaults.bool(forKey: "FocusOne.TaskFailed")
         if taskFailed {
+            defaults.removeObject(forKey: "FocusOne.EndNotified")
             defaults.removeObject(forKey: "FocusOne.TaskFailed")
             defaults.removeObject(forKey: "FocusOne.FailedReason")
             return

@@ -851,37 +851,34 @@ class NativeModule: RCTEventEmitter {
         repeats: true
       )
     } else {
-      // 计算开始/结束时间，若小于系统最小时长(约15分钟)，强制延长到15分钟，并在扩展的 intervalWillEndWarning 提前清理
+      // 使用完整的年月日时分秒创建区间，避免分钟截断后被系统判定为排程过短。
       let minDuration = 15
       let realDuration = max(minutes, minDuration)
       let now = Date()
-      let endDate = now.addingTimeInterval(TimeInterval(realDuration * 60))
       let calendar = Calendar.current
-      let startComps = calendar.dateComponents([.hour, .minute], from: now)
-      let endCompsFull = calendar.dateComponents([.hour, .minute], from: endDate)
-      let startHM = (startComps.hour ?? 0) * 60 + (startComps.minute ?? 0)
-      let endHM = (endCompsFull.hour ?? 0) * 60 + (endCompsFull.minute ?? 0)
-      let endComps: DateComponents
-      if endHM <= startHM {
-        // 跨日，兜底到当日23:59（后续可拆分两段以完整覆盖跨日场景）
-        endComps = DateComponents(hour: 23, minute: 59)
-      } else {
-        endComps = endCompsFull
-      }
-      // 若原始 minutes 小于最小时长，则设置 warningTime 在到期时提前触发
+      let bufferStart = now.addingTimeInterval(2)
+      let scheduleEndTime = bufferStart.addingTimeInterval(TimeInterval(realDuration * 60))
+      let startComponents = calendar.dateComponents(
+        [.year, .month, .day, .hour, .minute, .second],
+        from: bufferStart
+      )
+      let endComponents = calendar.dateComponents(
+        [.year, .month, .day, .hour, .minute, .second],
+        from: scheduleEndTime
+      )
+
       if minutes < minDuration {
-        let warnAhead = minDuration - minutes // 距离区间结束前 warnAhead 分钟触发
-        let warning = DateComponents(minute: warnAhead)
+        let warnAhead = minDuration - minutes
         schedule = DeviceActivitySchedule(
-          intervalStart: DateComponents(hour: startComps.hour, minute: startComps.minute),
-          intervalEnd: endComps,
+          intervalStart: startComponents,
+          intervalEnd: endComponents,
           repeats: false,
-          warningTime: warning
+          warningTime: DateComponents(minute: warnAhead)
         )
       } else {
         schedule = DeviceActivitySchedule(
-          intervalStart: DateComponents(hour: startComps.hour, minute: startComps.minute),
-          intervalEnd: endComps,
+          intervalStart: startComponents,
+          intervalEnd: endComponents,
           repeats: false
         )
       }
@@ -934,6 +931,7 @@ class NativeModule: RCTEventEmitter {
         defaults.set(self.totalMinutes, forKey: "FocusOne.TotalMinutes")
         defaults.set("once", forKey: "FocusOne.FocusType")
         defaults.set(shieldMode, forKey: "FocusOne.ShieldMode")
+        defaults.removeObject(forKey: "FocusOne.EndNotified")
         if let pid = planId as String? {
           defaults.set(pid, forKey: "FocusOne.CurrentPlanId")
         }
@@ -1047,11 +1045,9 @@ class NativeModule: RCTEventEmitter {
       defaults.removeObject(forKey: "FocusOne.TotalMinutes")
       defaults.removeObject(forKey: "FocusOne.FocusType")
       defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
-      defaults.removeObject(forKey: "FocusOne.TaskFailed")
       defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
       defaults.removeObject(forKey: "FocusOne.ShieldMode")
       defaults.removeObject(forKey: "FocusOne.FocusEntrySource")
-      defaults.removeObject(forKey: "FocusOne.FailedReason")
       defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
       defaults.removeObject(forKey: "FocusOne.PausedUntil")
     }
