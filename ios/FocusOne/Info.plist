@@ -70,8 +70,6 @@
 	<array>
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
 	</array>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>专注契约不会追踪您的个人数据用于广告或营销目的。我们仅收集匿名的应用使用统计数据以改进产品体验。</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
