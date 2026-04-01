@@ -100,10 +100,15 @@ const App = () => {
     });
   }, [navigation]);
 
-  // 根据筛选类型过滤任务
   const getFilteredPlans = () => {
     const allPlans = store.cus_plans;
-    return getPlansByPeriod(allPlans, filterType);
+    const filtered = getPlansByPeriod(allPlans, filterType);
+    return filtered.sort((a, b) => {
+      const inactiveA = a.status === 'finished' || a.status === 'failed';
+      const inactiveB = b.status === 'finished' || b.status === 'failed';
+      if (inactiveA === inactiveB) return 0;
+      return inactiveA ? 1 : -1;
+    });
   };
 
   const filterOptions: { key: FilterType; label: string }[] = [
@@ -147,7 +152,7 @@ const App = () => {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
-          <TaskArea plans={getFilteredPlans()} />
+          <TaskArea plans={getFilteredPlans()} filterType={filterType} />
         </ScrollView>
       </View>
     </Page>

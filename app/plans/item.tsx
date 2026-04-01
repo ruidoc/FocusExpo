@@ -14,7 +14,29 @@ import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-const TaskArea = ({ plans }: { plans: any[] }) => {
+type FilterType = 'today' | 'week' | 'month' | 'all';
+
+const isInactivePlan = (task: CusPlan) =>
+  task.status === 'finished' || task.status === 'failed';
+
+const getStatusLabel = (status?: string) => {
+  if (status === 'finished') return '已完成';
+  if (status === 'failed') return '已失败';
+  return '';
+};
+
+const getFetchParams = (filterType: FilterType) => {
+  if (filterType === 'all') return { status: 'all' };
+  return { period: filterType };
+};
+
+const TaskArea = ({
+  plans,
+  filterType,
+}: {
+  plans: CusPlan[];
+  filterType: FilterType;
+}) => {
   const { colors, isDark } = useCustomTheme();
   const store = usePlanStore();
   const astore = useAppStore();
@@ -27,7 +49,7 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
     }).then(action => {
       if (action === 'confirm') {
         if (id) {
-          store.removePlan(id);
+          store.removePlan(id, undefined, getFetchParams(filterType));
         } else {
           store.rmOncePlan(id);
         }
@@ -35,7 +57,8 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
     });
   };
 
-  const toEdit = (task: any) => {
+  const toEdit = (task: CusPlan) => {
+    if (isInactivePlan(task)) return;
     if (store.has_active_task()) {
       Toast('专注进行中，不可以修改契约', 'info');
       return;
@@ -79,6 +102,8 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
   return (
     <View className="flex-1 px-4 pt-2 pb-4">
       {plans.map((task, index) => {
+        const inactive = isInactivePlan(task);
+        const statusLabel = getStatusLabel(task.status);
         const startMin = task.start_min ?? 0;
         const endMin = task.end_min ?? 0;
         const durationMin = Math.max(0, endMin - startMin);
@@ -91,23 +116,27 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
           task.apps?.includes(`${app.stableId}:${app.type}`),
         );
 
+        const barColor = inactive ? colors.text3 : accentColor;
+        const cardOpacity = inactive ? 0.55 : 1;
+
         return (
           <Pressable
             key={task.id}
             onPress={() => toEdit(task)}
-            onLongPress={() => toRemove(task.id)}
+            onLongPress={() => toRemove(task.id!)}
             style={{
               marginBottom: index < plans.length - 1 ? 14 : 0,
               backgroundColor: cardBg,
               borderRadius: 16,
               overflow: 'hidden',
               flexDirection: 'row',
+              opacity: cardOpacity,
             }}>
             {/* 左侧色条 */}
             <View
               style={{
                 width: 4,
-                backgroundColor: accentColor,
+                backgroundColor: barColor,
                 borderTopLeftRadius: 16,
                 borderBottomLeftRadius: 16,
               }}
@@ -115,16 +144,45 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
 
             <View
               style={{ flex: 1, paddingVertical: 14, paddingHorizontal: 16 }}>
-              {/* 第一行：名称 */}
-              <Text
-                numberOfLines={1}
+              {/* 第一行：名称 + 状态标签 */}
+              <View
                 style={{
-                  fontSize: 16,
-                  fontWeight: '700',
-                  color: colors.text,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                 }}>
-                {task.name || '未命名任务'}
-              </Text>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '700',
+                    color: inactive ? colors.text3 : colors.text,
+                    flex: 1,
+                  }}>
+                  {task.name || '未命名任务'}
+                </Text>
+                {inactive && statusLabel ? (
+                  <View
+                    style={{
+                      backgroundColor: isDark
+                        ? 'rgba(255,255,255,0.08)'
+                        : 'rgba(0,0,0,0.06)',
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      borderRadius: 6,
+                      marginLeft: 8,
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        color: colors.text3,
+                        fontWeight: '500',
+                      }}>
+                      {statusLabel}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
 
               {/* 第二行：时间段 + 时长标签 */}
               <View
@@ -134,12 +192,20 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
                   justifyContent: 'space-between',
                   marginTop: 10,
                 }}>
-                <Text style={{ fontSize: 14, color: colors.text2 }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: inactive ? colors.text3 : colors.text2,
+                  }}>
                   {startTime} ~ {endTime}
                 </Text>
                 <View
                   style={{
-                    backgroundColor: pillBg,
+                    backgroundColor: inactive
+                      ? isDark
+                        ? 'rgba(255,255,255,0.06)'
+                        : 'rgba(0,0,0,0.04)'
+                      : pillBg,
                     paddingHorizontal: 8,
                     paddingVertical: 3,
                     borderRadius: 6,
@@ -148,7 +214,7 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
                     style={{
                       fontSize: 12,
                       fontWeight: '600',
-                      color: accentColor,
+                      color: inactive ? colors.text3 : accentColor,
                     }}>
                     {duration}
                   </Text>
@@ -185,7 +251,6 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  // justifyContent: 'flex-end',
                 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Icon name="bulb-outline" size={12} color={colors.text3} />
@@ -199,7 +264,6 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  {/* <Icon name={'flag'} size={12} color={colors.text3} /> */}
                   <Text
                     style={{
                       fontSize: 12,

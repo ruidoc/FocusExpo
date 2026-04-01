@@ -32,7 +32,7 @@ const App = () => {
     } else {
       store.loginSuccess(result.data);
       setLoading(false);
-      router.replace('/(tabs)');
+      router.dismiss();
     }
   };
 
@@ -41,7 +41,7 @@ const App = () => {
     store.appleLogin(credential, res => {
       setLoading(false);
       if (res?.statusCode === 200) {
-        router.replace('/(tabs)');
+        router.dismiss();
       }
     });
   };

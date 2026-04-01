@@ -14,6 +14,7 @@ interface UserInfo {
 interface CusPlan {
   id?: string;
   name?: string; // 计划名称
+  status?: 'active' | 'inactive' | 'finished' | 'failed';
   start: string;
   start_min: number;
   start_sec?: number;

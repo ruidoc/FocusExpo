@@ -90,7 +90,15 @@ const Header = () => {
         </Text>
       </View>
 
-      <PlanBadge count={planCount} onPress={() => router.push('/plans')} />
+      <PlanBadge
+        count={planCount}
+        onPress={() => {
+          if (!ustore.uInfo) {
+            return router.push('/login/wx');
+          }
+          router.push('/plans');
+        }}
+      />
     </View>
   );
 };

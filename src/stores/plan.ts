@@ -329,14 +329,17 @@ const PlanStore = combine(
       }
     },
 
-    removePlan: async (id: string, fun?: (data?: HttpRes) => void) => {
+    removePlan: async (
+      id: string,
+      fun?: (data?: HttpRes) => void,
+      fetchParams?: Record<string, any>,
+    ) => {
       try {
         let res: HttpRes = await http.delete('/plan/remove/' + id);
         if (res.statusCode === 200) {
           if (fun) fun(res);
-          // iOS: 立即删除原生端计划
           await deletePlan(id);
-          await (get() as any).getPlans();
+          await (get() as any).getPlans(fetchParams || {});
         }
       } catch (error) {
         console.log(error);

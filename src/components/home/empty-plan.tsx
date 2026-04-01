@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui';
-import { useBenefitStore, usePlanStore } from '@/stores';
+import { useBenefitStore, usePlanStore, useUserStore } from '@/stores';
 import { getCurrentMinute } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
@@ -9,6 +9,14 @@ import { Text, TouchableOpacity, View } from 'react-native';
 const EmptyPlan = () => {
   const pstore = usePlanStore();
   const bstore = useBenefitStore();
+  const ustore = useUserStore();
+
+  const toRoute = (path: string) => {
+    if (!ustore.uInfo) {
+      return router.push('/login/wx');
+    }
+    router.push(path as never);
+  };
   const [nowMinute, setNowMinute] = useState(getCurrentMinute());
 
   useEffect(() => {
@@ -84,7 +92,7 @@ const EmptyPlan = () => {
       )}
 
       <View className="w-full gap-4">
-        <Button text="创建契约" onPress={() => router.push('/plans/presets')} />
+        <Button text="创建契约" onPress={() => toRoute('/plans/presets')} />
 
         {isQuotaExhausted ? (
           <View className="items-center py-3">
@@ -98,7 +106,7 @@ const EmptyPlan = () => {
         ) : (
           <TouchableOpacity
             className="flex-row items-center justify-center py-3 gap-[2px]"
-            onPress={() => router.push('/quick-start')}>
+            onPress={() => toRoute('/quick-start')}>
             <Text className="text-sm text-[#858699] mr-1">临时使用？</Text>
             <Icon name="flash" size={14} color="#7A5AF8" />
             <Text className="text-[#7A5AF8] text-sm font-semibold">
