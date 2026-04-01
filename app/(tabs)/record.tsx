@@ -96,12 +96,13 @@ const App = () => {
   const total = sstore.app_statis;
   const items = useMemo(() => total?.items || [], [total?.items]);
   const currentRecordId = rstore.record_id;
+  const focusPlan = pstore.focus_plan();
   const currentApps = useMemo(
-    () => new Set(pstore.active_plan?.apps || []),
-    [pstore.active_plan?.apps],
+    () => new Set(focusPlan?.apps || []),
+    [focusPlan?.apps],
   );
   const liveDelta = getLiveFocusDelta({
-    active: !!pstore.active_plan,
+    active: pstore.has_active_task(),
     paused: !!pstore.is_pause(),
     curplanMinute: pstore.curplan_minute,
     currentRecordId,
@@ -127,9 +128,9 @@ const App = () => {
   const ACCENT = '#7A5AF8';
 
   const isAppCurrentlyLocked = (appId: string) =>
-    !!pstore.active_plan &&
+    pstore.has_active_task() &&
     !pstore.is_pause() &&
-    (pstore.active_plan.apps || []).includes(appId);
+    (focusPlan?.apps || []).includes(appId);
 
   const renderDuration = (mins: number) => {
     const h = Math.floor((mins || 0) / 60);

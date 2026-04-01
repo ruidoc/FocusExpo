@@ -8,13 +8,18 @@ import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 const TimeFlow = () => {
   const pstore = usePlanStore();
   const nativeFocus = pstore.native_focus;
+  const focusPlan = pstore.focus_plan();
   const hasPlan = pstore.has_active_task();
-  const totalMinutes =
-    pstore.active_plan
-      ? Math.max(pstore.active_plan.end_min - pstore.active_plan.start_min, 0)
-      : nativeFocus.total_minutes || 0;
+  const fallbackTotalMinutes = Math.max(
+    (focusPlan?.end_min || 0) - (focusPlan?.start_min || 0),
+    0,
+  );
+  const totalMinutes = Math.max(
+    nativeFocus.total_minutes || fallbackTotalMinutes,
+    0,
+  );
   const isPaused = pstore.is_pause();
-  const currentPlanId = pstore.active_plan?.id || nativeFocus.plan_id;
+  const currentPlanId = nativeFocus.plan_id || focusPlan?.id;
 
   const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 

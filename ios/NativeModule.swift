@@ -94,26 +94,7 @@ class NativeModule: RCTEventEmitter {
   private typealias PlannedWindow = (planId: String, start: TimeInterval, end: TimeInterval)
 
   // 统一归一化专注状态，避免 startAppLimits/getFocusStatus 各自维护一套判断。
-  private struct FocusSnapshot {
-    let taskFailed: Bool
-    let hasActiveSession: Bool
-    let isPaused: Bool
-    let isShielding: Bool
-    let isWindowLocked: Bool
-    let lockReason: String?
-    let isQuotaSkippedWindow: Bool
-    let windowPlanId: String?
-    let startAt: TimeInterval
-    let endAt: TimeInterval
-    let totalMinutes: Int
-    let actualMinutes: Int
-    let focusType: String?
-    let planId: String?
-    let planName: String?
-    let focusMode: String?
-    let recordId: String?
-    let pausedUntil: TimeInterval?
-  }
+  private typealias FocusSnapshot = FocusResolvedSnapshot
 
   private let center = DeviceActivityCenter()
   private let activityName = DeviceActivityName("FocusOne.ScreenTime")
@@ -503,18 +484,45 @@ class NativeModule: RCTEventEmitter {
     return try? JSONDecoder().decode([String: PlanConfig].self, from: storedData)
   }
 
+  private func currentWindowRecord() -> FocusWindowRecord? {
+    guard let window = currentPlannedWindow() else { return nil }
+    return FocusWindowRecord(
+      windowId: FocusStateStore.makeWindowId(
+        planId: window.planId,
+        startAt: window.start,
+        endAt: window.end
+      ),
+      planId: window.planId,
+      startAt: window.start,
+      endAt: window.end,
+      state: .active,
+      skipReason: nil
+    )
+  }
+
+  private func clearLegacyFocusKeys(defaults: UserDefaults) {
+    defaults.removeObject(forKey: "FocusOne.FocusStartAt")
+    defaults.removeObject(forKey: "FocusOne.FocusEndAt")
+    defaults.removeObject(forKey: "FocusOne.TotalMinutes")
+    defaults.removeObject(forKey: "FocusOne.FocusType")
+    defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
+    defaults.removeObject(forKey: "FocusOne.FocusEntrySource")
+    defaults.removeObject(forKey: "FocusOne.PausedUntil")
+    defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
+    defaults.removeObject(forKey: "FocusOne.TaskFailed")
+    defaults.removeObject(forKey: "FocusOne.FailedReason")
+    defaults.removeObject(forKey: "FocusOne.PendingEvent")
+  }
+
   // active session 代表“已有正在管理的专注任务”，window locked 代表“当前窗口禁止再创建一次性任务”。
   private func resolveFocusSnapshot(defaults: UserDefaults? = UserDefaults.groupUserDefaults()) -> FocusSnapshot {
     guard let defaults else {
       return FocusSnapshot(
-        taskFailed: false,
         hasActiveSession: false,
         isPaused: false,
         isShielding: false,
         isWindowLocked: false,
         lockReason: nil,
-        isQuotaSkippedWindow: false,
-        windowPlanId: nil,
         startAt: 0,
         endAt: 0,
         totalMinutes: 0,
@@ -524,20 +532,16 @@ class NativeModule: RCTEventEmitter {
         planName: nil,
         focusMode: nil,
         recordId: nil,
-        pausedUntil: nil
+        pausedUntil: nil,
+        sessionId: nil,
+        sessionState: nil,
+        windowId: nil,
+        windowState: nil,
+        endReason: nil
       )
     }
 
     let now = Date().timeIntervalSince1970
-    let taskFailed = defaults.bool(forKey: "FocusOne.TaskFailed")
-    let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
-    let endAt = defaults.double(forKey: "FocusOne.FocusEndAt")
-    let total = defaults.integer(forKey: "FocusOne.TotalMinutes")
-    let focusType = defaults.string(forKey: "FocusOne.FocusType")
-    let pausedUntilRaw = defaults.double(forKey: "FocusOne.PausedUntil")
-
-    let hasStoredSession = startAt > 0 && endAt > 0 && total > 0
-    let inWindow = hasStoredSession && now < endAt
 
     let store = ManagedSettingsStore()
     let hasApps = !(store.shield.applications?.isEmpty ?? true)
@@ -545,82 +549,34 @@ class NativeModule: RCTEventEmitter {
     let hasCats = (store.shield.applicationCategories != nil)
     let isShielding = hasApps || hasDomains || hasCats
 
-    let pauseWindowActive = pausedUntilRaw > 0 && now < pausedUntilRaw
-    let hasActiveSession = !taskFailed && (inWindow || pausedUntilRaw > 0)
-    let isPaused = !taskFailed && inWindow && !isShielding && pauseWindowActive
-
-    // 周期计划窗口和运行中的 session 不是同一个概念，这里统一折叠成可复用快照。
-    let plannedWindow = currentPlannedWindow()
-    let quotaSkippedWindow = plannedWindow.map { isQuotaSkippedWindow($0) } ?? false
-    let planWindowLocked = plannedWindow != nil && !quotaSkippedWindow
-    let isWindowLocked = hasActiveSession || planWindowLocked
-    let lockReason: String? = hasActiveSession
-      ? "active_session"
-      : (planWindowLocked ? "plan_window" : nil)
-
-    let elapsedMinRaw = hasStoredSession
-      ? Int(floor(now / 60.0) - floor(startAt / 60.0))
-      : 0
-    let actualMinutes = max(0, min(total, elapsedMinRaw))
-
+    let session = FocusStateStore.loadSession(defaults: defaults)
+    let storedWindow = FocusStateStore.loadWindow(defaults: defaults)
+    let currentWindow = currentWindowRecord()
     let plansMap = loadPlansMap(from: defaults)
-    var planId: String? = defaults.string(forKey: "FocusOne.CurrentPlanId")
+    let effectivePlanId = session?.planId ?? currentWindow?.planId ?? storedWindow?.planId
     var planName: String? = nil
-    var focusMode: String? = defaults.string(forKey: "FocusOne.ShieldMode")
-
-    if let currentPlanId = planId, let plan = plansMap?[currentPlanId] {
+    if let currentPlanId = effectivePlanId, let plan = plansMap?[currentPlanId] {
       planName = plan.name
-      focusMode = plan.mode ?? focusMode
     }
 
-    if let windowPlanId = plannedWindow?.planId {
-      if planId == nil {
-        planId = windowPlanId
-      }
-      if let plan = plansMap?[windowPlanId] {
-        if planName == nil {
-          planName = plan.name
-        }
-        focusMode = plan.mode ?? focusMode
-      }
-    }
-
-    if planId == nil, focusType == "once",
-       let storedPlanId = defaults.string(forKey: "FocusOne.CurrentPlanId"),
-       !storedPlanId.isEmpty {
-      planId = storedPlanId
-    }
-
-    if planName == nil, focusType == "once" {
+    if planName == nil, session?.focusType == "once" {
       planName = "一次性任务"
     }
 
-    return FocusSnapshot(
-      taskFailed: taskFailed,
-      hasActiveSession: hasActiveSession,
-      isPaused: isPaused,
+    return FocusSnapshotResolver.resolve(
+      now: now,
+      session: session,
+      currentWindow: currentWindow,
+      storedWindow: storedWindow,
       isShielding: isShielding,
-      isWindowLocked: isWindowLocked,
-      lockReason: lockReason,
-      isQuotaSkippedWindow: quotaSkippedWindow,
-      windowPlanId: plannedWindow?.planId,
-      startAt: startAt,
-      endAt: endAt,
-      totalMinutes: total,
-      actualMinutes: actualMinutes,
-      focusType: focusType,
-      planId: planId,
-      planName: planName,
-      focusMode: focusMode,
-      recordId: defaults.string(forKey: "record_id"),
-      pausedUntil: pauseWindowActive ? pausedUntilRaw : nil
+      planName: planName
     )
   }
 
   private func focusStatusPayload(from snapshot: FocusSnapshot) -> [String: Any] {
     return [
       "active": snapshot.hasActiveSession,
-      "failed": snapshot.taskFailed,
+      "failed": false,
       "paused": snapshot.isPaused,
       "plan_id": snapshot.planId ?? NSNull(),
       "plan_name": snapshot.planName ?? NSNull(),
@@ -634,7 +590,12 @@ class NativeModule: RCTEventEmitter {
       "paused_until": snapshot.pausedUntil ?? NSNull(),
       "window_locked": snapshot.isWindowLocked,
       "lock_reason": snapshot.lockReason ?? NSNull(),
-      "is_shielding": snapshot.isShielding
+      "is_shielding": snapshot.isShielding,
+      "session_id": snapshot.sessionId ?? NSNull(),
+      "session_state": snapshot.sessionState ?? NSNull(),
+      "window_id": snapshot.windowId ?? NSNull(),
+      "window_state": snapshot.windowState ?? NSNull(),
+      "end_reason": snapshot.endReason ?? NSNull()
     ]
   }
   
@@ -830,7 +791,7 @@ class NativeModule: RCTEventEmitter {
           properties: [
             "reason": "plan_window",
             "plan_id": planId as Any,
-            "conflict_plan_id": snapshot.windowPlanId as Any,
+            "conflict_plan_id": snapshot.planId as Any,
             "duration_minutes": Int(truncating: durationMinutes),
             "mode": mode as String
           ]
@@ -924,22 +885,30 @@ class NativeModule: RCTEventEmitter {
       let startDate = Date()
       self.totalMinutes = Int(truncating: durationMinutes)
       self.endTimestamp = startDate.addingTimeInterval(TimeInterval(self.totalMinutes * 60)).timeIntervalSince1970
-      // 保存状态到 App Group，供查询与扩展使用
+      let entrySource = "quick_start"
+
+      // 保存统一会话状态到 App Group，供查询与扩展使用
       if let defaults = UserDefaults.groupUserDefaults() {
-        defaults.set(startDate.timeIntervalSince1970, forKey: "FocusOne.FocusStartAt")
-        defaults.set(self.endTimestamp, forKey: "FocusOne.FocusEndAt")
-        defaults.set(self.totalMinutes, forKey: "FocusOne.TotalMinutes")
-        defaults.set("once", forKey: "FocusOne.FocusType")
-        defaults.set(shieldMode, forKey: "FocusOne.ShieldMode")
         defaults.removeObject(forKey: "FocusOne.EndNotified")
-        if let pid = planId as String? {
-          defaults.set(pid, forKey: "FocusOne.CurrentPlanId")
-        }
-        // 清理之前的失败标记
-        defaults.removeObject(forKey: "FocusOne.TaskFailed")
-        defaults.removeObject(forKey: "FocusOne.FailedReason")
+        FocusStateStore.clearWindow(defaults: defaults)
+        let session = FocusSessionRecord(
+          sessionId: FocusStateStore.makeSessionId(),
+          planId: planId as String?,
+          windowId: nil,
+          focusType: "once",
+          mode: shieldMode,
+          entrySource: entrySource,
+          state: .active,
+          startAt: startDate.timeIntervalSince1970,
+          endAt: self.endTimestamp,
+          totalMinutes: self.totalMinutes,
+          pausedUntil: nil,
+          recordId: defaults.string(forKey: "record_id"),
+          endReason: nil
+        )
+        FocusStateStore.saveSession(session, defaults: defaults)
+        clearLegacyFocusKeys(defaults: defaults)
       }
-      let entrySource = UserDefaults.groupUserDefaults()?.string(forKey: "FocusOne.FocusEntrySource") ?? "unknown"
       Analytics.shared.track(
         event: "session_started",
         properties: [
@@ -982,16 +951,19 @@ class NativeModule: RCTEventEmitter {
   // 停止限制应用
   @objc
   func stopAppLimits(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
-    // 标记任务失败（手动停止），阻止 Extension 调用 complete
     var trackProperties: [String: Any] = [:]
     if let defaults = UserDefaults.groupUserDefaults() {
-      // 【P0修复】累加已用时长（手动退出时）
-      let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
-      let focusType = defaults.string(forKey: "FocusOne.FocusType") == "once" ? "once" : "repeat"
-      let targetMinutes = defaults.integer(forKey: "FocusOne.TotalMinutes")
-      let planId = defaults.string(forKey: "FocusOne.CurrentPlanId") ?? ""
-      let recordId = defaults.string(forKey: "record_id") ?? ""
-      let entrySource = defaults.string(forKey: "FocusOne.FocusEntrySource") ?? "unknown"
+      guard var session = FocusStateStore.loadSession(defaults: defaults) else {
+        resolve(true)
+        return
+      }
+
+      let startAt = session.startAt
+      let focusType = session.focusType == "once" ? "once" : "repeat"
+      let targetMinutes = session.totalMinutes
+      let planId = session.planId ?? ""
+      let recordId = session.recordId ?? defaults.string(forKey: "record_id") ?? ""
+      let entrySource = session.entrySource
       trackProperties = [
         "plan_id": planId,
         "record_id": recordId,
@@ -1003,14 +975,18 @@ class NativeModule: RCTEventEmitter {
       ]
       if startAt > 0 {
         let now = Date().timeIntervalSince1970
-        let elapsedMin = Int((now - startAt) / 60)
+        let elapsedMin = FocusStateStore.elapsedMinutes(
+          startAt: startAt,
+          now: now,
+          endAt: session.endAt,
+          totalMinutes: targetMinutes
+        )
         trackProperties["elapsed_minutes"] = max(elapsedMin, 0)
         if elapsedMin > 0 {
           let currentUsed = defaults.integer(forKey: "today_used")
           let newUsed = currentUsed + elapsedMin
           defaults.set(newUsed, forKey: "today_used")
           print("【手动退出】累加已用时长: \(elapsedMin) 分钟，总计: \(newUsed) 分钟")
-          // 写入 pending，供 Extension 下次回调时兜底补报
           if !recordId.isEmpty {
             defaults.set(elapsedMin, forKey: "FocusOne.PendingActualMin")
             defaults.set(recordId, forKey: "FocusOne.PendingRecordId")
@@ -1018,14 +994,31 @@ class NativeModule: RCTEventEmitter {
         }
       }
 
-      defaults.set(true, forKey: "FocusOne.TaskFailed")
-      defaults.set("user_exit", forKey: "FocusOne.FailedReason")
+      session.state = .stopped
+      session.pausedUntil = nil
+      session.endReason = .userExit
+      session.recordId = recordId.isEmpty ? nil : recordId
+      FocusStateStore.saveSession(session, defaults: defaults)
 
-      // 周期任务手动结束后，将当前窗口标记为已跳过，
-      // 这样窗口剩余时间内允许创建一次性任务，并避免结束回调重复收尾。
-      if focusType == "repeat" {
-        markCurrentPlannedWindowAsSkipped(defaults: defaults)
+      if focusType == "repeat",
+         let window = currentWindowRecord() {
+        FocusStateStore.saveWindow(
+          FocusWindowRecord(
+            windowId: window.windowId,
+            planId: window.planId,
+            startAt: window.startAt,
+            endAt: window.endAt,
+            state: .skipped,
+            skipReason: .userExit
+          ),
+          defaults: defaults
+        )
+      } else {
+        FocusStateStore.clearWindow(defaults: defaults)
       }
+
+      defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
+      clearLegacyFocusKeys(defaults: defaults)
     }
     Analytics.shared.track(event: "session_finished", properties: trackProperties)
     // 仅停止一次性任务和暂停恢复活动，保留周期性计划监控，确保下个周期继续生效
@@ -1039,18 +1032,6 @@ class NativeModule: RCTEventEmitter {
 
     // 手动停止发送 user_exit 原因
     emitState("failed", extra: ["reason": "user_exit"])
-    if let defaults = UserDefaults.groupUserDefaults() {
-      defaults.removeObject(forKey: "FocusOne.FocusStartAt")
-      defaults.removeObject(forKey: "FocusOne.FocusEndAt")
-      defaults.removeObject(forKey: "FocusOne.TotalMinutes")
-      defaults.removeObject(forKey: "FocusOne.FocusType")
-      defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
-      defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
-      defaults.removeObject(forKey: "FocusOne.ShieldMode")
-      defaults.removeObject(forKey: "FocusOne.FocusEntrySource")
-      defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
-      defaults.removeObject(forKey: "FocusOne.PausedUntil")
-    }
 
     resolve(true)
   }
@@ -1070,13 +1051,17 @@ class NativeModule: RCTEventEmitter {
     let calendar = Calendar.current
     
     // 幂等检查：如果已处于暂停状态且未过期，直接返回成功
-    if let defaults = UserDefaults.groupUserDefaults() {
-      let existingPausedUntil = defaults.double(forKey: "FocusOne.PausedUntil")
-      if existingPausedUntil > 0 && now.timeIntervalSince1970 < existingPausedUntil {
-        print("【暂停】已处于暂停状态，跳过重复操作")
-        resolve(true)
-        return
-      }
+    guard let defaults = UserDefaults.groupUserDefaults(),
+          var session = FocusStateStore.loadSession(defaults: defaults) else {
+      resolve(false)
+      return
+    }
+    if session.state == .paused,
+       let existingPausedUntil = session.pausedUntil,
+       existingPausedUntil > now.timeIntervalSince1970 {
+      print("【暂停】已处于暂停状态，跳过重复操作")
+      resolve(true)
+      return
     }
     
     // 获取暂停时长，默认为3分钟
@@ -1138,11 +1123,10 @@ class NativeModule: RCTEventEmitter {
       print("【暂停监控注册失败，暂停仍生效】\(error)")
     }
     
-    if let defaults = UserDefaults.groupUserDefaults() {
-      defaults.set(true, forKey: "FocusOne.IsPauseActivity")
-      defaults.set(pausedUntil, forKey: "FocusOne.PausedUntil")
-      defaults.set("paused", forKey: "FocusOne.LastFocusEvent")
-    }
+    session.state = .paused
+    session.pausedUntil = pausedUntil
+    FocusStateStore.saveSession(session, defaults: defaults)
+    clearLegacyFocusKeys(defaults: defaults)
     
     print("【暂停成功】将在\(Int(minutes))分钟后自动恢复")
     emitState("paused")
@@ -1155,14 +1139,15 @@ class NativeModule: RCTEventEmitter {
     let now = Date().timeIntervalSince1970
     
     // 幂等检查：如果当前不处于暂停状态，直接返回成功
-    if let defaults = UserDefaults.groupUserDefaults() {
-      let pausedUntil = defaults.double(forKey: "FocusOne.PausedUntil")
-      let isPauseActivity = defaults.bool(forKey: "FocusOne.IsPauseActivity")
-      if pausedUntil <= 0 && !isPauseActivity {
-        print("【恢复】当前不处于暂停状态，跳过重复操作")
-        resolve(true)
-        return
-      }
+    guard let defaults = UserDefaults.groupUserDefaults(),
+          var session = FocusStateStore.loadSession(defaults: defaults) else {
+      resolve(true)
+      return
+    }
+    if session.state != .paused && session.pausedUntil == nil {
+      print("【恢复】当前不处于暂停状态，跳过重复操作")
+      resolve(true)
+      return
     }
     
     // 恢复前检查任务是否仍有效
@@ -1176,7 +1161,7 @@ class NativeModule: RCTEventEmitter {
       selection = sel
       print("【恢复】使用当前任务的屏蔽设置")
     }
-    if endTimestamp > now {
+    if session.endAt > now {
       canResume = true
     } else if let window = currentPlannedWindow() {
       if now >= window.start && now < window.end { canResume = true }
@@ -1188,15 +1173,14 @@ class NativeModule: RCTEventEmitter {
     }
     
     // 恢复屏蔽设置
-    let shieldMode = UserDefaults.groupUserDefaults()?.string(forKey: "FocusOne.ShieldMode") ?? "shield"
+    let shieldMode = session.mode
     let store = ManagedSettingsStore()
     NativeModule.applyShield(store: store, selection: sel, mode: shieldMode)
     
-    if let defaults = UserDefaults.groupUserDefaults() {
-      defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
-      defaults.removeObject(forKey: "FocusOne.PausedUntil")
-      defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
-    }
+    session.state = .active
+    session.pausedUntil = nil
+    FocusStateStore.saveSession(session, defaults: defaults)
+    clearLegacyFocusKeys(defaults: defaults)
     
     // 停止暂停恢复监控
     center.stopMonitoring([pauseResumeActivity])
@@ -1292,38 +1276,36 @@ class NativeModule: RCTEventEmitter {
 
   private func isQuotaSkippedWindow(_ window: (planId: String, start: TimeInterval, end: TimeInterval)) -> Bool {
     guard let defaults = UserDefaults.groupUserDefaults(),
-          let pendingData = defaults.data(forKey: "FocusOne.PendingEvent"),
-          let json = try? JSONSerialization.jsonObject(with: pendingData) as? [String: Any],
-          let type = json["type"] as? String,
-          type == "quota_skip",
-          let planId = json["plan_id"] as? String else {
+          let storedWindow = FocusStateStore.loadWindow(defaults: defaults),
+          storedWindow.state == .skipped,
+          storedWindow.skipReason == .quotaInsufficient else {
       return false
     }
-
-    let windowStart = (json["window_start"] as? NSNumber)?.doubleValue ?? 0
-    let windowEnd = (json["window_end"] as? NSNumber)?.doubleValue ?? 0
-
-    return planId == window.planId
-      && Int(windowStart) == Int(window.start)
-      && Int(windowEnd) == Int(window.end)
+    let currentWindowId = FocusStateStore.makeWindowId(
+      planId: window.planId,
+      startAt: window.start,
+      endAt: window.end
+    )
+    return storedWindow.windowId == currentWindowId
   }
 
   private func markCurrentPlannedWindowAsSkipped(defaults: UserDefaults) {
     guard let window = currentPlannedWindow() else { return }
-
-    let pendingEvent: [String: Any] = [
-      "type": "quota_skip",
-      "plan_id": window.planId,
-      "window_start": Int(window.start),
-      "window_end": Int(window.end),
-      "timestamp": Int(Date().timeIntervalSince1970)
-    ]
-
-    guard let pendingData = try? JSONSerialization.data(withJSONObject: pendingEvent) else {
-      return
-    }
-
-    defaults.set(pendingData, forKey: "FocusOne.PendingEvent")
+    FocusStateStore.saveWindow(
+      FocusWindowRecord(
+        windowId: FocusStateStore.makeWindowId(
+          planId: window.planId,
+          startAt: window.start,
+          endAt: window.end
+        ),
+        planId: window.planId,
+        startAt: window.start,
+        endAt: window.end,
+        state: .skipped,
+        skipReason: .userExit
+      ),
+      defaults: defaults
+    )
   }
 
   private func isExcessiveActivitiesError(_ error: Error) -> Bool {

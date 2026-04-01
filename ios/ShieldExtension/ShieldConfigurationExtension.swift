@@ -34,13 +34,12 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         var titleLabel = ShieldConfiguration.Label(text: "已被锁定", color: .label)
         var subtitleLabel = ShieldConfiguration.Label(text: "该应用已被锁定", color: .secondaryLabel)
         if let defaults = UserDefaults(suiteName: "group.com.focusone") {
-            let startAt = defaults.double(forKey: "FocusOne.FocusStartAt")
-            let endAt = defaults.double(forKey: "FocusOne.FocusEndAt")
-            let total = defaults.integer(forKey: "FocusOne.TotalMinutes")
-            if startAt > 0 && endAt > 0 && total > 0 {
+            if let session = FocusStateStore.loadSession(defaults: defaults),
+               session.totalMinutes > 0,
+               session.endAt > 0 {
                 // 计算总时长（分钟）与结束时间
-                let totalMin = total
-                let endDate = Date(timeIntervalSince1970: endAt)
+                let totalMin = session.totalMinutes
+                let endDate = Date(timeIntervalSince1970: session.endAt)
                 let df = DateFormatter()
                 df.dateFormat = "HH:mm"
                 let endStr = df.string(from: endDate)

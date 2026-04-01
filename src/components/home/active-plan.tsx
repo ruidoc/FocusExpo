@@ -22,25 +22,24 @@ const FocusButton = () => {
   const bstore = useBenefitStore();
   const { colors } = useCustomTheme();
   const nativeFocus = pstore.native_focus;
+  const focusPlan = pstore.focus_plan();
   const hasActiveTask = pstore.has_active_task();
   const isPaused = pstore.is_pause();
-  const isPeriodicFocus = pstore.active_plan
-    ? pstore.active_plan.repeat !== 'once'
+  const isPeriodicFocus = focusPlan
+    ? focusPlan.repeat !== 'once'
     : nativeFocus.focus_type === 'periodic';
-  const noStop = pstore.active_plan?.flags?.includes('no-stop');
+  const noStop = focusPlan?.flags?.includes('no-stop');
   const displayPlanName =
-    pstore.active_plan?.name ||
+    focusPlan?.name ||
     nativeFocus.plan_name ||
     (nativeFocus.focus_type === 'once' ? '一次性任务' : '进行中的任务');
-  const displayPlanEnd = pstore.active_plan?.end
-    ? pstore.active_plan.end
-    : nativeFocus.end_at
-      ? new Date(nativeFocus.end_at * 1000).toLocaleTimeString('zh-CN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        })
-      : '';
+  const displayPlanEnd = nativeFocus.end_at
+    ? new Date(nativeFocus.end_at * 1000).toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+    : focusPlan?.end || '';
 
   // 弹窗状态
   const [showPauseModal, setShowPauseModal] = useState(false);

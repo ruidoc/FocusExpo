@@ -134,7 +134,10 @@ async function syncIOSStatus() {
       }
     } else if (status.failed) {
       cleanupLocalFocusState();
-    } else if (pstore.active_plan) {
+    } else if (
+      status.session_state === 'stopped' ||
+      (pstore.active_plan && !status.window_locked)
+    ) {
       console.log('【专注同步纠正】iOS 无任务，清理本地状态');
       cleanupLocalFocusState();
     } else {

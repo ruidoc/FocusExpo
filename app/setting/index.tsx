@@ -9,7 +9,6 @@ import {
 import {
   useHomeStore,
   usePlanStore,
-  useRecordStore,
   useUserStore,
 } from '@/stores';
 import { stopAppLimits } from '@/utils/permission';
@@ -52,8 +51,7 @@ const App = () => {
 
   const toLogout = () => {
     const pstore = usePlanStore.getState();
-    const rstore = useRecordStore.getState();
-    const hasFocus = !!rstore.record_id || !!pstore.active_plan;
+    const hasFocus = pstore.has_active_task();
 
     ActionSheet({
       actions: ['确认'],

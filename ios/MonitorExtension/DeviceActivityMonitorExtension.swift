@@ -84,8 +84,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             logToJS(level: "log", message: "一次性任务开始，发送通知")
             checkAndHandleDayChange(defaults: defaults)
             
-            // 获取计划时长（一次性任务的时长存在 TotalMinutes 中）
-            let totalMin = defaults.integer(forKey: "FocusOne.TotalMinutes")
+            let totalMin = FocusStateStore.loadSession(defaults: defaults)?.totalMinutes ?? 0
             if totalMin > 0 {
                 let remaining = checkFreeUserQuota(totalMinutes: totalMin, defaults: defaults)
                 if remaining <= 0 {
@@ -96,6 +95,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                         identifier: "QuotaExceeded_\(Int(Date().timeIntervalSince1970))",
                         content: content
                     )
+                    let store = ManagedSettingsStore()
+                    store.clearAllSettings()
+                    FocusStateStore.clearSession(defaults: defaults)
                     return
                 }
             }
@@ -113,10 +115,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
         
-        if defaults.bool(forKey: "FocusOne.TaskFailed") { return }
-        
         // 检查是否是暂停恢复活动，如果是则跳过处理
         if activity.rawValue == "FocusOne.PauseResume" { return }
+        if consumeStoppedOnceSessionIfNeeded(
+            activity: activity,
+            defaults: defaults,
+            clearAfterConsume: true
+        ) { return }
         if consumeQuotaSkipEventIfNeeded(
             activity: activity,
             defaults: defaults,
@@ -139,14 +144,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
         
-        if defaults.bool(forKey: "FocusOne.TaskFailed") { return }
-
         // 区分暂停恢复 vs 正常任务
         if activity.rawValue == "FocusOne.PauseResume" {
-            // 检查是否仍在暂停中（防止手动恢复后重复触发）
-            let isPauseActivity = defaults.bool(forKey: "FocusOne.IsPauseActivity")
+            var session = FocusStateStore.loadSession(defaults: defaults)
             
-            if isPauseActivity {
+            if session?.state == .paused {
                 // 优先使用当前任务的屏蔽设置，如果没有则使用历史选择数据
                 var selection: FamilyActivitySelection? = nil
                 
@@ -162,9 +164,14 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 }
                 
                 if let selection = selection {
-                    let shieldMode = defaults.string(forKey: "FocusOne.ShieldMode") ?? "shield"
+                    let shieldMode = session?.mode ?? "shield"
                     let store = ManagedSettingsStore()
                     applyShield(store: store, selection: selection, mode: shieldMode)
+                    session?.state = .active
+                    session?.pausedUntil = nil
+                    if let session {
+                        FocusStateStore.saveSession(session, defaults: defaults)
+                    }
                     
                     notifyResume()
                     
@@ -178,6 +185,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             
         } else {
             // ===== 正常任务结束逻辑 =====
+            if consumeStoppedOnceSessionIfNeeded(
+                activity: activity,
+                defaults: defaults,
+                clearAfterConsume: false
+            ) { return }
             if consumeQuotaSkipEventIfNeeded(
                 activity: activity,
                 defaults: defaults,
@@ -338,6 +350,21 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         let totalMin = max(1, Int(ceil((sessionEndTime.timeIntervalSince1970 - now.timeIntervalSince1970) / 60)))
         let shieldMode = plan.mode ?? "shield"
+        let window = computeWindowIdentity(plan: plan, activityRawValue: raw, now: now)
+        let windowRecord = window.map {
+            FocusWindowRecord(
+                windowId: FocusStateStore.makeWindowId(
+                    planId: plan.id,
+                    startAt: $0.start,
+                    endAt: $0.end
+                ),
+                planId: plan.id,
+                startAt: $0.start,
+                endAt: $0.end,
+                state: .active,
+                skipReason: nil
+            )
+        }
 
         // 4. 周期任务启动前同步权益，不足则整次跳过
         syncBenefitStatus(defaults: defaults) { [self] in
@@ -347,7 +374,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             let remaining = dayDuration - todayUsed
 
             if !isSubscribed && dayDuration > 0 && remaining < totalMin {
-                let window = computeWindowIdentity(plan: plan, activityRawValue: raw, now: now)
                 handlePeriodicQuotaSkip(
                     defaults: defaults,
                     plan: plan,
@@ -359,13 +385,28 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 return
             }
 
-            defaults.set(now.timeIntervalSince1970, forKey: "FocusOne.FocusStartAt")
-            defaults.set(sessionEndTime.timeIntervalSince1970, forKey: "FocusOne.FocusEndAt")
-            defaults.set(totalMin, forKey: "FocusOne.TotalMinutes")
-            defaults.set("periodic", forKey: "FocusOne.FocusType")
-            defaults.set(plan.id, forKey: "FocusOne.CurrentPlanId")
-            defaults.set("schedule", forKey: "FocusOne.FocusEntrySource")
             defaults.removeObject(forKey: "FocusOne.EndNotified")
+            let session = FocusSessionRecord(
+                sessionId: FocusStateStore.makeSessionId(),
+                planId: plan.id,
+                windowId: windowRecord?.windowId,
+                focusType: "periodic",
+                mode: shieldMode,
+                entrySource: "schedule",
+                state: .active,
+                startAt: now.timeIntervalSince1970,
+                endAt: sessionEndTime.timeIntervalSince1970,
+                totalMinutes: totalMin,
+                pausedUntil: nil,
+                recordId: defaults.string(forKey: "record_id"),
+                endReason: nil
+            )
+            FocusStateStore.saveSession(session, defaults: defaults)
+            if let windowRecord {
+                FocusStateStore.saveWindow(windowRecord, defaults: defaults)
+            } else {
+                FocusStateStore.clearWindow(defaults: defaults)
+            }
 
             // 保存屏蔽设置到本地，供暂停恢复使用
             if let selectionData = try? JSONEncoder().encode(selection) {
@@ -374,10 +415,9 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
             let store = ManagedSettingsStore()
             applyShield(store: store, selection: selection, mode: shieldMode)
-            defaults.set(shieldMode, forKey: "FocusOne.ShieldMode")
 
             let focusType = plan.id.hasPrefix("once_") ? "once" : "repeat"
-            let entrySource = defaults.string(forKey: "FocusOne.FocusEntrySource") ?? "schedule"
+            let entrySource = "schedule"
             Analytics.shared.track(
                 event: "session_started",
                 properties: [
@@ -477,6 +517,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                    let data = json["data"] as? [String: Any],
                    let recordId = data["id"] as? String {
                     defaults.set(recordId, forKey: "record_id")
+                    if var session = FocusStateStore.loadSession(defaults: defaults) {
+                        session.recordId = recordId
+                        FocusStateStore.saveSession(session, defaults: defaults)
+                    }
                     self.logToJS(level: "log", message: "记录创建成功", data: ["recordId": recordId, "planId": plan.id])
                 } else {
                     self.logToJS(level: "warn", message: "记录创建成功但无法解析 recordId", data: ["planId": plan.id])
@@ -484,6 +528,10 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             case .failure(let error):
                 let tempId = "pending_\(Int(Date().timeIntervalSince1970))"
                 defaults.set(tempId, forKey: "record_id")
+                if var session = FocusStateStore.loadSession(defaults: defaults) {
+                    session.recordId = tempId
+                    FocusStateStore.saveSession(session, defaults: defaults)
+                }
                 self.logToJS(level: "error", message: "记录创建失败", data: ["error": "\(error)", "planId": plan.id, "tempId": tempId])
             }
         }
@@ -534,21 +582,17 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         let content = UNMutableNotificationContent()
         content.title = "专注结束"
-        let totalMin = UserDefaults(suiteName: "group.com.focusone")?.integer(forKey: "FocusOne.TotalMinutes") ?? 0
+        let totalMin = UserDefaults(suiteName: "group.com.focusone")
+            .flatMap { FocusStateStore.loadSession(defaults: $0)?.totalMinutes } ?? 0
         content.body = "已完成\(totalMin)分钟专注，太棒了！"
         let request = UNNotificationRequest(identifier: "FocusEnd", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
         
         if let defaults = UserDefaults(suiteName: "group.com.focusone") {
             defaults.set(true, forKey: "FocusOne.EndNotified")
-            defaults.set("ended", forKey: "FocusOne.LastFocusEvent")
-            defaults.removeObject(forKey: "FocusOne.FocusStartAt")
-            defaults.removeObject(forKey: "FocusOne.FocusEndAt")
-            defaults.removeObject(forKey: "FocusOne.TotalMinutes")
-            defaults.removeObject(forKey: "FocusOne.CurrentPlanId")
             defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
-            defaults.removeObject(forKey: "FocusOne.ShieldMode")
-            defaults.removeObject(forKey: "FocusOne.FocusEntrySource")
+            FocusStateStore.clearSession(defaults: defaults)
+            FocusStateStore.clearWindow(defaults: defaults)
         }
 
     }
@@ -563,13 +607,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         content.body = "暂时结束，已恢复锁定状态"
         let request = UNNotificationRequest(identifier: "FocusResume", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
-        
-        if let defaults = UserDefaults(suiteName: "group.com.focusone") {
-            defaults.set("resumed", forKey: "FocusOne.LastFocusEvent")
-            defaults.removeObject(forKey: "FocusOne.IsPauseActivity")
-            defaults.removeObject(forKey: "FocusOne.PausedUntil")
-        }
-        
+
         let deviceActivityCenter = DeviceActivityCenter()
         let pauseResumeActivity = DeviceActivityName("FocusOne.PauseResume")
         deviceActivityCenter.stopMonitoring([pauseResumeActivity])
@@ -588,25 +626,17 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     
     private func completeRecord() {
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
-        
-        let taskFailed = defaults.bool(forKey: "FocusOne.TaskFailed")
-        if taskFailed {
-            defaults.removeObject(forKey: "FocusOne.EndNotified")
-            defaults.removeObject(forKey: "FocusOne.TaskFailed")
-            defaults.removeObject(forKey: "FocusOne.FailedReason")
-            return
-        }
-        
-        guard let recordId = defaults.string(forKey: "record_id"), !recordId.isEmpty else { return }
+        guard let session = FocusStateStore.loadSession(defaults: defaults) else { return }
+        guard let recordId = session.recordId ?? defaults.string(forKey: "record_id"), !recordId.isEmpty else { return }
         
         let completedKey = "FocusOne.RecordCompleted_\(recordId)"
         if defaults.bool(forKey: completedKey) { return }
         
         // 更新今日已使用时长
-        let totalMin = defaults.integer(forKey: "FocusOne.TotalMinutes")
-        let planId = defaults.string(forKey: "FocusOne.CurrentPlanId") ?? ""
-        let focusType = defaults.string(forKey: "FocusOne.FocusType") == "once" ? "once" : "repeat"
-        let entrySource = defaults.string(forKey: "FocusOne.FocusEntrySource") ?? "schedule"
+        let totalMin = session.totalMinutes
+        let planId = session.planId ?? ""
+        let focusType = session.focusType == "once" ? "once" : "repeat"
+        let entrySource = session.entrySource
         if totalMin > 0 {
             updateTodayUsed(minutes: totalMin, defaults: defaults)
         }
@@ -772,19 +802,22 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 "entry_source": "schedule"
             ]
         )
-
-        let pendingEvent: [String: Any] = [
-            "type": "quota_skip",
-            "plan_id": plan.id,
-            "plan_name": plan.name ?? "",
-            "remaining_minutes": remaining,
-            "required_minutes": required,
-            "window_start": Int(windowStart ?? 0),
-            "window_end": Int(windowEnd ?? 0),
-            "timestamp": Int(Date().timeIntervalSince1970)
-        ]
-        if let pendingData = try? JSONSerialization.data(withJSONObject: pendingEvent) {
-            defaults.set(pendingData, forKey: "FocusOne.PendingEvent")
+        if let windowStart, let windowEnd {
+            FocusStateStore.saveWindow(
+                FocusWindowRecord(
+                    windowId: FocusStateStore.makeWindowId(
+                        planId: plan.id,
+                        startAt: windowStart,
+                        endAt: windowEnd
+                    ),
+                    planId: plan.id,
+                    startAt: windowStart,
+                    endAt: windowEnd,
+                    state: .skipped,
+                    skipReason: .quotaInsufficient
+                ),
+                defaults: defaults
+            )
         }
 
         let content = UNMutableNotificationContent()
@@ -854,31 +887,59 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         clearAfterConsume: Bool
     ) -> Bool {
         guard activity.rawValue.starts(with: "FocusOne.Plan."),
-              let pendingData = defaults.data(forKey: "FocusOne.PendingEvent"),
-              let json = try? JSONSerialization.jsonObject(with: pendingData) as? [String: Any],
-              let type = json["type"] as? String,
-              type == "quota_skip",
-              let pendingPlanId = json["plan_id"] as? String,
+              let storedWindow = FocusStateStore.loadWindow(defaults: defaults),
+              storedWindow.state == .skipped,
               let plan = findPlan(by: activity.rawValue, defaults: defaults),
-              plan.id == pendingPlanId,
-              let pendingWindowStart = (json["window_start"] as? NSNumber)?.doubleValue,
-              let pendingWindowEnd = (json["window_end"] as? NSNumber)?.doubleValue,
+              plan.id == storedWindow.planId,
               let currentWindow = computeWindowIdentity(
                 plan: plan,
                 activityRawValue: activity.rawValue,
                 now: Date()
               ),
-              Int(pendingWindowStart) == Int(currentWindow.start),
-              Int(pendingWindowEnd) == Int(currentWindow.end) else {
+              storedWindow.windowId == FocusStateStore.makeWindowId(
+                planId: plan.id,
+                startAt: currentWindow.start,
+                endAt: currentWindow.end
+              ) else {
             return false
         }
 
         if clearAfterConsume {
-            defaults.removeObject(forKey: "FocusOne.PendingEvent")
+            FocusStateStore.clearWindow(defaults: defaults)
+            if let session = FocusStateStore.loadSession(defaults: defaults),
+               session.state == .stopped,
+               session.windowId == storedWindow.windowId {
+                FocusStateStore.clearSession(defaults: defaults)
+            }
         }
-        // warning 阶段要保留 PendingEvent，让真正的结束回调也能继续跳过；
-        // intervalDidEnd 命中同一窗口后再清理，避免旧窗口的 quota_skip 污染后续真实任务。
-        logToJS(level: "log", message: "检测到配额跳过，忽略本次结束回调", data: ["plan_id": pendingPlanId])
+        logToJS(
+            level: "log",
+            message: "检测到已跳过窗口，忽略本次结束回调",
+            data: ["plan_id": plan.id, "reason": storedWindow.skipReason?.rawValue ?? "unknown"]
+        )
+        return true
+    }
+
+    private func consumeStoppedOnceSessionIfNeeded(
+        activity: DeviceActivityName,
+        defaults: UserDefaults,
+        clearAfterConsume: Bool
+    ) -> Bool {
+        guard activity.rawValue == "FocusOne.ScreenTime",
+              let session = FocusStateStore.loadSession(defaults: defaults),
+              session.focusType == "once",
+              session.state == .stopped else {
+            return false
+        }
+
+        if clearAfterConsume {
+            FocusStateStore.clearSession(defaults: defaults)
+        }
+        logToJS(
+            level: "log",
+            message: "检测到已停止的一次性会话，忽略本次结束回调",
+            data: ["session_id": session.sessionId]
+        )
         return true
     }
 }

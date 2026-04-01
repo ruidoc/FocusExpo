@@ -40,6 +40,16 @@ const PlanStore = combine(
     all_plans() {
       return [...get().cus_plans, ...get().once_plans];
     },
+    focus_plan() {
+      const nativePlanId = get().native_focus.plan_id;
+      if (nativePlanId) {
+        const matched = [...get().cus_plans, ...get().once_plans].find(
+          (p: CusPlan) => p.id === nativePlanId,
+        );
+        if (matched) return matched;
+      }
+      return get().active_plan;
+    },
     has_active_task() {
       if (Platform.OS === 'ios') {
         return !!get().native_focus.active;

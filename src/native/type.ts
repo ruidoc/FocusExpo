@@ -42,6 +42,11 @@ export interface FocusStatus {
   window_locked?: boolean;
   lock_reason?: 'active_session' | 'plan_window' | null;
   is_shielding?: boolean;
+  session_id?: string | null;
+  session_state?: 'active' | 'paused' | 'stopped' | null;
+  window_id?: string | null;
+  window_state?: 'active' | 'skipped' | null;
+  end_reason?: 'completed' | 'quota_insufficient' | 'user_exit' | null;
   plan_id?: string | null;
   plan_name?: string | null;
   record_id?: string | null;
