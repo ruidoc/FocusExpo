@@ -1,158 +1,172 @@
 /**
  * 调试悬浮球组件
  * 在开发环境和 preview 构建中显示，production 构建中隐藏
- * 支持拖拽和边缘吸附
+ * 支持丝滑拖拽和边缘吸附
  */
 
 import { APP_ENV } from '@/config/env';
 import { useDebugStore } from '@/stores';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
-  Animated,
-  Dimensions,
-  PanResponder,
   Pressable,
+  StyleSheet,
   View,
+  type ViewStyle,
+  useWindowDimensions,
 } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  clamp,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BALL_SIZE = 56;
 const MARGIN = 16;
-const DRAG_THRESHOLD = 10; // 拖拽阈值
+const TOP_SAFE_OFFSET = 100;
+const ACTIVE_SCALE = 1.06;
+const SNAP_SPRING_CONFIG = {
+  stiffness: 520,
+  damping: 38,
+  mass: 0.7,
+  overshootClamping: true as const,
+};
+const SCALE_SPRING_CONFIG = {
+  stiffness: 420,
+  damping: 28,
+  mass: 0.6,
+  overshootClamping: true as const,
+};
+
+const getBounds = (
+  width: number,
+  height: number,
+  topInset: number,
+  bottomInset: number,
+) => {
+  const left = MARGIN;
+  const right = Math.max(MARGIN, width - BALL_SIZE - MARGIN);
+  const top = Math.max(TOP_SAFE_OFFSET, topInset + MARGIN);
+  const bottom = Math.max(top, height - BALL_SIZE - Math.max(bottomInset, MARGIN));
+
+  return { left, right, top, bottom };
+};
+
+const getInitialPosition = (
+  width: number,
+  height: number,
+  topInset: number,
+  bottomInset: number,
+) => {
+  const bounds = getBounds(width, height, topInset, bottomInset);
+
+  return {
+    x: bounds.right,
+    y: clamp(height * 0.7, bounds.top, bounds.bottom),
+  };
+};
 
 export const DebugBall = () => {
   const showDebugBall = useDebugStore(state => state.showDebugBall);
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
-  const [position, setPosition] = useState({
-    x: SCREEN_WIDTH - BALL_SIZE - MARGIN,
-    y: SCREEN_HEIGHT * 0.7,
-  });
+  const bounds = useMemo(
+    () => getBounds(width, height, insets.top, insets.bottom),
+    [height, insets.bottom, insets.top, width],
+  );
+  const initialPosition = useMemo(
+    () => getInitialPosition(width, height, insets.top, insets.bottom),
+    [height, insets.bottom, insets.top, width],
+  );
 
-  const pan = useRef(new Animated.ValueXY()).current;
-  const isDraggingRef = useRef(false);
-  const startTimeRef = useRef(0);
-  const startPositionRef = useRef({ x: 0, y: 0 });
+  const translateX = useSharedValue(initialPosition.x);
+  const translateY = useSharedValue(initialPosition.y);
+  const dragStartX = useSharedValue(initialPosition.x);
+  const dragStartY = useSharedValue(initialPosition.y);
+  const scale = useSharedValue(1);
+  const hasDragged = useSharedValue(false);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // 只有移动距离超过阈值才认为是拖拽
-        return (
-          Math.abs(gestureState.dx) > DRAG_THRESHOLD ||
-          Math.abs(gestureState.dy) > DRAG_THRESHOLD
-        );
-      },
-      onPanResponderGrant: evt => {
-        isDraggingRef.current = false;
-        startTimeRef.current = Date.now();
-        startPositionRef.current = {
-          x: evt.nativeEvent.pageX,
-          y: evt.nativeEvent.pageY,
-        };
-        pan.setOffset({
-          x: position.x,
-          y: position.y,
-        });
-        pan.setValue({ x: 0, y: 0 });
-      },
-      onPanResponderMove: (_, gestureState) => {
-        // 检查是否超过拖拽阈值
-        if (
-          Math.abs(gestureState.dx) > DRAG_THRESHOLD ||
-          Math.abs(gestureState.dy) > DRAG_THRESHOLD
-        ) {
-          isDraggingRef.current = true;
-        }
+  useEffect(() => {
+    translateX.value = clamp(translateX.value, bounds.left, bounds.right);
+    translateY.value = clamp(translateY.value, bounds.top, bounds.bottom);
+  }, [bounds.bottom, bounds.left, bounds.right, bounds.top, translateX, translateY]);
 
-        // 边界限制
-        const safeTop = 100;
-        const safeBottom = SCREEN_HEIGHT - BALL_SIZE - MARGIN;
-        const safeLeft = MARGIN;
-        const safeRight = SCREEN_WIDTH - BALL_SIZE - MARGIN;
+  const openDebugPanel = () => {
+    router.push('/debug');
+  };
 
-        // 限制在屏幕内，计算允许的最大偏移量
-        const maxDx = safeRight - position.x;
-        const minDx = safeLeft - position.x;
-        const maxDy = safeBottom - position.y;
-        const minDy = safeTop - position.y;
+  const panGesture = Gesture.Pan()
+    .minDistance(2)
+    .onBegin(() => {
+      dragStartX.value = translateX.value;
+      dragStartY.value = translateY.value;
+      hasDragged.value = false;
+      scale.value = withSpring(ACTIVE_SCALE, SCALE_SPRING_CONFIG);
+    })
+    .onUpdate(event => {
+      hasDragged.value =
+        hasDragged.value ||
+        Math.abs(event.translationX) > 2 ||
+        Math.abs(event.translationY) > 2;
 
-        // 限制偏移量在允许范围内
-        const clampedDx = Math.max(minDx, Math.min(maxDx, gestureState.dx));
-        const clampedDy = Math.max(minDy, Math.min(maxDy, gestureState.dy));
+      translateX.value = clamp(
+        dragStartX.value + event.translationX,
+        bounds.left,
+        bounds.right,
+      );
+      translateY.value = clamp(
+        dragStartY.value + event.translationY,
+        bounds.top,
+        bounds.bottom,
+      );
+    })
+    .onEnd(event => {
+      const targetX =
+        Math.abs(translateX.value - bounds.left) <=
+        Math.abs(bounds.right - translateX.value)
+          ? bounds.left
+          : bounds.right;
 
-        pan.setValue({ x: clampedDx, y: clampedDy });
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        const moveDistance = Math.sqrt(
-          gestureState.dx * gestureState.dx + gestureState.dy * gestureState.dy,
-        );
-        const moveTime = Date.now() - startTimeRef.current;
+      translateX.value = withSpring(targetX, {
+        ...SNAP_SPRING_CONFIG,
+        velocity: event.velocityX,
+      });
+      translateY.value = withSpring(
+        clamp(translateY.value, bounds.top, bounds.bottom),
+        {
+          ...SNAP_SPRING_CONFIG,
+          velocity: event.velocityY,
+        },
+      );
+      scale.value = withSpring(1, SCALE_SPRING_CONFIG);
+    })
+    .onFinalize(() => {
+      scale.value = withSpring(1, SCALE_SPRING_CONFIG);
+    });
 
-        // 判断是否为点击：移动距离小且时间短
-        const isClick =
-          !isDraggingRef.current &&
-          moveDistance < DRAG_THRESHOLD &&
-          moveTime < 300;
+  const tapGesture = Gesture.Tap()
+    .maxDistance(8)
+    .onEnd((_event, success) => {
+      if (success && !hasDragged.value) {
+        runOnJS(openDebugPanel)();
+      }
+    });
 
-        if (isClick) {
-          // 点击事件：平滑恢复到原位置
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: false,
-            tension: 50,
-            friction: 7,
-          }).start();
-          isDraggingRef.current = false;
-          router.push('/debug');
-          return;
-        }
+  const gesture = Gesture.Race(panGesture, tapGesture);
 
-        // 拖拽结束，计算最终位置
-        const newX = position.x + gestureState.dx;
-        const newY = position.y + gestureState.dy;
-
-        // 边界限制
-        const safeTop = 100;
-        const safeBottom = SCREEN_HEIGHT - BALL_SIZE - MARGIN;
-        const safeLeft = MARGIN;
-        const safeRight = SCREEN_WIDTH - BALL_SIZE - MARGIN;
-
-        // 限制在屏幕内
-        let finalX = Math.max(safeLeft, Math.min(safeRight, newX));
-        let finalY = Math.max(safeTop, Math.min(safeBottom, newY));
-
-        // 水平边缘吸附
-        const centerX = SCREEN_WIDTH / 2;
-        if (finalX < centerX) {
-          finalX = safeLeft; // 吸附到左边
-        } else {
-          finalX = safeRight; // 吸附到右边
-        }
-
-        // 计算需要移动的距离（从当前位置到最终位置）
-        const deltaX = finalX - position.x;
-        const deltaY = finalY - position.y;
-
-        // 动画到最终位置（相对于起始position的偏移）
-        Animated.spring(pan, {
-          toValue: { x: deltaX, y: deltaY },
-          useNativeDriver: false,
-          tension: 50,
-          friction: 7,
-        }).start(() => {
-          // 动画完成后，先重置pan，再更新position状态
-          // 这样可以避免渲染时position和pan不同步导致的跳动
-          pan.flattenOffset();
-          pan.setValue({ x: 0, y: 0 });
-          setPosition({ x: finalX, y: finalY });
-          isDraggingRef.current = false;
-        });
-      },
-    }),
-  ).current;
+  const animatedStyle = useAnimatedStyle<ViewStyle>(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ] as ViewStyle['transform'],
+  }));
 
   // 统一使用 APP_ENV 判断环境，避免与 Expo extra 字段出现多套口径。
   const shouldShow = APP_ENV !== 'production';
@@ -160,37 +174,35 @@ export const DebugBall = () => {
 
   return (
     <View
-      style={{
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        pointerEvents: 'box-none',
-        zIndex: 9999,
-      }}>
-      <Animated.View
-        style={{
-          position: 'absolute',
-          left: position.x,
-          top: position.y,
-          transform: [{ translateX: pan.x }, { translateY: pan.y }],
-        }}
-        {...panResponder.panHandlers}>
-        <Pressable
-          onPress={() => {
-            // 这个 onPress 作为备用，但主要逻辑在 panResponder 中处理
-            if (!isDraggingRef.current) {
-              router.push('/debug');
-            }
-          }}
-          className="w-14 h-14 rounded-full justify-center items-center shadow-lg active:opacity-90"
-          style={{
-            backgroundColor: 'rgba(31, 41, 55, 0.9)', // gray-800 半透明暗色
-          }}>
-          <Icon name="bug" size={24} color="#9ca3af" />
-        </Pressable>
-      </Animated.View>
+      pointerEvents="box-none"
+      style={styles.overlay}>
+      <GestureDetector gesture={gesture}>
+        <Animated.View style={[styles.ballContainer, animatedStyle]}>
+          <Pressable
+            className="h-14 w-14 items-center justify-center rounded-full shadow-lg active:opacity-90"
+            style={{
+              backgroundColor: 'rgba(31, 41, 55, 0.9)',
+            }}>
+            <Icon name="bug" size={24} color="#9ca3af" />
+          </Pressable>
+        </Animated.View>
+      </GestureDetector>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999,
+  },
+  ballContainer: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+  },
+});

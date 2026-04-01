@@ -117,7 +117,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         // 检查是否是暂停恢复活动，如果是则跳过处理
         if activity.rawValue == "FocusOne.PauseResume" { return }
-        if consumeQuotaSkipEventIfNeeded(activity: activity, defaults: defaults) { return }
+        if consumeQuotaSkipEventIfNeeded(
+            activity: activity,
+            defaults: defaults,
+            clearAfterConsume: true
+        ) { return }
 
         // 到点自动清理屏蔽
         let store = ManagedSettingsStore()
@@ -174,7 +178,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             
         } else {
             // ===== 正常任务结束逻辑 =====
-            if consumeQuotaSkipEventIfNeeded(activity: activity, defaults: defaults) { return }
+            if consumeQuotaSkipEventIfNeeded(
+                activity: activity,
+                defaults: defaults,
+                clearAfterConsume: false
+            ) { return }
             // 在警告阶段（区间结束前 warningTime 分钟）提前清理，支持 <15 分钟的"有效时长"
             let store = ManagedSettingsStore()
             store.clearAllSettings()
@@ -842,7 +850,8 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
     private func consumeQuotaSkipEventIfNeeded(
         activity: DeviceActivityName,
-        defaults: UserDefaults
+        defaults: UserDefaults,
+        clearAfterConsume: Bool
     ) -> Bool {
         guard activity.rawValue.starts(with: "FocusOne.Plan."),
               let pendingData = defaults.data(forKey: "FocusOne.PendingEvent"),
@@ -851,14 +860,24 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
               type == "quota_skip",
               let pendingPlanId = json["plan_id"] as? String,
               let plan = findPlan(by: activity.rawValue, defaults: defaults),
-              plan.id == pendingPlanId else {
+              plan.id == pendingPlanId,
+              let pendingWindowStart = (json["window_start"] as? NSNumber)?.doubleValue,
+              let pendingWindowEnd = (json["window_end"] as? NSNumber)?.doubleValue,
+              let currentWindow = computeWindowIdentity(
+                plan: plan,
+                activityRawValue: activity.rawValue,
+                now: Date()
+              ),
+              Int(pendingWindowStart) == Int(currentWindow.start),
+              Int(pendingWindowEnd) == Int(currentWindow.end) else {
             return false
         }
 
-        // 不在这里清空 PendingEvent：
-        // quota_skip 代表“当前命中的这个窗口已跳过”，需要让主 App 在窗口结束前
-        // 仍能识别该窗口已跳过，从而允许创建一次性任务。
-        // 该标记会在窗口变化后自然失效，或在新的 quota_skip 到来时被覆盖。
+        if clearAfterConsume {
+            defaults.removeObject(forKey: "FocusOne.PendingEvent")
+        }
+        // warning 阶段要保留 PendingEvent，让真正的结束回调也能继续跳过；
+        // intervalDidEnd 命中同一窗口后再清理，避免旧窗口的 quota_skip 污染后续真实任务。
         logToJS(level: "log", message: "检测到配额跳过，忽略本次结束回调", data: ["plan_id": pendingPlanId])
         return true
     }

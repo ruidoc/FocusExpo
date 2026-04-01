@@ -14,6 +14,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View } from 'react-native';
 
 Sentry.init({
@@ -59,120 +60,122 @@ const RootLayout = () => {
   }
 
   return (
-    <PostHogProviderWrapper>
-      <SuperwallProviderWrapper>
-        <ThemeProvider value={theme.navigation}>
-          <StatusBar style={theme.isDark ? 'light' : 'dark'} />
-          <ActionSheet.Global />
-          <DateTimePicker.Global />
-          <Dialog.Global />
-          <Toast.Global />
-          <View className="flex-1">
-            <Stack screenOptions={ScreenOptions}>
-              <Stack.Screen
-                name="(tabs)"
-                options={{ headerShown: false, headerTitle: '' }}
-              />
-              <Stack.Screen name="(guides)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="onboarding/index"
-                options={{
-                  headerShown: false,
-                  gestureEnabled: false,
-                }}
-              />
-              <Stack.Screen name="login/index" options={{ title: '登录' }} />
-              <Stack.Screen name="login/wx" options={{ headerShown: false }} />
-              <Stack.Screen name="login/start" options={{ title: '' }} />
-              <Stack.Screen name="login/register" options={{ title: '注册' }} />
-              <Stack.Screen name="user/edit" options={{ title: '个人信息' }} />
-              <Stack.Screen name="user/vip" options={{ title: '会员中心' }} />
-              <Stack.Screen name="user/coins" options={{ title: '金币中心' }} />
-              <Stack.Screen name="setting/index" options={{ title: '设置' }} />
-              <Stack.Screen
-                name="setting/permission"
-                options={{ title: '权限管理' }}
-              />
-              <Stack.Screen
-                name="setting/feedback"
-                options={{ title: '意见反馈' }}
-              />
-              <Stack.Screen
-                name="setting/about"
-                options={{ title: '关于我们' }}
-              />
-              <Stack.Screen
-                name="quick-start/index"
-                options={{
-                  title: '开始专注',
-                  // animation: 'fade_from_bottom',
-                  // presentation: 'modal',
-                }}
-              />
-              <Stack.Screen
-                name="plans/index"
-                options={{ title: '我的契约' }}
-              />
-              <Stack.Screen name="plans/add" />
-              <Stack.Screen
-                name="plans/presets"
-                options={{
-                  title: '选择契约',
-                  headerTransparent: true,
-                }}
-              />
-              <Stack.Screen name="apps/index" options={{ title: 'APP管理' }} />
-              <Stack.Screen name="apps/add" options={{ title: '选择APP' }} />
-              <Stack.Screen
-                name="others/webview"
-                options={{ title: '隐私政策' }}
-              />
-              <Stack.Screen
-                name="challenges/index"
-                options={{ title: '挑战活动' }}
-              />
-              <Stack.Screen
-                name="challenges/detail"
-                options={{ title: '挑战活动详情' }}
-              />
-              <Stack.Screen
-                name="challenges/my-list"
-                options={{ title: '我的挑战' }}
-              />
-              <Stack.Screen
-                name="challenges/my-detail"
-                options={{ title: '挑战详情' }}
-              />
-              <Stack.Screen
-                name="others/welcome"
-                options={{ headerShown: false }}
-              />
-              {/* 支付页面 */}
-              <Stack.Screen
-                name="paywall/index"
-                options={{
-                  title: '',
-                  presentation: 'fullScreenModal',
-                  headerShown: false,
-                }}
-              />
-              {/* 支付页面 */}
-              <Stack.Screen
-                name="paywall/stripe"
-                options={{ title: 'Stripe 支付' }}
-              />
-              {/* 调试页面 */}
-              <Stack.Screen
-                name="debug/index"
-                options={{ title: '调试面板', headerShown: false }}
-              />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <DebugBall />
-          </View>
-        </ThemeProvider>
-      </SuperwallProviderWrapper>
-    </PostHogProviderWrapper>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PostHogProviderWrapper>
+        <SuperwallProviderWrapper>
+          <ThemeProvider value={theme.navigation}>
+            <StatusBar style={theme.isDark ? 'light' : 'dark'} />
+            <ActionSheet.Global />
+            <DateTimePicker.Global />
+            <Dialog.Global />
+            <Toast.Global />
+            <View className="flex-1">
+              <Stack screenOptions={ScreenOptions}>
+                <Stack.Screen
+                  name="(tabs)"
+                  options={{ headerShown: false, headerTitle: '' }}
+                />
+                <Stack.Screen name="(guides)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="onboarding/index"
+                  options={{
+                    headerShown: false,
+                    gestureEnabled: false,
+                  }}
+                />
+                <Stack.Screen name="login/index" options={{ title: '登录' }} />
+                <Stack.Screen name="login/wx" options={{ headerShown: false }} />
+                <Stack.Screen name="login/start" options={{ title: '' }} />
+                <Stack.Screen name="login/register" options={{ title: '注册' }} />
+                <Stack.Screen name="user/edit" options={{ title: '个人信息' }} />
+                <Stack.Screen name="user/vip" options={{ title: '会员中心' }} />
+                <Stack.Screen name="user/coins" options={{ title: '金币中心' }} />
+                <Stack.Screen name="setting/index" options={{ title: '设置' }} />
+                <Stack.Screen
+                  name="setting/permission"
+                  options={{ title: '权限管理' }}
+                />
+                <Stack.Screen
+                  name="setting/feedback"
+                  options={{ title: '意见反馈' }}
+                />
+                <Stack.Screen
+                  name="setting/about"
+                  options={{ title: '关于我们' }}
+                />
+                <Stack.Screen
+                  name="quick-start/index"
+                  options={{
+                    title: '开始专注',
+                    // animation: 'fade_from_bottom',
+                    // presentation: 'modal',
+                  }}
+                />
+                <Stack.Screen
+                  name="plans/index"
+                  options={{ title: '我的契约' }}
+                />
+                <Stack.Screen name="plans/add" />
+                <Stack.Screen
+                  name="plans/presets"
+                  options={{
+                    title: '选择契约',
+                    headerTransparent: true,
+                  }}
+                />
+                <Stack.Screen name="apps/index" options={{ title: 'APP管理' }} />
+                <Stack.Screen name="apps/add" options={{ title: '选择APP' }} />
+                <Stack.Screen
+                  name="others/webview"
+                  options={{ title: '隐私政策' }}
+                />
+                <Stack.Screen
+                  name="challenges/index"
+                  options={{ title: '挑战活动' }}
+                />
+                <Stack.Screen
+                  name="challenges/detail"
+                  options={{ title: '挑战活动详情' }}
+                />
+                <Stack.Screen
+                  name="challenges/my-list"
+                  options={{ title: '我的挑战' }}
+                />
+                <Stack.Screen
+                  name="challenges/my-detail"
+                  options={{ title: '挑战详情' }}
+                />
+                <Stack.Screen
+                  name="others/welcome"
+                  options={{ headerShown: false }}
+                />
+                {/* 支付页面 */}
+                <Stack.Screen
+                  name="paywall/index"
+                  options={{
+                    title: '',
+                    presentation: 'fullScreenModal',
+                    headerShown: false,
+                  }}
+                />
+                {/* 支付页面 */}
+                <Stack.Screen
+                  name="paywall/stripe"
+                  options={{ title: 'Stripe 支付' }}
+                />
+                {/* 调试页面 */}
+                <Stack.Screen
+                  name="debug/index"
+                  options={{ title: '调试面板', headerShown: false }}
+                />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <DebugBall />
+            </View>
+          </ThemeProvider>
+        </SuperwallProviderWrapper>
+      </PostHogProviderWrapper>
+    </GestureHandlerRootView>
   );
 };
 
