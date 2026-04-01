@@ -12,7 +12,12 @@ import {
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useBenefitStore, usePlanStore } from '@/stores';
-import { getCurrentMinute, parseRepeat, trackPlanCreated } from '@/utils';
+import {
+  getCurrentMinute,
+  minutesToHours,
+  parseRepeat,
+  trackPlanCreated,
+} from '@/utils';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -105,6 +110,28 @@ const App = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pstore.editing_plan?.id]); // 只在编辑计划 ID 变化时执行
+
+  // 计算当前选中重复日下，已有契约占用的总时长和剩余可用时长
+  const calcRemaining = () => {
+    const dayDuration = bstore.day_duration;
+    if (!dayDuration || dayDuration <= 0) return null;
+    const repeat = form.repeat;
+    if (!Array.isArray(repeat) || repeat.length === 0) return null;
+    const existingPlans = pstore
+      .all_plans()
+      .filter(r => Array.isArray(r.repeat))
+      .filter(plan => {
+        if (isEditing && plan.id === pstore.editing_plan?.id) return false;
+        return (plan.repeat as number[]).some(d =>
+          (repeat as number[]).includes(d),
+        );
+      });
+    const usedMin = existingPlans.reduce(
+      (sum, p) => sum + Math.max(0, p.end_min - p.start_min),
+      0,
+    );
+    return { used: usedMin, remaining: Math.max(0, dayDuration - usedMin) };
+  };
 
   // 单独管理选择的应用状态
   const [selectedApps, setSelectedApps] = useState<any[]>([]);
@@ -222,16 +249,8 @@ const App = () => {
         return Toast('请先选择要限制的应用', 'error');
       }
 
-      setSubmitting(true);
-
-      if (astore.ios_all_apps.length === 0) {
-        await astore.getIosApps();
-      }
       let start_day = dayjs(start);
       let end_day = dayjs(end);
-      // if (!end_day.isAfter(start_day)) {
-      //   return Toast('结束时间必须大于开始时间', 'error');
-      // }
       if (end_day.diff(start_day, 'minute') < 20) {
         return Toast('时间间隔最少20分钟', 'error');
       }
@@ -241,7 +260,6 @@ const App = () => {
         .all_plans()
         .filter(r => Array.isArray(r.repeat))
         .filter(plan => {
-          // 编辑模式下排除当前编辑的任务
           if (isEditing && plan.id === pstore.editing_plan.id) {
             return false;
           }
@@ -260,6 +278,23 @@ const App = () => {
       }
 
       const planDuration = end_day.diff(start_day, 'minute');
+
+      // 校验剩余可用时长
+      const info = calcRemaining();
+      if (info && planDuration > info.remaining) {
+        return Toast(
+          info.remaining <= 0
+            ? '今日专注时长已用完，无法创建'
+            : `超出今日可用时长，请缩短时间`,
+          'error',
+        );
+      }
+
+      setSubmitting(true);
+
+      if (astore.ios_all_apps.length === 0) {
+        await astore.getIosApps();
+      }
       await useBenefitStore.getState().getBenefit();
       const latestBenefit = useBenefitStore.getState();
       if (!latestBenefit.is_subscribed && latestBenefit.day_duration > 0) {
@@ -444,6 +479,8 @@ const App = () => {
     });
   };
 
+  const remainingInfo = calcRemaining();
+
   return (
     <Page>
       <ScrollView style={{ padding: 15 }}>
@@ -467,7 +504,7 @@ const App = () => {
         </FieldGroup>
 
         {/* 2. 起始时间 */}
-        <FieldGroup className="rounded-xl mb-4">
+        <FieldGroup divider={false} className="rounded-xl mb-4">
           <FieldItem
             title="起始时间"
             rightElement={
@@ -517,6 +554,14 @@ const App = () => {
             }
             showArrow={false}
           />
+          {remainingInfo && (
+            <View className="px-4 pb-4">
+              <Text
+                style={{ color: colors.text3, fontSize: 13, lineHeight: 18 }}>
+                今日可用时长：{minutesToHours(remainingInfo.remaining)}
+              </Text>
+            </View>
+          )}
         </FieldGroup>
 
         {/* 3. 屏蔽模式 */}

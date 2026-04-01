@@ -37,7 +37,7 @@ const App = () => {
 
   const fetchPlans = async (type: FilterType = filterType) => {
     if (type === 'all') {
-      return store.getPlans();
+      return store.getPlans({ status: 'all' });
     } else {
       return store.getPlans({ period: type });
     }

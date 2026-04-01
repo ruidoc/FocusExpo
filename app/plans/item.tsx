@@ -3,11 +3,13 @@ import { Dialog, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useAppStore, usePlanStore } from '@/stores';
 import {
+  getCurrentMinute,
   getPlanEndDisplay,
   getRepeatDaysLabel,
   minToTimeStr,
   minutesToHours,
 } from '@/utils';
+import dayjs from 'dayjs';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -36,6 +38,17 @@ const TaskArea = ({ plans }: { plans: any[] }) => {
   const toEdit = (task: any) => {
     if (store.has_active_task()) {
       Toast('专注进行中，不可以修改契约', 'info');
+      return;
+    }
+    const nowMin = getCurrentMinute();
+    const todayDay = dayjs().day();
+    const repeat = Array.isArray(task.repeat) ? task.repeat : [];
+    if (
+      repeat.includes(todayDay) &&
+      nowMin >= task.start_min &&
+      nowMin < task.end_min
+    ) {
+      Toast('当前处于契约执行时间内，无法修改', 'info');
       return;
     }
     store.setEditingPlan(task);

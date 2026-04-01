@@ -6,7 +6,7 @@ import {
   parseRepeat,
   storage,
 } from '@/utils';
-import { getPlansByPeriod } from '@/utils/date';
+
 import http from '@/utils/request';
 import dayjs from 'dayjs';
 import { Platform } from 'react-native';
@@ -21,6 +21,7 @@ import {
 const PlanStore = combine(
   {
     cus_plans: [] as CusPlan[], // 任务列表
+    today_plans: [] as CusPlan[], // 今日契约（独立于筛选）
     once_plans: [] as CusPlan[], // 一次性任务列表
     active_plan: null as CusPlan | null, // 当前任务
     next_plan: null as CusPlan | null, // 下一个
@@ -206,9 +207,8 @@ const PlanStore = combine(
       const minutes = getCurrentMinute();
       const dateKey = dayjs().format('YYYY-MM-DD');
 
-      // 与契约页「今日」一致：周期任务按 start_date / end_date / repeat 交集
-      const todayPeriodic = getPlansByPeriod(cus_plans, 'today');
-      const todayPeriodicIds = new Set(todayPeriodic.map(p => p.id));
+      const today_plans = get().today_plans || [];
+      const todayPeriodicIds = new Set(today_plans.map(p => p.id));
 
       const inFocusWindow = (p: CusPlan) =>
         minutes >= p.start_min &&
@@ -232,8 +232,8 @@ const PlanStore = combine(
         }
       }
 
-      // 下一个契约：仅今日周期契约中，按开始时间排序后取「尚未开始」的第一个
-      const sortedToday = [...todayPeriodic].sort(
+      // 下一个契约：仅今日契约中，按开始时间排序后取「尚未开始」的第一个
+      const sortedToday = [...today_plans].sort(
         (a, b) => a.start_min - b.start_min,
       );
       const next_plan =
@@ -304,7 +304,25 @@ const PlanStore = combine(
         let res: HttpRes = await http.get('/plan/lists', { params });
         if (res.statusCode === 200) {
           (get() as any).setCusPlans(res.data);
+          (get() as any).getTodayPlans();
           if (fun) fun(res);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    },
+
+    getTodayPlans: async () => {
+      try {
+        let res: HttpRes = await http.get('/plan/lists', {
+          params: { period: 'today' },
+        });
+        if (res.statusCode === 200) {
+          const plans = (res.data || []).map((r: any) => ({
+            ...r,
+            repeat: parseRepeat(r.repeat),
+          }));
+          set({ today_plans: plans });
         }
       } catch (error) {
         console.log(error);
