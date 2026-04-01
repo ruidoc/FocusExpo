@@ -6,47 +6,87 @@ import {
   Switch,
   Toast,
 } from '@/components/ui';
-import {
-  useHomeStore,
-  usePlanStore,
-  useUserStore,
-} from '@/stores';
+import { useHomeStore, usePlanStore, useUserStore } from '@/stores';
 import { stopAppLimits } from '@/utils/permission';
 import { useNavigation } from '@react-navigation/native';
-import React, { useEffect } from 'react';
+import * as StoreReview from 'expo-store-review';
+import React from 'react';
 import { Appearance, Linking, Platform, View } from 'react-native';
+
+const APP_STORE_APP_ID = '6751099977';
+const APP_STORE_DETAIL_URLS = [
+  `itms-apps://itunes.apple.com/app/id${APP_STORE_APP_ID}`,
+  `https://apps.apple.com/cn/app/id${APP_STORE_APP_ID}`,
+];
+const APP_STORE_SEARCH_URLS = [
+  'itms-apps://apps.apple.com/cn/search?term=%E4%B8%93%E6%B3%A8%E5%A5%91%E7%BA%A6',
+  'https://apps.apple.com/cn/search?term=%E4%B8%93%E6%B3%A8%E5%A5%91%E7%BA%A6',
+];
 
 const App = () => {
   const store = useUserStore();
   const homeStore = useHomeStore();
   const navigation = useNavigation();
 
+  const openAppStoreDetail = async () => {
+    for (const url of APP_STORE_DETAIL_URLS) {
+      try {
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          await Linking.openURL(url);
+          return true;
+        }
+      } catch {}
+    }
+    return false;
+  };
+
+  const openAppStoreSearch = async () => {
+    for (const url of APP_STORE_SEARCH_URLS) {
+      try {
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          await Linking.openURL(url);
+          return true;
+        }
+      } catch {}
+    }
+    Toast('无法打开 App Store');
+    return false;
+  };
+
+  const onCheckUpdate = async () => {
+    const opened = await openAppStoreDetail();
+    if (!opened) {
+      await openAppStoreSearch();
+    }
+  };
+
+  const onEvaluate = async () => {
+    try {
+      const available = await StoreReview.isAvailableAsync();
+      if (available) {
+        await StoreReview.requestReview();
+        return;
+      }
+    } catch {}
+
+    await openAppStoreSearch();
+  };
+
   const onClick = (tag: string) => {
     switch (tag) {
       case 'check':
-        return Toast('已是最新版本');
+        return onCheckUpdate();
       case 'privicy':
         return navigation.navigate('others/webview' as never);
       case 'evaluate':
-        return openStore();
+        return onEvaluate();
       case 'logoff':
         return navigation.navigate('setting/logoff' as never);
       case 'clear':
         return Toast('已清理');
     }
-  };
-
-  const openStore = () => {
-    let storeUrl = 'itms-apps://itunes.apple.com/app/com.focusone.app';
-    Linking.canOpenURL(storeUrl!)
-      .then(supported => {
-        if (supported) {
-          return Linking.openURL(storeUrl!);
-        } else {
-          Toast('无法打开应用市场');
-        }
-      })
-      .catch(() => Toast('打开应用市场失败'));
   };
 
   const toLogout = () => {
@@ -70,8 +110,6 @@ const App = () => {
       })
       .catch(() => {});
   };
-
-  useEffect(() => {}, []);
 
   return (
     <Page>
@@ -112,10 +150,10 @@ const App = () => {
           <FieldItem title="检查更新" onPress={() => onClick('check')} />
           <FieldItem title="隐私" onPress={() => onClick('privicy')} />
           <FieldItem title="去评价" onPress={() => onClick('evaluate')} />
-          {store.uInfo && (
+          {/* {store.uInfo && (
             <FieldItem title="注销账号" onPress={() => onClick('logoff')} />
-          )}
-          <FieldItem title="清理缓存" onPress={() => onClick('clear')} />
+          )} */}
+          {/* <FieldItem title="清理缓存" onPress={() => onClick('clear')} /> */}
         </FieldGroup>
         {store.uInfo && (
           <FieldGroup>
