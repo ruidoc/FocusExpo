@@ -93,7 +93,7 @@ const App = () => {
                 <Text
                   className="text-[13px]"
                   style={{ color: dark ? '#8A8A98' : '#94A3B8' }}>
-                  {store.uInfo.phone}
+                  {store.uInfo.phone || '请绑定手机号'}
                 </Text>
               </>
             ) : (

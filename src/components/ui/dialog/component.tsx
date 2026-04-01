@@ -1,6 +1,7 @@
 import { useCustomTheme } from '@/config/theme';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Keyboard,
   Modal,
   Pressable,
   Text,
@@ -33,13 +34,42 @@ const DialogComponent = ({
   style,
 }: DialogComponentProps) => {
   const { colors } = useCustomTheme();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', event => {
+      setKeyboardVisible(true);
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const handleConfirm = () => {
+    Keyboard.dismiss();
     onPressConfirm?.();
   };
 
   const handleCancel = () => {
+    Keyboard.dismiss();
     onPressCancel?.();
+  };
+
+  const handleBackdropPress = () => {
+    if (keyboardVisible) {
+      Keyboard.dismiss();
+      return;
+    }
+
+    handleCancel();
   };
 
   return (
@@ -49,14 +79,18 @@ const DialogComponent = ({
       animationType="fade"
       onRequestClose={handleCancel}>
       <Pressable
-        className="flex-1 items-center justify-center"
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-        onPress={handleCancel}>
+        className="flex-1 items-center px-6"
+        style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          justifyContent: keyboardVisible ? 'flex-end' : 'center',
+          paddingBottom: keyboardVisible ? keyboardHeight + 24 : 0,
+        }}
+        onPress={handleBackdropPress}>
         <Pressable
           className="bg-white rounded-lg overflow-hidden"
           style={[
             {
-              width: '85%',
+              width: '100%',
               maxWidth: 400,
               backgroundColor: colors.card,
             },

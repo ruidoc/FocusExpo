@@ -183,12 +183,6 @@ const App = () => {
           <View
             className="rounded-2xl mb-6 px-4 py-4 flex-row items-center"
             style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
-            <Icon
-              name="keypad-outline"
-              size={20}
-              color="rgba(255,255,255,0.5)"
-              style={{ marginRight: 12 }}
-            />
             <View className="flex-1 min-w-0">
               <TextInput
                 className="text-base"
@@ -199,7 +193,7 @@ const App = () => {
                 keyboardType="number-pad"
                 maxLength={6}
                 onChange={v => setInfo(v, 'code')}
-                style={{ color: colors.text, paddingVertical: 4 }}
+                style={{ color: colors.text, paddingVertical: 3 }}
               />
             </View>
             <TouchableOpacity
@@ -208,7 +202,7 @@ const App = () => {
               activeOpacity={0.7}
               style={{
                 marginLeft: 16,
-                paddingVertical: 8,
+                paddingVertical: 4,
                 paddingHorizontal: 8,
                 flexShrink: 0,
               }}
@@ -221,7 +215,7 @@ const App = () => {
                 </Text>
               ) : (
                 <Text
-                  className="text-sm font-medium"
+                  className="text-[15px] font-medium"
                   style={{
                     color: canSendCode
                       ? colors.primary || '#7A5AF8'
