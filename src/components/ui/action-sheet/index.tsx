@@ -91,7 +91,7 @@ const ActionSheetBody: React.FC<{
 
       {/* 默认操作按钮 */}
       {hasActions && (
-        <View className="px-4 py-2">
+        <View className="px-4 py-2 gap-y-3">
           {config.actions!.map((action, index) => (
             <TouchableOpacity
               key={index}

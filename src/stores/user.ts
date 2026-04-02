@@ -382,6 +382,20 @@ const UserStore = combine(
       }
     },
 
+    deleteAccount: async (): Promise<boolean> => {
+      try {
+        const res: HttpRes = await http.post('/user/delete-account');
+        if (res.statusCode === 200) {
+          return true;
+        }
+        Toast(res.message || '注销失败');
+        return false;
+      } catch (error) {
+        console.log('注销账号失败', error);
+        return false;
+      }
+    },
+
     getInfo: async () => {
       try {
         let res: HttpRes = await http.get('/user/info/self');
@@ -432,6 +446,7 @@ const UserStore = combine(
     logout: () => {
       storage.delete('user_info');
       storage.delete('access_token');
+      storage.setGroup('access_token', '');
       useAppStore.getState().setFocusApps([]);
       useAppStore.getState().setShieldApps([]);
       usePlanStore.getState().clearPlans();

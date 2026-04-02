@@ -121,6 +121,10 @@ const RootLayout = () => {
                   options={{ title: '意见反馈' }}
                 />
                 <Stack.Screen
+                  name="setting/logoff"
+                  options={{ title: '注销账号' }}
+                />
+                <Stack.Screen
                   name="setting/about"
                   options={{ title: '关于我们' }}
                 />

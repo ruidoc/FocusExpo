@@ -15,6 +15,7 @@ interface DialogComponentProps {
   title?: string;
   showCancelButton?: boolean;
   confirmButtonText?: string;
+  confirmButtonDisabled?: boolean;
   cancelButtonText?: string;
   onPressConfirm?: () => void;
   onPressCancel?: () => void;
@@ -27,6 +28,7 @@ const DialogComponent = ({
   title,
   showCancelButton = false,
   confirmButtonText = '确定',
+  confirmButtonDisabled = false,
   cancelButtonText = '取消',
   onPressConfirm,
   onPressCancel,
@@ -109,7 +111,9 @@ const DialogComponent = ({
           {children && (
             <View className="px-5 py-3">
               {typeof children === 'string' ? (
-                <Text className="text-base leading-6" style={{ color: colors.text }}>
+                <Text
+                  className="text-base leading-6"
+                  style={{ color: colors.text }}>
                   {children}
                 </Text>
               ) : (
@@ -117,7 +121,9 @@ const DialogComponent = ({
               )}
             </View>
           )}
-          <View className="flex-row border-t" style={{ borderTopColor: colors.border }}>
+          <View
+            className="flex-row border-t"
+            style={{ borderTopColor: colors.border }}>
             {showCancelButton && (
               <TouchableOpacity
                 className="flex-1 py-4 items-center border-r"
@@ -130,10 +136,13 @@ const DialogComponent = ({
             )}
             <TouchableOpacity
               className={`py-4 items-center ${showCancelButton ? 'flex-1' : 'flex-1'}`}
+              disabled={confirmButtonDisabled}
               onPress={handleConfirm}>
               <Text
                 className="text-base font-medium"
-                style={{ color: colors.primary }}>
+                style={{
+                  color: confirmButtonDisabled ? '#7A5AF890' : colors.primary,
+                }}>
                 {confirmButtonText}
               </Text>
             </TouchableOpacity>
@@ -145,4 +154,3 @@ const DialogComponent = ({
 };
 
 export default DialogComponent;
-

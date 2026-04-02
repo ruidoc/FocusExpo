@@ -161,7 +161,7 @@ const App = () => {
             <View className="flex-row items-center">
               <Icon
                 name="call-outline"
-                size={20}
+                size={18}
                 color="rgba(255,255,255,0.5)"
                 style={{ marginRight: 12 }}
               />
@@ -231,6 +231,7 @@ const App = () => {
           <Button
             disabled={!form.phone || !form.code || form.code.length < 4}
             loading={loading}
+            loadingText={isbind ? '绑定中...' : '登录中...'}
             onPress={isbind ? toBind : toLogin}
             text={isbind ? '绑定' : '登录'}
             className="w-full rounded-2xl h-14"

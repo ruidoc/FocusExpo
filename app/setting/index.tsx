@@ -150,9 +150,9 @@ const App = () => {
           <FieldItem title="检查更新" onPress={() => onClick('check')} />
           <FieldItem title="隐私" onPress={() => onClick('privicy')} />
           <FieldItem title="去评价" onPress={() => onClick('evaluate')} />
-          {/* {store.uInfo && (
+          {store.uInfo && (
             <FieldItem title="注销账号" onPress={() => onClick('logoff')} />
-          )} */}
+          )}
           {/* <FieldItem title="清理缓存" onPress={() => onClick('clear')} /> */}
         </FieldGroup>
         {store.uInfo && (

@@ -7,6 +7,7 @@ import {
 } from '@/stores';
 import type { Period } from '@/stores/statistic';
 import { addLiveFocusDelta, getLiveFocusDelta } from '@/utils/live-focus';
+import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -274,7 +275,13 @@ const App = () => {
               加载中...
             </Text>
           ) : displayItems.length === 0 ? (
-            <View className="flex-1 items-center justify-center py-20">
+            <View className="flex-1 items-center py-20">
+              <Icon
+                name="bar-chart-outline"
+                size={26}
+                color={TEXT2}
+                style={{ marginBottom: 10 }}
+              />
               <Text className="text-sm" style={{ color: TEXT2 }}>
                 暂无数据
               </Text>

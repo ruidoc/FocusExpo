@@ -27,6 +27,7 @@ interface DialogComponentProps {
   title?: string;
   showCancelButton?: boolean;
   confirmButtonText?: string;
+  confirmButtonDisabled?: boolean;
   cancelButtonText?: string;
   onPressConfirm?: () => void;
   onPressCancel?: () => void;
@@ -177,4 +178,5 @@ const Dialog = Object.assign(DialogComponentWrapper, {
 });
 
 export default Dialog;
+export type { DialogComponentProps };
 
