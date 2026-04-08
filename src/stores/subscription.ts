@@ -1,4 +1,5 @@
 import http from '@/utils/request';
+import { isSubscriptionEntitled } from '@/utils/subscription';
 import { registerApp, requestPayment } from 'expo-native-wechat';
 import { create } from 'zustand';
 import { combine } from 'zustand/middleware';
@@ -22,7 +23,7 @@ interface Subscription {
   product_id: string;
   period: number; // 订阅周期（月）
   price: number; // 价格（分）
-  status: 'active' | 'canceled' | 'expired'; // active=生效中、canceled=已取消、expired=已到期
+  status: 'active' | 'canceled' | 'cancelled' | 'expired'; // active=生效中、canceled/cancelled=已取消续费但未必失效、expired=已到期
   is_trial: number; // 0否、1是
   source: string; // 订阅来源（app_store/stripe/superwall）
   started_at: string; // 订阅开始时间
@@ -56,7 +57,7 @@ const SubscriptionStore = combine(
           const subscription = res.data as Subscription | null;
           set({
             subscription,
-            isSubscribed: subscription && subscription.status === 'active',
+            isSubscribed: isSubscriptionEntitled(subscription),
           });
           console.log('用户订阅状态:', subscription);
         }

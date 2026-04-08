@@ -6,8 +6,8 @@ interface UserInfo {
   avatar: string;
   sex: number;
   openid: string;
-  /** IAP appAccountToken，购买时传入以便 Webhook 关联用户 */
-  superwall_uuid?: string;
+  /** 账户关联标识，作为 Apple appAccountToken 传入以便 Webhook 关联用户 */
+  account_token?: string;
   apple_id?: string;
 }
 

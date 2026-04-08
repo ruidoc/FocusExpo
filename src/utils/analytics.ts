@@ -8,11 +8,9 @@
 
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
-import { useSuperwallStore } from 'expo-superwall';
 import { PostHog, usePostHog } from 'posthog-react-native';
 import { Platform } from 'react-native';
 import { APP_ENV } from '@/config/env';
-import { objectIdToUuid, isObjectId } from './uuid-mapper';
 import { storage } from './storage';
 
 // 全局 PostHog 实例（由 PostHogProviderWrapper 设置）
@@ -85,76 +83,6 @@ function buildBaseProperties(
 }
 
 /**
- * 等待 Superwall SDK 配置完成
- * 通过 subscribe 监听 isConfigured 状态变化，超时返回 false
- */
-function waitForSuperwallConfigured(timeoutMs = 5000): Promise<boolean> {
-  return new Promise(resolve => {
-    const state = useSuperwallStore.getState();
-    if (state.isConfigured) {
-      resolve(true);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      unsub();
-      resolve(false);
-    }, timeoutMs);
-
-    const unsub = useSuperwallStore.subscribe(s => {
-      if (s.isConfigured) {
-        clearTimeout(timer);
-        unsub();
-        resolve(true);
-      }
-    });
-  });
-}
-
-/**
- * Superwall 用户识别（独立异步，不阻塞主流程）
- * 等待 SDK ready 后再调用 identify
- */
-async function identifySuperwall(
-  userId: string,
-  properties?: Record<string, any>,
-) {
-  try {
-    const isReady = await waitForSuperwallConfigured();
-    if (!isReady) {
-      console.warn('[Superwall] SDK 配置超时（5s），跳过 identify');
-      return;
-    }
-
-    const superwall = useSuperwallStore.getState();
-
-    // iOS StoreKit 要求 userId 必须是 UUID 格式
-    // 如果传入的是 ObjectId，需要转换为 UUID v5
-    let superwallUserId: string;
-    if (isObjectId(userId)) {
-      superwallUserId = objectIdToUuid(userId);
-      console.log(
-        `[Superwall] ObjectId 转换为 UUID: ${userId} -> ${superwallUserId}`,
-      );
-    } else {
-      superwallUserId = userId;
-    }
-
-    await superwall.identify(superwallUserId);
-
-    if (properties) {
-      await superwall.setUserAttributes({
-        ...properties,
-        original_user_id: userId,
-      });
-    }
-    console.log('[Superwall] 用户识别成功:', superwallUserId);
-  } catch (error) {
-    console.warn('[Superwall] 用户识别失败:', error);
-  }
-}
-
-/**
  * 设置全局 PostHog 实例（由 PostHogProviderWrapper 调用）
  * @internal
  */
@@ -181,7 +109,6 @@ export const getPostHogClient = (): PostHog | null => {
 
 /**
  * 识别用户（登录后调用）
- * 同时识别 PostHog 和 Superwall 用户
  *
  * 支持两种调用方式：
  * 1. 在组件中：传入 usePostHogClient() 返回的实例
@@ -208,35 +135,20 @@ export const identifyUser = async (
   }
 
   syncNativeTrackingContext(userId);
-
-  // 2. Superwall 识别（关键：确保 Webhook 能关联到正确的用户）
-  identifySuperwall(userId, properties);
 };
 
 /**
  * 重置用户（登出后调用）
- * 同时重置 PostHog 和 Superwall 用户
  *
  * 支持两种调用方式：
  * 1. 在组件中：传入 usePostHogClient() 返回的实例
  * 2. 在非组件代码中：不传参数，自动获取全局实例
  */
 export const resetUser = async (posthog?: PostHog | null) => {
-  // 1. PostHog 重置
   const client = posthog || getPostHogClient();
   if (client) {
     client.reset();
     console.log('[PostHog] 用户重置');
-  }
-
-  // 2. Superwall 重置
-  try {
-    const superwall = useSuperwallStore.getState();
-    if (!superwall.isConfigured) return;
-    await superwall.reset();
-    console.log('[Superwall] 用户重置');
-  } catch (error) {
-    console.warn('[Superwall] 用户重置失败:', error);
   }
 };
 

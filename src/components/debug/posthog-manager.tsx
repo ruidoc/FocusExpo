@@ -12,10 +12,10 @@
 import { Flex, Switch } from '@/components/ui';
 import { useDebugStore, useExperimentStore } from '@/stores';
 import type { FeatureFlagState } from '@/stores/experiment';
-import { reloadFeatureFlags } from '@/utils/analytics';
+import { getPostHogClient, reloadFeatureFlags } from '@/utils/analytics';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 export const PostHogManager = () => {
   const [properties, setProperties] = useState<any[]>([]);
@@ -99,6 +99,16 @@ export const PostHogManager = () => {
       Alert.alert('错误', '刷新失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetPostHogUser = () => {
+    const client = getPostHogClient();
+    if (client) {
+      client.reset();
+      Alert.alert('成功', 'PostHog 用户已重置');
+    } else {
+      Alert.alert('提示', 'PostHog 客户端未初始化');
     }
   };
 
@@ -242,9 +252,19 @@ export const PostHogManager = () => {
             className="flex-1 px-3 pt-3"
             showsVerticalScrollIndicator={false}>
             {experiment.finalFlags.length > 0 ? (
-              experiment.finalFlags.map(item => (
-                <View key={item.key}>{renderExperimentItem({ item })}</View>
-              ))
+              <>
+                {experiment.finalFlags.map(item => (
+                  <View key={item.key}>{renderExperimentItem({ item })}</View>
+                ))}
+                <Pressable
+                  onPress={handleResetPostHogUser}
+                  className="mb-6 bg-gray-800 rounded-lg px-3 py-2.5 active:opacity-70 flex-row items-center justify-center gap-2 border border-gray-700">
+                  <Icon name="refresh-outline" size={16} color="#f97316" />
+                  <Text className="text-orange-400 text-sm font-medium">
+                    重置 PostHog 用户
+                  </Text>
+                </Pressable>
+              </>
             ) : (
               <View className="flex-1 justify-center items-center py-12">
                 <Icon name="flask-outline" size={48} color="#6b7280" />
@@ -257,17 +277,6 @@ export const PostHogManager = () => {
               </View>
             )}
           </ScrollView>
-
-          <Button
-            title="切换环境"
-            onPress={() => {
-              // debug.setEnvironment('production');
-              experiment.overrideFlag('user_onboarding', true);
-              // handleToggleExperiment('user_onboarding', true);
-              // experiment.overrideFlag('key3', false);
-              experiment.setTestVal({ key4: 'test4' });
-            }}
-          />
         </>
       ) : (
         <>

@@ -290,9 +290,6 @@ export { storage } from './storage';
 // 导出应用初始化工具
 export { initAppData } from './app-init';
 
-// 导出 Superwall 工具
-export { useSuperwall, useSuperwallUser } from './superwall';
-
 // 导出 PostHog Analytics 工具
 export * from './analytics';
 

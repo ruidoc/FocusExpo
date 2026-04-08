@@ -1,10 +1,10 @@
 import { Page } from '@/components/business';
 import { Toast } from '@/components/ui';
 import { useSubscriptionStore } from '@/stores';
-import { trackPaywallOpened, useSuperwall } from '@/utils';
+import { trackPaywallOpened } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
-import { useIAP } from 'expo-iap';
+import { router } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -22,12 +22,11 @@ const BENEFITS = [
   { icon: 'stats-chart' as const, title: '高级统计', desc: '多维度数据分析' },
   { icon: 'shield-checkmark' as const, title: '优先支持', desc: '专属客服通道' },
 ];
+const PRIVACY_URL = 'https://focus.freeshore.cn/privacy';
 
 const VipPage = () => {
   const { dark } = useTheme();
   const subStore = useSubscriptionStore();
-  const { registerPlacement } = useSuperwall();
-  const { restorePurchases } = useIAP();
   const [loading, setLoading] = useState(false);
   const isFocusedRef = useRef(true);
 
@@ -46,13 +45,13 @@ const VipPage = () => {
 
   const handleUpgrade = async () => {
     setLoading(true);
-    trackPaywallOpened('show_paywall', {
+    trackPaywallOpened('paywall_index', {
       entry_source: 'vip_page',
       screen_name: 'user_vip',
     });
     try {
       if (!isFocusedRef.current) return;
-      await registerPlacement({ placement: 'show_paywall' });
+      router.push('/paywall');
     } finally {
       setLoading(false);
     }
@@ -67,17 +66,6 @@ const VipPage = () => {
       }
     } catch {
       Toast('无法打开订阅管理页面');
-    }
-  };
-
-  const onRestorePurchases = async () => {
-    Toast('正在恢复购买记录...');
-    try {
-      await restorePurchases();
-      await subStore.getSubscription();
-      Toast('已恢复购买记录');
-    } catch {
-      Toast('恢复失败，请稍后重试');
     }
   };
 
@@ -234,26 +222,8 @@ const VipPage = () => {
           </TouchableOpacity>
         )}
 
-        {/* 取消订阅 */}
-        {isActive && sub && sub.status === 'active' && (
-          <TouchableOpacity
-            className="h-[54px] rounded-[14px] justify-center items-center mb-4 border"
-            style={{ backgroundColor: CARD, borderColor: BORDER }}
-            activeOpacity={0.7}
-            onPress={onManageSubscriptions}>
-            <Text className="text-[15px]" style={{ color: '#EF4444' }}>
-              取消订阅
-            </Text>
-          </TouchableOpacity>
-        )}
-
         {/* 合规入口 */}
         <View className="flex-row justify-center gap-6 mb-5">
-          <TouchableOpacity className="py-2" onPress={onRestorePurchases}>
-            <Text className="text-sm" style={{ color: ACCENT }}>
-              恢复购买
-            </Text>
-          </TouchableOpacity>
           {!isActive && (
             <TouchableOpacity className="py-2" onPress={onManageSubscriptions}>
               <Text className="text-sm" style={{ color: ACCENT }}>
@@ -277,9 +247,7 @@ const VipPage = () => {
             ·
           </Text>
           <TouchableOpacity
-            onPress={() =>
-              Linking.openURL('https://focusone.ruidoc.cn/privacy')
-            }>
+            onPress={() => Linking.openURL(PRIVACY_URL)}>
             <Text className="text-xs" style={{ color: TEXT2 }}>
               隐私政策
             </Text>

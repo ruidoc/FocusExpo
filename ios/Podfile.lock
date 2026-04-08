@@ -3306,12 +3306,6 @@ PODS:
     - SDWebImage/Core (~> 5.17)
   - Sentry/HybridSDK (8.56.1)
   - SocketRocket (0.7.1)
-  - Superscript (1.0.12)
-  - SuperwallExpo (1.0.2):
-    - ExpoModulesCore
-    - SuperwallKit (= 4.12.9)
-  - SuperwallKit (4.12.9):
-    - Superscript (= 1.0.12)
   - WechatOpenSDK (2.0.5)
   - Yoga (0.0.0)
 
@@ -3444,7 +3438,6 @@ DEPENDENCIES:
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
   - SocketRocket (~> 0.7.1)
-  - SuperwallExpo (from `../node_modules/expo-superwall/ios`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -3461,8 +3454,6 @@ SPEC REPOS:
     - SDWebImageWebPCoder
     - Sentry
     - SocketRocket
-    - Superscript
-    - SuperwallKit
     - WechatOpenSDK
 
 EXTERNAL SOURCES:
@@ -3719,8 +3710,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
-  SuperwallExpo:
-    :path: "../node_modules/expo-superwall/ios"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -3863,9 +3852,6 @@ SPEC CHECKSUMS:
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   Sentry: b3ec44d01708fce73f99b544beb57e890eca4406
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Superscript: 00e98fcd78a2cefa33b658d4a16756b535eabd2c
-  SuperwallExpo: 7fea7a273fb0cbb5c229df760c3d16d5ff12ed0c
-  SuperwallKit: d39b3edf823893e134959fa7f873eed155435c24
   WechatOpenSDK: a363db41205f57abbc05bb6b80bf2d2ed1ea40bf
   Yoga: 728df40394d49f3f471688747cf558158b3a3bd1
 

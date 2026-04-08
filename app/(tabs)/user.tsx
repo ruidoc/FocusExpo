@@ -33,6 +33,14 @@ const App = () => {
     }
   };
 
+  const toVipEntry = () => {
+    if (isActive) {
+      router.push('/user/vip');
+      return;
+    }
+    router.push('/paywall');
+  };
+
   const formatExpiry = (dateStr: string) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -123,7 +131,7 @@ const App = () => {
       {store.uInfo && showVip && (
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => toNavigate('paywall')}
+          onPress={toVipEntry}
           className="mx-4 rounded-2xl p-[18px] overflow-hidden"
           style={
             isActive
@@ -162,7 +170,7 @@ const App = () => {
                 activeOpacity={0.7}
                 className="px-3.5 py-1.5 rounded-[20px]"
                 style={{ backgroundColor: '#D4A44A' }}
-                onPress={() => toNavigate('paywall')}>
+                onPress={() => router.push('/paywall')}>
                 <Text className="text-[13px] font-semibold text-white">
                   升级
                 </Text>

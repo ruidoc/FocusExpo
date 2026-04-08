@@ -4,12 +4,17 @@
 import { Page } from '@/components/business';
 import { Checkbox, Toast } from '@/components/ui';
 import { useSubscriptionStore, useUserStore } from '@/stores';
-import { trackPaywallOpened, trackPurchaseCompleted, trackPurchaseFailed } from '@/utils';
 import type { Product } from '@/stores/subscription';
+import {
+  trackPaywallOpened,
+  trackPurchaseCompleted,
+  trackPurchaseFailed,
+} from '@/utils';
+import { isSubscriptionEntitled } from '@/utils/subscription';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import type { Purchase, SubscriptionProduct } from 'expo-iap';
-import { ErrorCode, useIAP } from 'expo-iap';
+import { ErrorCode, isEligibleForIntroOfferIOS, useIAP } from 'expo-iap';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -32,8 +37,6 @@ const BENEFITS = [
   '优先体验新功能',
 ];
 
-type DisplayProduct = Product & { iapProduct?: SubscriptionProduct };
-
 // 设计色板 — 金色 VIP 主题
 const BG = '#111111';
 const CARD_BG = '#1E1C16';
@@ -42,6 +45,240 @@ const GOLD_LIGHT = '#EFCB68';
 const GOLD_DARK = '#B8862D';
 const WHITE = '#FFFFFF';
 const TEXT_MUTED = 'rgba(255,255,255,0.6)';
+
+type OfferPeriod = {
+  unit: 'DAY' | 'WEEK' | 'MONTH' | 'YEAR' | '';
+  value: number;
+};
+
+type OfferInfo = {
+  displayPrice: string;
+  paymentMode: '' | 'FREETRIAL' | 'PAYASYOUGO' | 'PAYUPFRONT';
+  period: OfferPeriod;
+  periodCount: number;
+  price: number;
+  type: 'introductory' | 'promotional';
+};
+
+type SubscriptionInfoLike = {
+  introductoryOffer?: OfferInfo;
+  subscriptionGroupId?: string;
+};
+
+type DisplayProduct = Product & {
+  iapProduct?: SubscriptionProduct;
+  isEligibleForIntroOffer?: boolean;
+};
+
+type RuntimeDiscount = {
+  localizedPrice?: string;
+  priceFormatted?: string;
+  priceString?: string;
+  paymentMode?: string;
+  modeType?: string;
+  subscriptionPeriod?: string;
+  recurringSubscriptionPeriod?: string;
+  numberOfPeriods?: string | number;
+  numOfPeriods?: string | number;
+};
+
+const formatPeriodLabel = (period?: OfferPeriod) => {
+  if (!period || !period.value) return '';
+  switch (period.unit) {
+    case 'DAY':
+      return `${period.value}天`;
+    case 'WEEK':
+      return period.value === 1 ? '首周' : `${period.value}周`;
+    case 'MONTH':
+      return period.value === 1 ? '首月' : `${period.value}个月`;
+    case 'YEAR':
+      return period.value === 1 ? '首年' : `${period.value}年`;
+    default:
+      return '';
+  }
+};
+
+const normalizePriceText = (text?: string) => text?.replace(/\.00\b/, '') || '';
+
+const getSubscriptionInfo = (
+  product?: SubscriptionProduct,
+): SubscriptionInfoLike => {
+  return (
+    (
+      product as SubscriptionProduct & {
+        subscriptionInfoIOS?: SubscriptionInfoLike;
+      }
+    )?.subscriptionInfoIOS ?? {}
+  );
+};
+
+const parseIsoPeriod = (period?: string) => {
+  const match = period?.match(
+    /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$/,
+  );
+  if (!match) return null;
+
+  const [, years, months, weeks, days] = match;
+  if (years) return { unit: 'YEAR' as const, value: Number(years) };
+  if (months) return { unit: 'MONTH' as const, value: Number(months) };
+  if (weeks) return { unit: 'WEEK' as const, value: Number(weeks) };
+  if (days) return { unit: 'DAY' as const, value: Number(days) };
+  return null;
+};
+
+const getDiscountFromJsonRepresentation = (product?: SubscriptionProduct) => {
+  const jsonRepresentation = (product as any)?.jsonRepresentationIOS;
+  if (!jsonRepresentation) return null;
+
+  try {
+    const parsed = JSON.parse(jsonRepresentation);
+    const discounts = parsed?.attributes?.offers?.flatMap(
+      (offer: any) => offer?.discounts || [],
+    );
+    return discounts?.[0] || null;
+  } catch {
+    return null;
+  }
+};
+
+const getDiscount = (product?: SubscriptionProduct): RuntimeDiscount | null => {
+  const runtimeDiscount =
+    (product as any)?.discounts?.[0] || (product as any)?.discountsIOS?.[0];
+  return runtimeDiscount || getDiscountFromJsonRepresentation(product);
+};
+
+const getOfferPaymentMode = (
+  product?: SubscriptionProduct,
+  discount?: RuntimeDiscount,
+) => {
+  const rawMode =
+    (product as any)?.introductoryPricePaymentModeIOS ||
+    discount?.paymentMode ||
+    discount?.modeType ||
+    '';
+
+  const normalizedMode = String(rawMode).toUpperCase();
+  if (normalizedMode === 'FREETRIAL' || normalizedMode === 'FREE_TRIAL') {
+    return 'FREETRIAL' as const;
+  }
+  if (normalizedMode === 'PAYASYOUGO' || normalizedMode === 'PAY_AS_YOU_GO') {
+    return 'PAYASYOUGO' as const;
+  }
+  if (normalizedMode === 'PAYUPFRONT' || normalizedMode === 'PAY_UP_FRONT') {
+    return 'PAYUPFRONT' as const;
+  }
+  return '' as const;
+};
+
+const getOfferPeriodText = (
+  product?: SubscriptionProduct,
+  paymentMode?: string,
+  discount?: RuntimeDiscount | null,
+) => {
+  const parsedIsoPeriod = parseIsoPeriod(
+    discount?.subscriptionPeriod || discount?.recurringSubscriptionPeriod,
+  );
+
+  const introductoryPeriodUnit = (product as any)
+    ?.introductoryPriceSubscriptionPeriodIOS as OfferPeriod['unit'] | undefined;
+  const introductoryPeriodCount = Number(
+    (product as any)?.introductoryPriceNumberOfPeriodsIOS,
+  );
+
+  const fallbackPeriod =
+    parsedIsoPeriod ||
+    (introductoryPeriodUnit && introductoryPeriodCount
+      ? {
+          unit: introductoryPeriodUnit,
+          value: introductoryPeriodCount,
+        }
+      : null);
+
+  if (!fallbackPeriod?.value) return '';
+
+  if (paymentMode === 'FREETRIAL') {
+    return formatPeriodLabel(fallbackPeriod);
+  }
+
+  if (fallbackPeriod.unit === 'WEEK' && fallbackPeriod.value === 1) {
+    return '首周';
+  }
+  if (fallbackPeriod.unit === 'MONTH' && fallbackPeriod.value === 1) {
+    return '首月';
+  }
+  if (fallbackPeriod.unit === 'YEAR' && fallbackPeriod.value === 1) {
+    return '首年';
+  }
+  if (fallbackPeriod.unit === 'DAY' && fallbackPeriod.value === 7) {
+    return '首周';
+  }
+
+  return formatPeriodLabel(fallbackPeriod);
+};
+
+const getOfferPriceText = (discount?: RuntimeDiscount | null) => {
+  return normalizePriceText(
+    discount?.localizedPrice ||
+      discount?.priceFormatted ||
+      discount?.priceString,
+  );
+};
+
+const getOfferCopy = (product?: DisplayProduct) => {
+  if (!product?.iapProduct) {
+    return {
+      offerText: '',
+      checkoutText: '立即开通',
+    };
+  }
+
+  const info = getSubscriptionInfo(product.iapProduct);
+  const explicitOffer = info.introductoryOffer;
+  const eligible = product.isEligibleForIntroOffer;
+  const discount = getDiscount(product.iapProduct);
+  const paymentMode =
+    explicitOffer?.paymentMode ||
+    getOfferPaymentMode(product.iapProduct, discount);
+
+  if (!paymentMode) {
+    return {
+      offerText: '',
+      checkoutText: '立即开通',
+    };
+  }
+
+  if (eligible === false) {
+    return {
+      offerText: '新用户优惠仅可享受一次',
+      checkoutText: '立即开通',
+    };
+  }
+
+  const periodText =
+    (explicitOffer && formatPeriodLabel(explicitOffer.period)) ||
+    getOfferPeriodText(product.iapProduct, paymentMode, discount);
+  const offerPriceText =
+    explicitOffer?.displayPrice || getOfferPriceText(discount);
+
+  if (paymentMode === 'FREETRIAL') {
+    return {
+      offerText: `${periodText}免费试用`,
+      checkoutText: `开始${periodText}免费试用`,
+    };
+  }
+
+  if (offerPriceText) {
+    return {
+      offerText: `${periodText}${offerPriceText}`,
+      checkoutText: `${periodText}${offerPriceText}开通`,
+    };
+  }
+
+  return {
+    offerText: '',
+    checkoutText: '立即开通',
+  };
+};
 
 const PaywallPage = () => {
   useTheme(); // 本页固定深色主题
@@ -54,6 +291,9 @@ const PaywallPage = () => {
     'idle' | 'processing' | 'success' | 'failed'
   >('idle');
   const [agreed, setAgreed] = useState(false);
+  const [introOfferEligibility, setIntroOfferEligibility] = useState<
+    Record<string, boolean>
+  >({});
 
   const {
     connected,
@@ -71,14 +311,22 @@ const PaywallPage = () => {
         price: selectedProduct?.price,
         currency: 'CNY',
       });
-      Toast('订阅成功，感谢您的购买');
-      // Webhook 入库可能有延迟，短轮询获取订阅后再关闭
-      await subStore.getSubscription();
-      for (let i = 0; i < 3; i++) {
-        await new Promise(r => setTimeout(r, 1000));
-        await subStore.getSubscription();
-        if (useSubscriptionStore.getState().isSubscribed) break;
+      const synced = await waitForSubscriptionSync();
+      if (!synced) {
+        Alert.alert(
+          '购买已完成',
+          'App Store 已确认购买，权益通常会在几秒内同步完成。若未立即生效，可稍后返回会员页查看或点击“恢复购买”。',
+          [
+            {
+              text: '知道了',
+              onPress: () => router.back(),
+            },
+          ],
+        );
+        return;
       }
+
+      Toast('订阅成功，权益已生效');
       router.back();
     },
     onPurchaseError: (error: { code?: string; message?: string }) => {
@@ -113,9 +361,7 @@ const PaywallPage = () => {
   // products 加载后默认选中 period 最大的套餐
   useEffect(() => {
     if (products.length > 0 && !selectedSku) {
-      const best = products.reduce((a, b) =>
-        a.period > b.period ? a : b,
-      );
+      const best = products.reduce((a, b) => (a.period > b.period ? a : b));
       setSelectedSku(best.product_id);
     }
   }, [products, selectedSku]);
@@ -128,14 +374,56 @@ const PaywallPage = () => {
     });
   }, [connected, products, fetchProducts]);
 
+  useEffect(() => {
+    const groupIds = Array.from(
+      new Set(
+        subscriptions
+          .map(product => getSubscriptionInfo(product).subscriptionGroupId)
+          .filter(Boolean),
+      ),
+    ) as string[];
+
+    if (groupIds.length === 0) {
+      setIntroOfferEligibility({});
+      return;
+    }
+
+    let mounted = true;
+    Promise.all(
+      groupIds.map(async groupId => {
+        const eligible = await isEligibleForIntroOfferIOS(groupId);
+        return [groupId, eligible] as const;
+      }),
+    )
+      .then(entries => {
+        if (!mounted) return;
+        setIntroOfferEligibility(Object.fromEntries(entries));
+      })
+      .catch(error => {
+        console.warn('[Paywall] 获取 intro offer 资格失败:', error);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [subscriptions]);
+
   const displayProducts: DisplayProduct[] = useMemo(() => {
     return products.map(c => ({
       ...c,
       iapProduct: subscriptions.find(
         (s: SubscriptionProduct) => s.id === c.product_id,
       ),
+      isEligibleForIntroOffer:
+        introOfferEligibility[
+          getSubscriptionInfo(
+            subscriptions.find(
+              (s: SubscriptionProduct) => s.id === c.product_id,
+            ),
+          ).subscriptionGroupId || ''
+        ],
     }));
-  }, [products, subscriptions]);
+  }, [products, subscriptions, introOfferEligibility]);
 
   const selectedProduct =
     displayProducts.find(p => p.product_id === selectedSku) ??
@@ -159,11 +447,29 @@ const PaywallPage = () => {
     return null;
   };
 
+  const waitForSubscriptionSync = async () => {
+    const delays = [0, 1000, 1500, 2000, 2500, 3000, 4000];
+
+    for (const delay of delays) {
+      if (delay > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
+      await subStore.getSubscription();
+      const currentSubscription = useSubscriptionStore.getState().subscription;
+      if (isSubscriptionEntitled(currentSubscription)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const doCheckout = async () => {
     if (!selectedProduct) return;
     setPaymentStatus('processing');
     try {
-      const appAccountToken = userStore.uInfo?.superwall_uuid;
+      const appAccountToken = userStore.uInfo?.account_token;
       await requestPurchase({
         request: {
           ios: {
@@ -204,8 +510,8 @@ const PaywallPage = () => {
   const onRestore = async () => {
     try {
       await restorePurchases();
-      await subStore.getSubscription();
-      Toast('已恢复购买记录');
+      const synced = await waitForSubscriptionSync();
+      Toast(synced ? '已恢复购买记录' : '已提交恢复请求，请稍后查看');
     } catch {
       Toast('恢复失败，请稍后重试');
     }
@@ -342,7 +648,7 @@ const PaywallPage = () => {
                       <Text
                         className="text-sm mt-1"
                         style={{ color: TEXT_MUTED }}>
-                        3 天免费试用
+                        {getOfferCopy(p).offerText || '标准价格，自动续费'}
                       </Text>
                     </View>
                     {pillLabel && (
@@ -368,11 +674,7 @@ const PaywallPage = () => {
                         {getPriceDisplay(p)}
                       </Text>
                       <Text className="text-xs" style={{ color: TEXT_MUTED }}>
-                        {p.period >= 12
-                          ? '/年'
-                          : p.period >= 7
-                            ? '/周'
-                            : '/月'}
+                        {p.period >= 12 ? '/年' : p.period >= 7 ? '/周' : '/月'}
                       </Text>
                     </View>
                   </View>
@@ -417,7 +719,7 @@ const PaywallPage = () => {
               <Text
                 className="text-[17px] font-bold"
                 style={{ color: '#1A1200' }}>
-                开始免费试用
+                {getOfferCopy(selectedProduct).checkoutText}
               </Text>
             )}
           </LinearGradient>

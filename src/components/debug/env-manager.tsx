@@ -4,12 +4,11 @@
 
 import { Flex } from '@/components/ui';
 import { useDebugStore } from '@/stores';
-import { getPostHogClient } from '@/utils/analytics';
 import { storage } from '@/utils/storage';
 import Icon from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState } from 'react';
-import { Alert, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 export const EnvironmentManager = () => {
   const debugStore = useDebugStore();
@@ -35,19 +34,6 @@ export const EnvironmentManager = () => {
 
     storage.setGroup('http_base_url', baseURLMap[env]);
     Alert.alert('成功', `已切换到${env === 'development' ? '开发' : env === 'staging' ? '测试' : '生产'}环境`);
-  };
-
-  const handleCancelSubscription = async () => {
-    try {
-      if (Platform.OS === 'ios') {
-        await Linking.openURL('itms-apps://apps.apple.com/account/subscriptions');
-      } else {
-        Alert.alert('提示', 'Android 平台请在 Google Play 商店中管理订阅');
-      }
-    } catch (e) {
-      console.warn('打开订阅管理失败：', e);
-      Alert.alert('错误', '无法打开订阅管理页面');
-    }
   };
 
   return (
@@ -95,26 +81,6 @@ export const EnvironmentManager = () => {
         </Text>
         <Flex className="flex-col gap-2">
           <Pressable
-            onPress={handleCancelSubscription}
-            className="bg-gray-800 p-4 rounded-lg active:opacity-70 flex-row items-center justify-center gap-2 border border-gray-700">
-            <Icon name="card-outline" size={18} color="#ef4444" />
-            <Text className="text-red-400 font-medium">取消订阅</Text>
-          </Pressable>
-          <Pressable
-            onPress={async () => {
-              const client = getPostHogClient();
-              if (client) {
-                client.reset();
-                Alert.alert('成功', 'PostHog 用户已重置');
-              } else {
-                Alert.alert('提示', 'PostHog 客户端未初始化');
-              }
-            }}
-            className="bg-gray-800 p-4 rounded-lg active:opacity-70 flex-row items-center justify-center gap-2 border border-gray-700">
-            <Icon name="refresh-outline" size={18} color="#f97316" />
-            <Text className="text-orange-400 font-medium">重置 PostHog 用户</Text>
-          </Pressable>
-          <Pressable
             onPress={async () => {
               Alert.alert('确认', '确定要清除所有本地存储吗？此操作不可恢复！', [
                 { text: '取消', style: 'cancel' },
@@ -130,7 +96,7 @@ export const EnvironmentManager = () => {
             }}
             className="bg-gray-800 p-4 rounded-lg active:opacity-70 flex-row items-center justify-center gap-2 border border-gray-700">
             <Icon name="trash-outline" size={18} color="#ef4444" />
-            <Text className="text-red-400 font-medium">清除所有本地存储</Text>
+            <Text className="text-red-400 font-medium">清除 AsyncStorage</Text>
           </Pressable>
         </Flex>
       </View>
