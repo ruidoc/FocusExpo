@@ -6,23 +6,29 @@ import { Checkbox, Toast } from '@/components/ui';
 import { useSubscriptionStore, useUserStore } from '@/stores';
 import type { Product } from '@/stores/subscription';
 import {
-  trackPaywallOpened,
   trackPaywallClosed,
+  trackPaywallOpened,
   trackPaywallProductSelected,
   trackPaywallPurchaseClicked,
   trackPurchaseCancelled,
-  trackPurchaseStarted,
   trackPurchaseCompleted,
   trackPurchaseFailed,
+  trackPurchaseStarted,
   trackRestoreCompleted,
   trackRestoreFailed,
   trackRestoreStarted,
 } from '@/utils';
+import request from '@/utils/request';
 import { isSubscriptionEntitled } from '@/utils/subscription';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useTheme } from '@react-navigation/native';
 import type { Purchase, SubscriptionProduct } from 'expo-iap';
-import { ErrorCode, isEligibleForIntroOfferIOS, useIAP } from 'expo-iap';
+import {
+  ErrorCode,
+  isEligibleForIntroOfferIOS,
+  restorePurchases as restoreAvailablePurchases,
+  useIAP,
+} from 'expo-iap';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -39,20 +45,23 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BENEFITS = [
-  '无限选择APP数量，可选分类',
+  '无限选择APP数量/分类',
   '不限制每日专注时长',
-  '多维度专注数据分析',
-  '优先体验新功能',
+  '支持放行模式（应用白名单）',
+  '内部专属群优先支持',
 ];
 
 // 设计色板 — 金色 VIP 主题
 const BG = '#111111';
-const CARD_BG = '#1E1C16';
+const CARD_BG = '#1E1C1690';
 const GOLD = '#D4A44A';
 const GOLD_LIGHT = '#EFCB68';
 const GOLD_DARK = '#B8862D';
 const WHITE = '#FFFFFF';
 const TEXT_MUTED = 'rgba(255,255,255,0.6)';
+const TERMS_URL = 'https://focus.freeshore.cn/user-agreement';
+const PRIVACY_URL = 'https://focus.freeshore.cn/privacy';
+const PAID_SERVICE_URL = 'https://focus.freeshore.cn/paid-agreement';
 
 type OfferPeriod = {
   unit: 'DAY' | 'WEEK' | 'MONTH' | 'YEAR' | '';
@@ -295,8 +304,11 @@ const getTrackProductProps = (product?: DisplayProduct) => ({
   period: product?.period,
   price: product?.price,
   currency: 'CNY',
-  offer_type: getOfferPaymentMode(product?.iapProduct, getDiscount(product?.iapProduct))
-    .toLowerCase() || 'none',
+  offer_type:
+    getOfferPaymentMode(
+      product?.iapProduct,
+      getDiscount(product?.iapProduct),
+    ).toLowerCase() || 'none',
   offer_price: getDiscount(product?.iapProduct)?.priceString,
   is_intro_offer_eligible: product?.isEligibleForIntroOffer,
 });
@@ -311,18 +323,15 @@ const PaywallPage = () => {
   const [paymentStatus, setPaymentStatus] = useState<
     'idle' | 'processing' | 'success' | 'failed'
   >('idle');
+  const [restoreStatus, setRestoreStatus] = useState<'idle' | 'processing'>(
+    'idle',
+  );
   const [agreed, setAgreed] = useState(false);
   const [introOfferEligibility, setIntroOfferEligibility] = useState<
     Record<string, boolean>
   >({});
 
-  const {
-    connected,
-    subscriptions,
-    fetchProducts,
-    requestPurchase,
-    restorePurchases,
-  } = useIAP({
+  const { connected, subscriptions, fetchProducts, requestPurchase } = useIAP({
     onPurchaseSuccess: async (_purchase: Purchase) => {
       setPaymentStatus('success');
       trackPurchaseCompleted(selectedProduct?.product_id, {
@@ -350,10 +359,14 @@ const PaywallPage = () => {
     onPurchaseError: (error: { code?: string; message?: string }) => {
       if (error?.code === ErrorCode.E_USER_CANCELLED) {
         setPaymentStatus('idle');
-        trackPurchaseCancelled(selectedProduct?.product_id, selectedProduct?.period, {
-          ...getTrackProductProps(selectedProduct),
-          purchase_source: 'app_store',
-        });
+        trackPurchaseCancelled(
+          selectedProduct?.product_id,
+          selectedProduct?.period,
+          {
+            ...getTrackProductProps(selectedProduct),
+            purchase_source: 'app_store',
+          },
+        );
         return;
       }
       setPaymentStatus('failed');
@@ -461,12 +474,16 @@ const PaywallPage = () => {
     return formatPrice(p.price);
   };
 
-  const getPillLabel = (p: Product) => {
+  const getOriginalPriceDisplay = (p: Product) => {
     if (p.original_price && p.original_price > p.price) {
-      const rate = Math.round((1 - p.price / p.original_price) * 100);
-      return `省 ${rate}%`;
+      return formatPrice(p.original_price);
     }
-    return null;
+    return '';
+  };
+
+  const getDailyPriceDisplay = (p: Product) => {
+    const days = p.period >= 12 ? 365 : p.period >= 7 ? 7 : 30 * p.period;
+    return formatPrice(p.price / Math.max(days, 1));
   };
 
   const waitForSubscriptionSync = async () => {
@@ -499,14 +516,10 @@ const PaywallPage = () => {
       selectedProduct.period,
       productTrackProps,
     );
-    trackPurchaseStarted(
-      selectedProduct.product_id,
-      selectedProduct.period,
-      {
-        ...productTrackProps,
-        purchase_source: 'app_store',
-      },
-    );
+    trackPurchaseStarted(selectedProduct.product_id, selectedProduct.period, {
+      ...productTrackProps,
+      purchase_source: 'app_store',
+    });
     try {
       const appAccountToken = userStore.uInfo?.account_token;
       await requestPurchase({
@@ -537,7 +550,7 @@ const PaywallPage = () => {
   const handleCheckout = () => {
     if (!selectedProduct) return;
     if (!agreed) {
-      Alert.alert('会员自动续费服务协议', '已阅读并同意会员自动续费服务协议', [
+      Alert.alert('会员付费服务协议', '已阅读并同意会员付费服务协议', [
         { text: '取消', style: 'cancel' },
         {
           text: '同意',
@@ -553,20 +566,73 @@ const PaywallPage = () => {
   };
 
   const onRestore = async () => {
+    if (restoreStatus === 'processing') {
+      return;
+    }
+
+    setRestoreStatus('processing');
     trackRestoreStarted({
       screen_name: 'paywall_index',
       entry_source: 'paywall_index',
     });
     try {
-      await restorePurchases();
-      const synced = await waitForSubscriptionSync();
+      const restoredPurchases = await restoreAvailablePurchases({
+        alsoPublishToEventListenerIOS: false,
+        onlyIncludeActiveItemsIOS: true,
+      });
+      const sortedRestoredPurchases = restoredPurchases
+        .filter(purchase => !!purchase.purchaseToken)
+        .sort((a, b) => b.transactionDate - a.transactionDate);
+      const restorablePurchase =
+        sortedRestoredPurchases.find(purchase =>
+          products.some(product => product.product_id === purchase.productId),
+        ) || sortedRestoredPurchases[0];
+
+      if (!restorablePurchase?.purchaseToken) {
+        trackRestoreCompleted({
+          screen_name: 'paywall_index',
+          entry_source: 'paywall_index',
+          subscription_status:
+            useSubscriptionStore.getState().subscription?.status,
+          is_entitled: false,
+        });
+        Toast('未找到可恢复的有效订阅');
+        return;
+      }
+
+      const restoreRes: HttpRes = await request.post(
+        '/subscription/apple/restore',
+        {
+          purchaseToken: restorablePurchase.purchaseToken,
+          transactionId:
+            restorablePurchase.transactionId || restorablePurchase.id,
+          originalTransactionId:
+            'originalTransactionIdentifierIOS' in restorablePurchase
+              ? restorablePurchase.originalTransactionIdentifierIOS
+              : undefined,
+          productId: restorablePurchase.productId,
+        },
+        { silent: true } as any,
+      );
+      const synced =
+        restoreRes.statusCode === 200 && restoreRes.data?.entitled
+          ? true
+          : await waitForSubscriptionSync();
+
+      if (synced) {
+        await subStore.getSubscription();
+      }
       trackRestoreCompleted({
         screen_name: 'paywall_index',
         entry_source: 'paywall_index',
-        subscription_status: useSubscriptionStore.getState().subscription?.status,
+        subscription_status:
+          useSubscriptionStore.getState().subscription?.status,
         is_entitled: synced,
       });
       Toast(synced ? '已恢复购买记录' : '已提交恢复请求，请稍后查看');
+      if (synced) {
+        router.back();
+      }
     } catch (error: any) {
       trackRestoreFailed({
         screen_name: 'paywall_index',
@@ -574,7 +640,9 @@ const PaywallPage = () => {
         error_code: error?.code,
         error_message: error?.message,
       });
-      Toast('恢复失败，请稍后重试');
+      Toast(error?.response?.data?.message || '恢复失败，请稍后重试');
+    } finally {
+      setRestoreStatus('idle');
     }
   };
 
@@ -584,14 +652,8 @@ const PaywallPage = () => {
     <Page bgcolor={BG}>
       {/* 顶部栏：左关闭 / 右恢复购买 */}
       <View
-        className="flex-row items-center justify-between"
-        style={{
-          position: 'absolute',
-          top: insets.top,
-          left: 16,
-          right: 16,
-          zIndex: 10,
-        }}>
+        className="absolute left-4 right-4 z-10 flex-row items-center justify-between"
+        style={{ top: insets.top }}>
         <Pressable
           onPress={() => {
             trackPaywallClosed('paywall_index', {
@@ -603,20 +665,23 @@ const PaywallPage = () => {
             router.back();
           }}
           hitSlop={12}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: 'rgba(255,255,255,0.12)',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
+          className="h-9 w-9 items-center justify-center rounded-full bg-white/10">
           <Icon name="close" size={20} color={WHITE} />
         </Pressable>
-        <Pressable onPress={onRestore} hitSlop={12}>
-          <Text className="text-[13px]" style={{ color: TEXT_MUTED }}>
-            恢复购买
-          </Text>
+        <Pressable
+          onPress={onRestore}
+          hitSlop={12}
+          disabled={restoreStatus === 'processing'}
+          className="min-h-7 min-w-[72px] items-end justify-center"
+          style={{ opacity: restoreStatus === 'processing' ? 0.7 : 1 }}>
+          {restoreStatus === 'processing' ? (
+            <View className="flex-row items-center gap-1.5">
+              <ActivityIndicator size="small" color={TEXT_MUTED} />
+              <Text className="text-[13px] text-white/60">恢复中</Text>
+            </View>
+          ) : (
+            <Text className="text-[13px] text-white/60">恢复购买</Text>
+          )}
         </Pressable>
       </View>
 
@@ -629,37 +694,29 @@ const PaywallPage = () => {
         }}
         showsVerticalScrollIndicator={false}>
         {/* 标题 */}
-        <View className="flex-row items-center justify-center mb-8">
-          <Text
-            className="text-[28px] font-bold mr-1"
-            style={{ color: WHITE, lineHeight: 36 }}>
-            专注契约
+        <View className="mb-8 flex-row items-center justify-center">
+          <Text className="mr-1 text-[26px] font-bold leading-9 text-white">
+            解锁全部权益
           </Text>
           <LinearGradient
             colors={[GOLD_LIGHT, GOLD_DARK]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
-              paddingHorizontal: 8,
-              paddingVertical: 3,
               borderRadius: 8,
             }}>
-            <Text className="text-[18px] font-bold" style={{ color: WHITE }}>
-              Pro
-            </Text>
+            <View className="px-2 py-[3px]">
+              <Text className="text-[18px] font-bold text-white">Pro</Text>
+            </View>
           </LinearGradient>
         </View>
 
         {/* 权益 — 对勾 + 单行 */}
-        <View style={{ gap: 20, marginBottom: 36 }}>
+        <View className="mb-9 gap-[14px]">
           {BENEFITS.map((text, i) => (
-            <View key={i} className="flex-row items-center" style={{ gap: 14 }}>
-              <Icon name="checkmark-circle" size={22} color={GOLD} />
-              <Text
-                className="text-[16px] font-medium"
-                style={{ color: 'rgba(255,255,255,0.75)' }}>
-                {text}
-              </Text>
+            <View key={i} className="flex-row items-center gap-2.5">
+              <Icon name="checkmark" size={20} color={'#40C700'} />
+              <Text className="text-[15px] text-white/60">{text}</Text>
             </View>
           ))}
         </View>
@@ -667,14 +724,13 @@ const PaywallPage = () => {
         {/* 订阅卡片 */}
         {!connected || products.length === 0 ? (
           <View className="py-8 items-center">
-            <ActivityIndicator size="large" color={GOLD} />
+            <ActivityIndicator size="large" />
           </View>
         ) : (
-          <View style={{ gap: 12, marginBottom: 8 }}>
-            {displayProducts.map(p => {
+          <View className="mb-2 gap-3">
+            {displayProducts.map((p, index) => {
               const selected = isSelected(p);
-              const pillLabel = getPillLabel(p);
-              const isYearly = p.period >= 12;
+              const originalPrice = getOriginalPriceDisplay(p);
               return (
                 <Pressable
                   key={p.product_id}
@@ -685,70 +741,45 @@ const PaywallPage = () => {
                     });
                   }}
                   style={{
-                    backgroundColor: CARD_BG,
-                    borderRadius: 16,
-                    padding: 18,
+                    backgroundColor: selected
+                      ? CARD_BG
+                      : 'rgba(255,255,255,0.03)',
                     borderWidth: 2,
-                    borderColor: selected ? GOLD : 'rgba(255,255,255,0.12)',
-                    overflow: 'hidden',
-                  }}>
-                  {isYearly && (
+                    borderColor: selected ? GOLD : 'rgba(255,255,255,0.16)',
+                  }}
+                  className="rounded-[20px] px-5 pb-[18px] pt-[18px]">
+                  <View className="flex-row items-center justify-between gap-[14px]">
                     <View
+                      className="h-[22px] w-[22px] items-center justify-center rounded-full"
                       style={{
-                        position: 'absolute',
-                        top: -2,
-                        right: 16,
-                        zIndex: 1,
-                        backgroundColor: GOLD_DARK,
-                        paddingHorizontal: 12,
-                        paddingVertical: 4,
-                        borderBottomLeftRadius: 8,
-                        borderBottomRightRadius: 8,
+                        borderWidth: 1,
+                        borderColor: selected ? GOLD : 'rgba(255,255,255,0.2)',
                       }}>
-                      <Text
-                        className="text-xs font-bold"
-                        style={{ color: WHITE }}>
-                        最划算
-                      </Text>
+                      {selected && (
+                        <View className="h-2.5 w-2.5 rounded-full bg-[#D4A44A]" />
+                      )}
                     </View>
-                  )}
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      <Text
-                        className="text-base font-semibold"
-                        style={{ color: selected ? GOLD_LIGHT : WHITE }}>
+                    <View className="flex-1 gap-1.5">
+                      <Text className="text-[18px] font-semibold text-white">
                         {p.name}
                       </Text>
-                      <Text
-                        className="text-sm mt-1"
-                        style={{ color: TEXT_MUTED }}>
-                        {getOfferCopy(p).offerText || '标准价格，自动续费'}
-                      </Text>
-                    </View>
-                    {pillLabel && (
-                      <View
-                        style={{
-                          backgroundColor: GOLD,
-                          paddingHorizontal: 10,
-                          paddingVertical: 4,
-                          borderRadius: 12,
-                          marginHorizontal: 10,
-                        }}>
-                        <Text
-                          className="text-xs font-bold"
-                          style={{ color: '#1A1200' }}>
-                          {pillLabel}
+                      <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
+                        <Text className="text-[16px] text-white/70">
+                          {getPriceDisplay(p)}
                         </Text>
+                        {originalPrice ? (
+                          <Text className="text-[16px] text-white/40 line-through">
+                            {originalPrice}
+                          </Text>
+                        ) : null}
                       </View>
-                    )}
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text
-                        className="text-lg font-bold"
-                        style={{ color: selected ? GOLD_LIGHT : WHITE }}>
-                        {getPriceDisplay(p)}
-                      </Text>
-                      <Text className="text-xs" style={{ color: TEXT_MUTED }}>
-                        {p.period >= 12 ? '/年' : p.period >= 7 ? '/周' : '/月'}
+                    </View>
+                    <View className="min-w-24 items-end">
+                      <Text className="font-poppins-bold text-[24px] leading-[34px] text-[#F1F3F5]">
+                        {getDailyPriceDisplay(p)}
+                        <Text className="font-poppins text-[16px] text-[#F1F3F5]/70">
+                          /day
+                        </Text>
                       </Text>
                     </View>
                   </View>
@@ -761,22 +792,17 @@ const PaywallPage = () => {
 
       {/* 底部固定区 */}
       <View
-        style={{
-          paddingHorizontal: 24,
-          paddingTop: 12,
-          paddingBottom: insets.bottom + 8,
-          backgroundColor: BG,
-        }}>
+        className="bg-[#111111] px-6 pt-3"
+        style={{ paddingBottom: insets.bottom - 4 }}>
         {/* CTA 按钮 */}
         <TouchableOpacity
           activeOpacity={0.9}
           disabled={!connected || paymentStatus === 'processing'}
           onPress={handleCheckout}
+          className="overflow-hidden rounded-full"
           style={{
             opacity: !connected || paymentStatus === 'processing' ? 0.6 : 1,
             height: 54,
-            borderRadius: 27,
-            overflow: 'hidden',
           }}>
           <LinearGradient
             colors={[GOLD_LIGHT, GOLD_DARK]}
@@ -790,9 +816,7 @@ const PaywallPage = () => {
             {paymentStatus === 'processing' ? (
               <ActivityIndicator color="#1A1200" />
             ) : (
-              <Text
-                className="text-[17px] font-bold"
-                style={{ color: '#1A1200' }}>
+              <Text className="text-[17px] font-bold text-[#1A1200]">
                 {getOfferCopy(selectedProduct).checkoutText}
               </Text>
             )}
@@ -800,30 +824,32 @@ const PaywallPage = () => {
         </TouchableOpacity>
 
         {/* 协议 */}
-        <View
-          className="flex-row justify-center items-center mt-3"
-          style={{ gap: 2 }}>
-          <Checkbox
-            value={agreed}
-            onChange={setAgreed}
-            size={16}
-            activeColor={GOLD}
-          />
-          <Pressable onPress={() => setAgreed(!agreed)}>
-            <Text className="text-[11px]" style={{ color: TEXT_MUTED }}>
-              同意
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() =>
-              Linking.openURL('https://focusone.ruidoc.cn/agreement')
-            }>
-            <Text
-              className="text-[11px]"
-              style={{ color: 'rgba(255,255,255,0.8)' }}>
-              《自动续费服务协议》
-            </Text>
-          </Pressable>
+        <View className="mt-3 items-center gap-2">
+          <View className="flex-row items-center justify-center gap-0.5">
+            <Checkbox
+              value={agreed}
+              onChange={setAgreed}
+              size={16}
+              activeColor={GOLD}
+            />
+            <Pressable onPress={() => setAgreed(!agreed)}>
+              <Text className="text-[11px] text-white/60">我已阅读并同意</Text>
+            </Pressable>
+            <Pressable onPress={() => Linking.openURL(PAID_SERVICE_URL)}>
+              <Text className="text-[11px] text-white/80">
+                《付费服务协议》
+              </Text>
+            </Pressable>
+          </View>
+          <View className="flex-row items-center justify-center gap-2">
+            <Pressable onPress={() => Linking.openURL(TERMS_URL)}>
+              <Text className="text-[11px] text-white/60">用户协议</Text>
+            </Pressable>
+            <Text className="text-[11px] text-white/60">|</Text>
+            <Pressable onPress={() => Linking.openURL(PRIVACY_URL)}>
+              <Text className="text-[11px] text-white/60">隐私政策</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </Page>

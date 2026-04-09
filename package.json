@@ -21,6 +21,7 @@
     "docs:list": "bash docs/docs.sh list"
   },
   "dependencies": {
+    "@expo-google-fonts/poppins": "^0.4.1",
     "@expo/vector-icons": "^15.0.3",
     "@miblanchard/react-native-slider": "^2.6.0",
     "@react-native-async-storage/async-storage": "2.2.0",

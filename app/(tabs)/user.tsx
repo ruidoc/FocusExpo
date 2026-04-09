@@ -127,6 +127,11 @@ const App = () => {
         )}
       </Flex>
 
+      {/* 今日专注时长进度条（仅免费用户显示） */}
+      <View className="ml-6 mr-6 mb-6">
+        <DayDurationBar />
+      </View>
+
       {/* 会员卡片 */}
       {store.uInfo && showVip && (
         <TouchableOpacity
@@ -137,25 +142,21 @@ const App = () => {
             isActive
               ? {
                   backgroundColor: dark ? '#1C1A14' : '#FFFBF0',
-                  borderWidth: 1,
+                  borderWidth: 0,
                   borderColor: dark
                     ? 'rgba(212,164,74,0.25)'
                     : 'rgba(212,164,74,0.35)',
                 }
               : {
                   backgroundColor: dark ? '#1C1C26' : '#F5F7FB',
-                  borderWidth: 1,
+                  borderWidth: 0,
                   borderColor: dark ? '#2A2A3A' : '#E5E7EB',
                 }
           }>
           <View className="flex-row items-center justify-between">
             <View>
               <View className="flex-row items-center gap-1.5">
-                <Icon
-                  name="diamond"
-                  size={18}
-                  color={isActive ? '#D4A44A' : dark ? '#6B7280' : '#94A3B8'}
-                />
+                <Icon name="diamond" size={18} color={'#D4A44A'} />
                 <Text
                   className="text-base font-semibold"
                   style={{
@@ -164,6 +165,11 @@ const App = () => {
                   {isActive ? 'Pro 会员' : 'Pro 会员'}
                 </Text>
               </View>
+              {!isActive && (
+                <Text className="mt-1 text-[12px] text-[#8A8A9890]">
+                  升级 Pro 解锁每日无限专注时长
+                </Text>
+              )}
             </View>
             {!isActive && (
               <TouchableOpacity
@@ -171,7 +177,7 @@ const App = () => {
                 className="px-3.5 py-1.5 rounded-[20px]"
                 style={{ backgroundColor: '#D4A44A' }}
                 onPress={() => router.push('/paywall')}>
-                <Text className="text-[13px] font-semibold text-white">
+                <Text className="text-[13px] font-semibold text-[#461702]">
                   升级
                 </Text>
               </TouchableOpacity>
@@ -222,13 +228,8 @@ const App = () => {
         </TouchableOpacity>
       )}
 
-      {/* 今日专注时长进度条（仅免费用户显示） */}
-      <View className="ml-6 mr-8 mt-1">
-        <DayDurationBar />
-      </View>
-
       {/* 菜单列表 */}
-      <Flex className="flex-col items-stretch mt-7 gap-2 opacity-85">
+      <Flex className="flex-col items-stretch mt-4 gap-2 opacity-85">
         <FieldGroup className="rounded-[10px] mx-4">
           <FieldItem
             icon={<MenuIcon icon="shield-checkmark-outline" />}

@@ -9,6 +9,11 @@ import { initAppData } from '@/utils';
 
 import { ThemeProvider } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
+import {
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -36,6 +41,9 @@ Sentry.init({
 
 const RootLayout = () => {
   const [loaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
     SpaceMono: require('../src/assets/fonts/SpaceMono-Regular.ttf'),
   });
   const theme = useCustomTheme();

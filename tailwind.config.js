@@ -54,6 +54,11 @@ module.exports = {
       borderWidth: {
         hairline: hairlineWidth(),
       },
+      fontFamily: {
+        poppins: ['Poppins_400Regular'],
+        'poppins-semibold': ['Poppins_600SemiBold'],
+        'poppins-bold': ['Poppins_700Bold'],
+      },
       keyframes: {
         'accordion-down': {
           from: { height: '0' },
