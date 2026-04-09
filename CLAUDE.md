@@ -163,7 +163,7 @@ app/
 
 **用户/设置**
 
-- VIP会员 → `user/vip.tsx`
+- VIP会员 → `user/rights.tsx`
 - 积分 → `user/coins.tsx`
 - 编辑资料 → `user/edit.tsx`
 - 设置 → `setting/index.tsx`

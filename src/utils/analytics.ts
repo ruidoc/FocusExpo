@@ -476,7 +476,7 @@ export const trackOnboardingCompleted = (
 };
 
 /**
- * 打开Superwall Paywall
+ * 打开付费墙
  */
 export const trackPaywallOpened = (
   placement: string,
@@ -494,7 +494,7 @@ export const trackPaywallOpened = (
 };
 
 /**
- * Superwall购买成功
+ * 购买成功
  */
 export const trackPurchaseCompleted = (
   productId?: string,
@@ -524,6 +524,180 @@ export const trackPurchaseFailed = (
     },
     posthog,
   );
+};
+
+export const trackPaywallClosed = (
+  placement: string,
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'paywall_closed',
+    {
+      placement,
+      ...properties,
+    },
+    posthog,
+  );
+};
+
+export const trackPaywallProductSelected = (
+  productId: string | undefined,
+  period: number | undefined,
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'paywall_product_selected',
+    {
+      product_id: productId,
+      period,
+      ...properties,
+    },
+    posthog,
+  );
+};
+
+export const trackPaywallPurchaseClicked = (
+  productId: string | undefined,
+  period: number | undefined,
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'paywall_purchase_clicked',
+    {
+      product_id: productId,
+      period,
+      ...properties,
+    },
+    posthog,
+  );
+};
+
+export const trackPurchaseStarted = (
+  productId: string | undefined,
+  period: number | undefined,
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'purchase_started',
+    {
+      product_id: productId,
+      period,
+      ...properties,
+    },
+    posthog,
+  );
+};
+
+export const trackPurchaseCancelled = (
+  productId: string | undefined,
+  period: number | undefined,
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent(
+    'purchase_cancelled',
+    {
+      product_id: productId,
+      period,
+      ...properties,
+    },
+    posthog,
+  );
+};
+
+export const trackRestoreStarted = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('restore_started', properties, posthog);
+};
+
+export const trackRestoreCompleted = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('restore_completed', properties, posthog);
+};
+
+export const trackRestoreFailed = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('restore_failed', properties, posthog);
+};
+
+export const trackRightsPageViewed = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('rights_page_viewed', properties, posthog);
+};
+
+export const trackManageSubscriptionClicked = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('manage_subscription_clicked', properties, posthog);
+};
+
+export const trackSubscriptionSyncStarted = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('subscription_sync_started', properties, posthog);
+};
+
+export const trackSubscriptionSyncCompleted = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('subscription_sync_completed', properties, posthog);
+};
+
+export const trackSubscriptionSyncFailed = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('subscription_sync_failed', properties, posthog);
+};
+
+export const trackSubscriptionStatusChanged = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('subscription_status_changed', properties, posthog);
+};
+
+export const trackSubscriptionRenewed = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('subscription_renewed', properties, posthog);
+};
+
+export const trackSubscriptionExpired = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('subscription_expired', properties, posthog);
+};
+
+export const trackSubscriptionRefunded = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('subscription_refunded', properties, posthog);
+};
+
+export const trackSubscriptionWebhookProcessed = (
+  properties?: TrackProperties,
+  posthog?: PostHog | null,
+) => {
+  trackEvent('subscription_webhook_processed', properties, posthog);
 };
 
 // 兼容旧调用名，统一映射到新事件

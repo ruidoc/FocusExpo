@@ -1,7 +1,11 @@
 import { Page } from '@/components/business';
 import { Toast } from '@/components/ui';
 import { useSubscriptionStore } from '@/stores';
-import { trackPaywallOpened } from '@/utils';
+import {
+  trackPaywallOpened,
+  trackManageSubscriptionClicked,
+  trackRightsPageViewed,
+} from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
@@ -24,7 +28,7 @@ const BENEFITS = [
 ];
 const PRIVACY_URL = 'https://focus.freeshore.cn/privacy';
 
-const VipPage = () => {
+const RightsPage = () => {
   const { dark } = useTheme();
   const subStore = useSubscriptionStore();
   const [loading, setLoading] = useState(false);
@@ -36,18 +40,25 @@ const VipPage = () => {
   useFocusEffect(
     useCallback(() => {
       isFocusedRef.current = true;
+      trackRightsPageViewed({
+        screen_name: 'rights_page',
+        entry_source: 'rights_page',
+        subscription_status: subStore.subscription?.status,
+        is_entitled: subStore.isSubscribed,
+        expires_at: subStore.subscription?.expires_at,
+      });
       useSubscriptionStore.getState().getSubscription();
       return () => {
         isFocusedRef.current = false;
       };
-    }, []),
+    }, [subStore.isSubscribed, subStore.subscription?.expires_at, subStore.subscription?.status]),
   );
 
   const handleUpgrade = async () => {
     setLoading(true);
     trackPaywallOpened('paywall_index', {
-      entry_source: 'vip_page',
-      screen_name: 'user_vip',
+      entry_source: 'rights_page',
+      screen_name: 'rights_page',
     });
     try {
       if (!isFocusedRef.current) return;
@@ -58,6 +69,12 @@ const VipPage = () => {
   };
 
   const onManageSubscriptions = async () => {
+    trackManageSubscriptionClicked({
+      screen_name: 'rights_page',
+      subscription_status: sub?.status,
+      is_entitled: isActive,
+      expires_at: sub?.expires_at,
+    });
     try {
       if (Platform.OS === 'ios') {
         await Linking.openURL(
@@ -84,13 +101,13 @@ const VipPage = () => {
 
   const statusLabel = (s: string) => {
     if (s === 'active') return '生效中';
-    if (s === 'canceled') return '已取消';
+    if (s === 'canceled' || s === 'cancelled') return '已取消';
     return '已到期';
   };
 
   const statusColor = (s: string) => {
     if (s === 'active') return '#16B364';
-    if (s === 'canceled') return '#F59E0B';
+    if (s === 'canceled' || s === 'cancelled') return '#F59E0B';
     return '#EF4444';
   };
 
@@ -103,7 +120,6 @@ const VipPage = () => {
   return (
     <Page>
       <ScrollView className="flex-1 px-5 pt-5">
-        {/* 已订阅：订阅状态卡片 */}
         {isActive && sub && (
           <View
             className="rounded-[18px] p-5 mb-6 border"
@@ -133,7 +149,17 @@ const VipPage = () => {
             <View className="flex-row flex-wrap gap-4">
               {[
                 { label: '订阅来源', value: sourceLabel[sub.source] || sub.source },
-                { label: '订阅周期', value: sub.period === 1 ? '月度' : sub.period === 12 ? '年度' : `${sub.period}个月` },
+                {
+                  label: '订阅周期',
+                  value:
+                    sub.period === 1
+                      ? '月度'
+                      : sub.period === 7
+                        ? '周度'
+                      : sub.period === 12
+                        ? '年度'
+                        : `${sub.period}期`,
+                },
                 { label: '开始时间', value: formatDate(sub.started_at) },
                 { label: '到期时间', value: formatDate(sub.expires_at) },
               ].map(item => (
@@ -154,7 +180,6 @@ const VipPage = () => {
           </View>
         )}
 
-        {/* 未订阅：标题引导 */}
         {!isActive && (
           <>
             <Text
@@ -170,7 +195,6 @@ const VipPage = () => {
           </>
         )}
 
-        {/* 权益卡片网格 */}
         <View className="flex-row flex-wrap gap-2.5 mb-7">
           {BENEFITS.map(b => (
             <View
@@ -194,7 +218,6 @@ const VipPage = () => {
           ))}
         </View>
 
-        {/* CTA / 管理按钮 */}
         {!isActive ? (
           <TouchableOpacity
             className="h-[54px] rounded-[14px] justify-center items-center mb-4"
@@ -222,7 +245,6 @@ const VipPage = () => {
           </TouchableOpacity>
         )}
 
-        {/* 合规入口 */}
         <View className="flex-row justify-center gap-6 mb-5">
           {!isActive && (
             <TouchableOpacity className="py-2" onPress={onManageSubscriptions}>
@@ -233,7 +255,6 @@ const VipPage = () => {
           )}
         </View>
 
-        {/* 协议链接 */}
         <View className="flex-row justify-center gap-4 pb-8">
           <TouchableOpacity
             onPress={() =>
@@ -246,8 +267,7 @@ const VipPage = () => {
           <Text className="text-xs" style={{ color: TEXT2 }}>
             ·
           </Text>
-          <TouchableOpacity
-            onPress={() => Linking.openURL(PRIVACY_URL)}>
+          <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_URL)}>
             <Text className="text-xs" style={{ color: TEXT2 }}>
               隐私政策
             </Text>
@@ -258,4 +278,4 @@ const VipPage = () => {
   );
 };
 
-export default VipPage;
+export default RightsPage;

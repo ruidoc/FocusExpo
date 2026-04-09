@@ -7,8 +7,16 @@ import { useSubscriptionStore, useUserStore } from '@/stores';
 import type { Product } from '@/stores/subscription';
 import {
   trackPaywallOpened,
+  trackPaywallClosed,
+  trackPaywallProductSelected,
+  trackPaywallPurchaseClicked,
+  trackPurchaseCancelled,
+  trackPurchaseStarted,
   trackPurchaseCompleted,
   trackPurchaseFailed,
+  trackRestoreCompleted,
+  trackRestoreFailed,
+  trackRestoreStarted,
 } from '@/utils';
 import { isSubscriptionEntitled } from '@/utils/subscription';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -280,6 +288,19 @@ const getOfferCopy = (product?: DisplayProduct) => {
   };
 };
 
+const getTrackProductProps = (product?: DisplayProduct) => ({
+  screen_name: 'paywall_index',
+  product_id: product?.product_id,
+  product_name: product?.name,
+  period: product?.period,
+  price: product?.price,
+  currency: 'CNY',
+  offer_type: getOfferPaymentMode(product?.iapProduct, getDiscount(product?.iapProduct))
+    .toLowerCase() || 'none',
+  offer_price: getDiscount(product?.iapProduct)?.priceString,
+  is_intro_offer_eligible: product?.isEligibleForIntroOffer,
+});
+
 const PaywallPage = () => {
   useTheme(); // 本页固定深色主题
   const insets = useSafeAreaInsets();
@@ -305,11 +326,8 @@ const PaywallPage = () => {
     onPurchaseSuccess: async (_purchase: Purchase) => {
       setPaymentStatus('success');
       trackPurchaseCompleted(selectedProduct?.product_id, {
-        entry_source: 'paywall',
-        screen_name: 'paywall_index',
-        product_period: selectedProduct?.period,
-        price: selectedProduct?.price,
-        currency: 'CNY',
+        ...getTrackProductProps(selectedProduct),
+        purchase_source: 'app_store',
       });
       const synced = await waitForSubscriptionSync();
       if (!synced) {
@@ -332,14 +350,18 @@ const PaywallPage = () => {
     onPurchaseError: (error: { code?: string; message?: string }) => {
       if (error?.code === ErrorCode.E_USER_CANCELLED) {
         setPaymentStatus('idle');
+        trackPurchaseCancelled(selectedProduct?.product_id, selectedProduct?.period, {
+          ...getTrackProductProps(selectedProduct),
+          purchase_source: 'app_store',
+        });
         return;
       }
       setPaymentStatus('failed');
       trackPurchaseFailed(selectedProduct?.product_id, {
-        entry_source: 'paywall',
-        screen_name: 'paywall_index',
+        ...getTrackProductProps(selectedProduct),
         error_code: error?.code,
         error_message: error?.message,
+        purchase_source: 'app_store',
       });
       Toast(error?.message ?? '购买失败');
     },
@@ -468,6 +490,23 @@ const PaywallPage = () => {
   const doCheckout = async () => {
     if (!selectedProduct) return;
     setPaymentStatus('processing');
+    const productTrackProps = {
+      ...getTrackProductProps(selectedProduct),
+      placement: 'paywall_index',
+    };
+    trackPaywallPurchaseClicked(
+      selectedProduct.product_id,
+      selectedProduct.period,
+      productTrackProps,
+    );
+    trackPurchaseStarted(
+      selectedProduct.product_id,
+      selectedProduct.period,
+      {
+        ...productTrackProps,
+        purchase_source: 'app_store',
+      },
+    );
     try {
       const appAccountToken = userStore.uInfo?.account_token;
       await requestPurchase({
@@ -482,6 +521,12 @@ const PaywallPage = () => {
     } catch (err: any) {
       if (err?.code !== ErrorCode.E_USER_CANCELLED) {
         setPaymentStatus('failed');
+        trackPurchaseFailed(selectedProduct.product_id, {
+          ...productTrackProps,
+          error_code: err?.code,
+          error_message: err?.message,
+          purchase_source: 'app_store',
+        });
         Toast(err?.message ?? '下单失败');
       } else {
         setPaymentStatus('idle');
@@ -508,11 +553,27 @@ const PaywallPage = () => {
   };
 
   const onRestore = async () => {
+    trackRestoreStarted({
+      screen_name: 'paywall_index',
+      entry_source: 'paywall_index',
+    });
     try {
       await restorePurchases();
       const synced = await waitForSubscriptionSync();
+      trackRestoreCompleted({
+        screen_name: 'paywall_index',
+        entry_source: 'paywall_index',
+        subscription_status: useSubscriptionStore.getState().subscription?.status,
+        is_entitled: synced,
+      });
       Toast(synced ? '已恢复购买记录' : '已提交恢复请求，请稍后查看');
-    } catch {
+    } catch (error: any) {
+      trackRestoreFailed({
+        screen_name: 'paywall_index',
+        entry_source: 'paywall_index',
+        error_code: error?.code,
+        error_message: error?.message,
+      });
       Toast('恢复失败，请稍后重试');
     }
   };
@@ -532,7 +593,15 @@ const PaywallPage = () => {
           zIndex: 10,
         }}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => {
+            trackPaywallClosed('paywall_index', {
+              screen_name: 'paywall_index',
+              product_id: selectedProduct?.product_id,
+              period: selectedProduct?.period,
+              close_action: 'close_button',
+            });
+            router.back();
+          }}
           hitSlop={12}
           style={{
             width: 36,
@@ -609,7 +678,12 @@ const PaywallPage = () => {
               return (
                 <Pressable
                   key={p.product_id}
-                  onPress={() => setSelectedSku(p.product_id)}
+                  onPress={() => {
+                    setSelectedSku(p.product_id);
+                    trackPaywallProductSelected(p.product_id, p.period, {
+                      ...getTrackProductProps(p),
+                    });
+                  }}
                   style={{
                     backgroundColor: CARD_BG,
                     borderRadius: 16,

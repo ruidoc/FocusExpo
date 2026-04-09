@@ -35,7 +35,7 @@ const App = () => {
 
   const toVipEntry = () => {
     if (isActive) {
-      router.push('/user/vip');
+      router.push('/user/rights');
       return;
     }
     router.push('/paywall');
