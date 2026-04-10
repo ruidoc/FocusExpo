@@ -43,7 +43,7 @@ class NetworkManager {
   private let groupSuite = "group.com.focusone"
   private let baseURLKey = "http_base_url"
   private let tokenKey = "access_token"
-  private let defaultBaseURL = "https://focusone.ruidoc.cn/dev-api"
+  private let defaultBaseURL = "https://focus.freeshore.cn/dev-api"
   private let session: URLSession
   
   private init() {

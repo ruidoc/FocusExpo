@@ -2,8 +2,8 @@ import { Page } from '@/components/business';
 import { Toast } from '@/components/ui';
 import { useSubscriptionStore } from '@/stores';
 import {
-  trackPaywallOpened,
   trackManageSubscriptionClicked,
+  trackPaywallOpened,
   trackRightsPageViewed,
 } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -21,10 +21,18 @@ import {
 } from 'react-native';
 
 const BENEFITS = [
-  { icon: 'infinite' as const, title: '无限契约', desc: '不限专注契约数量' },
-  { icon: 'apps' as const, title: '更多应用位', desc: '屏蔽更多分心应用' },
-  { icon: 'stats-chart' as const, title: '高级统计', desc: '多维度数据分析' },
-  { icon: 'shield-checkmark' as const, title: '优先支持', desc: '专属客服通道' },
+  {
+    icon: 'infinite' as const,
+    title: '无限应用',
+    desc: '不限选择APP数量/分类',
+  },
+  { icon: 'apps' as const, title: '无限时长', desc: '不限制每日专注时长' },
+  { icon: 'stats-chart' as const, title: '放行模式', desc: '支持放行模式' },
+  {
+    icon: 'shield-checkmark' as const,
+    title: '专属群组',
+    desc: '内部专属群优先支持',
+  },
 ];
 const PRIVACY_URL = 'https://focus.freeshore.cn/privacy';
 
@@ -51,7 +59,11 @@ const RightsPage = () => {
       return () => {
         isFocusedRef.current = false;
       };
-    }, [subStore.isSubscribed, subStore.subscription?.expires_at, subStore.subscription?.status]),
+    }, [
+      subStore.isSubscribed,
+      subStore.subscription?.expires_at,
+      subStore.subscription?.status,
+    ]),
   );
 
   const handleUpgrade = async () => {
@@ -116,6 +128,12 @@ const RightsPage = () => {
   const CARD = dark ? '#1C1C26' : '#fff';
   const BORDER = dark ? '#2A2A3A' : '#E5E7EB';
   const TEXT2 = dark ? '#8A8A98' : '#94A3B8';
+  const VIP_CARD_BG = dark ? '#1C1A14' : '#FFFBF0';
+  const VIP_CARD_BORDER = dark
+    ? 'rgba(212,164,74,0.25)'
+    : 'rgba(212,164,74,0.35)';
+  const VIP_TITLE = '#D4A44A';
+  const VIP_META = dark ? '#B79B62' : '#A16207';
 
   return (
     <Page>
@@ -124,15 +142,15 @@ const RightsPage = () => {
           <View
             className="rounded-[18px] p-5 mb-6 border"
             style={{
-              backgroundColor: dark ? '#2A1F48' : '#EDE5FF',
-              borderColor: dark ? '#4A3580' : '#C4A6FF',
+              backgroundColor: VIP_CARD_BG,
+              borderColor: VIP_CARD_BORDER,
             }}>
             <View className="flex-row justify-between items-center mb-4">
               <View className="flex-row items-center gap-2">
-                <Icon name="diamond" size={22} color="#FFC107" />
+                <Icon name="diamond" size={22} color={VIP_TITLE} />
                 <Text
                   className="text-lg font-bold"
-                  style={{ color: dark ? '#D4BBFF' : '#6B3FD4' }}>
+                  style={{ color: VIP_TITLE }}>
                   VIP 会员
                 </Text>
               </View>
@@ -148,7 +166,10 @@ const RightsPage = () => {
             </View>
             <View className="flex-row flex-wrap gap-4">
               {[
-                { label: '订阅来源', value: sourceLabel[sub.source] || sub.source },
+                {
+                  label: '订阅来源',
+                  value: sourceLabel[sub.source] || sub.source,
+                },
                 {
                   label: '订阅周期',
                   value:
@@ -156,9 +177,9 @@ const RightsPage = () => {
                       ? '月度'
                       : sub.period === 7
                         ? '周度'
-                      : sub.period === 12
-                        ? '年度'
-                        : `${sub.period}期`,
+                        : sub.period === 12
+                          ? '年度'
+                          : `${sub.period}期`,
                 },
                 { label: '开始时间', value: formatDate(sub.started_at) },
                 { label: '到期时间', value: formatDate(sub.expires_at) },
@@ -166,12 +187,12 @@ const RightsPage = () => {
                 <View key={item.label} className="w-[45%]">
                   <Text
                     className="text-[11px] mb-0.5"
-                    style={{ color: dark ? '#8A7DB8' : '#9B8ACE' }}>
+                    style={{ color: VIP_META }}>
                     {item.label}
                   </Text>
                   <Text
                     className="text-sm font-semibold"
-                    style={{ color: dark ? '#D4BBFF' : '#6B3FD4' }}>
+                    style={{ color: VIP_TITLE }}>
                     {item.value}
                   </Text>
                 </View>
@@ -237,9 +258,7 @@ const RightsPage = () => {
             style={{ backgroundColor: CARD, borderColor: BORDER }}
             activeOpacity={0.7}
             onPress={onManageSubscriptions}>
-            <Text
-              className="text-[17px] font-bold"
-              style={{ color: ACCENT }}>
+            <Text className="text-[17px] font-bold" style={{ color: ACCENT }}>
               管理订阅
             </Text>
           </TouchableOpacity>
@@ -258,7 +277,7 @@ const RightsPage = () => {
         <View className="flex-row justify-center gap-4 pb-8">
           <TouchableOpacity
             onPress={() =>
-              Linking.openURL('https://focusone.ruidoc.cn/agreement')
+              Linking.openURL('https://focus.freeshore.cn/user-agreement')
             }>
             <Text className="text-xs" style={{ color: TEXT2 }}>
               用户协议
