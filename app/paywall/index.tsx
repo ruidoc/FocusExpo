@@ -3,7 +3,7 @@
  */
 import { Page } from '@/components/business';
 import { Checkbox, Toast } from '@/components/ui';
-import { useSubscriptionStore, useUserStore } from '@/stores';
+import { useBenefitStore, useSubscriptionStore, useUserStore } from '@/stores';
 import type { Product } from '@/stores/subscription';
 import {
   trackPaywallClosed,
@@ -353,6 +353,7 @@ const PaywallPage = () => {
         return;
       }
 
+      await useBenefitStore.getState().getBenefit();
       Toast('订阅成功，权益已生效');
       router.back();
     },
@@ -621,6 +622,7 @@ const PaywallPage = () => {
 
       if (synced) {
         await subStore.getSubscription();
+        await useBenefitStore.getState().getBenefit();
       }
       trackRestoreCompleted({
         screen_name: 'paywall_index',

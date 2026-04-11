@@ -435,6 +435,7 @@ const UserStore = combine(
       useHomeStore.getState().loadApps();
       useAppStore.getState().getCurapp();
       usePlanStore.getState().getPlans();
+      useBenefitStore.getState().getBenefit();
       useSubscriptionStore.getState().getSubscription();
       (get() as any).getInfo();
 
