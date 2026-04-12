@@ -1,3 +1,4 @@
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import {
@@ -40,6 +41,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onCancel,
   onClose,
 }) => {
+  const { colors } = useCustomTheme();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const [mounted, setMounted] = React.useState<boolean>(visible);
@@ -132,6 +134,136 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     onClose();
   };
 
+  const styles = StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'flex-end',
+    },
+    modalContainer: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      margin: 8,
+      paddingHorizontal: 16,
+      paddingTop: 39,
+      paddingBottom: 45,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 1,
+      },
+      shadowOpacity: 0.15,
+      shadowRadius: 1,
+      elevation: 5,
+    },
+    handle: {
+      position: 'absolute',
+      top: 6,
+      alignSelf: 'center',
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.borderStrong,
+    },
+    closeButton: {
+      position: 'absolute',
+      top: 12,
+      right: 12,
+      width: 28,
+      height: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    content: {
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    iconContainer: {
+      width: 53,
+      height: 53,
+      borderRadius: 26.5,
+      backgroundColor: colors.warningSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: '500',
+      color: colors.text,
+      textAlign: 'center',
+      lineHeight: 30,
+    },
+    banner: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.card2,
+      borderRadius: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      marginBottom: 24,
+    },
+    bannerText: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: '400',
+      color: colors.text2,
+      lineHeight: 20,
+      letterSpacing: -0.1,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    cancelButton: {
+      flex: 1,
+      height: 48,
+      backgroundColor: colors.controlBg,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.controlBorder,
+    },
+    cancelButtonText: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.text2,
+    },
+    confirmButton: {
+      flex: 1,
+      height: 48,
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    confirmButtonText: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.textInverse,
+    },
+    warningBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: colors.warningSoft,
+      borderRadius: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      marginBottom: 24,
+    },
+    warningText: {
+      flex: 1,
+      fontSize: 13,
+      fontWeight: '400',
+      color: colors.warning,
+      lineHeight: 18,
+    },
+  });
+
   return (
     <Modal
       visible={mounted}
@@ -168,14 +300,14 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 style={styles.closeButton}
                 onPress={onClose}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Icon name="close" size={24} color="#B3B3BA" />
+                <Icon name="close" size={24} color={colors.text2} />
               </TouchableOpacity>
 
               {/* 内容区域 */}
               <View style={styles.content}>
                 {/* 图标 */}
                 <View style={styles.iconContainer}>
-                  <Icon name="warning" size={24} color="#F7AF5D" />
+                  <Icon name="warning" size={24} color={colors.warning} />
                 </View>
 
                 {/* 标题 */}
@@ -195,7 +327,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                   <Icon
                     name="information-circle-outline"
                     size={16}
-                    color="#F7AF5D"
+                    color={colors.warning}
                   />
                   <Text style={styles.warningText}>{extraWarning}</Text>
                 </View>
@@ -221,139 +353,5 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: '#14141C',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    margin: 8,
-    paddingHorizontal: 16,
-    paddingTop: 39,
-    paddingBottom: 45,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 1,
-    elevation: 5,
-  },
-  handle: {
-    position: 'absolute',
-    top: 6,
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  iconContainer: {
-    width: 53,
-    height: 53,
-    borderRadius: 26.5,
-    backgroundColor: 'rgba(247, 175, 93, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 30,
-  },
-  banner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#181821',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  bannerText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#858699',
-    lineHeight: 20,
-    letterSpacing: -0.1,
-  },
-  bannerDecoration: {
-    width: 48,
-    height: 40,
-    backgroundColor: '#16B364',
-    borderRadius: 4,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    height: 48,
-    backgroundColor: '#1C1C26',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#858699',
-  },
-  confirmButton: {
-    flex: 1,
-    height: 48,
-    backgroundColor: '#7A5AF8',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  warningBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(247, 175, 93, 0.1)',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginBottom: 24,
-  },
-  warningText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '400',
-    color: '#F7AF5D',
-    lineHeight: 18,
-  },
-});
 
 export default ConfirmationModal;

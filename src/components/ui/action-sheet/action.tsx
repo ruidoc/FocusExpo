@@ -42,10 +42,11 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   contentStyle,
   className = '',
   onModalHide,
-  backdropColor = 'rgba(0, 0, 0, 0.6)',
+  backdropColor,
   backdropOpacity = 0.6,
 }) => {
   const { colors } = useCustomTheme();
+  const resolvedBackdropColor = backdropColor || colors.overlay;
   const slideAnim = useRef(new Animated.Value(screenHeight)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [mounted, setMounted] = useState<boolean>(visible);
@@ -149,16 +150,17 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           className="flex-1 justify-end"
           style={[
             {
-              backgroundColor: backdropColor,
+              backgroundColor: resolvedBackdropColor,
               opacity: fadeAnim,
             },
           ]}>
           <TouchableWithoutFeedback>
             <Animated.View
-              className={`rounded-t-[24px] overflow-hidden m-2 bg-[#121212] ${className || ''}`}
+              className={`rounded-t-[24px] overflow-hidden m-2 ${className || ''}`}
               style={[
                 contentStyle,
                 {
+                  backgroundColor: colors.card2 || colors.card,
                   transform: [{ translateY: slideAnim }],
                 },
               ]}>
@@ -167,7 +169,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
                 <View className="w-full relative">
                   {showIndicator && (
                     <View className="w-full items-center pt-3 pb-2">
-                      <View className="w-12 h-1 rounded-full bg-white/10" />
+                      <View
+                        className="w-12 h-1 rounded-full"
+                        style={{ backgroundColor: colors.borderStrong }}
+                      />
                     </View>
                   )}
                   {showCloseButton && (

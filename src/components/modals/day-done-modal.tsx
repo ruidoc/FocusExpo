@@ -3,6 +3,7 @@
  * 预留组件，后续可在其它时机手动展示
  */
 
+import { useCustomTheme } from '@/config/theme';
 import { useBenefitStore } from '@/stores';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Modal, Text, TouchableOpacity, View } from 'react-native';
@@ -30,6 +31,7 @@ export function hideDayDoneModal() {
 }
 
 const DayDoneModal: React.FC = () => {
+  const { colors } = useCustomTheme();
   const { visible, hide } = useDayDoneModalStore();
   const benefitStore = useBenefitStore();
   const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -61,24 +63,34 @@ const DayDoneModal: React.FC = () => {
       transparent
       animationType="fade"
       onRequestClose={hide}>
-      <View className="flex-1 bg-black/70 justify-center items-center px-6">
+      <View
+        className="flex-1 justify-center items-center px-6"
+        style={{ backgroundColor: colors.overlay }}>
         <Animated.View
-          style={{ transform: [{ scale: scaleAnim }] }}
-          className="w-full bg-[#1C1C26] rounded-[24px] p-6 border border-[#2C2C36]">
+          className="w-full rounded-[24px] p-6 border"
+          style={{
+            transform: [{ scale: scaleAnim }],
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          }}>
           {/* 图标 */}
           <View className="items-center mb-4">
             <Text className="text-6xl">🌙</Text>
           </View>
 
           {/* 标题 */}
-          <Text className="text-2xl font-bold text-white text-center mb-2">
+          <Text
+            className="text-2xl font-bold text-center mb-2"
+            style={{ color: colors.text }}>
             今天做的很棒！
           </Text>
 
           {/* 正文 */}
-          <Text className="text-[#858699] text-center text-base leading-6 mb-6">
+          <Text
+            className="text-center text-base leading-6 mb-6"
+            style={{ color: colors.text2 }}>
             今日{' '}
-            <Text className="text-white font-semibold">
+            <Text className="font-semibold" style={{ color: colors.text }}>
               {formatMinutes(benefitStore.day_duration)}
             </Text>{' '}
             专注时长已全部完成。{'\n'}
@@ -89,9 +101,11 @@ const DayDoneModal: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.8}
             className="py-4 rounded-2xl items-center"
-            style={{ backgroundColor: '#7A5AF8' }}
+            style={{ backgroundColor: colors.primary }}
             onPress={hide}>
-            <Text className="text-white font-semibold text-base">
+            <Text
+              className="font-semibold text-base"
+              style={{ color: colors.textInverse }}>
               好的，明天继续
             </Text>
           </TouchableOpacity>

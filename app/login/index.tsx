@@ -126,7 +126,7 @@ const App = () => {
       });
     }
     initState();
-  }, []);
+  }, [navigation, route.params]);
 
   useEffect(() => {
     return () => {
@@ -134,7 +134,7 @@ const App = () => {
     };
   }, []);
 
-  const bg = '#14141C';
+  const bg = colors.background;
 
   return (
     <Keyboard>
@@ -157,24 +157,32 @@ const App = () => {
           {/* 手机号 */}
           <View
             className="rounded-2xl mb-4 px-4 py-4"
-            style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+            style={{
+              backgroundColor: colors.card2,
+            }}>
             <View className="flex-row items-center">
               <Icon
                 name="call-outline"
                 size={18}
-                color="rgba(255,255,255,0.5)"
+                color={colors.text3}
                 style={{ marginRight: 12 }}
               />
               <TextInput
                 className="flex-1 text-base"
                 placeholder="请输入手机号"
-                placeholderTextColor="rgba(255,255,255,0.4)"
+                placeholderTextColor={colors.text3}
                 value={form.phone}
                 clearable
                 keyboardType="number-pad"
                 maxLength={11}
                 onChange={v => setInfo(v, 'phone')}
-                style={{ color: colors.text, paddingVertical: 4 }}
+                style={{
+                  color: colors.text,
+                  paddingVertical: 4,
+                  backgroundColor: 'transparent',
+                  borderWidth: 0,
+                  paddingHorizontal: 0,
+                }}
               />
             </View>
           </View>
@@ -182,18 +190,26 @@ const App = () => {
           {/* 验证码 */}
           <View
             className="rounded-2xl mb-6 px-4 py-4 flex-row items-center"
-            style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+            style={{
+              backgroundColor: colors.card2,
+            }}>
             <View className="flex-1 min-w-0">
               <TextInput
                 className="text-base"
                 placeholder="请输入验证码"
-                placeholderTextColor="rgba(255,255,255,0.4)"
+                placeholderTextColor={colors.text3}
                 value={form.code}
                 clearable
                 keyboardType="number-pad"
                 maxLength={6}
                 onChange={v => setInfo(v, 'code')}
-                style={{ color: colors.text, paddingVertical: 3 }}
+                style={{
+                  color: colors.text,
+                  paddingVertical: 3,
+                  backgroundColor: 'transparent',
+                  borderWidth: 0,
+                  paddingHorizontal: 0,
+                }}
               />
             </View>
             <TouchableOpacity
@@ -210,7 +226,7 @@ const App = () => {
               {countdown > 0 ? (
                 <Text
                   className="text-sm font-medium"
-                  style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  style={{ color: colors.text3 }}>
                   {countdown}s 后重发
                 </Text>
               ) : (
@@ -219,7 +235,7 @@ const App = () => {
                   style={{
                     color: canSendCode
                       ? colors.primary || '#7A5AF8'
-                      : '#9CA3AF',
+                      : colors.text3,
                   }}>
                   获取验证码
                 </Text>
@@ -244,16 +260,16 @@ const App = () => {
               <View className="flex-row items-center mb-6">
                 <View
                   className="flex-1 h-px"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                  style={{ backgroundColor: colors.border }}
                 />
                 <Text
                   className="mx-4 text-sm"
-                  style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  style={{ color: colors.text3 }}>
                   其他登录方式
                 </Text>
                 <View
                   className="flex-1 h-px"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                  style={{ backgroundColor: colors.border }}
                 />
               </View>
               <View className="flex-row gap-4">

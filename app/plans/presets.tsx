@@ -1,5 +1,6 @@
 import { Page } from '@/components/business';
 import { Button, Flex } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { trackEvent } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -122,6 +123,7 @@ const PRESET_PLANS: PresetPlan[] = [
 ];
 
 const PresetsPage = () => {
+  const { colors } = useCustomTheme();
   const params = useLocalSearchParams();
   const navigation = useNavigation();
   const fromOnboarding = params.from === 'onboarding';
@@ -181,7 +183,7 @@ const PresetsPage = () => {
     <Page>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 pt-6 pb-4 mt-[94px]">
-          <Text className="text-sm text-white/60 text-center">
+          <Text className="text-sm text-center" style={{ color: colors.text2 }}>
             为你推荐以下场景，选一个快速开始
           </Text>
         </View>
@@ -194,27 +196,29 @@ const PresetsPage = () => {
               onPress={() => handleSelectPreset(preset)}
               className="rounded-3xl p-5"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: colors.card2,
               }}>
               <Flex className="justify-between items-start mb-2">
                 <Flex className="items-center gap-x-2">
                   <Text className="text-2xl">{preset.icon}</Text>
-                  <Text className="text-base font-semibold text-white">
+                  <Text
+                    className="text-base font-semibold"
+                    style={{ color: colors.text }}>
                     {preset.name}
                   </Text>
                 </Flex>
                 <Icon
                   name="chevron-forward"
                   size={20}
-                  color="rgba(255, 255, 255, 0.4)"
+                  color={colors.text3}
                 />
               </Flex>
 
               <View className="ml-8">
-                <Text className="text-sm text-white/60 mb-1">
+                <Text className="text-sm mb-1" style={{ color: colors.text2 }}>
                   {preset.repeatText} · {preset.time}
                 </Text>
-                <Text className="text-xs text-white/50">
+                <Text className="text-xs" style={{ color: colors.text3 }}>
                   {preset.description}
                 </Text>
               </View>
@@ -225,8 +229,13 @@ const PresetsPage = () => {
 
       {/* 底部按钮区 */}
       <View
-        className="px-6 pb-2 pt-4 border-t border-white/5"
-        style={{ paddingBottom: 24 }}>
+        className="px-6 pb-2 pt-4"
+        style={{
+          paddingBottom: 24,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          backgroundColor: colors.background,
+        }}>
         <Button
           type="ghost"
           onPress={handleCustomPlan}
@@ -238,7 +247,9 @@ const PresetsPage = () => {
             onPress={handleSkip}
             activeOpacity={0.6}
             className="py-3 items-center justify-center">
-            <Text className="text-white/50 text-sm">稍后创建</Text>
+            <Text className="text-sm" style={{ color: colors.text3 }}>
+              稍后创建
+            </Text>
           </TouchableOpacity>
         )}
       </View>

@@ -107,7 +107,7 @@ const DialogGlobal: React.FC = () => {
       onRequestClose={handleCancel}>
       <Pressable
         className="flex-1 items-center justify-center"
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        style={{ backgroundColor: colors.overlay }}
         onPress={handleCancel}>
         <Pressable
           className="bg-white rounded-lg overflow-hidden"

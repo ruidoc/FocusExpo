@@ -1,3 +1,4 @@
+import { useCustomTheme } from '@/config/theme';
 import { usePlanStore } from '@/stores';
 import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -6,6 +7,7 @@ import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 const TimeFlow = () => {
+  const { colors } = useCustomTheme();
   const pstore = usePlanStore();
   const nativeFocus = pstore.native_focus;
   const focusPlan = pstore.focus_plan();
@@ -130,6 +132,54 @@ const TimeFlow = () => {
     hasPlan && progress === 0 ? zeroProgressDashoffset : animatedDashoffset;
 
   // spin 已移除（旋转动画未使用）
+  const styles = StyleSheet.create({
+    container: {
+      width: 300,
+      height: 300,
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+    },
+    progressRing: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+    },
+    centerContent: {
+      alignItems: 'center',
+      zIndex: 10,
+    },
+    goalText: {
+      fontSize: 13,
+      fontWeight: '500',
+      color: colors.text2,
+      marginBottom: 12,
+      letterSpacing: -0.1,
+    },
+    timeText: {
+      fontSize: 70,
+      fontWeight: '500',
+      color: colors.text,
+      lineHeight: 72,
+      letterSpacing: -1.4,
+      marginBottom: 12,
+    },
+    statusChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.controlBg,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+      gap: 5,
+    },
+    statusText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.text2,
+      letterSpacing: -0.1,
+    },
+  });
 
   return (
     <View style={styles.container}>
@@ -153,7 +203,7 @@ const TimeFlow = () => {
           cx="150"
           cy="150"
           r="136"
-          stroke="#303044"
+          stroke={colors.progressTrack}
           strokeWidth="28"
           fill="none"
         />
@@ -202,55 +252,5 @@ const TimeFlow = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    width: 300,
-    height: 300,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-
-  progressRing: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  centerContent: {
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  goalText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#858699',
-    marginBottom: 12,
-    letterSpacing: -0.1,
-  },
-  timeText: {
-    fontSize: 70,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    lineHeight: 72,
-    letterSpacing: -1.4,
-    marginBottom: 12,
-  },
-  statusChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(133, 134, 153, 0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 5,
-  },
-  statusText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#858699',
-    letterSpacing: -0.1,
-  },
-});
 
 export default TimeFlow;

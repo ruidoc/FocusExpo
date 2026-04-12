@@ -50,7 +50,7 @@ const TextInput = ({
   };
 
   const defaultPlaceholderColor =
-    placeholderTextColor || colors.border || '#999';
+    placeholderTextColor || colors.text3 || '#999';
 
   return (
     <View
@@ -67,6 +67,11 @@ const TextInput = ({
             flex: 1,
             fontSize: 16,
             color: colors.text,
+            backgroundColor: colors.inputBg,
+            borderColor: isFocused ? colors.primary : colors.inputBorder,
+            borderWidth: 1,
+            borderRadius: 12,
+            paddingHorizontal: 14,
             paddingVertical: isTextarea ? 8 : 4,
             paddingRight: clearable && value ? 30 : 0,
             minHeight: isTextarea ? textareaHeight : undefined,

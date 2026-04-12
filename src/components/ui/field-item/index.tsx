@@ -228,7 +228,7 @@ const FieldItem: React.FC<FieldItemProps> = ({
             {rightText && (
               <Text
                 className={`text-base mr-2 ${rightTextClassName || ''}`.trim()}
-                style={[{ color: colors.text, opacity: 0.6 }, rightTextStyle]}>
+                style={[{ color: colors.text2 }, rightTextStyle]}>
                 {rightText}
               </Text>
             )}

@@ -520,7 +520,9 @@ const App = () => {
                     });
                   }}
                   style={{
-                    backgroundColor: colors.border,
+                    backgroundColor: colors.controlBg,
+                    borderWidth: 1,
+                    borderColor: colors.controlBorder,
                     paddingHorizontal: 12,
                     paddingVertical: 6,
                     borderRadius: 8,
@@ -541,7 +543,9 @@ const App = () => {
                     });
                   }}
                   style={{
-                    backgroundColor: colors.border,
+                    backgroundColor: colors.controlBg,
+                    borderWidth: 1,
+                    borderColor: colors.controlBorder,
                     paddingHorizontal: 12,
                     paddingVertical: 6,
                     borderRadius: 8,
@@ -633,11 +637,17 @@ const App = () => {
                     style={{
                       backgroundColor: isSelected
                         ? colors.primary
-                        : colors.border,
+                        : colors.controlBg,
+                      borderWidth: isSelected ? 0 : 1,
+                      borderColor: isSelected
+                        ? 'transparent'
+                        : colors.controlBorder,
                     }}>
                     <Text
                       style={{
-                        color: colors.primaryForeground,
+                        color: isSelected
+                          ? colors.primaryForeground
+                          : colors.text2,
                         fontSize: 15,
                       }}>
                       {item.label}
@@ -722,7 +732,9 @@ const App = () => {
                       });
                     }}
                     style={{
-                      backgroundColor: colors.border,
+                      backgroundColor: colors.controlBg,
+                      borderWidth: 1,
+                      borderColor: colors.controlBorder,
                       paddingHorizontal: 12,
                       paddingVertical: 6,
                       borderRadius: 8,
@@ -746,7 +758,9 @@ const App = () => {
                       });
                     }}
                     style={{
-                      backgroundColor: colors.border,
+                      backgroundColor: colors.controlBg,
+                      borderWidth: 1,
+                      borderColor: colors.controlBorder,
                       paddingHorizontal: 12,
                       paddingVertical: 6,
                       borderRadius: 8,

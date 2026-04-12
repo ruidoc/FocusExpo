@@ -6,6 +6,7 @@
 import {
   useAppStore,
   useDebugStore,
+  useHomeStore,
   usePlanStore,
   useUserStore,
 } from '@/stores';
@@ -22,6 +23,10 @@ export async function initAppData(): Promise<void> {
   const pstore = usePlanStore.getState();
   const ustore = useUserStore.getState();
   const dstore = useDebugStore.getState();
+  const hstore = useHomeStore.getState();
+
+  // 初始化主题设置（跟随系统 / 手动模式）
+  hstore.init();
 
   // 初始化用户状态（恢复本地登录状态 + identify）
   console.log('[AppInit] 初始化用户状态...');

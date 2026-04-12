@@ -20,7 +20,9 @@ const Card = (props: PageProps) => {
             {props.title}
           </Text>
           {props.desc && (
-            <Text className="text-xs text-[#888]">{props.desc}</Text>
+            <Text className="text-xs" style={{ color: colors.text2 }}>
+              {props.desc}
+            </Text>
           )}
         </View>
         {props.action}

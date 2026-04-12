@@ -1,12 +1,12 @@
 import { Page } from '@/components/business';
 import { Button, Dialog, TextInput, Toast } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { usePlanStore, useUserStore } from '@/stores';
 import { stopAppLimits } from '@/utils/permission';
 import { storage } from '@/utils/storage';
 import { resetUserActivation } from '@/utils/user-activation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { useTheme } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import * as Updates from 'expo-updates';
 import { useMemo, useState } from 'react';
@@ -31,7 +31,7 @@ const DELETE_ITEMS = [
 const LOGOFF_INPUT_ACCESSORY_ID = 'logoff-confirm-accessory';
 
 const App = () => {
-  const { colors } = useTheme();
+  const { colors } = useCustomTheme();
   const headerHeight = useHeaderHeight();
   const router = useRouter();
   const store = useUserStore();
@@ -142,7 +142,7 @@ const App = () => {
               </Text>
               <View
                 className="rounded-2xl px-4 py-4"
-                style={{ backgroundColor: colors.card }}>
+                style={{ backgroundColor: colors.card2 }}>
                 <Text className="text-base" style={{ color: colors.text }}>
                   {accountLabel}
                 </Text>
@@ -155,7 +155,7 @@ const App = () => {
               </Text>
               <View
                 className="rounded-2xl px-4 py-4"
-                style={{ backgroundColor: colors.card }}>
+                style={{ backgroundColor: colors.card2 }}>
                 {DELETE_ITEMS.map(item => (
                   <Text
                     key={item}
@@ -201,10 +201,14 @@ const App = () => {
 
         <View
           className="rounded-2xl px-4 py-3"
-          style={{ backgroundColor: 'rgba(18,18,18,0.5)' }}>
+          style={{
+            backgroundColor: colors.controlBg,
+            borderWidth: 1,
+            borderColor: colors.controlBorder,
+          }}>
           <TextInput
             placeholder="确认注销"
-            placeholderTextColor="#666"
+            placeholderTextColor={colors.text3}
             value={confirmText}
             clearable
             inputAccessoryViewID={

@@ -74,7 +74,8 @@ const ActionSheetBody: React.FC<{
       {config.description && (
         <View className="px-6 py-5">
           <Text
-            className="text-[17px] text-center leading-6 text-white/80">
+            className="text-[17px] text-center leading-6"
+            style={{ color: colors.text2 }}>
             {config.description}
           </Text>
         </View>
@@ -95,7 +96,8 @@ const ActionSheetBody: React.FC<{
           {config.actions!.map((action, index) => (
             <TouchableOpacity
               key={index}
-              className="py-4 px-4 rounded-3xl bg-[#171717]"
+              className="py-4 px-4 rounded-3xl"
+              style={{ backgroundColor: colors.controlBg }}
               onPress={() => onActionPress(index)}
               activeOpacity={0.7}>
               <Text
@@ -112,7 +114,8 @@ const ActionSheetBody: React.FC<{
       {config.cancelText && (
         <View className="px-4 pb-6 pt-2">
           <TouchableOpacity
-            className="py-4 px-4 rounded-3xl bg-[#171717]"
+            className="py-4 px-4 rounded-3xl"
+            style={{ backgroundColor: colors.controlBg }}
             onPress={onCancel}
             activeOpacity={0.7}>
             <Text

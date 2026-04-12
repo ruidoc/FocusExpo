@@ -1,3 +1,4 @@
+import { useCustomTheme } from '@/config/theme';
 import { usePlanStore, useRecordStore, useUserStore } from '@/stores';
 import { addLiveFocusDelta, getLiveFocusDelta } from '@/utils/live-focus';
 import { minutesToHours } from '@/utils';
@@ -15,6 +16,7 @@ const PlanBadge = ({
   count: number;
   onPress: () => void;
 }) => {
+  const { colors } = useCustomTheme();
   const labelText =
     count > 0 ? `今日 ${count > 99 ? '99+' : count} 个契约` : '今日无契约';
 
@@ -27,13 +29,15 @@ const PlanBadge = ({
         height: HEIGHT,
         paddingHorizontal: 12,
         borderRadius: HEIGHT / 2,
-        backgroundColor: 'rgba(255,255,255,0.08)',
+        backgroundColor: colors.primarySoft,
+        borderWidth: 1,
+        borderColor: colors.chipActiveBorder,
         gap: 6,
       }}>
-      <Icon name="calendar-outline" size={18} color="#E5E7EB" />
+      <Icon name="calendar-outline" size={18} color={colors.primary} />
       <Text
         style={{
-          color: '#E5E7EB',
+          color: colors.primary,
           fontSize: 13,
           fontWeight: '600',
         }}
@@ -45,6 +49,7 @@ const PlanBadge = ({
 };
 
 const Header = () => {
+  const { colors } = useCustomTheme();
   const ustore = useUserStore();
   const rstore = useRecordStore();
   const pstore = usePlanStore();
@@ -80,10 +85,14 @@ const Header = () => {
   return (
     <View className="flex-row justify-between items-center px-4 py-2">
       <View className="flex-1">
-        <Text className="text-base font-medium text-[#858699] leading-6 tracking-tight mb-1">
+        <Text
+          className="text-base font-medium leading-6 tracking-tight mb-1"
+          style={{ color: colors.text2 }}>
           {getGreeting()}，{getUserName()}！
         </Text>
-        <Text className="text-lg font-semibold text-white/90 leading-7 tracking-tighter">
+        <Text
+          className="text-lg font-semibold leading-7 tracking-tighter"
+          style={{ color: colors.text }}>
           {liveActualMins > 0
             ? `你已专注 ${minutesToHours(liveActualMins)} 👍`
             : '今天还没开始，加油！💪'}

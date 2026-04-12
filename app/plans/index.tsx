@@ -6,7 +6,7 @@ import { getPlansByPeriod } from '@/utils/date';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Pressable,
   RefreshControl,
@@ -27,21 +27,21 @@ const App = () => {
   const [filterType, setFilterType] = useState<FilterType>('today');
   const { colors } = useCustomTheme();
 
-  const toCreatePlan = () => {
+  const toCreatePlan = useCallback(() => {
     if (store.has_active_task()) {
       Toast('专注进行中，不可以创建契约', 'info');
       return;
     }
     router.push('plans/add' as never);
-  };
+  }, [store]);
 
-  const fetchPlans = async (type: FilterType = filterType) => {
+  const fetchPlans = useCallback(async (type: FilterType = filterType) => {
     if (type === 'all') {
       return store.getPlans({ status: 'all' });
     } else {
       return store.getPlans({ period: type });
     }
-  };
+  }, [filterType, store]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -63,7 +63,7 @@ const App = () => {
 
   useEffect(() => {
     fetchPlans('today');
-  }, []);
+  }, [fetchPlans]);
 
   // 同步计划到 iOS 原生侧
   const handleSync = async () => {
@@ -98,7 +98,7 @@ const App = () => {
         </Pressable>
       ),
     });
-  }, [navigation]);
+  }, [navigation, colors.text, toCreatePlan]);
 
   const getFilteredPlans = () => {
     const allPlans = store.cus_plans;
@@ -128,16 +128,23 @@ const App = () => {
             <TouchableOpacity
               key={option.key}
               activeOpacity={0.7}
-              className={`px-3.5 py-1.5 rounded-2xl border ${
-                active
-                  ? 'bg-[#303044] border-[#45455C]'
-                  : 'bg-card border-[#2E2E3A]'
-              } ${index > 0 ? 'ml-2' : ''}`}
+              className={`px-3.5 py-1.5 rounded-2xl ${index > 0 ? 'ml-2' : ''}`}
+              style={{
+                backgroundColor: active
+                  ? colors.chipActiveBg
+                  : colors.chipInactiveBg,
+                borderWidth: 1,
+                borderColor: active
+                  ? colors.chipActiveBorder
+                  : colors.chipInactiveBorder,
+              }}
               onPress={() => handleFilterChange(option.key)}>
               <Text
-                className={`text-[13px] ${
-                  active ? 'text-white font-semibold' : 'text-[#999]'
-                }`}>
+                className="text-[13px]"
+                style={{
+                  color: active ? colors.chipActiveText : colors.chipInactiveText,
+                  fontWeight: active ? '600' : '500',
+                }}>
                 {option.label}
               </Text>
             </TouchableOpacity>

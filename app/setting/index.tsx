@@ -28,6 +28,20 @@ const App = () => {
   const homeStore = useHomeStore();
   const navigation = useNavigation();
 
+  const handleFollowSystemChange = (enabled: boolean) => {
+    if (enabled) {
+      const sys = Appearance.getColorScheme() || 'light';
+      homeStore.setThem(sys === 'dark' ? 'dark' : 'light', true);
+      return;
+    }
+
+    homeStore.setThem(homeStore.them, false);
+  };
+
+  const handleDarkModeChange = (enabled: boolean) => {
+    homeStore.setThem(enabled ? 'dark' : 'light', false);
+  };
+
   const openAppStoreDetail = async () => {
     for (const url of APP_STORE_DETAIL_URLS) {
       try {
@@ -121,16 +135,7 @@ const App = () => {
               <Switch
                 value={homeStore.followSystem}
                 size={18}
-                onChange={v => {
-                  if (v) {
-                    // 如果开启跟随系统，使用当前系统主题
-                    const sys = Appearance.getColorScheme() || 'light';
-                    homeStore.setThem(sys === 'dark' ? 'dark' : 'light', true);
-                  } else {
-                    // 如果关闭跟随系统，保持当前主题
-                    homeStore.setThem(homeStore.them, false);
-                  }
-                }}
+                onChange={handleFollowSystemChange}
               />
             }
             showArrow={false}
@@ -142,7 +147,7 @@ const App = () => {
                 value={homeStore.them === 'dark'}
                 size={18}
                 disabled={homeStore.followSystem}
-                onChange={v => homeStore.setThem(v ? 'dark' : 'light', false)}
+                onChange={handleDarkModeChange}
               />
             }
             showArrow={false}

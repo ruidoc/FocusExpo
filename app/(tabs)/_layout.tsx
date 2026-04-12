@@ -41,7 +41,7 @@ const RightDom = ({
 );
 
 const TabLayout = () => {
-  const { colors, isDark } = useCustomTheme();
+  const { colors } = useCustomTheme();
   const navigation = useNavigation();
 
   const toRoute = async (path: string) => {
@@ -53,14 +53,21 @@ const TabLayout = () => {
   };
 
   const tabBarStyle = {
-    backgroundColor: isDark ? '#14141C' : colors.card,
-    borderTopColor: isDark ? '#1C1C26' : colors.border,
+    backgroundColor: colors.tabBg,
+    borderTopColor: colors.tabDivider,
     borderTopWidth: StyleSheet.hairlineWidth,
     elevation: 0,
   } as const;
 
   return (
-    <Tabs screenOptions={{ ...BottomTabOptions, tabBarStyle }}>
+    <Tabs
+      screenOptions={{
+        ...BottomTabOptions,
+        tabBarStyle,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.tabIconDefault,
+        sceneStyle: { backgroundColor: colors.background },
+      }}>
       <Tabs.Screen
         name="index"
         options={{
@@ -70,7 +77,7 @@ const TabLayout = () => {
             <Icon
               name={focused ? 'timer' : 'timer-outline'}
               size={22}
-              color={focused ? colors.primary : colors.text}
+              color={focused ? colors.primary : colors.tabIconDefault}
             />
           ),
           headerRight: () => <RightDom colors={colors} toRoute={toRoute} />,
@@ -86,7 +93,7 @@ const TabLayout = () => {
             <Icon
               name={focused ? 'bar-chart' : 'bar-chart-outline'}
               size={20}
-              color={focused ? colors.primary : colors.text}
+              color={focused ? colors.primary : colors.tabIconDefault}
             />
           ),
           headerRight: () => <RightDom colors={colors} toRoute={toRoute} />,
@@ -116,7 +123,7 @@ const TabLayout = () => {
             <Icon
               name={focused ? 'person' : 'person-outline'}
               size={20}
-              color={focused ? colors.primary : colors.text}
+              color={focused ? colors.primary : colors.tabIconDefault}
             />
           ),
         }}

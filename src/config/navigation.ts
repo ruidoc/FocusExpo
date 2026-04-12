@@ -9,7 +9,6 @@ export const ScreenOptions: NativeStackNavigationOptions = {
   headerLargeTitleShadowVisible: false, // 隐藏大标题阴影
   headerTitleAlign: 'center', // 标题居中
   statusBarTranslucent: true, // 状态栏沉浸
-  headerTintColor: '#fff',
   headerBackTitle: '',
   headerBackButtonDisplayMode: 'minimal',
   // statusBarColor: 'transparent', // 状态栏透明

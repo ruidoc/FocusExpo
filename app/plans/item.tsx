@@ -37,7 +37,7 @@ const TaskArea = ({
   plans: CusPlan[];
   filterType: FilterType;
 }) => {
-  const { colors, isDark } = useCustomTheme();
+  const { colors } = useCustomTheme();
   const store = usePlanStore();
   const astore = useAppStore();
 
@@ -94,10 +94,10 @@ const TaskArea = ({
     );
   }
 
-  const cardBg = isDark ? '#1E1E2D' : '#F4F4F8';
+  const cardBg = colors.card2;
   const accentColor = colors.primary;
-  const pillBg = isDark ? 'rgba(122,90,248,0.15)' : 'rgba(122,90,248,0.1)';
-  const dividerColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+  const pillBg = colors.primarySoft;
+  const dividerColor = colors.border;
 
   return (
     <View className="flex-1 px-4 pt-2 pb-4">
@@ -164,9 +164,7 @@ const TaskArea = ({
                 {inactive && statusLabel ? (
                   <View
                     style={{
-                      backgroundColor: isDark
-                        ? 'rgba(255,255,255,0.08)'
-                        : 'rgba(0,0,0,0.06)',
+                      backgroundColor: colors.controlBg,
                       paddingHorizontal: 8,
                       paddingVertical: 2,
                       borderRadius: 6,
@@ -202,9 +200,7 @@ const TaskArea = ({
                 <View
                   style={{
                     backgroundColor: inactive
-                      ? isDark
-                        ? 'rgba(255,255,255,0.06)'
-                        : 'rgba(0,0,0,0.04)'
+                      ? colors.controlBg
                       : pillBg,
                     paddingHorizontal: 8,
                     paddingVertical: 3,

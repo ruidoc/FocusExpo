@@ -47,6 +47,20 @@ const RootLayout = () => {
     SpaceMono: require('../src/assets/fonts/SpaceMono-Regular.ttf'),
   });
   const theme = useCustomTheme();
+  const stackScreenOptions = {
+    ...ScreenOptions,
+    headerTintColor: theme.colors.text,
+    headerStyle: {
+      backgroundColor: theme.colors.background,
+    },
+    headerTitleStyle: {
+      ...(ScreenOptions.headerTitleStyle || {}),
+      color: theme.colors.text,
+    },
+    headerBackTitleStyle: {
+      color: theme.colors.text,
+    },
+  };
 
   // 初始化数据并设置 iOS 专注状态同步
   useEffect(() => {
@@ -75,8 +89,8 @@ const RootLayout = () => {
           <DateTimePicker.Global />
           <Dialog.Global />
           <Toast.Global />
-          <View className="flex-1">
-            <Stack screenOptions={ScreenOptions}>
+          <View className="flex-1" style={{ backgroundColor: theme.colors.background }}>
+            <Stack screenOptions={stackScreenOptions}>
               <Stack.Screen
                 name="(tabs)"
                 options={{ headerShown: false, headerTitle: '' }}

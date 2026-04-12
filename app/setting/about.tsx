@@ -27,7 +27,9 @@ const App = () => {
             《隐私政策》
           </Link>
         </View>
-        <Text className="text-white mt-2 text-sm text-center">
+        <Text
+          className="mt-2 text-sm text-center"
+          style={{ color: colors.text2 }}>
           北京自由岸科技 ©️版权所有
         </Text>
       </View>

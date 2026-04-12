@@ -83,7 +83,7 @@ const DialogComponent = ({
       <Pressable
         className="flex-1 items-center px-6"
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: colors.overlay,
           justifyContent: keyboardVisible ? 'flex-end' : 'center',
           paddingBottom: keyboardVisible ? keyboardHeight + 24 : 0,
         }}
@@ -141,7 +141,7 @@ const DialogComponent = ({
               <Text
                 className="text-base font-medium"
                 style={{
-                  color: confirmButtonDisabled ? '#7A5AF890' : colors.primary,
+                  color: confirmButtonDisabled ? colors.text3 : colors.primary,
                 }}>
                 {confirmButtonText}
               </Text>

@@ -1,7 +1,14 @@
+import { useCustomTheme } from '@/config/theme';
 import React from 'react';
 import { ImageBackground, View } from 'react-native';
 
 const BackgroundDecoration = () => {
+  const { isDark } = useCustomTheme();
+
+  if (!isDark) {
+    return null;
+  }
+
   return (
     <View className="absolute inset-0 -z-[1]">
       {/* 主背景色 */}

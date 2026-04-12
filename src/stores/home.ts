@@ -12,6 +12,8 @@ const HomeStore = combine(
 
     them: 'light' as 'dark' | 'light', // 主题
     followSystem: true, // 是否跟随系统主题
+    themeInitialized: false,
+    themeListenerAttached: false,
 
     ios_screen_time_permission: true, // iOS 屏幕时间权限状态
 
@@ -76,7 +78,7 @@ const HomeStore = combine(
 
     // 设置主题
     setThem: (them: 'dark' | 'light', followSystem: boolean = true) => {
-      set({ them, followSystem });
+      set({ them, followSystem, themeInitialized: true });
       AsyncStorage.setItem('mythem', them);
       AsyncStorage.setItem('followSystem', followSystem.toString());
     },
@@ -134,7 +136,10 @@ const HomeStore = combine(
       // 初始化主题
       (get() as any).initTheme();
       // 监听系统主题变化
-      Appearance.addChangeListener((get() as any).handleThemeChange);
+      if (!get().themeListenerAttached) {
+        Appearance.addChangeListener((get() as any).handleThemeChange);
+        set({ themeListenerAttached: true });
+      }
     },
   }),
 );

@@ -49,7 +49,7 @@ const FieldGroup: React.FC<FieldGroupProps> = ({
       className={groupClassName}
       style={[
         {
-          backgroundColor: colors.card,
+          backgroundColor: colors.card2 || colors.card,
         },
         style,
       ]}>

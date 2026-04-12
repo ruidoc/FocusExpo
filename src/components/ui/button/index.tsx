@@ -47,7 +47,7 @@ const Button = ({
       duration: 200,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [opacity]);
 
   const isDisabled = disabled || loading;
 
@@ -67,22 +67,30 @@ const Button = ({
       return {
         backgroundColor: 'transparent',
         borderWidth: 1,
-        borderColor: isDisabled ? '#5B4A9E' : colors.primary || '#7A5AF8',
+        borderColor: isDisabled
+          ? colors.buttonDisabledBg || colors.border
+          : colors.primary || '#7A5AF8',
       };
     }
     return {
-      backgroundColor: isDisabled ? '#3D2E7A' : colors.primary || '#7A5AF8',
+      backgroundColor: isDisabled
+        ? colors.buttonDisabledBg || colors.primarySoft
+        : colors.primary || '#7A5AF8',
     };
   };
 
   const getTextStyle = () => {
     if (type === 'ghost') {
       return {
-        color: isDisabled ? '#5B4A9E' : colors.primary || '#7A5AF8',
+        color: isDisabled
+          ? colors.text3 || colors.text2
+          : colors.primary || '#7A5AF8',
       };
     }
     return {
-      color: isDisabled ? 'rgba(255, 255, 255, 0.5)' : '#FFFFFF',
+      color: isDisabled
+        ? colors.buttonDisabledText || colors.textInverse
+        : colors.textInverse || '#FFFFFF',
     };
   };
 
@@ -105,7 +113,7 @@ const Button = ({
         style={[
           {
             ...currentSizeStyle,
-            shadowColor: '#3478F6',
+            shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.08,
             shadowRadius: 12,
@@ -120,7 +128,7 @@ const Button = ({
           <>
             <ActivityIndicator
               size="small"
-              color={type === 'ghost' ? colors.primary : '#fff'}
+              color={type === 'ghost' ? colors.primary : colors.textInverse || '#fff'}
               className="mr-2"
             />
             <Text

@@ -153,18 +153,18 @@ const ToastGlobal: React.FC = () => {
         return {
           icon: 'hourglass',
           color: colors.primary || '#7A5AF8',
-          bgColor: 'rgba(122, 90, 248, 0.1)',
+          bgColor: colors.primarySoft || 'rgba(122, 90, 248, 0.1)',
         };
       default:
         return {
           icon: 'information-circle',
-          color: '#2575FC',
-          bgColor: 'rgba(37, 117, 252, 0.1)',
+          color: colors.primary || '#7A5AF8',
+          bgColor: colors.primarySoft || 'rgba(122, 90, 248, 0.1)',
         };
     }
   };
 
-  const { icon, color } = getIconAndColor();
+  const { icon, color, bgColor } = getIconAndColor();
   const isLoading = type === 'loading';
 
   return (
@@ -186,6 +186,8 @@ const ToastGlobal: React.FC = () => {
           className="flex-row items-center px-4 py-3 rounded-lg mx-4 shadow-lg"
           style={{
             backgroundColor: colors.card || '#FFFFFF',
+            borderWidth: 1,
+            borderColor: colors.border,
             minWidth: 120,
             maxWidth: '90%',
           }}>
@@ -194,7 +196,11 @@ const ToastGlobal: React.FC = () => {
               <Icon name={icon} size={20} color={color} />
             </View>
           ) : (
-            <Icon name={icon} size={20} color={color} />
+            <View
+              className="rounded-full items-center justify-center"
+              style={{ width: 28, height: 28, backgroundColor: bgColor }}>
+              <Icon name={icon} size={18} color={color} />
+            </View>
           )}
           <Text
             className="ml-2 text-sm"
