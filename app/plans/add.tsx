@@ -50,6 +50,9 @@ const App = () => {
   const presetStart = params.presetStart as string | undefined;
   const presetEnd = params.presetEnd as string | undefined;
   const presetRepeat = params.presetRepeat as string | undefined;
+  const targetTaskId = params.taskId as string | undefined;
+  const targetProblem = params.problem as string | undefined;
+  const completedTasksParam = params.completedTasks as string | undefined;
 
   const [title, setTitle] = useState(() => {
     // 预设模式：使用预设名称
@@ -64,6 +67,7 @@ const App = () => {
   // 检测是否从 onboarding 或 presets 进入
   const fromOnboarding = params.from === 'onboarding';
   const fromPresets = params.from === 'presets';
+  const fromTarget = params.from === 'target';
 
   // 使用 ref 保存清理函数，避免依赖项导致的循环更新
   const clearEditingPlanRef = useRef(pstore.clearEditingPlan);
@@ -321,6 +325,8 @@ const App = () => {
       // 根据模式调用不同的接口
       const entrySource = fromOnboarding
         ? 'onboarding'
+        : fromTarget
+          ? 'target'
         : fromPresets
           ? 'presets'
           : 'normal';
@@ -395,9 +401,28 @@ const App = () => {
               screen_name: 'plans_add',
             });
 
-            // 从 onboarding 或 presets 进入：清空路由栈，直接进入首页
+            // 从 onboarding / presets 进入：创建后直接进入首页
+            // 从 target 进入：返回任务页并更新进度
             // 正常进入：返回上一页
-            if (fromOnboarding || fromPresets) {
+            if (fromTarget) {
+              const mergedCompletedTasks = Array.from(
+                new Set(
+                  [completedTasksParam, targetTaskId]
+                    .flatMap(item => item?.split(',') || [])
+                    .map(item => item.trim())
+                    .filter(Boolean),
+                ),
+              ).join(',');
+
+              router.replace({
+                pathname: '/plans/target',
+                params: {
+                  from: 'onboarding',
+                  problem: targetProblem || 'other',
+                  completedTasks: mergedCompletedTasks,
+                },
+              });
+            } else if (fromOnboarding || fromPresets) {
               router.replace('/(tabs)');
             } else {
               router.back();

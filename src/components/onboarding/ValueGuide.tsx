@@ -91,7 +91,13 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
       entry_source: 'onboarding',
       screen_name: 'onboarding_value_guide',
     });
-    router.replace('/plans/presets?from=onboarding');
+    router.replace({
+      pathname: '/plans/target',
+      params: {
+        from: 'onboarding',
+        problem: problem || 'other',
+      },
+    });
     onComplete();
   };
 

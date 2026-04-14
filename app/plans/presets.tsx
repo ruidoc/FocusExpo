@@ -1,7 +1,7 @@
 import { Page } from '@/components/business';
 import { Button, Flex } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { trackEvent } from '@/utils';
-import Icon from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect } from 'react';
@@ -9,7 +9,6 @@ import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 interface PresetPlan {
   id: string;
-  icon: string;
   name: string;
   time: string;
   repeat: number[] | 'once';
@@ -22,7 +21,6 @@ interface PresetPlan {
 const PRESET_PLANS: PresetPlan[] = [
   {
     id: 'morning_reading',
-    icon: '🌅',
     name: '早起读书',
     time: '6:30-7:30',
     repeat: [1, 2, 3, 4, 5, 6, 7],
@@ -33,7 +31,6 @@ const PRESET_PLANS: PresetPlan[] = [
   },
   {
     id: 'morning_exercise',
-    icon: '💪',
     name: '晨间锻炼',
     time: '6:00-7:00',
     repeat: [1, 2, 3, 4, 5],
@@ -44,7 +41,6 @@ const PRESET_PLANS: PresetPlan[] = [
   },
   {
     id: 'morning_study',
-    icon: '📚',
     name: '上午深度学习',
     time: '9:00-11:30',
     repeat: [1, 2, 3, 4, 5],
@@ -55,7 +51,6 @@ const PRESET_PLANS: PresetPlan[] = [
   },
   {
     id: 'afternoon_focus',
-    icon: '✍️',
     name: '下午专注时段',
     time: '14:00-17:00',
     repeat: [1, 2, 3, 4, 5],
@@ -66,7 +61,6 @@ const PRESET_PLANS: PresetPlan[] = [
   },
   {
     id: 'evening_study',
-    icon: '🌆',
     name: '晚间学习',
     time: '19:00-22:00',
     repeat: [1, 2, 3, 4, 5, 6, 7],
@@ -77,7 +71,6 @@ const PRESET_PLANS: PresetPlan[] = [
   },
   {
     id: 'workday_focus',
-    icon: '💼',
     name: '工作日专注',
     time: '9:00-18:00',
     repeat: [1, 2, 3, 4, 5],
@@ -88,7 +81,6 @@ const PRESET_PLANS: PresetPlan[] = [
   },
   {
     id: 'lunch_break',
-    icon: '🍜',
     name: '午间防刷手机',
     time: '12:00-14:00',
     repeat: [1, 2, 3, 4, 5],
@@ -99,7 +91,6 @@ const PRESET_PLANS: PresetPlan[] = [
   },
   {
     id: 'before_sleep',
-    icon: '🌙',
     name: '睡前一小时',
     time: '22:00-23:00',
     repeat: [1, 2, 3, 4, 5, 6, 7],
@@ -110,7 +101,6 @@ const PRESET_PLANS: PresetPlan[] = [
   },
   {
     id: 'weekend_discipline',
-    icon: '🎯',
     name: '周末自律',
     time: '9:00-21:00',
     repeat: [6, 7],
@@ -124,7 +114,17 @@ const PRESET_PLANS: PresetPlan[] = [
 const PresetsPage = () => {
   const params = useLocalSearchParams();
   const navigation = useNavigation();
+  const { colors, isDark } = useCustomTheme();
   const fromOnboarding = params.from === 'onboarding';
+  const cardBg = isDark ? 'rgba(255, 255, 255, 0.05)' : colors.card;
+  const cardBorderColor = isDark
+    ? 'rgba(255, 255, 255, 0.08)'
+    : colors.border;
+  const helperTextColor = isDark ? 'rgba(255, 255, 255, 0.6)' : colors.text2;
+  const descTextColor = isDark ? 'rgba(255, 255, 255, 0.5)' : colors.text3;
+  const footerBorderColor = isDark
+    ? 'rgba(255, 255, 255, 0.05)'
+    : colors.border;
 
   // 从 onboarding 进入时，禁止返回
   useEffect(() => {
@@ -178,10 +178,10 @@ const PresetsPage = () => {
   };
 
   return (
-    <Page>
+    <Page bgcolor={colors.background}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 pt-6 pb-4 mt-[94px]">
-          <Text className="text-sm text-white/60 text-center">
+          <Text className="text-sm text-center" style={{ color: helperTextColor }}>
             为你推荐以下场景，选一个快速开始
           </Text>
         </View>
@@ -192,29 +192,24 @@ const PresetsPage = () => {
               key={preset.id}
               activeOpacity={0.7}
               onPress={() => handleSelectPreset(preset)}
-              className="rounded-3xl p-5"
+              className="rounded-3xl p-5 border"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: cardBg,
+                borderColor: cardBorderColor,
               }}>
               <Flex className="justify-between items-start mb-2">
-                <Flex className="items-center gap-x-2">
-                  <Text className="text-2xl">{preset.icon}</Text>
-                  <Text className="text-base font-semibold text-white">
+                <Flex className="items-center">
+                  <Text className="text-base font-semibold" style={{ color: colors.text }}>
                     {preset.name}
                   </Text>
                 </Flex>
-                <Icon
-                  name="chevron-forward"
-                  size={20}
-                  color="rgba(255, 255, 255, 0.4)"
-                />
               </Flex>
 
-              <View className="ml-8">
-                <Text className="text-sm text-white/60 mb-1">
+              <View>
+                <Text className="text-sm mb-1" style={{ color: helperTextColor }}>
                   {preset.repeatText} · {preset.time}
                 </Text>
-                <Text className="text-xs text-white/50">
+                <Text className="text-xs" style={{ color: descTextColor }}>
                   {preset.description}
                 </Text>
               </View>
@@ -225,8 +220,8 @@ const PresetsPage = () => {
 
       {/* 底部按钮区 */}
       <View
-        className="px-6 pb-2 pt-4 border-t border-white/5"
-        style={{ paddingBottom: 24 }}>
+        className="px-6 pb-2 pt-4 border-t"
+        style={{ borderTopColor: footerBorderColor, borderTopWidth: 1, paddingBottom: 24 }}>
         <Button
           type="ghost"
           onPress={handleCustomPlan}
@@ -238,7 +233,9 @@ const PresetsPage = () => {
             onPress={handleSkip}
             activeOpacity={0.6}
             className="py-3 items-center justify-center">
-            <Text className="text-white/50 text-sm">稍后创建</Text>
+            <Text className="text-sm" style={{ color: descTextColor }}>
+              稍后创建
+            </Text>
           </TouchableOpacity>
         )}
       </View>

@@ -127,6 +127,7 @@ const App = () => {
   }, [currentApps, items, liveDelta]);
   const TEXT2 = dark ? '#6B7280' : '#94A3B8';
   const ACCENT = '#7A5AF8';
+  const unitTextColor = dark ? '#FFFFFF' : colors.text2;
 
   const isAppCurrentlyLocked = (appId: string) =>
     pstore.has_active_task() &&
@@ -142,11 +143,15 @@ const App = () => {
           <Text className="text-2xl font-semibold" style={{ color: ACCENT }}>
             {h}
           </Text>
-          <Text className="text-sm text-white">小时</Text>
+          <Text className="text-sm" style={{ color: unitTextColor }}>
+            小时
+          </Text>
           <Text className="text-2xl font-semibold" style={{ color: ACCENT }}>
             {mm}
           </Text>
-          <Text className="text-sm text-white">分</Text>
+          <Text className="text-sm" style={{ color: unitTextColor }}>
+            分
+          </Text>
         </View>
       );
     }
@@ -155,7 +160,9 @@ const App = () => {
         <Text className="text-2xl font-semibold" style={{ color: ACCENT }}>
           {mm}
         </Text>
-        <Text className="text-sm text-white">分钟</Text>
+        <Text className="text-sm" style={{ color: unitTextColor }}>
+          分钟
+        </Text>
       </View>
     );
   };
@@ -263,7 +270,9 @@ const App = () => {
                   <Text className="text-2xl " style={{ color: colors.text }}>
                     {toIntPercent(total?.total_success_rate)}
                   </Text>
-                  <Text className="text-sm text-white">%</Text>
+                  <Text className="text-sm" style={{ color: unitTextColor }}>
+                    %
+                  </Text>
                 </View>
               </View>
             </View>
