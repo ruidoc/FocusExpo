@@ -122,13 +122,9 @@ class StorageManager {
     return { value: undefined, type: 'unknown' };
   }
 
-  // 设置组共享数据
-  async setGroup(key: string, data: string) {
-    try {
-      await SharedGroupPreferences.setItem(key, data, appGroupIdentifier);
-    } catch (errorCode) {
-      console.log(errorCode);
-    }
+  // 设置组共享数据（与 Native Extension 共用 App Group，失败应向上抛以便调用方中止流程）
+  async setGroup(key: string, data: string): Promise<void> {
+    await SharedGroupPreferences.setItem(key, data, appGroupIdentifier);
   }
 
   // 获取组共享数据

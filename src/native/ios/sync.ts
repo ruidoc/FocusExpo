@@ -14,7 +14,7 @@ import type { ExtensionLogEvent, FocusStateEvent } from '../type';
 import { createExtensionLogListener, createFocusStateListener } from './events';
 import { getFocusStatus } from './methods';
 
-function cleanupLocalFocusState() {
+async function cleanupLocalFocusState() {
   const pstore = usePlanStore.getState();
   const rstore = useRecordStore.getState();
   const nativeFocus = pstore.native_focus;
@@ -38,7 +38,7 @@ function cleanupLocalFocusState() {
 
   pstore.clearNativeFocus();
   pstore.pauseCurPlan(false);
-  rstore.removeRecordId();
+  await rstore.removeRecordId();
   pstore.setCurPlanMinute(0);
   pstore.resetPlan();
   rstore.getStatis();
@@ -108,9 +108,12 @@ async function syncIOSStatus() {
     pstore.setNativeFocus(status);
 
     if (status.active) {
-      // 同步 record_id（优先使用 iOS 的）
-      if (status.record_id !== rstore.record_id) {
-        rstore.setRecordId(status.record_id || '');
+      // 仅当 Native 带回有效 record_id 时再写入；避免用空值覆盖 JS 已拿到的 id
+      if (
+        status.record_id &&
+        status.record_id !== rstore.record_id
+      ) {
+        await rstore.setRecordId(status.record_id);
       }
       pstore.setCurPlanMinute(status.actual_mins || 0);
       startElapsedTimer(status.actual_mins || 0);
@@ -133,18 +136,18 @@ async function syncIOSStatus() {
         rstore.updateActualMins(status.record_id, status.actual_mins);
       }
     } else if (status.failed) {
-      cleanupLocalFocusState();
+      await cleanupLocalFocusState();
     } else if (
       status.session_state === 'stopped' ||
       (pstore.active_plan && !status.window_locked)
     ) {
       console.log('【专注同步纠正】iOS 无任务，清理本地状态');
-      cleanupLocalFocusState();
+      await cleanupLocalFocusState();
     } else {
       // 专注已结束，停止定时器
       stopFocusTimer();
       pstore.clearNativeFocus();
-      rstore.removeRecordId();
+      await rstore.removeRecordId();
       pstore.setCurPlanMinute(0);
       // 确保数据已初始化后再调用 resetPlan
       const cus_plans = pstore.cus_plans;

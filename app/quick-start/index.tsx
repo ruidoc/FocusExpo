@@ -37,14 +37,15 @@ const QuickStartPage = () => {
     });
   }, [navigation]);
 
-  const setOncePlan = (plan_id: string) => {
+  /** 构造一次性计划（须在与 startAppLimits 同一流程内复用同一对象，保证 plan 与 record 一致） */
+  const buildOncePlan = (plan_id: string): CusPlan => {
     let now = dayjs();
     let cur_minute = now.hour() * 60 + now.minute();
     let cur_secend = cur_minute * 60 + now.second();
     let select_apps = astore.ios_selected_apps.map(
       r => `${r.stableId}:${r.type}`,
     );
-    let from_data: CusPlan = {
+    return {
       id: plan_id,
       name: '一次性任务',
       apps: select_apps,
@@ -58,8 +59,6 @@ const QuickStartPage = () => {
       mode,
       flags: noStop ? 'no-stop' : '',
     };
-    pstore.addOncePlan(from_data);
-    rstore.addRecord(from_data, 0); // 下注设为 0
   };
 
   const selectApps = (apps: any[]) => {
@@ -128,17 +127,25 @@ const QuickStartPage = () => {
     }
 
     let plan_id = `once_${Math.floor(Math.random() * 99999999)}`;
+    const from_data = buildOncePlan(plan_id);
     // iOS: 使用屏幕时间限制开始屏蔽
     console.log('startAppLimits', minute, plan_id, mode);
     setStarting(true);
     try {
+      const recordId = await rstore.addRecord(from_data, 0);
+      if (!recordId) {
+        setStarting(false);
+        Toast('创建专注记录失败，请稍后重试', 'error');
+        return;
+      }
+
       const ok = await startAppLimits(minute, plan_id, mode, {
         entry_source: 'quick_start',
         screen_name: 'quick_start',
         focus_type: 'once',
       });
       if (ok) {
-        setOncePlan(plan_id);
+        pstore.addOncePlan(from_data);
         // 立即设置 native_focus，避免返回首页时 has_active_task() 因等待异步事件而为 false
         pstore.setNativeFocus({
           active: true,
@@ -246,7 +253,12 @@ const QuickStartPage = () => {
         )}
       </View>
       <View className="px-8">
-        <Button onPress={handleStart} text="开始专注" loading={starting} />
+        <Button
+          onPress={handleStart}
+          text="开始专注"
+          loadingText="启动中..."
+          loading={starting}
+        />
       </View>
     </Page>
   );

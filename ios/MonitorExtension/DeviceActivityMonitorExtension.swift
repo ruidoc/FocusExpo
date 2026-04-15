@@ -72,6 +72,8 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         
         // 补报上一次 pending 的 actual_min
         flushPendingActualMin(defaults: defaults)
+        // 补报上一次未成功完成的记录
+        flushPendingCompletion(defaults: defaults)
         
         // 1. 暂停恢复活动：不处理
         if activity.rawValue == "FocusOne.PauseResume" {
@@ -227,6 +229,23 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 self.logToJS(level: "log", message: "pending 时长补报成功", data: ["recordId": pendingRecordId, "actualMin": pendingMin])
             case .failure(let error):
                 self.logToJS(level: "warn", message: "pending 时长补报失败: \(error.localizedDescription)", data: ["recordId": pendingRecordId, "actualMin": pendingMin])
+            }
+        }
+    }
+
+    /// 补报上一次未成功完成的记录
+    private func flushPendingCompletion(defaults: UserDefaults) {
+        let pendingRecordId = defaults.string(forKey: "FocusOne.PendingCompleteRecordId") ?? ""
+        guard !pendingRecordId.isEmpty else { return }
+
+        defaults.removeObject(forKey: "FocusOne.PendingCompleteRecordId")
+
+        NetworkManager.shared.post(path: "/record/complete/\(pendingRecordId)") { result in
+            switch result {
+            case .success:
+                self.logToJS(level: "log", message: "pending complete 补报成功", data: ["recordId": pendingRecordId])
+            case .failure(let error):
+                self.logToJS(level: "warn", message: "pending complete 补报失败: \(error.localizedDescription)", data: ["recordId": pendingRecordId])
             }
         }
     }
@@ -628,10 +647,17 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
         guard let session = FocusStateStore.loadSession(defaults: defaults) else { return }
         guard let recordId = session.recordId ?? defaults.string(forKey: "record_id"), !recordId.isEmpty else { return }
-        
+
+        // 跳过 createRecord 失败时的临时占位 ID
+        if recordId.hasPrefix("pending_") {
+            logToJS(level: "warn", message: "completeRecord 跳过临时 ID", data: ["recordId": recordId])
+            defaults.removeObject(forKey: "record_id")
+            return
+        }
+
         let completedKey = "FocusOne.RecordCompleted_\(recordId)"
         if defaults.bool(forKey: completedKey) { return }
-        
+
         // 更新今日已使用时长
         let totalMin = session.totalMinutes
         let planId = session.planId ?? ""
@@ -653,14 +679,18 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                 "entry_source": entrySource
             ]
         )
-        
-        NetworkManager.shared.post(path: "/record/complete/\(recordId)") { result in
+
+        NetworkManager.shared.post(path: "/record/complete/\(recordId)") { [weak self] result in
             switch result {
             case .success(_):
                 defaults.set(true, forKey: completedKey)
                 defaults.removeObject(forKey: "record_id")
-            case .failure(_):
+                self?.logToJS(level: "log", message: "completeRecord 成功", data: ["recordId": recordId])
+            case .failure(let error):
+                // 网络失败：存入 pending，下次 intervalDidStart 时补报
+                defaults.set(recordId, forKey: "FocusOne.PendingCompleteRecordId")
                 defaults.removeObject(forKey: "record_id")
+                self?.logToJS(level: "warn", message: "completeRecord 失败，已存入 pending", data: ["recordId": recordId, "error": error.localizedDescription])
             }
         }
     }

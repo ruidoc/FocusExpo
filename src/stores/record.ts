@@ -24,15 +24,19 @@ const RecordStore = combine(
     setRecords: (records: any[]) => {
       set({ records });
     },
-    setRecordId: (id: string) => {
+    setRecordId: async (id: string) => {
       set({ record_id: id });
       storage.set('record_id', id);
-      storage.setGroup('record_id', id);
+      await storage.setGroup('record_id', id);
     },
-    removeRecordId: () => {
+    removeRecordId: async () => {
       set({ record_id: '' });
       storage.delete('record_id');
-      storage.setGroup('record_id', '');
+      try {
+        await storage.setGroup('record_id', '');
+      } catch (error) {
+        console.log('removeRecordId setGroup', error);
+      }
     },
 
     // 格式化专注时长
@@ -45,7 +49,10 @@ const RecordStore = combine(
       return `${mint}分钟`;
     },
 
-    addRecord: async (plan: CusPlan, bet_amount: number) => {
+    addRecord: async (
+      plan: CusPlan,
+      bet_amount: number,
+    ): Promise<string | null> => {
       try {
         let res: HttpRes = await http.post('/record/add', {
           title: plan.name || '一次性任务',
@@ -58,13 +65,19 @@ const RecordStore = combine(
           bet_amount,
         });
         console.log('添加记录结果：', res);
+        if (res.statusCode === 200 && res.data?.id) {
+          await (get() as any).setRecordId(res.data.id);
+          return res.data.id as string;
+        }
         if (res.statusCode === 200) {
-          (get() as any).setRecordId(res.data.id);
+          Toast('创建记录失败：缺少记录 ID');
         } else {
           Toast(res.message);
         }
+        return null;
       } catch (error) {
         console.log(error);
+        return null;
       }
     },
 

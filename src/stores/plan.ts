@@ -152,7 +152,7 @@ const PlanStore = combine(
     complatePlan: async () => {
       console.log('【专注计划完成】');
       (get() as any).clearNativeFocus();
-      record.getState().removeRecordId();
+      await record.getState().removeRecordId();
       (get() as any).pauseCurPlan(false);
       (get() as any).setCurPlanMinute(0);
       (get() as any).resetPlan();
@@ -167,7 +167,7 @@ const PlanStore = combine(
       (get() as any).clearNativeFocus();
       if (record_id) {
         await record.getState().exitRecord(record_id);
-        record.getState().removeRecordId();
+        await record.getState().removeRecordId();
         (get() as any).pauseCurPlan(false);
         (get() as any).setCurPlanMinute(0);
         (get() as any).resetPlan();
