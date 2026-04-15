@@ -4,8 +4,7 @@ import { useCustomTheme } from '@/config/theme';
 import { usePlanStore } from '@/stores';
 import { getPlansByPeriod } from '@/utils/date';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
-import { router } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   Pressable,
@@ -21,7 +20,6 @@ type FilterType = 'today' | 'week' | 'month' | 'all';
 
 const App = () => {
   const store = usePlanStore();
-  const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [filterType, setFilterType] = useState<FilterType>('today');
@@ -65,41 +63,6 @@ const App = () => {
     fetchPlans('today');
   }, []);
 
-  // 同步计划到 iOS 原生侧
-  const handleSync = async () => {
-    setSyncing(true);
-    try {
-      const result = await store.syncAllPlansToNative();
-      Toast(
-        `同步完成：成功 ${result.successCount}/${result.total}`,
-        result.successCount === result.total ? 'success' : 'info',
-      );
-    } catch (error) {
-      Toast('同步失败，请重试', 'error');
-      console.error('同步失败:', error);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  useEffect(() => {
-    navigation.setOptions({
-      // 避免 header 右侧 flex 布局把 Pressable 拉满剩余宽度（偶现长条）
-      headerRight: ({ tintColor }: { tintColor?: string }) => (
-        <Pressable
-          onPress={toCreatePlan}
-          style={{
-            width: 36,
-            height: 36,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          <Icon name="add" size={27} color={tintColor ?? colors.text} />
-        </Pressable>
-      ),
-    });
-  }, [navigation]);
-
   const getFilteredPlans = () => {
     const allPlans = store.cus_plans;
     const filtered = getPlansByPeriod(allPlans, filterType);
@@ -120,6 +83,22 @@ const App = () => {
 
   return (
     <Page>
+      <Stack.Screen
+        options={{
+          headerRight: ({ tintColor }) => (
+            <Pressable
+              onPress={toCreatePlan}
+              style={{
+                width: 36,
+                height: 36,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Icon name="add" size={27} color={tintColor ?? colors.text} />
+            </Pressable>
+          ),
+        }}
+      />
       {/* 筛选选项区域 */}
       <Flex className="px-4 py-2.5">
         {filterOptions.map((option, index) => {

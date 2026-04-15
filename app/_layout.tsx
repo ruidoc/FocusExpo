@@ -149,7 +149,10 @@ const RootLayout = () => {
                 name="plans/index"
                 options={{ title: '我的契约' }}
               />
-              <Stack.Screen name="plans/add" />
+              <Stack.Screen
+                name="plans/add"
+                options={{ title: '创建契约' }}
+              />
               <Stack.Screen
                 name="plans/presets"
                 options={{

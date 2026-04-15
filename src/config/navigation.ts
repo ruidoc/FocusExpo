@@ -12,12 +12,9 @@ export const ScreenOptions: NativeStackNavigationOptions = {
   headerTintColor: '#fff',
   headerBackTitle: '',
   headerBackButtonDisplayMode: 'minimal',
-  // statusBarColor: 'transparent', // 状态栏透明
-  // gestureEnabled: true, // 启用手势
-  // animationTypeForReplace: 'push', // 替换动画
-  // animation: 'fade_from_bottom', // 屏幕转换动画
-  // animationDuration: 100, // 动画持续时间
-  // presentation: 'modal', // 模态动画
+  headerStyle: {
+    backgroundColor: '#14141C', // 显式指定暗色背景，避免首帧亮色闪烁
+  },
   headerTitleStyle: {
     fontSize: 18,
   },

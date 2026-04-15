@@ -17,9 +17,9 @@ import {
   parseRepeat,
   trackPlanCreated,
 } from '@/utils';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
@@ -42,7 +42,6 @@ const App = () => {
   const { colors } = useCustomTheme();
   const allowModeEnabled = bstore.features.includes('allow-mode');
   const forceFocusEnabled = bstore.features.includes('force-focus');
-  const navigation = useNavigation();
   const params = useLocalSearchParams();
 
   // 解析预设参数
@@ -72,13 +71,6 @@ const App = () => {
   // 使用 ref 保存清理函数，避免依赖项导致的循环更新
   const clearEditingPlanRef = useRef(pstore.clearEditingPlan);
   clearEditingPlanRef.current = pstore.clearEditingPlan;
-
-  // 动态设置页面标题
-  useEffect(() => {
-    navigation.setOptions({
-      title: isEditing ? '编辑契约' : '创建契约',
-    });
-  }, [isEditing, navigation]);
 
   // 页面失去焦点时清理编辑状态
   useFocusEffect(
@@ -508,6 +500,7 @@ const App = () => {
 
   return (
     <Page>
+      <Stack.Screen options={{ title: isEditing ? '编辑契约' : '创建契约' }} />
       <ScrollView style={{ padding: 15 }}>
         {/* 1. 契约名称 */}
         <FieldGroup className="rounded-xl mb-4">
