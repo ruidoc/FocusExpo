@@ -5,11 +5,11 @@ import { trackEvent } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { ScrollView, Text, View } from 'react-native';
 
 type OnboardingProblem = 'video' | 'game' | 'study' | 'other';
-type TargetTaskId = 'short_video' | 'sleep' | 'study_work';
+type TargetTaskId = 'short_video' | 'sleep';
 
 interface TargetTask {
   id: TargetTaskId;
@@ -20,42 +20,28 @@ interface TargetTask {
   endTime: string;
   repeat: number[];
   repeatText: string;
-  appHint: string;
 }
 
 const TARGET_TASKS: TargetTask[] = [
   {
     id: 'short_video',
-    stepLabel: '短视频',
-    title: '21天不刷短视频',
-    subtitle: '先锁住最容易停不下来的内容',
+    stepLabel: '戒短视频',
+    title: '一周不刷短视频',
+    subtitle: '晚上最容易停不下来，先锁住这 1 小时',
     startTime: '20:00',
-    endTime: '23:00',
+    endTime: '21:00',
     repeat: [1, 2, 3, 4, 5, 6, 7],
     repeatText: '每天',
-    appHint: '建议先选抖音、小红书、视频号等应用',
   },
   {
     id: 'sleep',
-    stepLabel: '熬夜',
-    title: '21天不熬夜玩手机',
-    subtitle: '到点自动锁，减少“再玩10分钟”',
-    startTime: '23:00',
-    endTime: '07:00',
+    stepLabel: '不熬夜',
+    title: '一周不熬夜玩手机',
+    subtitle: '睡前锁定 1 小时，不给「再刷 5 分钟」的机会',
+    startTime: '22:00',
+    endTime: '23:00',
     repeat: [1, 2, 3, 4, 5, 6, 7],
     repeatText: '每天',
-    appHint: '建议优先选择夜里最常点开的娱乐应用',
-  },
-  {
-    id: 'study_work',
-    stepLabel: '学习/工作',
-    title: '21天专注学习 / 工作',
-    subtitle: '把高价值时间先守住',
-    startTime: '09:00',
-    endTime: '11:30',
-    repeat: [1, 2, 3, 4, 5],
-    repeatText: '工作日',
-    appHint: '建议先选会频繁打断你的娱乐、社交和资讯应用',
   },
 ];
 
@@ -94,34 +80,17 @@ const TargetPage = () => {
   const completedCount = TARGET_TASKS.filter(task =>
     completedTaskIds.has(task.id),
   ).length;
-  const currentTask = completedCount < TARGET_TASKS.length
-    ? TARGET_TASKS[completedCount]
-    : null;
-
-  const handleSkip = useCallback(() => {
-    trackEvent('target_tasks_skipped', {
-      entry_source: fromOnboarding ? 'onboarding' : 'normal',
-      completed_count: completedCount,
-      problem,
-    });
-    router.replace('/(tabs)');
-  }, [completedCount, fromOnboarding, problem]);
+  const currentTask =
+    completedCount < TARGET_TASKS.length ? TARGET_TASKS[completedCount] : null;
 
   useEffect(() => {
     if (fromOnboarding) {
       navigation.setOptions({
-        title: '新手任务',
-        headerLeft: () => null as any,
+        headerShown: false,
         gestureEnabled: false,
-        headerBackVisible: false,
-        headerRight: () => (
-          <TouchableOpacity onPress={handleSkip} activeOpacity={0.7}>
-            <Text className="text-sm text-white/55">稍后</Text>
-          </TouchableOpacity>
-        ),
       });
     }
-  }, [fromOnboarding, handleSkip, navigation]);
+  }, [fromOnboarding, navigation]);
 
   useEffect(() => {
     trackEvent('target_page_view', {
@@ -152,6 +121,7 @@ const TargetPage = () => {
         presetStart: task.startTime,
         presetEnd: task.endTime,
         presetRepeat: JSON.stringify(task.repeat),
+        presetDuration: '7d',
       },
     });
   };
@@ -159,16 +129,24 @@ const TargetPage = () => {
   return (
     <Page safe decoration>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-6 pt-4 pb-8">
-          <View className="flex-row items-start justify-between mb-8">
+        <View className="px-6 pt-16 pb-8">
+          {/* 自定义标题区 */}
+          <View className="mb-8 mx-4">
+            <Text className="text-[26px] font-bold text-white tracking-tight">
+              签 2 个契约，开始改变
+            </Text>
+            <Text className="text-base text-white/50 mt-2 leading-6">
+              90% 的新用户都从这两步开始
+            </Text>
+          </View>
+
+          {/* 步骤指示器 */}
+          <View className="flex-row items-start justify-center mb-8 mx-8">
             {TARGET_TASKS.map((task, index) => {
               const isCompleted = index < completedCount;
               const isCurrent = index === completedCount && !!currentTask;
-              const lineColor = index < completedCount - 1
-                ? COMPLETE_COLOR
-                : index === completedCount - 1
-                  ? COMPLETE_COLOR
-                  : PENDING_COLOR;
+              const lineColor =
+                index < completedCount ? COMPLETE_COLOR : PENDING_COLOR;
 
               return (
                 <React.Fragment key={task.id}>
@@ -191,9 +169,11 @@ const TargetPage = () => {
                         <Icon name="checkmark" size={20} color="#FFFFFF" />
                       ) : (
                         <Text
-                          className="text-base font-semibold"
+                          className="text-base font-bold"
                           style={{
-                            color: isCurrent ? colors.primary : 'rgba(255,255,255,0.55)',
+                            color: isCurrent
+                              ? colors.primary
+                              : 'rgba(255,255,255,0.55)',
                             fontVariant: ['tabular-nums'],
                           }}>
                           {index + 1}
@@ -201,18 +181,19 @@ const TargetPage = () => {
                       )}
                     </View>
                     <Text
-                      className="text-[11px] text-center mt-2 leading-4"
+                      className="text-[12px] text-center mt-2 leading-4"
                       style={{
-                        color: isCompleted || isCurrent
-                          ? '#FFFFFF'
-                          : 'rgba(255,255,255,0.5)',
+                        color:
+                          isCompleted || isCurrent
+                            ? '#FFFFFF'
+                            : 'rgba(255,255,255,0.5)',
                       }}>
                       {task.stepLabel}
                     </Text>
                   </View>
                   {index < TARGET_TASKS.length - 1 && (
                     <View
-                      className="flex-1 h-[2px] mt-5 mx-2"
+                      className="flex-1 h-[1px] mt-5 mx-2"
                       style={{ backgroundColor: lineColor }}
                     />
                   )}
@@ -241,33 +222,23 @@ const TargetPage = () => {
               <View
                 className="rounded-2xl px-4 py-4 mt-6"
                 style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
-                <Text className="text-xs text-white/40 mb-2">默认时间</Text>
                 <View className="flex-row items-center">
                   <Icon name="time-outline" size={16} color="#B3B3BA" />
                   <Text
                     className="text-sm text-[#D1D5DB] ml-2"
                     style={{ fontVariant: ['tabular-nums'] }}>
-                    {currentTask.repeatText} · {currentTask.startTime} - {currentTask.endTime}
+                    {currentTask.repeatText} · {currentTask.startTime} -{' '}
+                    {currentTask.endTime} · 持续一周
                   </Text>
                 </View>
               </View>
 
-              <View className="flex-row items-start mt-4 mb-6">
-                <Icon
-                  name="phone-portrait-outline"
-                  size={16}
-                  color="rgba(255,255,255,0.45)"
-                  style={{ marginTop: 2 }}
+              <View className="mt-6">
+                <Button
+                  onPress={() => handleCreateTask(currentTask)}
+                  text={`创建第 ${completedCount + 1} 个契约`}
                 />
-                <Text className="text-sm text-white/55 leading-5 ml-2 flex-1">
-                  {currentTask.appHint}
-                </Text>
               </View>
-
-              <Button
-                onPress={() => handleCreateTask(currentTask)}
-                text="创建这个目标"
-              />
             </View>
           ) : (
             <View
@@ -281,12 +252,15 @@ const TargetPage = () => {
                   <Icon name="checkmark" size={28} color={COMPLETE_COLOR} />
                 </View>
                 <Text className="text-[24px] font-semibold text-white mb-2">
-                  3 个目标已创建
+                  2 个契约已生效
                 </Text>
                 <Text className="text-sm text-white/60 text-center leading-6 mb-6">
-                  这些场景会按你设置的时间自动锁定。
+                  接下来一周，它们会按时自动锁定你的应用
                 </Text>
-                <Button onPress={() => router.replace('/(tabs)')} text="进入首页" />
+                <Button
+                  onPress={() => router.replace('/(tabs)')}
+                  text="进入首页"
+                />
               </View>
             </View>
           )}

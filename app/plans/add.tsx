@@ -49,6 +49,7 @@ const App = () => {
   const presetStart = params.presetStart as string | undefined;
   const presetEnd = params.presetEnd as string | undefined;
   const presetRepeat = params.presetRepeat as string | undefined;
+  const presetDuration = params.presetDuration as string | undefined;
   const targetTaskId = params.taskId as string | undefined;
   const targetProblem = params.problem as string | undefined;
   const completedTasksParam = params.completedTasks as string | undefined;
@@ -124,12 +125,20 @@ const App = () => {
     return Math.max(0, dayDuration - todayUsed - todayPlanned);
   };
 
-  // 单独管理选择的应用状态
-  const [selectedApps, setSelectedApps] = useState<any[]>([]);
+  // 单独管理选择的应用状态（从 target 进入时自动带入 onboarding 选的应用）
+  const [selectedApps, setSelectedApps] = useState<any[]>(() => {
+    if (fromTarget && astore.ios_selected_apps.length > 0) {
+      return astore.ios_selected_apps;
+    }
+    return [];
+  });
   const [submitting, setSubmitting] = useState(false);
 
   // 时长模式：true = 长期有效，false = 自定义时长
-  const [isLongTerm, setIsLongTerm] = useState(true);
+  const [isLongTerm, setIsLongTerm] = useState(() => {
+    if (presetDuration === '7d') return false;
+    return true;
+  });
   const [form, setForm] = useState<FormState>(() => {
     // 编辑模式：使用编辑任务的数据初始化
     if (pstore.editing_plan) {
@@ -189,15 +198,20 @@ const App = () => {
         console.log('解析预设重复参数失败:', e);
       }
 
+      // 从 target 进入时自动带入 onboarding 选的应用
+      const prefilledApps = fromTarget && astore.ios_selected_apps.length > 0
+        ? astore.ios_selected_apps.map((r: any) => `${r.stableId}:${r.type}`)
+        : [];
+
       return {
         name: presetName || '',
         start,
         end,
         start_date: today,
-        end_date: null,
+        end_date: presetDuration === '7d' ? dayjs(today).add(7, 'day').toDate() : null,
         repeat,
-        mode: 'shield',
-        apps: [],
+        mode: 'shield' as const,
+        apps: prefilledApps,
         flags: '',
       };
     }

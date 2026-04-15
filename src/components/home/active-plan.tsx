@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import ConfirmationModal from './confirm-modal';
+import InputConfirmModal from './input-confirm-modal';
 import TimeFlow from './time-flow';
 
 const FocusButton = () => {
@@ -201,18 +202,18 @@ const FocusButton = () => {
         onClose={() => setShowPauseModal(false)}
       />
 
-      {/* 停止确认弹窗 */}
-      <ConfirmationModal
+      {/* 停止确认弹窗（需输入确认文字） */}
+      <InputConfirmModal
         visible={showStopModal}
-        title="结束专注？"
-        message="结束后将无法恢复当前专注，确定要结束吗？"
-        confirmText="确认结束"
-        cancelText="继续专注"
+        title="终止契约"
+        message="你曾为这次专注立下契约，这是你对自己的承诺。如果并非紧急情况，放弃意味着一次对自己的失信。"
+        requiredText="我决定放弃这次对自己的承诺"
+        confirmText="确认终止"
+        cancelText="我再坚持一下"
         extraWarning={
           isPeriodicFocus ? '注意：停止后，今天该专注后续不会再触发' : undefined
         }
         onConfirm={stopFocus}
-        onCancel={() => {}}
         onClose={() => setShowStopModal(false)}
       />
     </>

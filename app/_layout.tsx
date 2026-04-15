@@ -7,13 +7,13 @@ import { setupIOSFocusSync } from '@/native/ios';
 import '@/styles/global.css';
 import { initAppData } from '@/utils';
 
-import { ThemeProvider } from '@react-navigation/native';
-import * as Sentry from '@sentry/react-native';
 import {
   Poppins_400Regular,
   Poppins_600SemiBold,
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
+import { ThemeProvider } from '@react-navigation/native';
+import * as Sentry from '@sentry/react-native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -81,10 +81,7 @@ const RootLayout = () => {
                 name="(tabs)"
                 options={{ headerShown: false, headerTitle: '' }}
               />
-              <Stack.Screen
-                name="(guides)"
-                options={{ headerShown: false }}
-              />
+              <Stack.Screen name="(guides)" options={{ headerShown: false }} />
               <Stack.Screen
                 name="onboarding/index"
                 options={{
@@ -96,31 +93,16 @@ const RootLayout = () => {
                 name="login/index"
                 options={{ headerTransparent: true, title: '' }}
               />
-              <Stack.Screen
-                name="login/wx"
-                options={{ headerShown: false }}
-              />
+              <Stack.Screen name="login/wx" options={{ headerShown: false }} />
               <Stack.Screen name="login/start" options={{ title: '' }} />
-              <Stack.Screen
-                name="login/register"
-                options={{ title: '注册' }}
-              />
-              <Stack.Screen
-                name="user/edit"
-                options={{ title: '个人信息' }}
-              />
+              <Stack.Screen name="login/register" options={{ title: '注册' }} />
+              <Stack.Screen name="user/edit" options={{ title: '个人信息' }} />
               <Stack.Screen
                 name="user/rights"
                 options={{ title: '权益中心' }}
               />
-              <Stack.Screen
-                name="user/coins"
-                options={{ title: '金币中心' }}
-              />
-              <Stack.Screen
-                name="setting/index"
-                options={{ title: '设置' }}
-              />
+              <Stack.Screen name="user/coins" options={{ title: '金币中心' }} />
+              <Stack.Screen name="setting/index" options={{ title: '设置' }} />
               <Stack.Screen
                 name="setting/permission"
                 options={{ title: '权限管理' }}
@@ -149,10 +131,7 @@ const RootLayout = () => {
                 name="plans/index"
                 options={{ title: '我的契约' }}
               />
-              <Stack.Screen
-                name="plans/add"
-                options={{ title: '创建契约' }}
-              />
+              <Stack.Screen name="plans/add" options={{ title: '创建契约' }} />
               <Stack.Screen
                 name="plans/presets"
                 options={{
@@ -161,9 +140,13 @@ const RootLayout = () => {
                 }}
               />
               <Stack.Screen
-                name="apps/index"
-                options={{ title: 'APP管理' }}
+                name="plans/target"
+                options={{
+                  title: '',
+                  headerTransparent: true,
+                }}
               />
+              <Stack.Screen name="apps/index" options={{ title: 'APP管理' }} />
               <Stack.Screen name="apps/add" options={{ title: '选择APP' }} />
               <Stack.Screen
                 name="others/webview"

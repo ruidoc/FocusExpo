@@ -117,9 +117,7 @@ const PresetsPage = () => {
   const { colors, isDark } = useCustomTheme();
   const fromOnboarding = params.from === 'onboarding';
   const cardBg = isDark ? 'rgba(255, 255, 255, 0.05)' : colors.card;
-  const cardBorderColor = isDark
-    ? 'rgba(255, 255, 255, 0.08)'
-    : colors.border;
+  const cardBorderColor = isDark ? 'rgba(255, 255, 255, 0.08)' : colors.border;
   const helperTextColor = isDark ? 'rgba(255, 255, 255, 0.6)' : colors.text2;
   const descTextColor = isDark ? 'rgba(255, 255, 255, 0.5)' : colors.text3;
   const footerBorderColor = isDark
@@ -181,7 +179,9 @@ const PresetsPage = () => {
     <Page bgcolor={colors.background}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 pt-6 pb-4 mt-[94px]">
-          <Text className="text-sm text-center" style={{ color: helperTextColor }}>
+          <Text
+            className="text-sm text-center"
+            style={{ color: helperTextColor }}>
             为你推荐以下场景，选一个快速开始
           </Text>
         </View>
@@ -192,21 +192,25 @@ const PresetsPage = () => {
               key={preset.id}
               activeOpacity={0.7}
               onPress={() => handleSelectPreset(preset)}
-              className="rounded-3xl p-5 border"
+              className="rounded-3xl p-5"
               style={{
                 backgroundColor: cardBg,
                 borderColor: cardBorderColor,
               }}>
               <Flex className="justify-between items-start mb-2">
                 <Flex className="items-center">
-                  <Text className="text-base font-semibold" style={{ color: colors.text }}>
+                  <Text
+                    className="text-base font-semibold"
+                    style={{ color: colors.text }}>
                     {preset.name}
                   </Text>
                 </Flex>
               </Flex>
 
               <View>
-                <Text className="text-sm mb-1" style={{ color: helperTextColor }}>
+                <Text
+                  className="text-sm mb-1"
+                  style={{ color: helperTextColor }}>
                   {preset.repeatText} · {preset.time}
                 </Text>
                 <Text className="text-xs" style={{ color: descTextColor }}>
@@ -221,7 +225,11 @@ const PresetsPage = () => {
       {/* 底部按钮区 */}
       <View
         className="px-6 pb-2 pt-4 border-t"
-        style={{ borderTopColor: footerBorderColor, borderTopWidth: 1, paddingBottom: 24 }}>
+        style={{
+          borderTopColor: footerBorderColor,
+          borderTopWidth: 1,
+          paddingBottom: 24,
+        }}>
         <Button
           type="ghost"
           onPress={handleCustomPlan}

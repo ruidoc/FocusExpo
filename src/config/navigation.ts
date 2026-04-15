@@ -12,9 +12,7 @@ export const ScreenOptions: NativeStackNavigationOptions = {
   headerTintColor: '#fff',
   headerBackTitle: '',
   headerBackButtonDisplayMode: 'minimal',
-  headerStyle: {
-    backgroundColor: '#14141C', // 显式指定暗色背景，避免首帧亮色闪烁
-  },
+  headerStyle: {},
   headerTitleStyle: {
     fontSize: 18,
   },

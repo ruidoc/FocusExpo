@@ -27,6 +27,13 @@ const TEST_ITEMS: TestItem[] = [
     icon: 'card-outline',
     route: '/test/stripe',
   },
+  {
+    id: 'target',
+    title: '签约引导页',
+    description: '登录后创建契约的引导流程',
+    icon: 'document-text-outline',
+    route: '/plans/target',
+  },
 ];
 
 const TestIndexPage = () => {
