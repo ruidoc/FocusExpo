@@ -210,9 +210,9 @@ const FocusButton = () => {
         requiredText="我决定放弃这次对自己的承诺"
         confirmText="确认终止"
         cancelText="我再坚持一下"
-        extraWarning={
-          isPeriodicFocus ? '注意：停止后，今天该专注后续不会再触发' : undefined
-        }
+        // extraWarning={
+        //   isPeriodicFocus ? '注意：停止后，今天该专注后续不会再触发' : undefined
+        // }
         onConfirm={stopFocus}
         onClose={() => setShowStopModal(false)}
       />

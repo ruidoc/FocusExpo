@@ -12,11 +12,7 @@ import {
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useBenefitStore, usePlanStore } from '@/stores';
-import {
-  getCurrentMinute,
-  parseRepeat,
-  trackPlanCreated,
-} from '@/utils';
+import { getCurrentMinute, parseRepeat, trackPlanCreated } from '@/utils';
 import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
@@ -52,6 +48,7 @@ const App = () => {
   const presetDuration = params.presetDuration as string | undefined;
   const targetTaskId = params.taskId as string | undefined;
   const targetProblem = params.problem as string | undefined;
+  const appSelectHint = params.appSelectHint as string | undefined;
   const completedTasksParam = params.completedTasks as string | undefined;
 
   const [title, setTitle] = useState(() => {
@@ -120,7 +117,10 @@ const App = () => {
         if (isEditing && plan.id === pstore.editing_plan?.id) return false;
         return true;
       })
-      .reduce((sum, plan) => sum + Math.max(0, plan.end_min - plan.start_min), 0);
+      .reduce(
+        (sum, plan) => sum + Math.max(0, plan.end_min - plan.start_min),
+        0,
+      );
 
     return Math.max(0, dayDuration - todayUsed - todayPlanned);
   };
@@ -199,16 +199,18 @@ const App = () => {
       }
 
       // 从 target 进入时自动带入 onboarding 选的应用
-      const prefilledApps = fromTarget && astore.ios_selected_apps.length > 0
-        ? astore.ios_selected_apps.map((r: any) => `${r.stableId}:${r.type}`)
-        : [];
+      const prefilledApps =
+        fromTarget && astore.ios_selected_apps.length > 0
+          ? astore.ios_selected_apps.map((r: any) => `${r.stableId}:${r.type}`)
+          : [];
 
       return {
         name: presetName || '',
         start,
         end,
         start_date: today,
-        end_date: presetDuration === '7d' ? dayjs(today).add(7, 'day').toDate() : null,
+        end_date:
+          presetDuration === '7d' ? dayjs(today).add(7, 'day').toDate() : null,
         repeat,
         mode: 'shield' as const,
         apps: prefilledApps,
@@ -284,6 +286,19 @@ const App = () => {
 
       const planDuration = end_day.diff(start_day, 'minute');
 
+      // 从 target 预填充的应用需要先同步到服务器和 UserDefaults，否则原生 Token 转换会失败
+      if (fromTarget && selectedApps.length > 0) {
+        try {
+          await astore.addIosApps(selectedApps);
+        } catch {
+          // 同步失败，清空预填充，提示用户重新选择
+          setSelectedApps([]);
+          setForm(prev => ({ ...prev, apps: [] }));
+          setSubmitting(false);
+          return Toast('请重新选择要锁定的应用', 'info');
+        }
+      }
+
       if (astore.ios_all_apps.length === 0) {
         await astore.getIosApps();
       }
@@ -333,9 +348,9 @@ const App = () => {
         ? 'onboarding'
         : fromTarget
           ? 'target'
-        : fromPresets
-          ? 'presets'
-          : 'normal';
+          : fromPresets
+            ? 'presets'
+            : 'normal';
 
       if (isEditing) {
         pstore.editPlan(pstore.editing_plan.id, subinfo, async res => {
@@ -429,6 +444,9 @@ const App = () => {
                 },
               });
             } else if (fromOnboarding || fromPresets) {
+              if (router.canDismiss()) {
+                router.dismissAll();
+              }
               router.replace('/(tabs)');
             } else {
               router.back();
@@ -631,7 +649,7 @@ const App = () => {
             showArrow={false}
           />
           <View className="px-4 pb-4">
-            <SelectedApps apps={selectedApps} />
+            <SelectedApps apps={selectedApps} hint={appSelectHint} />
           </View>
         </FieldGroup>
 
@@ -800,6 +818,7 @@ const App = () => {
         <Button
           onPress={submit}
           text={isEditing ? '修改契约' : '签定契约'}
+          loadingText="生效中..."
           loading={submitting}
         />
       </View>

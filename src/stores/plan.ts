@@ -195,7 +195,11 @@ const PlanStore = combine(
         end_date: toYmd(plan.end_date),
       };
       console.log('同步计划到 IOS Native:', JSON.stringify(data));
-      await updatePlan(data);
+      try {
+        await updatePlan(data);
+      } catch (error) {
+        console.log('updateIOSPlan error:', error);
+      }
     },
 
     // 重新获取当前任务

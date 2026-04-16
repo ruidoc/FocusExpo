@@ -172,6 +172,9 @@ const PresetsPage = () => {
       entry_source: 'presets',
       step: 'preset_selection',
     });
+    if (router.canDismiss()) {
+      router.dismissAll();
+    }
     router.replace('/(tabs)');
   };
 

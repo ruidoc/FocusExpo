@@ -20,6 +20,7 @@ interface TargetTask {
   endTime: string;
   repeat: number[];
   repeatText: string;
+  appSelectHint: string;
 }
 
 const TARGET_TASKS: TargetTask[] = [
@@ -30,18 +31,20 @@ const TARGET_TASKS: TargetTask[] = [
     subtitle: '晚上最容易停不下来，先锁住这 1 小时',
     startTime: '20:00',
     endTime: '21:00',
-    repeat: [1, 2, 3, 4, 5, 6, 7],
+    repeat: [1, 2, 3, 4, 5, 6, 0],
     repeatText: '每天',
+    appSelectHint: '选择让你上瘾的短视频应用',
   },
   {
     id: 'sleep',
-    stepLabel: '不熬夜',
+    stepLabel: '停止熬夜',
     title: '一周不熬夜玩手机',
     subtitle: '睡前锁定 1 小时，不给「再刷 5 分钟」的机会',
     startTime: '22:00',
     endTime: '23:00',
-    repeat: [1, 2, 3, 4, 5, 6, 7],
+    repeat: [1, 2, 3, 4, 5, 6, 0],
     repeatText: '每天',
+    appSelectHint: '选择你睡前总忍不住刷的应用',
   },
 ];
 
@@ -122,6 +125,7 @@ const TargetPage = () => {
         presetEnd: task.endTime,
         presetRepeat: JSON.stringify(task.repeat),
         presetDuration: '7d',
+        appSelectHint: task.appSelectHint,
       },
     });
   };
@@ -210,7 +214,7 @@ const TargetPage = () => {
                 borderColor: 'rgba(255,255,255,0.06)',
               }}>
               <Text className="text-sm text-white/45 mb-2">
-                第 {completedCount + 1} 步
+                第 {completedCount + 1} 个契约
               </Text>
               <Text className="text-[26px] font-semibold text-white leading-8">
                 {currentTask.title}
@@ -258,7 +262,13 @@ const TargetPage = () => {
                   接下来一周，它们会按时自动锁定你的应用
                 </Text>
                 <Button
-                  onPress={() => router.replace('/(tabs)')}
+                  className="w-[140px]"
+                  onPress={() => {
+                    if (router.canDismiss()) {
+                      router.dismissAll();
+                    }
+                    router.replace('/(tabs)');
+                  }}
                   text="进入首页"
                 />
               </View>

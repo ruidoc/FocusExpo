@@ -1,7 +1,7 @@
 import { AppToken } from '@/components/business';
 import { Flex } from '@/components/ui';
 import React from 'react';
-import { Platform, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 interface App {
   stableId: string;
@@ -12,19 +12,24 @@ interface App {
 
 interface SelectedAppsListProps {
   apps: App[];
+  hint?: string;
 }
 
-const SelectedApps: React.FC<SelectedAppsListProps> = ({ apps }) => {
-  if (Platform.OS !== 'ios' || apps.length === 0) {
-    return (
-      <View style={{ paddingVertical: 12 }}>
-        <Text style={{ color: '#666', fontSize: 14 }}>未选择应用</Text>
-      </View>
-    );
-  }
-
+const SelectedApps: React.FC<SelectedAppsListProps> = ({ apps, hint }) => {
+  const categoryCount = apps.filter((a: App) => a.type === 'category').length;
+  const appCount = apps.filter(
+    (a: App) => a.type === 'application' || a.type === 'webDomain',
+  ).length;
+  const parts: string[] = [];
+  if (categoryCount > 0) parts.push(`${categoryCount} 个分类`);
+  if (appCount > 0) parts.push(`${appCount} 个应用`);
+  const countText = hint
+    ? hint
+    : parts.length > 0
+      ? `已选择 ${parts.join('、')}`
+      : `已选择 ${apps.length} 个`;
   return (
-    <View style={{ paddingVertical: 4 }}>
+    <View style={{ paddingVertical: 0 }}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -40,30 +45,16 @@ const SelectedApps: React.FC<SelectedAppsListProps> = ({ apps }) => {
           ))}
         </Flex>
       </ScrollView>
-      {apps.length > 0 && (() => {
-        const categoryCount = apps.filter(
-          (a: App) => a.type === 'category',
-        ).length;
-        const appCount = apps.filter(
-          (a: App) => a.type === 'application' || a.type === 'webDomain',
-        ).length;
-        const parts: string[] = [];
-        if (categoryCount > 0) parts.push(`${categoryCount} 个分类`);
-        if (appCount > 0) parts.push(`${appCount} 个应用`);
-        const countText =
-          parts.length > 0 ? `已选择 ${parts.join('、')}` : `已选择 ${apps.length} 个`;
-        return (
-          <Text
-            style={{
-              fontSize: 12,
-              color: '#666',
-              marginTop: 8,
-              textAlign: 'center',
-            }}>
-            {countText}
-          </Text>
-        );
-      })()}
+
+      <Text
+        style={{
+          fontSize: 12,
+          color: hint ? '#F7AF5D' : '#666',
+          marginTop: 10,
+          textAlign: 'center',
+        }}>
+        {countText}
+      </Text>
     </View>
   );
 };

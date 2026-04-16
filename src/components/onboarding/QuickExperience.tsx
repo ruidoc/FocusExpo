@@ -325,12 +325,12 @@ const QuickExperience = ({
       </View>
 
       {/* 底部按钮 */}
-      <View className="px-6 pb-8">
+      <View className="px-6 pb-8 mx-6">
         <Button
           onPress={handleConfirm}
           text="我已确认"
           type="ghost"
-          className="w-full rounded-3xl h-14 border-2"
+          className="w-full rounded-3xl border-1"
           textClassName="text-lg"
         />
       </View>

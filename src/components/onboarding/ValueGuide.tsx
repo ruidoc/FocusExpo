@@ -3,9 +3,9 @@ import { Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useHomeStore, useUserStore } from '@/stores';
 import {
-  trackLoginStarted,
   markOnboardingCompleted,
   trackLoginFailed,
+  trackLoginStarted,
   trackOnboardingCompleted,
 } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
@@ -67,21 +67,25 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
       entry_source: 'onboarding',
       screen_name: 'onboarding_value_guide',
     });
-    ustore.appleLogin(credential, res => {
-      if (res?.statusCode === 200) {
-        completeWithLogin();
-      } else {
-        trackLoginFailed('apple', {
-          entry_source: 'onboarding',
-          screen_name: 'onboarding_value_guide',
-          error_message: res?.message || 'api_error',
-        });
-        Toast('登录失败，请重试');
-      }
-    }, {
-      entry_source: 'onboarding',
-      screen_name: 'onboarding_value_guide',
-    });
+    ustore.appleLogin(
+      credential,
+      res => {
+        if (res?.statusCode === 200) {
+          completeWithLogin();
+        } else {
+          trackLoginFailed('apple', {
+            entry_source: 'onboarding',
+            screen_name: 'onboarding_value_guide',
+            error_message: res?.message || 'api_error',
+          });
+          Toast('登录失败，请重试');
+        }
+      },
+      {
+        entry_source: 'onboarding',
+        screen_name: 'onboarding_value_guide',
+      },
+    );
   };
 
   const completeWithLogin = () => {
@@ -189,14 +193,14 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
       </View>
 
       {/* 底部操作区 */}
-      <View className="flex px-6 gap-0 pb-2">
+      <View className="flex px-6 pb-2">
         <Apple
           type="custom"
           disabled={!agree}
           onSuccess={appleLoginResult}
           label="登录后创建契约"
         />
-        <View className="flex-row items-center justify-center mt-4">
+        <View className="flex-row items-center justify-center">
           <Privicy onChange={setAgree} />
         </View>
       </View>
