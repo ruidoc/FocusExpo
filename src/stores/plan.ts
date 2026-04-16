@@ -195,11 +195,19 @@ const PlanStore = combine(
         end_date: toYmd(plan.end_date),
       };
       console.log('同步计划到 IOS Native:', JSON.stringify(data));
+      // 等待上一次 native sync 完成后再执行，避免密集调用触发 iOS DeviceActivity 频率限制
+      const lastSync = (get() as any)._lastNativeSyncTime || 0;
+      const elapsed = Date.now() - lastSync;
+      const minInterval = 2000;
+      if (elapsed < minInterval) {
+        await new Promise(r => setTimeout(r, minInterval - elapsed));
+      }
       try {
         await updatePlan(data);
       } catch (error) {
         console.log('updateIOSPlan error:', error);
       }
+      set({ _lastNativeSyncTime: Date.now() } as any);
     },
 
     // 重新获取当前任务
