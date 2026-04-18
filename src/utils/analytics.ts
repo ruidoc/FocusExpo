@@ -6,17 +6,18 @@
  * 这里提供事件追踪的工具函数
  */
 
+import { APP_ENV } from '@/config/env';
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import { PostHog, usePostHog } from 'posthog-react-native';
 import { Platform } from 'react-native';
-import { APP_ENV } from '@/config/env';
 import { storage } from './storage';
 
 // 全局 PostHog 实例（由 PostHogProviderWrapper 设置）
 let globalPostHogInstance: PostHog | null = null;
 
-export const POSTHOG_API_KEY = 'phc_A4Pt2WQHEQLedNR9wyLMxSHrpdnOdUTCiR8LHNGT5QG';
+export const POSTHOG_API_KEY =
+  'phc_A4Pt2WQHEQLedNR9wyLMxSHrpdnOdUTCiR8LHNGT5QG';
 
 type TrackProperties = Record<string, any>;
 export type FocusType = 'once' | 'repeat';
@@ -79,6 +80,17 @@ function buildBaseProperties(
     event_origin: eventOrigin,
     is_logged_in: !!storage.getString('access_token'),
     ...properties,
+  };
+}
+
+function withFailedError(
+  properties: TrackProperties | undefined,
+  defaults: { error_code: string; error_message: string },
+) {
+  return {
+    ...properties,
+    error_code: String(properties?.error_code || defaults.error_code),
+    error_message: String(properties?.error_message || defaults.error_message),
   };
 }
 
@@ -218,78 +230,6 @@ export const setUserProperties = (
   console.log('[PostHog] 用户属性更新:', properties);
 };
 
-// ============== Feature Flags ==============
-
-/**
- * 已知的实验/Feature Flags列表
- * 用于在Debug界面显示所有实验，即使当前用户未命中
- */
-export const ExperimentKeys = {
-  USER_ONBOARDING: 'user_onboarding',
-} as const;
-
-export type ExperimentKey =
-  (typeof ExperimentKeys)[keyof typeof ExperimentKeys];
-
-/**
- * 检查Feature Flag是否启用
- * 支持两种调用方式：
- * 1. 在组件中：传入 usePostHogClient() 返回的实例
- * 2. 在非组件代码中：不传参数，自动获取全局实例
- */
-export const isFeatureFlagEnabled = (
-  flagKey: string,
-  posthog?: PostHog | null,
-): boolean => {
-  const client = posthog || getPostHogClient();
-  if (!client) {
-    console.warn('[PostHog] 客户端未初始化，Feature Flag检查失败:', flagKey);
-    return false;
-  }
-
-  const isEnabled = client.isFeatureEnabled(flagKey);
-  console.log(`[PostHog] Feature Flag [${flagKey}]:`, isEnabled);
-  return isEnabled || false;
-};
-
-/**
- * 获取Feature Flag的payload值
- * 支持两种调用方式：
- * 1. 在组件中：传入 usePostHogClient() 返回的实例
- * 2. 在非组件代码中：不传参数，自动获取全局实例
- */
-export const getFeatureFlagPayload = (
-  flagKey: string,
-  posthog?: PostHog | null,
-): any => {
-  const client = posthog || getPostHogClient();
-  if (!client) {
-    console.warn('[PostHog] 客户端未初始化，无法获取payload:', flagKey);
-    return null;
-  }
-
-  return client.getFeatureFlagPayload(flagKey);
-};
-
-/**
- * 重载Feature Flags（用于调试）
- * 支持两种调用方式：
- * 1. 在组件中：传入 usePostHogClient() 返回的实例
- * 2. 在非组件代码中：不传参数，自动获取全局实例
- */
-export const reloadFeatureFlags = async (
-  posthog?: PostHog | null,
-): Promise<void> => {
-  const client = posthog || getPostHogClient();
-  if (!client) {
-    console.warn('[PostHog] 客户端未初始化，无法重载Feature Flags');
-    return;
-  }
-
-  await client.reloadFeatureFlags();
-  console.log('[PostHog] Feature Flags已重载');
-};
-
 // ============== 预定义事件 ==============
 // 注意：这些函数支持两种调用方式：
 // 1. 在组件中：传入 usePostHogClient() 返回的实例（可选）
@@ -315,11 +255,7 @@ export const trackLoginStarted = (
   properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
-  trackEvent(
-    'login_started',
-    { login_method: method, ...properties },
-    posthog,
-  );
+  trackEvent('login_started', { login_method: method, ...properties }, posthog);
 };
 
 export const trackLoginFailed = (
@@ -329,7 +265,10 @@ export const trackLoginFailed = (
 ) => {
   trackEvent(
     'login_failed',
-    { login_method: method, ...properties },
+    withFailedError(
+      { login_method: method, ...properties },
+      { error_code: 'LOGIN_FAILED', error_message: 'login_failed' },
+    ),
     posthog,
   );
 };
@@ -420,11 +359,7 @@ export const trackBlockAppsSelectionStarted = (
   properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
-  trackEvent(
-    'block_apps_selection_started',
-    properties,
-    posthog,
-  );
+  trackEvent('apps_select_clicked', properties, posthog);
 };
 
 /**
@@ -436,7 +371,7 @@ export const trackBlockAppsSelected = (
   posthog?: PostHog | null,
 ) => {
   trackEvent(
-    'block_apps_selected',
+    'apps_selected',
     {
       selected_app_count: appCount,
       ...properties,
@@ -518,10 +453,13 @@ export const trackPurchaseFailed = (
 ) => {
   trackEvent(
     'purchase_failed',
-    {
-      product_id: productId,
-      ...properties,
-    },
+    withFailedError(
+      {
+        product_id: productId,
+        ...properties,
+      },
+      { error_code: 'PURCHASE_FAILED', error_message: 'purchase_failed' },
+    ),
     posthog,
   );
 };
@@ -627,7 +565,14 @@ export const trackRestoreFailed = (
   properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
-  trackEvent('restore_failed', properties, posthog);
+  trackEvent(
+    'restore_failed',
+    withFailedError(properties, {
+      error_code: 'RESTORE_FAILED',
+      error_message: 'restore_failed',
+    }),
+    posthog,
+  );
 };
 
 export const trackRightsPageViewed = (
@@ -662,7 +607,14 @@ export const trackSubscriptionSyncFailed = (
   properties?: TrackProperties,
   posthog?: PostHog | null,
 ) => {
-  trackEvent('subscription_sync_failed', properties, posthog);
+  trackEvent(
+    'subscription_sync_failed',
+    withFailedError(properties, {
+      error_code: 'SUBSCRIPTION_SYNC_FAILED',
+      error_message: 'subscription_sync_failed',
+    }),
+    posthog,
+  );
 };
 
 export const trackSubscriptionStatusChanged = (
@@ -711,10 +663,8 @@ export const trackStartFocus = (
 ) => trackStartClicked(planId, 'once', { duration_minutes: duration }, posthog);
 export const trackOpenPaywall = trackPaywallOpened;
 export const trackPurchaseSuccess = trackPurchaseCompleted;
-export const trackAddBlockApps = (
-  appCount: number,
-  posthog?: PostHog | null,
-) => trackBlockAppsSelected(appCount, undefined, posthog);
+export const trackAddBlockApps = (appCount: number, posthog?: PostHog | null) =>
+  trackBlockAppsSelected(appCount, undefined, posthog);
 export const trackPermissionGrant = (
   permission: 'screen_time' | 'notification',
   posthog?: PostHog | null,

@@ -9,7 +9,6 @@ import { StorageManager } from '@/components/debug/storage-manager';
 import { Flex, Toast } from '@/components/ui';
 import {
   useDebugStore,
-  useExperimentStore,
   useSubscriptionStore,
 } from '@/stores';
 import request from '@/utils/request';
@@ -85,7 +84,6 @@ const DebugPage = () => {
   const clearSubscription = useSubscriptionStore(
     state => state.clearSubscription,
   );
-  useExperimentStore();
 
   const loadBenefit = async () => {
     try {

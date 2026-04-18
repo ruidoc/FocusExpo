@@ -54,6 +54,7 @@ export async function selectAppsToLimit(
   apps?: string[],
   options?: TrackingOptions,
 ): Promise<AppSelectionResult> {
+  let tracked = false;
   try {
     trackBlockAppsSelectionStarted(options);
     const result = await nativeSelectAppsToLimit(maxCount, apps);
@@ -62,12 +63,20 @@ export async function selectAppsToLimit(
       trackBlockAppsSelected(result.apps?.length || 0, options);
       return result;
     } else {
-      throw { success: false };
+      const resultTag = result.reason === 'cancel' ? 'cancel' : 'failed';
+      trackBlockAppsSelected(0, { ...options, result: resultTag });
+      tracked = true;
+      throw { success: false, reason: result.reason || 'error' };
     }
   } catch (error) {
     console.log('selectAppsToLimit error', error);
-    trackBlockAppsSelected(0, { ...options, result: 'failed' });
-    throw { success: false };
+    if (!tracked) {
+      const err = error as { reason?: string };
+      const resultTag = err?.reason === 'cancel' ? 'cancel' : 'failed';
+      trackBlockAppsSelected(0, { ...options, result: resultTag });
+    }
+    const reason = (error as { reason?: string })?.reason || 'error';
+    throw { success: false, reason };
   }
 }
 

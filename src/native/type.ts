@@ -28,6 +28,7 @@ export interface AppDetail {
  */
 export interface AppSelectionResult {
   success: boolean;
+  reason?: 'cancel' | 'error';
   apps?: AppDetail[];
   selectionToken?: string; // Base64编码的 FamilyActivitySelection 数据
 }

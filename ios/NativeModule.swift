@@ -301,7 +301,8 @@ class NativeModule: RCTEventEmitter {
           "plan_type": planType,
           "apps_count": plan.apps.count,
           "is_cross_day": plan.start > plan.end,
-          "days": plan.days
+          "days": plan.days,
+          "registered_activity_count": getRegisteredActivityCount()
         ]
       )
 
@@ -319,13 +320,16 @@ class NativeModule: RCTEventEmitter {
         ]
       )
       if isExcessiveActivitiesError(error) {
+        let currentCount = getRegisteredActivityCount()
+        print("【监控】⚠️ excessiveActivities 错误! plan=\(plan.id), 当前已注册 \(currentCount) 个 schedule (上限20)")
         Analytics.shared.track(
           event: "error_locked_excessive",
           properties: [
             "source": "update_plan",
             "plan_id": plan.id,
             "plan_type": planType,
-            "error_message": error.localizedDescription
+            "error_message": error.localizedDescription,
+            "registered_activity_count": currentCount
           ]
         )
       }
@@ -352,66 +356,77 @@ class NativeModule: RCTEventEmitter {
     resolve(true)
   }
 
-  // 内部方法：启动监控（含跨日拆分逻辑）
+  /// 获取当前已注册的 DeviceActivitySchedule 数量
+  private func getRegisteredActivityCount() -> Int {
+    return center.activities.count
+  }
+
+  // 内部方法：启动监控
+  // 优化：不指定 weekday，每个计划只注册 1 个 schedule（跨日 2 个），
+  // 由 Extension 在 intervalDidStart 中检查当天是否在 plan.days 中。
+  // 这样 20 个 slot 可支持 10-20 个计划，而非之前的 2-3 个。
   private func startMonitor(for plan: PlanConfig) throws {
-    let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
+    let beforeCount = getRegisteredActivityCount()
+    print("【监控】startMonitor 开始 plan=\(plan.id), 当前已注册 \(beforeCount) 个 schedule")
+
     let startH = plan.start / 60
     let startM = plan.start % 60
     let endH = plan.end / 60
     let endM = plan.end % 60
 
     if plan.start > plan.end {
-      // 跨日拆分
-      for d in days {
-        let wd = d + 1
-        // Part 1: Start -> 23:59 (Day d)
-        let s1 = DeviceActivitySchedule(
-          intervalStart: DateComponents(hour: startH, minute: startM, weekday: wd),
-          intervalEnd: DateComponents(hour: 23, minute: 59, weekday: wd),
-          repeats: true
-        )
-        try center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1_D\(d)"), during: s1)
+      // 跨日拆分：2 个 schedule
+      let s1 = DeviceActivitySchedule(
+        intervalStart: DateComponents(hour: startH, minute: startM),
+        intervalEnd: DateComponents(hour: 23, minute: 59),
+        repeats: true
+      )
+      try center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1"), during: s1)
 
-        // Part 2: 00:00 -> End (Day d+1)
-        let nextWd = (d + 1) % 7 + 1
-
-        let s2 = DeviceActivitySchedule(
-          intervalStart: DateComponents(hour: 0, minute: 0, weekday: nextWd),
-          intervalEnd: DateComponents(hour: endH, minute: endM, weekday: nextWd),
-          repeats: true
-        )
-        try center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2_D\(d)"), during: s2)
-      }
+      let s2 = DeviceActivitySchedule(
+        intervalStart: DateComponents(hour: 0, minute: 0),
+        intervalEnd: DateComponents(hour: endH, minute: endM),
+        repeats: true
+      )
+      try center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2"), during: s2)
     } else {
-      // 非跨日
-      for d in days {
-        let wd = d + 1
-        let schedule = DeviceActivitySchedule(
-          intervalStart: DateComponents(hour: startH, minute: startM, weekday: wd),
-          intervalEnd: DateComponents(hour: endH, minute: endM, weekday: wd),
-          repeats: true
-        )
-        try center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)_D\(d)"), during: schedule)
-      }
+      // 非跨日：1 个 schedule
+      let schedule = DeviceActivitySchedule(
+        intervalStart: DateComponents(hour: startH, minute: startM),
+        intervalEnd: DateComponents(hour: endH, minute: endM),
+        repeats: true
+      )
+      try center.startMonitoring(DeviceActivityName("FocusOne.Plan.\(plan.id)"), during: schedule)
     }
+
+    let afterCount = getRegisteredActivityCount()
+    print("【监控】startMonitor 完成 plan=\(plan.id), 注册后 \(afterCount) 个 schedule (上限20)")
   }
 
   // 内部方法：停止监控
   private func stopMonitor(for plan: PlanConfig) {
     var names: [DeviceActivityName] = []
-    let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
-    
+
     if plan.start > plan.end {
-        // 跨日
-        for d in days {
-             names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1_D\(d)"))
-             names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2_D\(d)")) 
-        }
+      names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1"))
+      names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2"))
     } else {
-        for d in days {
-            names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_D\(d)"))
-        }
+      names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)"))
     }
+
+    // 兼容旧格式：清理可能残留的按 weekday 拆分的 schedule
+    let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
+    if plan.start > plan.end {
+      for d in days {
+        names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1_D\(d)"))
+        names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2_D\(d)"))
+      }
+    } else {
+      for d in days {
+        names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_D\(d)"))
+      }
+    }
+
     center.stopMonitoring(names)
   }
   // Event Emitter
@@ -595,7 +610,8 @@ class NativeModule: RCTEventEmitter {
       "session_state": snapshot.sessionState ?? NSNull(),
       "window_id": snapshot.windowId ?? NSNull(),
       "window_state": snapshot.windowState ?? NSNull(),
-      "end_reason": snapshot.endReason ?? NSNull()
+      "end_reason": snapshot.endReason ?? NSNull(),
+      "registered_activity_count": getRegisteredActivityCount()
     ]
   }
   
@@ -668,7 +684,7 @@ class NativeModule: RCTEventEmitter {
         // 在主线程显示应用选择器
         DispatchQueue.main.async { [weak self] in
           guard let self = self else {
-            resolve(["success": false])
+            resolve(["success": false, "reason": "error"])
             return
           }
           
@@ -735,7 +751,7 @@ class NativeModule: RCTEventEmitter {
                   ])
                 } else {
                   // 用户取消选择
-                  resolve(["success": false])
+                  resolve(["success": false, "reason": "cancel"])
                 }
               },
               maxCount: effectiveMaxCount,
@@ -933,6 +949,8 @@ class NativeModule: RCTEventEmitter {
       resolve(true)
     } catch {
       if isExcessiveActivitiesError(error) {
+        let currentCount = getRegisteredActivityCount()
+        print("【监控】⚠️ excessiveActivities 错误! source=start_app_limits, 当前已注册 \(currentCount) 个 schedule (上限20)")
         Analytics.shared.track(
           event: "error_locked_excessive",
           properties: [
@@ -940,7 +958,8 @@ class NativeModule: RCTEventEmitter {
             "plan_id": planId as Any,
             "duration_minutes": Int(truncating: durationMinutes),
             "mode": mode as String,
-            "error_message": error.localizedDescription
+            "error_message": error.localizedDescription,
+            "registered_activity_count": currentCount
           ]
         )
       }

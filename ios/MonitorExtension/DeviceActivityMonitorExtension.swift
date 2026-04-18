@@ -116,9 +116,21 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         super.intervalDidEnd(for: activity)
 
         guard let defaults = UserDefaults(suiteName: "group.com.focusone") else { return }
-        
+
         // 检查是否是暂停恢复活动，如果是则跳过处理
         if activity.rawValue == "FocusOne.PauseResume" { return }
+
+        // 非计划日的 schedule 触发时，startPlanSession 已跳过，此处也应跳过
+        // 避免 clearAllSettings 清掉其他正在运行计划的 shield
+        if activity.rawValue.starts(with: "FocusOne.Plan.") {
+            if let plan = findPlan(by: activity.rawValue, defaults: defaults) {
+                let planDays = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
+                let todayWeekday = Calendar.current.component(.weekday, from: Date()) - 1
+                let checkDay = activity.rawValue.contains("_P2") ? (todayWeekday + 6) % 7 : todayWeekday
+                if !planDays.contains(checkDay) { return }
+            }
+        }
+
         if consumeStoppedOnceSessionIfNeeded(
             activity: activity,
             defaults: defaults,
@@ -187,6 +199,15 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             
         } else {
             // ===== 正常任务结束逻辑 =====
+            // 非计划日跳过，避免误清其他计划的 shield
+            if activity.rawValue.starts(with: "FocusOne.Plan.") {
+                if let plan = findPlan(by: activity.rawValue, defaults: defaults) {
+                    let planDays = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
+                    let todayWeekday = Calendar.current.component(.weekday, from: Date()) - 1
+                    let checkDay = activity.rawValue.contains("_P2") ? (todayWeekday + 6) % 7 : todayWeekday
+                    if !planDays.contains(checkDay) { return }
+                }
+            }
             if consumeStoppedOnceSessionIfNeeded(
                 activity: activity,
                 defaults: defaults,
@@ -279,6 +300,24 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             return
         }
 
+        // 1.5 检查今天是否在计划的执行日内
+        // schedule 不再指定 weekday，每天都会触发，需要在此过滤
+        // plan.days 编码：0=周日, 1=周一, ..., 6=周六
+        // Calendar.weekday：1=周日, 2=周一, ..., 7=周六
+        let planDays = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
+        let todayWeekday = Calendar.current.component(.weekday, from: Date()) - 1 // 转换为 0=周日, 1=周一, ..., 6=周六
+        // 跨日 P2 段：在次日凌晨触发，应检查前一天是否在 planDays 中
+        let checkDay = raw.contains("_P2") ? (todayWeekday + 6) % 7 : todayWeekday
+        if !planDays.contains(checkDay) {
+            logToJS(level: "log", message: "今天不在计划执行日内，跳过", data: [
+                "planId": plan.id,
+                "todayWeekday": todayWeekday,
+                "checkDay": checkDay,
+                "planDays": planDays.map { String($0) }.joined(separator: ",")
+            ])
+            return
+        }
+
         let today = Calendar.current.startOfDay(for: Date())
         if let startDate = parsePlanDate(plan.start_date),
            today < Calendar.current.startOfDay(for: startDate) {
@@ -351,15 +390,15 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             planEndTime = planEndTime.addingTimeInterval(24 * 3600)
         }
         
-        // 判断当前是 P1 还是 P2
-        if raw.contains("_P1_") {
+        // 判断当前是 P1 还是 P2（兼容新旧命名：_P1 / _P1_D0）
+        if raw.contains("_P1") {
             // P1: start -> 23:59
             if let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: now) {
                 sessionEndTime = endOfDay
             } else {
                 sessionEndTime = planEndTime // Fallback
             }
-        } else if raw.contains("_P2_") {
+        } else if raw.contains("_P2") {
             // P2: 00:00 -> end
             sessionEndTime = planEndTime // end is on "today" (which is actually the next day of P1)
         } else {
@@ -486,8 +525,17 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
     private func monitorNames(for plan: PlanConfig) -> [DeviceActivityName] {
         var names: [DeviceActivityName] = []
-        let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
 
+        // 新格式：不按 weekday 拆分
+        if plan.start > plan.end {
+            names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1"))
+            names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P2"))
+        } else {
+            names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)"))
+        }
+
+        // 兼容旧格式：清理可能残留的按 weekday 拆分的 schedule
+        let days = plan.days.isEmpty ? [0,1,2,3,4,5,6] : plan.days
         if plan.start > plan.end {
             for d in days {
                 names.append(DeviceActivityName("FocusOne.Plan.\(plan.id)_P1_D\(d)"))
@@ -897,7 +945,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         let endDate = currentDayStart.addingTimeInterval(TimeInterval(plan.end * 60))
 
         if plan.end <= plan.start {
-            if activityRawValue.contains("_P2_") {
+            if activityRawValue.contains("_P2") {
                 let previousStart = startDate.addingTimeInterval(-24 * 3600)
                 return (start: previousStart.timeIntervalSince1970, end: endDate.timeIntervalSince1970)
             }

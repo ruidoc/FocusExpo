@@ -1,11 +1,7 @@
 import { Toast } from '@/components/ui';
 import { deletePlan, updatePlan } from '@/native/ios';
 import type { FocusStatus, PlanConfig } from '@/native/type';
-import {
-  getCurrentMinute,
-  parseRepeat,
-  storage,
-} from '@/utils';
+import { getCurrentMinute, parseRepeat, storage, trackEvent } from '@/utils';
 
 import http from '@/utils/request';
 import dayjs from 'dayjs';
@@ -59,8 +55,9 @@ const PlanStore = combine(
     },
     is_pause() {
       return (
-        !!(get().active_plan && get().active_plan.id === get().paused_plan_id) ||
-        !!get().native_focus.paused
+        !!(
+          get().active_plan && get().active_plan.id === get().paused_plan_id
+        ) || !!get().native_focus.paused
       );
     },
     setNativeFocus: (focus: FocusStatus) => {
@@ -134,7 +131,9 @@ const PlanStore = combine(
       const activePlanId = get().active_plan?.id;
 
       // 幂等：已在目标状态则跳过副作用，避免重复扣币和重复调用 pauseRecord
-      const alreadyPaused = !!(activePlanId && activePlanId === get().paused_plan_id);
+      const alreadyPaused = !!(
+        activePlanId && activePlanId === get().paused_plan_id
+      );
       if (paused && alreadyPaused) return;
       if (!paused && !alreadyPaused) return;
 
@@ -163,7 +162,8 @@ const PlanStore = combine(
 
     // 专注计划终止
     exitPlan: async () => {
-      const record_id = record.getState().record_id || storage.getString('record_id');
+      const record_id =
+        record.getState().record_id || storage.getString('record_id');
       (get() as any).clearNativeFocus();
       if (record_id) {
         await record.getState().exitRecord(record_id);
@@ -276,10 +276,21 @@ const PlanStore = combine(
           (get() as any).updateIOSPlan(res.data);
           (get() as any).getPlans();
         } else {
-          Toast(res.message);
+          // 不在 store 弹 Toast，由调用方统一处理错误提示，避免双重 Toast
+          trackEvent('plan_create_failed', {
+            failure_stage: 'api_response',
+            http_status_code: res.statusCode,
+            error_code: String(res.statusCode),
+            error_message: res.message,
+          });
           fun();
         }
       } catch (error) {
+        trackEvent('plan_create_failed', {
+          failure_stage: 'network',
+          error_code: 'NETWORK_ERROR',
+          error_message: error instanceof Error ? error.message : String(error),
+        });
         console.log(error);
         fun();
       }
@@ -302,10 +313,23 @@ const PlanStore = combine(
           (get() as any).getPlans();
           (get() as any).clearEditingPlan(); // 编辑成功后清除编辑状态
         } else {
+          trackEvent('plan_update_failed', {
+            failure_stage: 'api_response',
+            http_status_code: res.statusCode,
+            error_code: String(res.statusCode),
+            error_message: res.message,
+            plan_id: id,
+          });
           Toast(res.message);
           fun();
         }
       } catch (error) {
+        trackEvent('plan_update_failed', {
+          failure_stage: 'network',
+          error_code: 'NETWORK_ERROR',
+          error_message: error instanceof Error ? error.message : String(error),
+          plan_id: id,
+        });
         console.log('编辑计划失败：', error);
         fun();
       }

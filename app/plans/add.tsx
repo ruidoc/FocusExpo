@@ -12,7 +12,12 @@ import {
 import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useBenefitStore, usePlanStore } from '@/stores';
-import { getCurrentMinute, parseRepeat, trackPlanCreated } from '@/utils';
+import {
+  getCurrentMinute,
+  parseRepeat,
+  trackEvent,
+  trackPlanCreated,
+} from '@/utils';
 import { useFocusEffect } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
@@ -65,6 +70,13 @@ const App = () => {
   const fromOnboarding = params.from === 'onboarding';
   const fromPresets = params.from === 'presets';
   const fromTarget = params.from === 'target';
+  const entrySource = fromOnboarding
+    ? 'onboarding'
+    : fromTarget
+      ? 'target'
+      : fromPresets
+        ? 'presets'
+        : 'normal';
 
   // 使用 ref 保存清理函数，避免依赖项导致的循环更新
   const clearEditingPlanRef = useRef(pstore.clearEditingPlan);
@@ -79,6 +91,15 @@ const App = () => {
       };
     }, []), // 使用 ref，不需要依赖项
   );
+
+  useEffect(() => {
+    trackEvent('plan_form_viewed', {
+      mode: isEditing ? 'edit' : 'create',
+      screen_name: 'plans_add',
+      entry_source: entrySource,
+      plan_id: pstore.editing_plan?.id,
+    });
+  }, []);
 
   // 编辑模式下初始化选中的应用和时长模式
   useEffect(() => {
@@ -237,6 +258,13 @@ const App = () => {
 
   const submit = async () => {
     try {
+      trackEvent('plan_submit_clicked', {
+        mode: isEditing ? 'edit' : 'create',
+        screen_name: 'plans_add',
+        entry_source: entrySource,
+        plan_id: pstore.editing_plan?.id,
+      });
+
       let { name, start, end, start_date, end_date, repeat } = form;
       name = title;
       // 验证计划名称
@@ -343,19 +371,19 @@ const App = () => {
       subinfo.end_date =
         isLongTerm || !end_date ? null : dayjs(end_date).format('YYYY-MM-DD');
 
-      // 根据模式调用不同的接口
-      const entrySource = fromOnboarding
-        ? 'onboarding'
-        : fromTarget
-          ? 'target'
-          : fromPresets
-            ? 'presets'
-            : 'normal';
-
       if (isEditing) {
         pstore.editPlan(pstore.editing_plan.id, subinfo, async res => {
           if (res) {
             Toast('契约已更新', 'success');
+            trackEvent('plan_updated', {
+              mode: 'edit',
+              screen_name: 'plans_add',
+              entry_source: entrySource,
+              plan_id: pstore.editing_plan.id,
+              duration_minutes: subinfo.end_min - subinfo.start_min,
+              app_count: subinfo.apps.length,
+              plan_mode: subinfo.mode,
+            });
 
             const nowMin = getCurrentMinute();
             const inWindow =
@@ -422,27 +450,8 @@ const App = () => {
               screen_name: 'plans_add',
             });
 
-            // 从 onboarding / presets 进入：创建后直接进入首页
-            // 从 target 进入：返回任务页并更新进度
-            // 正常进入：返回上一页
             if (fromTarget) {
-              const mergedCompletedTasks = Array.from(
-                new Set(
-                  [completedTasksParam, targetTaskId]
-                    .flatMap(item => item?.split(',') || [])
-                    .map(item => item.trim())
-                    .filter(Boolean),
-                ),
-              ).join(',');
-
-              router.replace({
-                pathname: '/plans/target',
-                params: {
-                  from: 'onboarding',
-                  problem: targetProblem || 'other',
-                  completedTasks: mergedCompletedTasks,
-                },
-              });
+              navigateToTarget();
             } else if (fromOnboarding || fromPresets) {
               if (router.canDismiss()) {
                 router.dismissAll();
@@ -453,15 +462,35 @@ const App = () => {
             }
           } else {
             setSubmitting(false);
-            Toast('契约签订失败，请稍后重试', 'error');
+            Toast('网络不佳，请重试', 'error');
           }
         });
       }
     } catch (error) {
       setSubmitting(false);
-      Toast('契约签订出错，请稍后重试', 'error');
+      Toast('网络不佳，请重试', 'error');
       console.log('契约签订失败：', error);
     }
+  };
+
+  const navigateToTarget = () => {
+    const mergedCompletedTasks = Array.from(
+      new Set(
+        [completedTasksParam, targetTaskId]
+          .flatMap(item => item?.split(',') || [])
+          .map(item => item.trim())
+          .filter(Boolean),
+      ),
+    ).join(',');
+
+    router.replace({
+      pathname: '/plans/target',
+      params: {
+        from: 'onboarding',
+        problem: targetProblem || 'other',
+        completedTasks: mergedCompletedTasks,
+      },
+    });
   };
 
   const setInfo = (val: any, key: string) => {

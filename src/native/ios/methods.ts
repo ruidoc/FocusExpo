@@ -4,6 +4,7 @@
  */
 
 import { Toast } from '@/components/ui';
+import { trackEvent } from '@/utils/analytics';
 import { NativeModules, Platform } from 'react-native';
 import type {
   AppSelectionResult,
@@ -45,6 +46,42 @@ function getNativeErrorCode(error: unknown): string | undefined {
     return typeof c === 'string' ? c : undefined;
   }
   return undefined;
+}
+
+type ExcessiveLockSource = 'startAppLimits' | 'updatePlan';
+
+function trackExcessiveLockLimited(params: {
+  source: ExcessiveLockSource;
+  planId?: string;
+  durationMinutes?: number;
+  mode?: 'shield' | 'allow';
+  error: unknown;
+}) {
+  const errorCode = getNativeErrorCode(params.error) || 'DEVICE_ACTIVITY_RATE_LIMIT';
+  const errorMessage = getErrorMessage(params.error);
+
+  if (params.source === 'startAppLimits') {
+    trackEvent('session_failed', {
+      plan_id: params.planId,
+      focus_type: 'once',
+      duration_minutes: params.durationMinutes,
+      mode: params.mode,
+      failure_stage: 'start_app_limits',
+      error_type: 'device_activity_rate_limit',
+      error_code: errorCode,
+      error_message: errorMessage,
+    });
+    return;
+  }
+
+  trackEvent('plan_sync_failed', {
+    plan_id: params.planId,
+    sync_mode: 'update_plan',
+    failure_stage: 'update_plan',
+    error_type: 'device_activity_rate_limit',
+    error_code: errorCode,
+    error_message: errorMessage,
+  });
 }
 
 /** Device Activity 监控数量/密度超限（系统 localizedDescription 因语言而异，不能与 MONITOR_ERROR 划等号） */
@@ -139,7 +176,7 @@ export async function selectAppsToLimit(
         maxCount,
         apps ? apps.join(',') : null,
       ),
-    { success: false },
+    { success: false, reason: 'error' },
   );
 }
 
@@ -174,6 +211,13 @@ export async function startAppLimits(
       return false;
     }
     if (isDeviceActivityExcessiveError(error)) {
+      trackExcessiveLockLimited({
+        source: 'startAppLimits',
+        planId,
+        durationMinutes,
+        mode,
+        error,
+      });
       Toast('锁定过于频繁，触发系统限制', 'error');
       return false;
     }
@@ -244,6 +288,11 @@ export async function updatePlan(plan: PlanConfig): Promise<boolean> {
     return true;
   } catch (error) {
     if (isDeviceActivityExcessiveError(error)) {
+      trackExcessiveLockLimited({
+        source: 'updatePlan',
+        planId: plan.id,
+        error,
+      });
       Toast('锁定过于频繁，触发系统限制', 'error');
       return false;
     }

@@ -66,9 +66,15 @@ instance.interceptors.response.use(
       let response = error.response;
       console.log('【请求错误】', response.status, response.data);
       if (response.status === 401) {
-        storage.delete('access_token');
-        storage.delete('user_info');
-        useUserStore.setState({ uInfo: null });
+        // 只有当失败请求携带的 token 与当前存储一致时才清除，
+        // 防止登录后旧请求的 401 误删新 token
+        const reqToken = error.config?.headers?.Authorization;
+        const curToken = storage.getString('access_token');
+        if (!curToken || `Bearer ${curToken}` === reqToken) {
+          storage.delete('access_token');
+          storage.delete('user_info');
+          useUserStore.setState({ uInfo: null });
+        }
       } else if (!silent) {
         Toast(response.data.message);
       }
