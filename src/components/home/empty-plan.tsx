@@ -1,6 +1,11 @@
 import { Button } from '@/components/ui';
 import { useBenefitStore, usePlanStore, useUserStore } from '@/stores';
-import { getCurrentMinute } from '@/utils';
+import {
+  dismissQuickStartHint,
+  getCurrentMinute,
+  getUserActivationState,
+  isQuickStartHintDismissed,
+} from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -31,6 +36,26 @@ const EmptyPlan = () => {
   const remainingMinutes = bstore.day_duration - bstore.today_used;
   const isQuotaExhausted =
     !bstore.is_subscribed && bstore.day_duration > 0 && remainingMinutes <= 0;
+
+  const userState = getUserActivationState();
+  const [hintVisible, setHintVisible] = useState(
+    userState.isFirstTimeUser && !isQuickStartHintDismissed(),
+  );
+
+  const handleDismissHint = () => {
+    dismissQuickStartHint();
+    setHintVisible(false);
+  };
+
+  const getHintText = () => {
+    if (nextPlan && gap > 0) {
+      const hours = Math.floor(gap / 60);
+      const mins = gap % 60;
+      const timeText = hours > 0 ? `${hours}小时` : `${mins}分钟`;
+      return `距下个契约还有 ${timeText}，先试试快速专注`;
+    }
+    return '现在空闲，试试快速专注吧';
+  };
 
   const getCountdownText = (minutes: number) => {
     if (minutes < 60) {
@@ -104,15 +129,50 @@ const EmptyPlan = () => {
             </Text>
           </View>
         ) : (
-          <TouchableOpacity
-            className="flex-row items-center justify-center py-3 gap-[2px]"
-            onPress={() => toRoute('/quick-start')}>
-            <Text className="text-sm text-[#858699] mr-1">临时使用？</Text>
-            <Icon name="flash" size={14} color="#7A5AF8" />
-            <Text className="text-[#7A5AF8] text-sm font-semibold">
-              快速专注
-            </Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              className="flex-row items-center justify-center py-3 gap-[2px]"
+              onPress={() => toRoute('/quick-start')}>
+              <Text className="text-sm text-[#858699] mr-1">临时使用？</Text>
+              <Icon name="flash" size={14} color="#7A5AF8" />
+              <Text className="text-[#7A5AF8] text-sm font-semibold">
+                快速专注
+              </Text>
+            </TouchableOpacity>
+            {hintVisible && (
+              <View className="-mt-2">
+                {/* 小三角箭头 */}
+                <View
+                  style={{
+                    alignSelf: 'center',
+                    marginRight: -80,
+                    width: 0,
+                    height: 0,
+                    borderLeftWidth: 6,
+                    borderRightWidth: 6,
+                    borderBottomWidth: 6,
+                    borderLeftColor: 'transparent',
+                    borderRightColor: 'transparent',
+                    borderBottomColor: '#1C1C26',
+                  }}
+                />
+                <TouchableOpacity
+                  onPress={() => toRoute('/quick-start')}
+                  activeOpacity={0.8}
+                  className="flex-row items-center bg-[#1C1C26] rounded-xl px-4 py-3 w-full">
+                  <Text className="flex-1 text-sm text-[#B3B3BA]">
+                    {getHintText()} ☝️
+                  </Text>
+                  <TouchableOpacity
+                    onPress={handleDismissHint}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    className="ml-2">
+                    <Icon name="close" size={16} color="#858699" />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
         )}
       </View>
     </View>

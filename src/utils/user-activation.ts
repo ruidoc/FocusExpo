@@ -14,6 +14,7 @@ export const USER_ACTIVATION_KEYS = {
   ONBOARDING_COMPLETED: 'onboarding_completed', // 是否完成引导流程
   FIRST_FOCUS_DATE: 'first_focus_date', // 首次专注日期
   SHOW_CELEBRATION: 'show_celebration', // 是否显示过首次完成庆祝
+  QUICK_START_HINT_DISMISSED: 'quick_start_hint_dismissed', // 是否关闭过快速专注提示
 };
 
 /**
@@ -135,6 +136,22 @@ export const getActivationDays = (): number => {
 };
 
 /**
+ * 关闭快速专注引导提示
+ */
+export const dismissQuickStartHint = () => {
+  storage.set(USER_ACTIVATION_KEYS.QUICK_START_HINT_DISMISSED, true);
+};
+
+/**
+ * 是否已关闭快速专注引导提示
+ */
+export const isQuickStartHintDismissed = (): boolean => {
+  return (
+    storage.getBoolean(USER_ACTIVATION_KEYS.QUICK_START_HINT_DISMISSED) || false
+  );
+};
+
+/**
  * 重置用户激活状态（仅用于测试）
  */
 export const resetUserActivation = () => {
@@ -143,5 +160,6 @@ export const resetUserActivation = () => {
   storage.delete(USER_ACTIVATION_KEYS.ONBOARDING_COMPLETED);
   storage.delete(USER_ACTIVATION_KEYS.FIRST_FOCUS_DATE);
   storage.delete(USER_ACTIVATION_KEYS.SHOW_CELEBRATION);
+  storage.delete(USER_ACTIVATION_KEYS.QUICK_START_HINT_DISMISSED);
   console.log('[UserActivation] State reset');
 };

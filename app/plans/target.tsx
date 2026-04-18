@@ -119,6 +119,7 @@ const TargetPage = () => {
         from: 'target',
         problem,
         taskId: task.id,
+        taskIndex: String(completedCount),
         completedTasks: Array.from(completedTaskIds).join(','),
         presetName: task.title,
         presetStart: task.startTime,

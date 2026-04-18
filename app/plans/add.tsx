@@ -146,9 +146,10 @@ const App = () => {
     return Math.max(0, dayDuration - todayUsed - todayPlanned);
   };
 
-  // 单独管理选择的应用状态（从 target 进入时自动带入 onboarding 选的应用）
+  // 单独管理选择的应用状态（仅第一个 target 任务自动带入 onboarding 选的应用）
+  const isFirstTargetTask = fromTarget && params.taskIndex === '0';
   const [selectedApps, setSelectedApps] = useState<any[]>(() => {
-    if (fromTarget && astore.ios_selected_apps.length > 0) {
+    if (isFirstTargetTask && astore.ios_selected_apps.length > 0) {
       return astore.ios_selected_apps;
     }
     return [];
@@ -219,9 +220,9 @@ const App = () => {
         console.log('解析预设重复参数失败:', e);
       }
 
-      // 从 target 进入时自动带入 onboarding 选的应用
+      // 仅第一个 target 任务自动带入 onboarding 选的应用
       const prefilledApps =
-        fromTarget && astore.ios_selected_apps.length > 0
+        isFirstTargetTask && astore.ios_selected_apps.length > 0
           ? astore.ios_selected_apps.map((r: any) => `${r.stableId}:${r.type}`)
           : [];
 
