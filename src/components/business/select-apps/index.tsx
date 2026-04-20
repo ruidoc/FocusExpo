@@ -44,9 +44,11 @@ const SelectApps: React.FC<SelectAppsProps> = ({
     <Flex
       onPress={selectApps}
       className="px-3 py-2 rounded-2xl gap-1"
-      style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+      style={{ backgroundColor: colors.muted }}>
       <Icon name="add" size={16} color={colors.text3} />
-      <Text className="text-[13px]" style={{ color: colors.text2 }}>选择</Text>
+      <Text className="text-[13px]" style={{ color: colors.text2 }}>
+        选择
+      </Text>
     </Flex>
   );
 };

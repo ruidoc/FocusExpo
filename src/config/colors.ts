@@ -12,7 +12,7 @@ const baseCommon = {
 const baseLight = {
   ...baseCommon,
   primaryForeground: '#FFFFFF',
-  background: '#FFFFFF',
+  background: '#F5F7FB',
   surface: '#FFFFFF',
   card: '#FFFFFF',
   text: '#0F172A',
@@ -20,14 +20,14 @@ const baseLight = {
   text3: '#94A3B8', // 弱化文字
   text4: '#CBD5E1', // 禁用文字
   border: '#E5E7EB',
-  muted: '#F5F7FB',
+  muted: 'rgba(0, 0, 0, 0.06)',
   mutedForeground: '#94A3B8',
   success: '#16A34A',
   warning: '#F59E0B',
   danger: '#EF4444',
   surfaceSecondary: '#F0F2F5', // 二级表面（action sheet、tooltip）
   ring: '#E5E7EB', // 进度环背景
-  primaryMuted: '#EDE9FE', // 禁用按钮背景
+  primaryMuted: '#7A5AF880', // 禁用按钮背景
   primaryMutedForeground: '#A78BFA', // 禁用按钮文字/边框
 };
 
@@ -42,7 +42,7 @@ const baseDark = {
   text3: '#6B7280', // 弱化文字
   text4: '#9CA3AF', // 禁用文字
   border: '#1C1C26',
-  muted: '#0F172A',
+  muted: 'rgba(255, 255, 255, 0.06)',
   mutedForeground: '#94A3B8',
   success: '#22C55E',
   warning: '#F59E0B',

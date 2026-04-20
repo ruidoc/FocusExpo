@@ -1,4 +1,5 @@
 import { AppToken, Page } from '@/components/business';
+import { useCustomTheme } from '@/config/theme';
 import {
   useAppStore,
   usePlanStore,
@@ -6,7 +7,6 @@ import {
   useStatisticStore,
 } from '@/stores';
 import type { Period } from '@/stores/statistic';
-import { useCustomTheme } from '@/config/theme';
 import { addLiveFocusDelta, getLiveFocusDelta } from '@/utils/live-focus';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -197,11 +197,7 @@ const App = () => {
                 activeOpacity={0.7}
                 className="px-4 py-[7px] rounded-[20px]"
                 style={{
-                  backgroundColor: active
-                    ? colors.primary
-                    : isDark
-                      ? colors.border
-                      : colors.muted,
+                  backgroundColor: active ? colors.primary : colors.card,
                 }}
                 onPress={() => {
                   setPeriod(p.key);
@@ -210,7 +206,7 @@ const App = () => {
                 <Text
                   className="text-[13px] font-medium"
                   style={{
-                    color: active ? '#fff' : colors.text3,
+                    color: active ? colors.primaryForeground : colors.text3,
                     fontWeight: active ? '600' : '500',
                   }}>
                   {p.label}

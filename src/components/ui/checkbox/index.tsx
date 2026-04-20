@@ -22,7 +22,7 @@ const CheckboxIcon = ({
   const icon = active ? (
     <Icon name="checkmark-circle" size={size} color={iconColor} />
   ) : (
-    <Icon name="ellipse-outline" size={size} color={'#FFFFFF90'} />
+    <Icon name="ellipse-outline" size={size} color={'#aaa'} />
   );
 
   // 无 onPress 时不能用 Pressable：会抢走外层 Pressable 的点击（如图标区域点不动）

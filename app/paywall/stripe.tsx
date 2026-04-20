@@ -66,7 +66,7 @@ const CheckoutPage = () => {
       marginBottom: 24,
     },
     productCard: {
-      backgroundColor: isDark ? '#1C1C26' : '#FFFFFF',
+      backgroundColor: colors.surface,
       borderRadius: 12,
       padding: 16,
       marginBottom: 12,
@@ -100,7 +100,7 @@ const CheckoutPage = () => {
     },
     divider: {
       height: 1,
-      backgroundColor: isDark ? '#2C2C36' : '#E5E7EB',
+      backgroundColor: colors.border,
       marginVertical: 24,
     },
     summaryTitle: {
@@ -129,7 +129,7 @@ const CheckoutPage = () => {
       marginTop: 8,
       paddingTop: 12,
       borderTopWidth: 1,
-      borderTopColor: isDark ? '#2C2C36' : '#E5E7EB',
+      borderTopColor: colors.border,
     },
     totalLabel: {
       fontSize: 16,

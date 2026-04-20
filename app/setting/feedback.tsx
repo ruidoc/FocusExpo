@@ -57,7 +57,7 @@ const App = () => {
         style={{ backgroundColor: colors.background }}
         contentContainerStyle={{
           flexGrow: 1,
-          paddingTop: 30,
+          paddingTop: 20,
           paddingBottom: 32,
         }}
         keyboardShouldPersistTaps="handled"
@@ -147,7 +147,7 @@ const App = () => {
           </View>
           <Button
             disabled={!reason || !type}
-            style={{ marginHorizontal: 20 }}
+            style={{ marginHorizontal: 20, marginTop: 14 }}
             loading={loading}
             onPress={toSubmit}>
             提交反馈

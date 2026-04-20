@@ -14,7 +14,7 @@ const CODE_COOLDOWN = 60;
 
 const App = () => {
   const store = useUserStore();
-  const { colors } = useCustomTheme();
+  const { colors, isDark } = useCustomTheme();
   const [loading, setLoading] = useState(false);
   const [agree, setAgree] = useState(false);
   const [isbind, setIsbind] = useState(false);
@@ -134,11 +134,9 @@ const App = () => {
     };
   }, []);
 
-  const bg = '#14141C';
-
   return (
     <Keyboard>
-      <View className="flex-1" style={{ backgroundColor: bg }}>
+      <View className="flex-1" style={{ backgroundColor: colors.background }}>
         <View className="flex-1 px-6 pt-12 mt-[100px]">
           {/* 标题 */}
           <View className="mb-10">
@@ -157,18 +155,18 @@ const App = () => {
           {/* 手机号 */}
           <View
             className="rounded-2xl mb-4 px-4 py-4"
-            style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+            style={{ backgroundColor: colors.card }}>
             <View className="flex-row items-center">
               <Icon
                 name="call-outline"
                 size={18}
-                color="rgba(255,255,255,0.5)"
+                color={colors.text3}
                 style={{ marginRight: 12 }}
               />
               <TextInput
                 className="flex-1 text-base"
                 placeholder="请输入手机号"
-                placeholderTextColor="rgba(255,255,255,0.4)"
+                placeholderTextColor={colors.text3}
                 value={form.phone}
                 clearable
                 keyboardType="number-pad"
@@ -182,12 +180,12 @@ const App = () => {
           {/* 验证码 */}
           <View
             className="rounded-2xl mb-6 px-4 py-4 flex-row items-center"
-            style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+            style={{ backgroundColor: colors.card }}>
             <View className="flex-1 min-w-0">
               <TextInput
                 className="text-base"
                 placeholder="请输入验证码"
-                placeholderTextColor="rgba(255,255,255,0.4)"
+                placeholderTextColor={colors.text3}
                 value={form.code}
                 clearable
                 keyboardType="number-pad"
@@ -210,16 +208,14 @@ const App = () => {
               {countdown > 0 ? (
                 <Text
                   className="text-sm font-medium"
-                  style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  style={{ color: colors.text2 }}>
                   {countdown}s 后重发
                 </Text>
               ) : (
                 <Text
                   className="text-[15px] font-medium"
                   style={{
-                    color: canSendCode
-                      ? colors.primary || '#7A5AF8'
-                      : '#9CA3AF',
+                    color: canSendCode ? colors.primary : colors.text3,
                   }}>
                   获取验证码
                 </Text>
@@ -234,7 +230,7 @@ const App = () => {
             loadingText={isbind ? '绑定中...' : '登录中...'}
             onPress={isbind ? toBind : toLogin}
             text={isbind ? '绑定' : '登录'}
-            className="w-full rounded-2xl h-14"
+            className="w-full rounded-2xl"
             textClassName="text-lg"
           />
 
@@ -244,16 +240,14 @@ const App = () => {
               <View className="flex-row items-center mb-6">
                 <View
                   className="flex-1 h-px"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                  style={{ backgroundColor: colors.border }}
                 />
-                <Text
-                  className="mx-4 text-sm"
-                  style={{ color: 'rgba(255,255,255,0.5)' }}>
+                <Text className="mx-4 text-sm" style={{ color: colors.text3 }}>
                   其他登录方式
                 </Text>
                 <View
                   className="flex-1 h-px"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                  style={{ backgroundColor: colors.border }}
                 />
               </View>
               <View className="flex-row gap-4">

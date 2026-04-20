@@ -23,7 +23,7 @@ const App = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [filterType, setFilterType] = useState<FilterType>('today');
-  const { colors } = useCustomTheme();
+  const { colors, isDark } = useCustomTheme();
 
   const toCreatePlan = () => {
     if (store.has_active_task()) {
@@ -85,7 +85,7 @@ const App = () => {
     <Page>
       <Stack.Screen
         options={{
-          headerRight: ({ tintColor }) => (
+          headerRight: () => (
             <Pressable
               onPress={toCreatePlan}
               style={{
@@ -94,27 +94,29 @@ const App = () => {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <Icon name="add" size={27} color={tintColor ?? colors.text} />
+              <Icon name="add" size={27} color={colors.text} />
             </Pressable>
           ),
         }}
       />
       {/* 筛选选项区域 */}
-      <Flex className="px-4 py-2.5">
+      <Flex
+        className="px-4 pb-0 gap-3 flex justify-center"
+        style={{ backgroundColor: colors.card }}>
         {filterOptions.map((option, index) => {
           const active = filterType === option.key;
           return (
             <TouchableOpacity
               key={option.key}
               activeOpacity={0.7}
-              className={`px-3.5 py-1.5 rounded-2xl border ${index > 0 ? 'ml-2' : ''}`}
+              className={`pb-2 px-1`}
               style={{
-                backgroundColor: active ? colors.ring : colors.card,
-                borderColor: active ? colors.border : colors.border,
+                borderBottomWidth: 2,
+                borderBottomColor: active ? colors.primary : 'transparent',
               }}
               onPress={() => handleFilterChange(option.key)}>
               <Text
-                className={`text-[13px] ${active ? 'font-semibold' : ''}`}
+                className={`text-[14px] ${active ? 'font-semibold' : ''}`}
                 style={{ color: active ? colors.text : colors.text3 }}>
                 {option.label}
               </Text>
@@ -126,7 +128,7 @@ const App = () => {
       {/* 任务区域 */}
       <View className="flex-1">
         <ScrollView
-          className="flex-1"
+          className="flex-1 pt-1.5"
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>

@@ -119,10 +119,10 @@ export default function UserCoinsPage() {
                   style={{
                     paddingHorizontal: 16,
                     paddingVertical: 8,
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: colors.primary,
                     borderRadius: 8,
                   }}>
-                  <Text style={{ color: '#fff' }}>购买</Text>
+                  <Text style={{ color: colors.primaryForeground }}>购买</Text>
                 </TouchableOpacity>
               </View>
             </View>

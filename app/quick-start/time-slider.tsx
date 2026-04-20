@@ -29,7 +29,7 @@ const TimeSlider: React.FC<Props> = ({ minute, setMinute }) => {
         className={`text-base font-bold mb-0 text-center ${dark ? 'text-white' : 'text-[#222]'}`}>
         <Text
           className={`text-[18px] font-bold`}
-          style={{ color: dark ? colors.primary : '#0065FE' }}>
+          style={{ color: colors.primary }}>
           {formatTime(localMinute)}
         </Text>
       </Text>
@@ -40,9 +40,9 @@ const TimeSlider: React.FC<Props> = ({ minute, setMinute }) => {
         value={localMinute}
         onValueChange={setLocalMinute}
         onSlidingComplete={setMinute}
-        minimumTrackTintColor={dark ? colors.primary : '#0065FE'}
+        minimumTrackTintColor={colors.primary}
         maximumTrackTintColor={dark ? '#444' : '#ccc'}
-        thumbTintColor={dark ? colors.primary : '#0065FE'}
+        thumbTintColor={colors.primary}
         useThemeColors={false}
         style={{ marginTop: 20 }}
       />

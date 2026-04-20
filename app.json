@@ -9,7 +9,7 @@
       "wxdc022c6a39cb32b7",
       "focusone"
     ],
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,

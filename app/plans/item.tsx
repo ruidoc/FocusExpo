@@ -9,8 +9,8 @@ import {
   minToTimeStr,
   minutesToHours,
 } from '@/utils';
-import dayjs from 'dayjs';
 import Icon from '@expo/vector-icons/Ionicons';
+import dayjs from 'dayjs';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -94,10 +94,15 @@ const TaskArea = ({
     );
   }
 
-  const cardBg = isDark ? '#1E1E2D' : '#F4F4F8';
-  const accentColor = colors.primary;
-  const pillBg = isDark ? 'rgba(122,90,248,0.15)' : 'rgba(122,90,248,0.1)';
+  const cardBg = isDark ? '#1E1E2D' : '#FFFFFF';
   const dividerColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+
+  // 根据状态决定左侧色条和强调色
+  const getStatusColor = (task: CusPlan) => {
+    if (task.status === 'finished') return colors.success; // 绿色-已完成
+    if (task.status === 'failed') return colors.danger; // 红色-已失败
+    return isDark ? colors.text3 : colors.text4; // 灰色-待执行
+  };
 
   return (
     <View className="flex-1 px-4 pt-2 pb-4">
@@ -116,7 +121,8 @@ const TaskArea = ({
           task.apps?.includes(`${app.stableId}:${app.type}`),
         );
 
-        const barColor = inactive ? colors.text3 : accentColor;
+        const barColor = getStatusColor(task);
+        const pillBg = `${barColor}18`;
         const cardOpacity = inactive ? 0.55 : 1;
 
         return (
@@ -201,11 +207,7 @@ const TaskArea = ({
                 </Text>
                 <View
                   style={{
-                    backgroundColor: inactive
-                      ? isDark
-                        ? 'rgba(255,255,255,0.06)'
-                        : 'rgba(0,0,0,0.04)'
-                      : pillBg,
+                    backgroundColor: pillBg,
                     paddingHorizontal: 8,
                     paddingVertical: 3,
                     borderRadius: 6,
@@ -214,7 +216,7 @@ const TaskArea = ({
                     style={{
                       fontSize: 12,
                       fontWeight: '600',
-                      color: inactive ? colors.text3 : accentColor,
+                      color: colors.green,
                     }}>
                     {duration}
                   </Text>

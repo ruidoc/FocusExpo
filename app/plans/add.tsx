@@ -600,7 +600,7 @@ const App = () => {
                     });
                   }}
                   style={{
-                    backgroundColor: colors.border,
+                    backgroundColor: colors.muted,
                     paddingHorizontal: 12,
                     paddingVertical: 6,
                     borderRadius: 8,
@@ -621,7 +621,7 @@ const App = () => {
                     });
                   }}
                   style={{
-                    backgroundColor: colors.border,
+                    backgroundColor: colors.muted,
                     paddingHorizontal: 12,
                     paddingVertical: 6,
                     borderRadius: 8,
@@ -802,7 +802,7 @@ const App = () => {
                       });
                     }}
                     style={{
-                      backgroundColor: colors.border,
+                      backgroundColor: colors.muted,
                       paddingHorizontal: 12,
                       paddingVertical: 6,
                       borderRadius: 8,
@@ -826,7 +826,7 @@ const App = () => {
                       });
                     }}
                     style={{
-                      backgroundColor: colors.border,
+                      backgroundColor: colors.muted,
                       paddingHorizontal: 12,
                       paddingVertical: 6,
                       borderRadius: 8,

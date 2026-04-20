@@ -6,6 +6,7 @@
 import {
   useAppStore,
   useDebugStore,
+  useHomeStore,
   usePlanStore,
   useUserStore,
 } from '@/stores';
@@ -58,4 +59,8 @@ export async function initAppData(): Promise<void> {
 
   // 初始化 debug store
   dstore.init();
+
+  // 初始化主题（从 AsyncStorage 恢复主题偏好 + 监听系统主题变化）
+  const hstore = useHomeStore.getState();
+  hstore.init();
 }

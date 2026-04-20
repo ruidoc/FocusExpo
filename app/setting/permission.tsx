@@ -5,13 +5,13 @@ import {
   getScreenTimePermission,
 } from '@/utils/permission';
 import { usePermisStore } from '@/stores';
-import { useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
 import React, { useEffect, useState } from 'react';
 import { Text } from 'react-native';
 
 const App = () => {
   const store = usePermisStore();
-  const { dark } = useTheme();
+  const { colors } = useCustomTheme();
   const [screenTimeGranted, setScreenTimeGranted] = useState(false);
 
   const checkScreenTime = async () => {
@@ -66,7 +66,7 @@ const App = () => {
       </FieldGroup>
       <Text
         className="text-xs px-5 mt-1.5"
-        style={{ color: dark ? '#4B5563' : '#94A3B8', lineHeight: 18 }}>
+        style={{ color: colors.text3, lineHeight: 18 }}>
         屏幕使用时间权限用于屏蔽分心应用，通知权限用于专注提醒。
       </Text>
     </Page>

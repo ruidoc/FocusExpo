@@ -178,10 +178,9 @@ const QuickStartPage = () => {
               values={['锁定模式', '放行模式']}
               selectedIndex={mode === 'shield' ? 0 : 1}
               style={{ height: 40, width: 220 }}
-              tintColor={'#85869950'}
-              sliderStyle={{ backgroundColor: colors.primary }}
-              appearance="dark"
-              fontStyle={{ fontSize: 14 }}
+              tintColor={colors.primary}
+              fontStyle={{ fontSize: 14, color: colors.text2 }}
+              activeFontStyle={{ fontSize: 14, color: colors.primaryForeground }}
               onChange={event => {
                 const idx = event.nativeEvent.selectedSegmentIndex;
                 setMode(idx === 0 ? 'shield' : 'allow');

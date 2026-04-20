@@ -10,9 +10,14 @@ const App = () => {
     <Page bgcolor={colors.background}>
       <View className="flex-col items-center mt-20">
         <Image
-          source={require('@/assets/images/splash.png')}
-          className="w-[130px] h-[180px] rounded-none"
+          source={require('@/assets/images/logo.png')}
+          className="w-[130px] h-[130px] rounded-none"
         />
+        <Text
+          className="text-2xl font-semibold tracking-tight mt-2"
+          style={{ color: colors.text }}>
+          专注契约
+        </Text>
       </View>
       <View className="gap-0.5 absolute bottom-[50px] left-0 right-0 px-[30px]">
         <View className="flex-row gap-2 justify-center items-center">
@@ -28,7 +33,9 @@ const App = () => {
             《隐私政策》
           </Link>
         </View>
-        <Text className="mt-2 text-sm text-center" style={{ color: colors.text2 }}>
+        <Text
+          className="mt-2 text-sm text-center"
+          style={{ color: colors.text2 }}>
           北京自由岸科技 ©️版权所有
         </Text>
       </View>
