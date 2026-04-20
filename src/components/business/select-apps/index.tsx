@@ -1,4 +1,5 @@
 import { Flex } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useMemo } from 'react';
@@ -18,6 +19,7 @@ const SelectApps: React.FC<SelectAppsProps> = ({
   apps,
   onFinish,
 }) => {
+  const { colors, isDark } = useCustomTheme();
   // 转为 native 期望的 string[] 格式 stableId:type
   const appIds = useMemo(() => {
     if (!apps?.length) return [];
@@ -41,9 +43,10 @@ const SelectApps: React.FC<SelectAppsProps> = ({
   return (
     <Flex
       onPress={selectApps}
-      className="bg-black/10 px-3 py-2 rounded-2xl gap-1">
-      <Icon name="add" size={16} color="#B3B3BA" />
-      <Text className="text-[#858699] text-[13px]">选择</Text>
+      className="px-3 py-2 rounded-2xl gap-1"
+      style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+      <Icon name="add" size={16} color={colors.text3} />
+      <Text className="text-[13px]" style={{ color: colors.text2 }}>选择</Text>
     </Flex>
   );
 };

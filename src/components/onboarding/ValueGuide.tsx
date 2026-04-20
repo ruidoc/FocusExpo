@@ -21,7 +21,7 @@ interface ValueGuideProps {
 const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
   const store = useHomeStore();
   const ustore = useUserStore();
-  const { colors } = useCustomTheme();
+  const { colors, isDark } = useCustomTheme();
   const [agree, setAgree] = useState(false);
   const accentColor = colors.primary ?? '#2E90FA';
 
@@ -116,20 +116,20 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
       <View className="flex-1 px-6">
         {/* 顶部成功提示 */}
         <View className="items-center mb-10 pt-2 gap-2">
-          <Text className="text-[26px] font-bold text-white text-center tracking-tight">
+          <Text className="text-[26px] font-bold text-center tracking-tight" style={{ color: colors.text }}>
             一次锁定不够
           </Text>
-          <Text className="text-2xl font-bold text-white text-center tracking-tight">
+          <Text className="text-2xl font-bold text-center tracking-tight" style={{ color: colors.text }}>
             你需要契约来约束自己！
           </Text>
         </View>
 
         {/* 问题 → 解决方案 */}
         <View className="mb-5">
-          <Text className="text-base text-white/60 mb-1 leading-6">
+          <Text className="text-base mb-1 leading-6" style={{ color: colors.text2 }}>
             主动性专注，消耗意志力，很难长期坚持下去
           </Text>
-          <Text className="text-base  text-white/60 leading-7">
+          <Text className="text-base leading-7" style={{ color: colors.text2 }}>
             更好的方式：
             <Text className="font-semibold" style={{ color: '#15b79e' }}>
               创建契约，定时执行
@@ -141,26 +141,26 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
         <View
           className="rounded-3xl p-5 mb-5"
           style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
           }}>
           <View className="flex-row items-center mb-4 gap-2">
             <Icon name="alarm-outline" size={22} color={accentColor} />
-            <Text className="text-lg font-semibold text-white">专注契约</Text>
+            <Text className="text-lg font-semibold" style={{ color: colors.text }}>专注契约</Text>
           </View>
 
           <View className="gap-y-3">
             {scheduleItems.map((item, index) => (
               <View key={index} className="flex-row items-center">
-                <Text className="text-base text-[#858699] font-medium w-14 pl-2">
+                <Text className="text-base font-medium w-14 pl-2" style={{ color: colors.text2 }}>
                   {item.time}
                 </Text>
                 <Icon
                   name="chevron-forward"
                   size={16}
-                  color="rgba(255, 255, 255, 0.3)"
+                  color={isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)'}
                   style={{ marginRight: 12 }}
                 />
-                <Text className="text-base text-white/90 flex-1">
+                <Text className="text-base flex-1" style={{ color: colors.text }}>
                   {item.label}
                 </Text>
               </View>
@@ -168,7 +168,7 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
           </View>
         </View>
 
-        <Text className="text-sm text-white/50 text-center">
+        <Text className="text-sm text-center" style={{ color: colors.text3 }}>
           到点自动执行，无需手动开启
         </Text>
 

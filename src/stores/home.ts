@@ -77,6 +77,8 @@ const HomeStore = combine(
     // 设置主题
     setThem: (them: 'dark' | 'light', followSystem: boolean = true) => {
       set({ them, followSystem });
+      // 设置系统级主题，让 useColorScheme() 返回正确值
+      Appearance.setColorScheme(followSystem ? null : them);
       AsyncStorage.setItem('mythem', them);
       AsyncStorage.setItem('followSystem', followSystem.toString());
     },
@@ -122,10 +124,9 @@ const HomeStore = combine(
       if (shouldFollowSystem) {
         (get() as any).setThem(sys === 'dark' ? 'dark' : 'light', true);
       } else {
-        (get() as any).setThem(
-          (local as 'dark' | 'light') || (sys === 'dark' ? 'dark' : 'light'),
-          false,
-        );
+        const theme =
+          (local as 'dark' | 'light') || (sys === 'dark' ? 'dark' : 'light');
+        (get() as any).setThem(theme, false);
       }
     },
 

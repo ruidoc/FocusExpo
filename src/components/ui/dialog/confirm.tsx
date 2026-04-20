@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Text } from 'react-native';
+import { useCustomTheme } from '@/config/theme';
 import DialogComponent from './component';
 
 interface DialogConfig {
@@ -23,6 +24,7 @@ const DialogContext = createContext<DialogContextType | null>(null);
 export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { colors } = useCustomTheme();
   const [visible, setVisible] = useState(false);
   const [config, setConfig] = useState<DialogConfig>({});
   const [resolve, setResolve] = useState<
@@ -69,7 +71,9 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({
         onPressConfirm={handleConfirm}
         onPressCancel={handleCancel}>
         {config.message && (
-          <Text className="text-[17px] text-center leading-6 text-white/80">
+          <Text
+            className="text-[17px] text-center leading-6"
+            style={{ color: colors.text2 }}>
             {config.message}
           </Text>
         )}

@@ -20,22 +20,8 @@ const ManageEntry = () => {
 
   const appManageBg = dark ? '#00BCD4' : '#4DD0E1';
   const taskManageBg = dark ? '#7d45e6' : '#818CF8';
-  const appManageText = dark ? '#f5f5f5' : '#222';
-  const taskManageText = dark ? '#f5f5f5' : '#222';
-  const appCountColor = dark
-    ? app_count
-      ? '#777'
-      : '#FF5C1F'
-    : app_count
-      ? '#777'
-      : '#FF5C1F';
-  const planCountColor = dark
-    ? plan_count
-      ? '#777'
-      : '#FF5C1F'
-    : plan_count
-      ? '#777'
-      : '#FF5C1F';
+  const appCountColor = app_count ? colors.text3 : '#FF5C1F';
+  const planCountColor = plan_count ? colors.text3 : '#FF5C1F';
 
   const toRoute = (path: string) => {
     if (!ustore.uInfo) {
@@ -65,7 +51,7 @@ const ManageEntry = () => {
           <Icon name="grid-outline" size={21} color="#fff" />
         </View>
         <View>
-          <Text style={{ fontSize: 15, color: appManageText }}>APP管理</Text>
+          <Text style={{ fontSize: 15, color: colors.text }}>APP管理</Text>
           <Text style={{ fontSize: 10, color: appCountColor }}>
             {app_count ? `共 ${app_count} 个APP` : '请添加APP'}
           </Text>
@@ -89,7 +75,7 @@ const ManageEntry = () => {
           <Icon name="time-outline" size={21} color="#fff" />
         </View>
         <View>
-          <Text style={{ fontSize: 15, color: taskManageText }}>定时任务</Text>
+          <Text style={{ fontSize: 15, color: colors.text }}>定时任务</Text>
           <Text style={{ fontSize: 10, color: planCountColor }}>
             {plan_count ? `共 ${plan_count} 个任务` : '请添加任务'}
           </Text>

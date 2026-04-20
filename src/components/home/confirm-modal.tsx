@@ -1,3 +1,4 @@
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import {
@@ -5,7 +6,6 @@ import {
   Dimensions,
   Modal,
   Platform,
-  StyleSheet,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -40,6 +40,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onCancel,
   onClose,
 }) => {
+  const { colors, isDark } = useCustomTheme();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const [mounted, setMounted] = React.useState<boolean>(visible);
@@ -148,7 +149,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <Animated.View
           pointerEvents={isAnimatingOut ? 'none' : 'auto'}
           style={[
-            styles.overlay,
+            {
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              justifyContent: 'flex-end' as const,
+            },
             {
               opacity: fadeAnim,
             },
@@ -156,62 +161,178 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <TouchableWithoutFeedback>
             <Animated.View
               style={[
-                styles.modalContainer,
+                {
+                  backgroundColor: colors.background,
+                  borderTopLeftRadius: 24,
+                  borderTopRightRadius: 24,
+                  margin: 8,
+                  paddingHorizontal: 16,
+                  paddingTop: 39,
+                  paddingBottom: 45,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 1,
+                  elevation: 5,
+                },
                 {
                   transform: [{ translateY: slideAnim }],
                 },
               ]}>
               {/* 顶部手柄条，增强视觉 */}
-              <View style={styles.handle} />
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 6,
+                  alignSelf: 'center',
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: isDark
+                    ? 'rgba(255,255,255,0.12)'
+                    : 'rgba(0,0,0,0.08)',
+                }}
+              />
               {/* 关闭按钮 */}
               <TouchableOpacity
-                style={styles.closeButton}
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  width: 28,
+                  height: 28,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
                 onPress={onClose}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Icon name="close" size={24} color="#B3B3BA" />
+                <Icon name="close" size={24} color={colors.text3} />
               </TouchableOpacity>
 
               {/* 内容区域 */}
-              <View style={styles.content}>
+              <View style={{ alignItems: 'center', marginBottom: 24 }}>
                 {/* 图标 */}
-                <View style={styles.iconContainer}>
+                <View
+                  style={{
+                    width: 53,
+                    height: 53,
+                    borderRadius: 26.5,
+                    backgroundColor: 'rgba(247, 175, 93, 0.1)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 16,
+                  }}>
                   <Icon name="warning" size={24} color="#F7AF5D" />
                 </View>
 
                 {/* 标题 */}
-                <Text style={styles.title}>{title}</Text>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: '500',
+                    color: colors.text,
+                    textAlign: 'center',
+                    lineHeight: 30,
+                  }}>
+                  {title}
+                </Text>
               </View>
 
               {/* 提示横幅 */}
-              <View style={styles.banner}>
-                <Text style={styles.bannerText}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: colors.surface,
+                  borderRadius: 8,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  marginBottom: 24,
+                }}>
+                <Text
+                  style={{
+                    flex: 1,
+                    fontSize: 14,
+                    fontWeight: '400',
+                    color: colors.text2,
+                    lineHeight: 20,
+                    letterSpacing: -0.1,
+                  }}>
                   {message}
                 </Text>
               </View>
 
               {/* 额外警告信息 */}
               {extraWarning && (
-                <View style={styles.warningBanner}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
+                    backgroundColor: 'rgba(247, 175, 93, 0.1)',
+                    borderRadius: 8,
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    marginBottom: 24,
+                  }}>
                   <Icon
                     name="information-circle-outline"
                     size={16}
                     color="#F7AF5D"
                   />
-                  <Text style={styles.warningText}>{extraWarning}</Text>
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontSize: 13,
+                      fontWeight: '400',
+                      color: '#F7AF5D',
+                      lineHeight: 18,
+                    }}>
+                    {extraWarning}
+                  </Text>
                 </View>
               )}
 
               {/* 按钮区域 */}
-              <View style={styles.buttonContainer}>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
                 <TouchableOpacity
-                  style={styles.cancelButton}
+                  style={{
+                    flex: 1,
+                    height: 48,
+                    backgroundColor: colors.border,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                   onPress={handleCancel}>
-                  <Text style={styles.cancelButtonText}>{cancelText}</Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: '500',
+                      color: colors.text2,
+                    }}>
+                    {cancelText}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.confirmButton}
+                  style={{
+                    flex: 1,
+                    height: 48,
+                    backgroundColor: colors.primary,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                   onPress={handleConfirm}>
-                  <Text style={styles.confirmButtonText}>{confirmText}</Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: '500',
+                      color: '#FFFFFF',
+                    }}>
+                    {confirmText}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>
@@ -221,139 +342,5 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: '#14141C',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    margin: 8,
-    paddingHorizontal: 16,
-    paddingTop: 39,
-    paddingBottom: 45,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 1,
-    elevation: 5,
-  },
-  handle: {
-    position: 'absolute',
-    top: 6,
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  iconContainer: {
-    width: 53,
-    height: 53,
-    borderRadius: 26.5,
-    backgroundColor: 'rgba(247, 175, 93, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 30,
-  },
-  banner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#181821',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  bannerText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#858699',
-    lineHeight: 20,
-    letterSpacing: -0.1,
-  },
-  bannerDecoration: {
-    width: 48,
-    height: 40,
-    backgroundColor: '#16B364',
-    borderRadius: 4,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    height: 48,
-    backgroundColor: '#1C1C26',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#858699',
-  },
-  confirmButton: {
-    flex: 1,
-    height: 48,
-    backgroundColor: '#7A5AF8',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  warningBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(247, 175, 93, 0.1)',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginBottom: 24,
-  },
-  warningText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '400',
-    color: '#F7AF5D',
-    lineHeight: 18,
-  },
-});
 
 export default ConfirmationModal;

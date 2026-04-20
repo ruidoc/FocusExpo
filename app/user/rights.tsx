@@ -6,8 +6,9 @@ import {
   trackPaywallOpened,
   trackRightsPageViewed,
 } from '@/utils';
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useFocusEffect, useTheme } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
 import {
@@ -37,7 +38,7 @@ const BENEFITS = [
 const PRIVACY_URL = 'https://focus.freeshore.cn/privacy';
 
 const RightsPage = () => {
-  const { dark } = useTheme();
+  const { colors, isDark } = useCustomTheme();
   const subStore = useSubscriptionStore();
   const [loading, setLoading] = useState(false);
   const isFocusedRef = useRef(true);
@@ -123,17 +124,14 @@ const RightsPage = () => {
     return '#EF4444';
   };
 
-  const ACCENT = dark ? '#C4A6FF' : '#7A5AF8';
-  const ACCENT_BG = dark ? '#1A1530' : '#F3EEFF';
-  const CARD = dark ? '#1C1C26' : '#fff';
-  const BORDER = dark ? '#2A2A3A' : '#E5E7EB';
-  const TEXT2 = dark ? '#8A8A98' : '#94A3B8';
-  const VIP_CARD_BG = dark ? '#1C1A14' : '#FFFBF0';
-  const VIP_CARD_BORDER = dark
+  const ACCENT = isDark ? '#C4A6FF' : '#7A5AF8';
+  const ACCENT_BG = isDark ? '#1A1530' : '#F3EEFF';
+  const VIP_CARD_BG = isDark ? '#1C1A14' : '#FFFBF0';
+  const VIP_CARD_BORDER = isDark
     ? 'rgba(212,164,74,0.25)'
     : 'rgba(212,164,74,0.35)';
   const VIP_TITLE = '#D4A44A';
-  const VIP_META = dark ? '#B79B62' : '#A16207';
+  const VIP_META = isDark ? '#B79B62' : '#A16207';
 
   return (
     <Page>
@@ -205,12 +203,12 @@ const RightsPage = () => {
           <>
             <Text
               className="text-2xl font-extrabold text-center mb-2"
-              style={{ color: dark ? '#E5E7EB' : '#0F172A' }}>
+              style={{ color: colors.text }}>
               解锁全部能力
             </Text>
             <Text
               className="text-sm text-center mb-7"
-              style={{ color: TEXT2, lineHeight: 22 }}>
+              style={{ color: colors.text2, lineHeight: 22 }}>
               不限契约数量，屏蔽更多应用，掌控你的专注时间
             </Text>
           </>
@@ -221,7 +219,7 @@ const RightsPage = () => {
             <View
               key={b.icon}
               className="w-[48%] rounded-[14px] p-4 border-hairline"
-              style={{ backgroundColor: CARD, borderColor: BORDER }}>
+              style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
               <View
                 className="w-9 h-9 rounded-[10px] justify-center items-center mb-2.5"
                 style={{ backgroundColor: ACCENT_BG }}>
@@ -229,10 +227,10 @@ const RightsPage = () => {
               </View>
               <Text
                 className="text-[15px] font-semibold mb-0.5"
-                style={{ color: dark ? '#E5E7EB' : '#0F172A' }}>
+                style={{ color: colors.text }}>
                 {b.title}
               </Text>
-              <Text className="text-xs" style={{ color: TEXT2 }}>
+              <Text className="text-xs" style={{ color: colors.text2 }}>
                 {b.desc}
               </Text>
             </View>
@@ -279,15 +277,15 @@ const RightsPage = () => {
             onPress={() =>
               Linking.openURL('https://focus.freeshore.cn/user-agreement')
             }>
-            <Text className="text-xs" style={{ color: TEXT2 }}>
+            <Text className="text-xs" style={{ color: colors.text2 }}>
               用户协议
             </Text>
           </TouchableOpacity>
-          <Text className="text-xs" style={{ color: TEXT2 }}>
+          <Text className="text-xs" style={{ color: colors.text2 }}>
             ·
           </Text>
           <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_URL)}>
-            <Text className="text-xs" style={{ color: TEXT2 }}>
+            <Text className="text-xs" style={{ color: colors.text2 }}>
               隐私政策
             </Text>
           </TouchableOpacity>

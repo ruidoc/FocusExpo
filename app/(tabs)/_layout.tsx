@@ -53,8 +53,8 @@ const TabLayout = () => {
   };
 
   const tabBarStyle = {
-    backgroundColor: isDark ? '#14141C' : colors.card,
-    borderTopColor: isDark ? '#1C1C26' : colors.border,
+    backgroundColor: colors.background,
+    borderTopColor: colors.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     elevation: 0,
   } as const;

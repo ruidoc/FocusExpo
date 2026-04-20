@@ -155,10 +155,11 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           ]}>
           <TouchableWithoutFeedback>
             <Animated.View
-              className={`rounded-t-[24px] overflow-hidden m-2 bg-[#121212] ${className || ''}`}
+              className={`rounded-t-[24px] overflow-hidden m-2 ${className || ''}`}
               style={[
                 contentStyle,
                 {
+                  backgroundColor: colors.surface,
                   transform: [{ translateY: slideAnim }],
                 },
               ]}>
@@ -167,7 +168,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
                 <View className="w-full relative">
                   {showIndicator && (
                     <View className="w-full items-center pt-3 pb-2">
-                      <View className="w-12 h-1 rounded-full bg-white/10" />
+                      <View
+                        className="w-12 h-1 rounded-full"
+                        style={{ backgroundColor: colors.border }}
+                      />
                     </View>
                   )}
                   {showCloseButton && (

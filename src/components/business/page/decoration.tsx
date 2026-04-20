@@ -1,20 +1,31 @@
+import { useCustomTheme } from '@/config/theme';
 import React from 'react';
 import { ImageBackground, View } from 'react-native';
 
 const BackgroundDecoration = () => {
+  const { isDark } = useCustomTheme();
+
+  if (!isDark) {
+    // 亮色模式：纯净浅色背景
+    return (
+      <View className="absolute inset-0 -z-[1]">
+        <View
+          className="absolute inset-0"
+          style={{ backgroundColor: '#F5F7FB' }}
+        />
+      </View>
+    );
+  }
+
+  // 暗色模式：保持原有星空效果
   return (
     <View className="absolute inset-0 -z-[1]">
-      {/* 主背景色 */}
       <View className="absolute inset-0 bg-[#0D0D12]" />
-
-      {/* 背景渐变图片 */}
       <ImageBackground
         source={require('@/assets/images/background-gradient.png')}
         className="absolute -top-[200px] -left-[120px] w-[150%] h-[120%] opacity-40"
         resizeMode="cover"
       />
-
-      {/* 顶部装饰点 */}
       <View className="absolute inset-0">
         {Array.from({ length: 30 }).map((_, index) => (
           <View

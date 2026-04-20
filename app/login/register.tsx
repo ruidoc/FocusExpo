@@ -2,14 +2,15 @@ import { Privicy } from '@/components/business';
 import { Keyboard } from '@/components/system';
 import { Button, Flex, TextInput, Toast } from '@/components/ui';
 import { useUserStore } from '@/stores';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useCustomTheme } from '@/config/theme';
+import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const App = () => {
   const store = useUserStore();
-  const { colors, dark } = useTheme();
+  const { colors, isDark } = useCustomTheme();
   const [loading, setLoading] = useState(false);
   const [agree, setAgree] = useState(false);
 
@@ -65,7 +66,7 @@ const App = () => {
       flex: 1,
     },
     inputWrap: {
-      backgroundColor: '#12121250',
+      backgroundColor: isDark ? '#12121250' : 'rgba(0,0,0,0.06)',
       borderRadius: 9,
       marginBottom: 14,
       paddingVertical: 15,
@@ -99,7 +100,7 @@ const App = () => {
     <Keyboard>
       <LinearGradient
         // 设置渐变的颜色
-        colors={['#443937', '#44393760']}
+        colors={isDark ? ['#443937', '#44393760'] : ['#F5F0EE', '#F5F0EE60']}
         // 设置开始和结束点
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -109,7 +110,7 @@ const App = () => {
             <TextInput
               style={styles.inputBox}
               placeholder="请输入手机号"
-              placeholderTextColor="#FFFFFF50"
+              placeholderTextColor={isDark ? '#FFFFFF50' : '#00000040'}
               value={form.phone}
               clearable
               keyboardType="number-pad"
@@ -120,7 +121,7 @@ const App = () => {
             <TextInput
               style={styles.inputBox}
               placeholder="请输入用户名"
-              placeholderTextColor="#FFFFFF50"
+              placeholderTextColor={isDark ? '#FFFFFF50' : '#00000040'}
               value={form.username}
               clearable
               onChange={v => setInfo(v, 'username')}
@@ -131,7 +132,7 @@ const App = () => {
               secureTextEntry
               style={styles.inputBox}
               placeholder="请输入密码"
-              placeholderTextColor="#FFFFFF50"
+              placeholderTextColor={isDark ? '#FFFFFF50' : '#00000040'}
               value={form.password}
               clearable
               onChange={v => setInfo(v, 'password')}
@@ -142,7 +143,7 @@ const App = () => {
               secureTextEntry
               style={styles.inputBox}
               placeholder="再次输入密码"
-              placeholderTextColor="#FFFFFF50"
+              placeholderTextColor={isDark ? '#FFFFFF50' : '#00000040'}
               value={form.confirm_password}
               clearable
               onChange={v => setInfo(v, 'confirm_password')}

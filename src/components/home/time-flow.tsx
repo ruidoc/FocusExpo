@@ -1,11 +1,13 @@
+import { useCustomTheme } from '@/config/theme';
 import { usePlanStore } from '@/stores';
 import { getIOSFocusStatus } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
+import { Animated, Platform, Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 const TimeFlow = () => {
+  const { colors } = useCustomTheme();
   const pstore = usePlanStore();
   const nativeFocus = pstore.native_focus;
   const focusPlan = pstore.focus_plan();
@@ -153,7 +155,7 @@ const TimeFlow = () => {
           cx="150"
           cy="150"
           r="136"
-          stroke="#303044"
+          stroke={colors.ring}
           strokeWidth="28"
           fill="none"
         />
@@ -176,10 +178,10 @@ const TimeFlow = () => {
       {/* 中央内容 */}
       <View style={styles.centerContent}>
         {/* 目标文本 */}
-        <Text style={styles.goalText}>{getGoalText()}</Text>
+        <Text style={[styles.goalText, { color: colors.text2 }]}>{getGoalText()}</Text>
 
         {/* 时间显示 */}
-        <Text style={styles.timeText}>{getDisplayTime()}</Text>
+        <Text style={[styles.timeText, { color: colors.text }]}>{getDisplayTime()}</Text>
 
         {/* 进度 / 暂停状态 */}
         {hasPlan &&
@@ -203,42 +205,40 @@ const TimeFlow = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     width: 300,
     height: 300,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    position: 'relative' as const,
   },
 
   progressRing: {
-    position: 'absolute',
+    position: 'absolute' as const,
     top: 0,
     left: 0,
   },
   centerContent: {
-    alignItems: 'center',
+    alignItems: 'center' as const,
     zIndex: 10,
   },
   goalText: {
     fontSize: 13,
-    fontWeight: '500',
-    color: '#858699',
+    fontWeight: '500' as const,
     marginBottom: 12,
     letterSpacing: -0.1,
   },
   timeText: {
     fontSize: 70,
-    fontWeight: '500',
-    color: '#FFFFFF',
+    fontWeight: '500' as const,
     lineHeight: 72,
     letterSpacing: -1.4,
     marginBottom: 12,
   },
   statusChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     backgroundColor: 'rgba(133, 134, 153, 0.1)',
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -247,10 +247,10 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: '#858699',
     letterSpacing: -0.1,
   },
-});
+};
 
 export default TimeFlow;

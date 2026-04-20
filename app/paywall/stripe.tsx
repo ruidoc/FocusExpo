@@ -10,9 +10,9 @@
  */
 import { Page, StripeWebView } from '@/components/business';
 import { Button, Flex, Toast } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { type PaymentResult, useStripePayment } from '@/utils/stripe';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useTheme } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -39,7 +39,7 @@ const PRODUCTS = [
 ];
 
 const CheckoutPage = () => {
-  const { colors, dark } = useTheme();
+  const { colors, isDark } = useCustomTheme();
   const { checkout, loading, visible, checkoutUrl, handleClose } =
     useStripePayment();
   const [selectedProduct, setSelectedProduct] = useState(PRODUCTS[0]);
@@ -66,7 +66,7 @@ const CheckoutPage = () => {
       marginBottom: 24,
     },
     productCard: {
-      backgroundColor: dark ? '#1C1C26' : '#FFFFFF',
+      backgroundColor: isDark ? '#1C1C26' : '#FFFFFF',
       borderRadius: 12,
       padding: 16,
       marginBottom: 12,
@@ -100,7 +100,7 @@ const CheckoutPage = () => {
     },
     divider: {
       height: 1,
-      backgroundColor: dark ? '#2C2C36' : '#E5E7EB',
+      backgroundColor: isDark ? '#2C2C36' : '#E5E7EB',
       marginVertical: 24,
     },
     summaryTitle: {
@@ -129,7 +129,7 @@ const CheckoutPage = () => {
       marginTop: 8,
       paddingTop: 12,
       borderTopWidth: 1,
-      borderTopColor: dark ? '#2C2C36' : '#E5E7EB',
+      borderTopColor: isDark ? '#2C2C36' : '#E5E7EB',
     },
     totalLabel: {
       fontSize: 16,

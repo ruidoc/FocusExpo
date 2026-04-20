@@ -4,6 +4,7 @@
  */
 
 import { Button } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { markCelebrationShown, trackEvent } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
@@ -21,6 +22,7 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
   onClose,
   focusDuration = 15,
 }) => {
+  const { colors } = useCustomTheme();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -78,8 +80,8 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
       onRequestClose={onClose}>
       <View className="flex-1 bg-black/70 justify-center items-center p-6">
         <Animated.View
-          style={{ transform: [{ scale: scaleAnim }] }}
-          className="w-full bg-[#1C1C26] rounded-[24px] p-6 border border-[#2C2C36]">
+          style={{ transform: [{ scale: scaleAnim }], backgroundColor: colors.surface, borderColor: colors.border }}
+          className="w-full rounded-[24px] p-6 border">
           {/* 礼花图标 */}
           <View className="items-center mb-4">
             <Animated.Text
@@ -90,18 +92,18 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
           </View>
 
           {/* 标题 */}
-          <Text className="text-2xl font-bold text-white text-center mb-6">
+          <Text className="text-2xl font-bold text-center mb-6" style={{ color: colors.text }}>
             恭喜完成首次专注！
           </Text>
 
           {/* 成就卡片 */}
-          <View className="bg-[#2C2C36] rounded-xl p-4 mb-6">
+          <View className="rounded-xl p-4 mb-6" style={{ backgroundColor: colors.border }}>
             <View className="flex-row justify-between items-center mb-3">
               <View className="flex-row items-center">
-                <Icon name="time-outline" size={18} color="#7A5AF8" />
-                <Text className="text-white ml-2">专注时长</Text>
+                <Icon name="time-outline" size={18} color={colors.primary} />
+                <Text className="ml-2" style={{ color: colors.text }}>专注时长</Text>
               </View>
-              <Text className="text-white font-semibold">
+              <Text className="font-semibold" style={{ color: colors.text }}>
                 {focusDuration} 分钟
               </Text>
             </View>
@@ -109,14 +111,14 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
             <View className="flex-row justify-between items-center">
               <View className="flex-row items-center">
                 <Icon name="trophy-outline" size={18} color="#34B545" />
-                <Text className="text-white ml-2">解锁成就</Text>
+                <Text className="ml-2" style={{ color: colors.text }}>解锁成就</Text>
               </View>
               <Text className="text-[#34B545] font-semibold">专注新手</Text>
             </View>
           </View>
 
           {/* 引导文案 */}
-          <Text className="text-[#B3B3BA] text-center mb-6">
+          <Text className="text-center mb-6" style={{ color: colors.text3 }}>
             💪 创建契约，让专注成为习惯
           </Text>
 
@@ -125,7 +127,7 @@ const CelebrationModal: React.FC<CelebrationModalProps> = ({
             <Button text="创建我的第一个契约" onPress={handleCreatePlan} />
 
             <TouchableOpacity className="py-3" onPress={closeCelebration}>
-              <Text className="text-[#858699] text-center font-medium">
+              <Text className="text-center font-medium" style={{ color: colors.text2 }}>
                 稍后再说
               </Text>
             </TouchableOpacity>

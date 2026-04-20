@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { useBenefitStore, usePlanStore, useUserStore } from '@/stores';
 import {
   dismissQuickStartHint,
@@ -12,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 const EmptyPlan = () => {
+  const { colors } = useCustomTheme();
   const pstore = usePlanStore();
   const bstore = useBenefitStore();
   const ustore = useUserStore();
@@ -70,14 +72,16 @@ const EmptyPlan = () => {
     <View className="w-full px-6 items-center">
       {nextPlan && (
         <>
-          <View className="w-full bg-[#1C1C26] rounded-[20px] p-6 mb-6 border border-[#2C2C36]">
+          <View
+            className="w-full rounded-[20px] p-6 mb-6 border"
+            style={{ backgroundColor: colors.surface, borderColor: colors.border }}>
             <View className="flex-row justify-between items-start">
               <View>
-                <Text className="text-sm text-[#858699] mb-2">下一个契约</Text>
-                <Text className="text-2xl font-bold text-white mb-1">
+                <Text className="text-sm mb-2" style={{ color: colors.text2 }}>下一个契约</Text>
+                <Text className="text-2xl font-bold mb-1" style={{ color: colors.text }}>
                   {nextPlan.name}
                 </Text>
-                <Text className="text-base text-[#7A5AF8] font-semibold mb-4">
+                <Text className="text-base font-semibold mb-4" style={{ color: colors.primary }}>
                   {nextPlan.start} - {nextPlan.end}
                 </Text>
               </View>
@@ -86,17 +90,17 @@ const EmptyPlan = () => {
               </View>
             </View>
             <View className="flex-row items-center gap-1.5">
-              <Icon name="time-outline" size={14} color="#B3B3BA" />
-              <Text className="text-sm text-[#B3B3BA]">
+              <Icon name="time-outline" size={14} color={colors.text3} />
+              <Text className="text-sm" style={{ color: colors.text3 }}>
                 {getCountdownText(gap)}
               </Text>
             </View>
           </View>
           <View className="w-full mt-6">
-            <Text className="text-2xl font-semibold text-white mt-5 mb-2 text-center">
+            <Text className="text-2xl font-semibold mt-5 mb-2 text-center" style={{ color: colors.text }}>
               自律不是靠忍，是靠规则
             </Text>
-            <Text className="text-base text-[#858699] text-center mb-8 leading-5">
+            <Text className="text-base text-center mb-8 leading-5" style={{ color: colors.text2 }}>
               多一个契约，多一段被锁定的专注
             </Text>
           </View>
@@ -104,13 +108,15 @@ const EmptyPlan = () => {
       )}
       {!nextPlan && (
         <View className="items-center my-10">
-          <View className="w-20 h-20 rounded-full bg-[#1C1C26] items-center justify-center mb-4">
+          <View
+            className="w-20 h-20 rounded-full items-center justify-center mb-4"
+            style={{ backgroundColor: colors.surface }}>
             <Icon name="sunny-outline" size={54} color="#F7AF5D" />
           </View>
-          <Text className="text-2xl font-semibold text-white mt-5 mb-2 text-center">
+          <Text className="text-2xl font-semibold mt-5 mb-2 text-center" style={{ color: colors.text }}>
             改变，从一个契约开始
           </Text>
-          <Text className="text-base text-[#858699] text-center mb-8 leading-5">
+          <Text className="text-base text-center mb-8 leading-5" style={{ color: colors.text2 }}>
             设定时间段，每日自动锁定分心应用
           </Text>
         </View>
@@ -121,10 +127,10 @@ const EmptyPlan = () => {
 
         {isQuotaExhausted ? (
           <View className="items-center py-3">
-            <Text className="text-sm text-[#B3B3BA] text-center">
+            <Text className="text-sm text-center" style={{ color: colors.text3 }}>
               今日额度已用完，明天再来吧
             </Text>
-            <Text className="text-[12px] text-[#85869990] text-center mt-1">
+            <Text className="text-[12px] text-center mt-1" style={{ color: colors.text3, opacity: 0.6 }}>
               自律需要长期坚持，保持节奏
             </Text>
           </View>
@@ -133,9 +139,9 @@ const EmptyPlan = () => {
             <TouchableOpacity
               className="flex-row items-center justify-center py-3 gap-[2px]"
               onPress={() => toRoute('/quick-start')}>
-              <Text className="text-sm text-[#858699] mr-1">临时使用？</Text>
-              <Icon name="flash" size={14} color="#7A5AF8" />
-              <Text className="text-[#7A5AF8] text-sm font-semibold">
+              <Text className="text-sm mr-1" style={{ color: colors.text2 }}>临时使用？</Text>
+              <Icon name="flash" size={14} color={colors.primary} />
+              <Text className="text-sm font-semibold" style={{ color: colors.primary }}>
                 快速专注
               </Text>
             </TouchableOpacity>
@@ -153,21 +159,22 @@ const EmptyPlan = () => {
                     borderBottomWidth: 6,
                     borderLeftColor: 'transparent',
                     borderRightColor: 'transparent',
-                    borderBottomColor: '#1C1C26',
+                    borderBottomColor: colors.surface,
                   }}
                 />
                 <TouchableOpacity
                   onPress={() => toRoute('/quick-start')}
                   activeOpacity={0.8}
-                  className="flex-row items-center bg-[#1C1C26] rounded-xl px-4 py-3 w-full">
-                  <Text className="flex-1 text-sm text-[#B3B3BA]">
+                  className="flex-row items-center rounded-xl px-4 py-3 w-full"
+                  style={{ backgroundColor: colors.surface }}>
+                  <Text className="flex-1 text-sm" style={{ color: colors.text3 }}>
                     {getHintText()} ☝️
                   </Text>
                   <TouchableOpacity
                     onPress={handleDismissHint}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     className="ml-2">
-                    <Icon name="close" size={16} color="#858699" />
+                    <Icon name="close" size={16} color={colors.text2} />
                   </TouchableOpacity>
                 </TouchableOpacity>
               </View>

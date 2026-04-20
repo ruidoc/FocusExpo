@@ -62,7 +62,8 @@ const parseCompletedTasks = (value?: string) =>
     .filter(Boolean) as TargetTaskId[] | undefined;
 
 const COMPLETE_COLOR = '#22C55E';
-const PENDING_COLOR = 'rgba(255,255,255,0.22)';
+const PENDING_COLOR_DARK = 'rgba(255,255,255,0.22)';
+const PENDING_COLOR_LIGHT = 'rgba(0,0,0,0.15)';
 
 const TargetPage = () => {
   const params = useLocalSearchParams<{
@@ -71,7 +72,7 @@ const TargetPage = () => {
     completedTasks?: string;
   }>();
   const navigation = useNavigation();
-  const { colors } = useCustomTheme();
+  const { colors, isDark } = useCustomTheme();
   const fromOnboarding = params.from === 'onboarding';
   const problem = parseProblem(params.problem);
 
@@ -137,10 +138,10 @@ const TargetPage = () => {
         <View className="px-6 pt-16 pb-8">
           {/* 自定义标题区 */}
           <View className="mb-8 mx-4">
-            <Text className="text-[26px] font-bold text-white tracking-tight">
+            <Text className="text-[26px] font-bold tracking-tight" style={{ color: colors.text }}>
               签 2 个契约，开始改变
             </Text>
-            <Text className="text-base text-white/50 mt-2 leading-6">
+            <Text className="text-base mt-2 leading-6" style={{ color: colors.text3 }}>
               90% 的新用户都从这两步开始
             </Text>
           </View>
@@ -151,7 +152,7 @@ const TargetPage = () => {
               const isCompleted = index < completedCount;
               const isCurrent = index === completedCount && !!currentTask;
               const lineColor =
-                index < completedCount ? COMPLETE_COLOR : PENDING_COLOR;
+                index < completedCount ? COMPLETE_COLOR : (isDark ? PENDING_COLOR_DARK : PENDING_COLOR_LIGHT);
 
               return (
                 <React.Fragment key={task.id}>
@@ -168,7 +169,7 @@ const TargetPage = () => {
                           ? COMPLETE_COLOR
                           : isCurrent
                             ? colors.primary
-                            : 'rgba(255,255,255,0.25)',
+                            : isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.15)',
                       }}>
                       {isCompleted ? (
                         <Icon name="checkmark" size={20} color="#FFFFFF" />
@@ -178,7 +179,7 @@ const TargetPage = () => {
                           style={{
                             color: isCurrent
                               ? colors.primary
-                              : 'rgba(255,255,255,0.55)',
+                              : isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.4)',
                             fontVariant: ['tabular-nums'],
                           }}>
                           {index + 1}
@@ -190,8 +191,8 @@ const TargetPage = () => {
                       style={{
                         color:
                           isCompleted || isCurrent
-                            ? '#FFFFFF'
-                            : 'rgba(255,255,255,0.5)',
+                            ? colors.text
+                            : colors.text3,
                       }}>
                       {task.stepLabel}
                     </Text>
@@ -211,27 +212,27 @@ const TargetPage = () => {
             <View
               className="rounded-[28px] p-6 border"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                borderColor: 'rgba(255,255,255,0.06)',
+                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
               }}>
-              <Text className="text-sm text-white/45 mb-2">
+              <Text className="text-sm mb-2" style={{ color: colors.text3 }}>
                 第 {completedCount + 1} 个契约
               </Text>
-              <Text className="text-[26px] font-semibold text-white leading-8">
+              <Text className="text-[26px] font-semibold leading-8" style={{ color: colors.text }}>
                 {currentTask.title}
               </Text>
-              <Text className="text-sm text-white/60 mt-3 leading-6">
+              <Text className="text-sm mt-3 leading-6" style={{ color: colors.text2 }}>
                 {currentTask.subtitle}
               </Text>
 
               <View
                 className="rounded-2xl px-4 py-4 mt-6"
-                style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
+                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' }}>
                 <View className="flex-row items-center">
-                  <Icon name="time-outline" size={16} color="#B3B3BA" />
+                  <Icon name="time-outline" size={16} color={colors.text3} />
                   <Text
-                    className="text-sm text-[#D1D5DB] ml-2"
-                    style={{ fontVariant: ['tabular-nums'] }}>
+                    className="text-sm ml-2"
+                    style={{ fontVariant: ['tabular-nums'], color: colors.text2 }}>
                     {currentTask.repeatText} · {currentTask.startTime} -{' '}
                     {currentTask.endTime} · 持续一周
                   </Text>
@@ -249,17 +250,17 @@ const TargetPage = () => {
             <View
               className="rounded-[28px] p-6 border"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                borderColor: 'rgba(255,255,255,0.06)',
+                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
               }}>
               <View className="items-center py-2">
                 <View className="w-14 h-14 rounded-full bg-[#22C55E1F] items-center justify-center mb-4">
                   <Icon name="checkmark" size={28} color={COMPLETE_COLOR} />
                 </View>
-                <Text className="text-[24px] font-semibold text-white mb-2">
+                <Text className="text-[24px] font-semibold mb-2" style={{ color: colors.text }}>
                   2 个契约已生效
                 </Text>
-                <Text className="text-sm text-white/60 text-center leading-6 mb-6">
+                <Text className="text-sm text-center leading-6 mb-6" style={{ color: colors.text2 }}>
                   接下来一周，它们会按时自动锁定你的应用
                 </Text>
                 <Button

@@ -6,6 +6,7 @@ import {
   ValueGuide,
 } from '@/components/onboarding';
 import { Process } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useRef, useState } from 'react';
 import { Animated, Dimensions, TouchableOpacity, View } from 'react-native';
@@ -28,6 +29,7 @@ const OnboardingScreen = () => {
   const [selectedAppName, setSelectedAppName] = useState('');
   const [isFocusActive, setIsFocusActive] = useState(false); // 是否处于专注生效阶段
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const { colors, isDark } = useCustomTheme();
 
   const goNext = () => {
     if (step >= TOTAL_STEPS) return;
@@ -118,9 +120,10 @@ const OnboardingScreen = () => {
             {showBackButton && (
               <TouchableOpacity
                 onPress={goBack}
-                className="w-7 h-7 rounded-full bg-white/5 items-center justify-center"
+                className="w-7 h-7 rounded-full items-center justify-center"
+                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
                 activeOpacity={0.7}>
-                <Icon name="chevron-back" size={18} color="#FFFFFF" />
+                <Icon name="chevron-back" size={18} color={colors.text} />
               </TouchableOpacity>
             )}
           </View>

@@ -1,5 +1,6 @@
 import { Page } from '@/components/business';
 import { Toast } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import { ErrorCode, useIAP } from 'expo-iap';
 import React, { useEffect } from 'react';
 import {
@@ -20,6 +21,7 @@ const consumableSkus = [
 
 export default function UserCoinsPage() {
   const [loading, setLoading] = React.useState<boolean>(false);
+  const { colors } = useCustomTheme();
   const {
     connected,
     products,
@@ -73,8 +75,8 @@ export default function UserCoinsPage() {
     <Page>
       {!connected && (
         <View style={{ alignItems: 'center', marginTop: 24 }}>
-          <Text style={{ color: '#fff' }}>正在连接 App Store…</Text>
-          <Text style={{ color: '#fff' }}>产品数量：{products.length}</Text>
+          <Text style={{ color: colors.text }}>正在连接 App Store…</Text>
+          <Text style={{ color: colors.text }}>产品数量：{products.length}</Text>
         </View>
       )}
       {connected && (
@@ -87,7 +89,7 @@ export default function UserCoinsPage() {
                 marginBottom: 12,
               }}>
               <ActivityIndicator />
-              <Text style={{ marginLeft: 8, color: '#fff' }}>加载中…</Text>
+              <Text style={{ marginLeft: 8, color: colors.text }}>加载中…</Text>
             </View>
           )}
           {products.map(p => (
@@ -97,12 +99,12 @@ export default function UserCoinsPage() {
                 padding: 16,
                 borderRadius: 12,
                 borderWidth: 1,
-                borderColor: '#e5e5e5',
+                borderColor: colors.border,
                 marginBottom: 12,
-                backgroundColor: '#fff',
+                backgroundColor: colors.surface,
               }}>
-              <Text style={{ fontSize: 16, fontWeight: '500' }}>{p.title}</Text>
-              <Text style={{ color: '#666', marginTop: 4 }}>
+              <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text }}>{p.title}</Text>
+              <Text style={{ color: colors.text2, marginTop: 4 }}>
                 {p.description}
               </Text>
               <View
@@ -111,7 +113,7 @@ export default function UserCoinsPage() {
                   justifyContent: 'space-between',
                   marginTop: 12,
                 }}>
-                <Text style={{ fontSize: 16 }}>{p.displayPrice}</Text>
+                <Text style={{ fontSize: 16, color: colors.text }}>{p.displayPrice}</Text>
                 <TouchableOpacity
                   onPress={() => onBuy(p.id)}
                   style={{
@@ -127,7 +129,7 @@ export default function UserCoinsPage() {
           ))}
           {!loading && products.length === 0 && (
             <View style={{ alignItems: 'center', marginTop: 24 }}>
-              <Text style={{ color: '#fff' }}>
+              <Text style={{ color: colors.text }}>
                 未获取到商品，请检查产品 ID 与配置
               </Text>
             </View>

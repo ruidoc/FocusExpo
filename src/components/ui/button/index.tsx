@@ -67,18 +67,18 @@ const Button = ({
       return {
         backgroundColor: 'transparent',
         borderWidth: 1,
-        borderColor: isDisabled ? '#5B4A9E' : colors.primary || '#7A5AF8',
+        borderColor: isDisabled ? colors.primaryMutedForeground : colors.primary,
       };
     }
     return {
-      backgroundColor: isDisabled ? '#3D2E7A' : colors.primary || '#7A5AF8',
+      backgroundColor: isDisabled ? colors.primaryMuted : colors.primary,
     };
   };
 
   const getTextStyle = () => {
     if (type === 'ghost') {
       return {
-        color: isDisabled ? '#5B4A9E' : colors.primary || '#7A5AF8',
+        color: isDisabled ? colors.primaryMutedForeground : colors.primary,
       };
     }
     return {

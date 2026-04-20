@@ -25,6 +25,10 @@ const baseLight = {
   success: '#16A34A',
   warning: '#F59E0B',
   danger: '#EF4444',
+  surfaceSecondary: '#F0F2F5', // 二级表面（action sheet、tooltip）
+  ring: '#E5E7EB', // 进度环背景
+  primaryMuted: '#EDE9FE', // 禁用按钮背景
+  primaryMutedForeground: '#A78BFA', // 禁用按钮文字/边框
 };
 
 const baseDark = {
@@ -43,6 +47,10 @@ const baseDark = {
   success: '#22C55E',
   warning: '#F59E0B',
   danger: '#F87171',
+  surfaceSecondary: '#101017', // 二级表面（action sheet、tooltip）
+  ring: '#303044', // 进度环背景
+  primaryMuted: '#3D2E7A', // 禁用按钮背景
+  primaryMutedForeground: '#5B4A9E', // 禁用按钮文字/边框
 };
 
 export const Colors = {

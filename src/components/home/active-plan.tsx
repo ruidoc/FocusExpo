@@ -49,7 +49,7 @@ const FocusButton = () => {
   const styles = StyleSheet.create({
     btnFont: {
       fontSize: 18,
-      color: 'white',
+      color: colors.text,
     },
     descFont: {
       fontSize: 16,
@@ -62,7 +62,7 @@ const FocusButton = () => {
       width: 60,
       height: 60,
       borderRadius: 30,
-      backgroundColor: '#85869930',
+      backgroundColor: colors.ring,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -154,7 +154,7 @@ const FocusButton = () => {
             onPress={quickStart}
             activeOpacity={0.8}
             style={styles.circleButton}>
-            <Icon name="play" size={24} color="#B3B3BA" />
+            <Icon name="play" size={24} color={colors.text3} />
           </TouchableOpacity>
         )}
         {bstore.features.includes('allow-pause') &&
@@ -166,7 +166,7 @@ const FocusButton = () => {
                   onPress={() => setShowPauseModal(true)}
                   activeOpacity={0.8}
                   style={styles.circleButton}>
-                  <Icon name="pause" size={24} color="#B3B3BA" />
+                  <Icon name="pause" size={24} color={colors.text3} />
                 </TouchableOpacity>
               )}
               {isPaused && (
@@ -174,7 +174,7 @@ const FocusButton = () => {
                   onPress={resumeFocus}
                   activeOpacity={0.8}
                   style={styles.circleButton}>
-                  <Icon name="play" size={24} color="#B3B3BA" />
+                  <Icon name="play" size={24} color={colors.text3} />
                 </TouchableOpacity>
               )}
             </>
@@ -186,7 +186,7 @@ const FocusButton = () => {
             }}
             activeOpacity={0.8}
             style={styles.circleButton}>
-            <Icon name="stop" size={24} color="#B3B3BA" />
+            <Icon name="stop" size={24} color={colors.text3} />
           </TouchableOpacity>
         )}
       </Flex>

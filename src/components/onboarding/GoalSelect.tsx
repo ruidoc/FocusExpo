@@ -1,4 +1,5 @@
 import { Flex } from '@/components/ui';
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
 import type { ProblemType } from 'app/onboarding';
 import React from 'react';
@@ -11,6 +12,7 @@ interface GoalSelectProps {
 }
 
 const GoalSelect = ({ problem, setProblem, onNext }: GoalSelectProps) => {
+  const { colors, isDark } = useCustomTheme();
   const addictionOptions = [
     {
       id: 'video' as const,
@@ -52,10 +54,10 @@ const GoalSelect = ({ problem, setProblem, onNext }: GoalSelectProps) => {
   return (
     <View className="flex-1 px-6">
       <View className="mb-9">
-        <Text className="text-2xl font-bold text-white mb-2 tracking-tight text-center">
+        <Text className="text-2xl font-bold mb-2 tracking-tight text-center" style={{ color: colors.text }}>
           你最常在什么场景分心？
         </Text>
-        <Text className="text-base text-white/60 leading-6 text-center">
+        <Text className="text-base leading-6 text-center" style={{ color: colors.text2 }}>
           选择一个，为你定制专注方案
         </Text>
       </View>
@@ -70,9 +72,9 @@ const GoalSelect = ({ problem, setProblem, onNext }: GoalSelectProps) => {
               activeOpacity={0.8}
               className="rounded-3xl p-3.5"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
                 borderWidth: 2,
-                borderColor: isSelected ? '#7A5AF8' : 'transparent',
+                borderColor: isSelected ? colors.primary : 'transparent',
               }}>
               {/* 图标区域 - 固定尺寸和颜色 */}
               <View className="w-10 h-10 rounded-xl items-center justify-center mr-4 ml-1">
@@ -85,19 +87,19 @@ const GoalSelect = ({ problem, setProblem, onNext }: GoalSelectProps) => {
 
               {/* 文字区域 */}
               <View className="flex-1">
-                <Text className="text-lg font-semibold text-white mb-0.5">
+                <Text className="text-lg font-semibold mb-0.5" style={{ color: colors.text }}>
                   {option.title}
                 </Text>
-                <Text className="text-sm text-white/40">{option.desc}</Text>
+                <Text className="text-sm" style={{ color: colors.text3 }}>{option.desc}</Text>
               </View>
 
               {/* 选中指示器 */}
               <View
                 className="w-6 h-6 rounded-full items-center justify-center"
                 style={{
-                  backgroundColor: isSelected ? '#7A5AF8' : 'transparent',
+                  backgroundColor: isSelected ? colors.primary : 'transparent',
                   borderWidth: isSelected ? 0 : 1.5,
-                  borderColor: 'rgba(255, 255, 255, 0.15)',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)',
                 }}>
                 {isSelected && <Icon name="checkmark" size={16} color="#FFF" />}
               </View>

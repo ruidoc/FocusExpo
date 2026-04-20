@@ -1,3 +1,4 @@
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import {
@@ -7,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -42,6 +42,7 @@ const InputConfirmModal: React.FC<InputConfirmModalProps> = ({
   onConfirm,
   onClose,
 }) => {
+  const { colors, isDark } = useCustomTheme();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const [mounted, setMounted] = React.useState<boolean>(visible);
@@ -157,97 +158,237 @@ const InputConfirmModal: React.FC<InputConfirmModalProps> = ({
         <Animated.View
           pointerEvents={isAnimatingOut ? 'none' : 'auto'}
           style={[
-            styles.overlay,
             {
-              opacity: fadeAnim,
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              justifyContent: 'flex-end' as const,
             },
+            { opacity: fadeAnim },
           ]}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={-32}
-            style={styles.keyboardAvoiding}>
+            style={{ width: '100%' }}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <Animated.View
                 style={[
-                  styles.modalContainer,
                   {
-                    transform: [{ translateY: slideAnim }],
+                    backgroundColor: colors.background,
+                    borderTopLeftRadius: 24,
+                    borderTopRightRadius: 24,
+                    margin: 8,
+                    paddingHorizontal: 16,
+                    paddingTop: 39,
+                    paddingBottom: 45,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 1,
+                    elevation: 5,
                   },
+                  { transform: [{ translateY: slideAnim }] },
                 ]}>
                 {/* 顶部手柄条 */}
-                <View style={styles.handle} />
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 6,
+                    alignSelf: 'center',
+                    width: 40,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: isDark
+                      ? 'rgba(255,255,255,0.12)'
+                      : 'rgba(0,0,0,0.08)',
+                  }}
+                />
                 {/* 关闭按钮 */}
                 <TouchableOpacity
-                  style={styles.closeButton}
+                  style={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    width: 28,
+                    height: 28,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                   onPress={handleClose}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Icon name="close" size={24} color="#B3B3BA" />
+                  <Icon name="close" size={24} color={colors.text3} />
                 </TouchableOpacity>
 
                 {/* 内容区域 */}
-                <View style={styles.content}>
-                  <View style={styles.iconContainer}>
+                <View style={{ alignItems: 'center', marginBottom: 24 }}>
+                  <View
+                    style={{
+                      width: 53,
+                      height: 53,
+                      borderRadius: 26.5,
+                      backgroundColor: 'rgba(247, 175, 93, 0.1)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 16,
+                    }}>
                     <Icon name="warning" size={24} color="#F7AF5D" />
                   </View>
-                  <Text style={styles.title}>{title}</Text>
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      fontWeight: '500',
+                      color: colors.text,
+                      textAlign: 'center',
+                      lineHeight: 30,
+                    }}>
+                    {title}
+                  </Text>
                 </View>
 
                 {/* 提示横幅 */}
-                <View style={styles.banner}>
-                  <Text style={styles.bannerText}>{message}</Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 20,
+                  }}>
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontSize: 14,
+                      fontWeight: '400',
+                      color: colors.text2,
+                      lineHeight: 20,
+                      letterSpacing: -0.1,
+                    }}>
+                    {message}
+                  </Text>
                 </View>
 
                 {/* 额外警告信息 */}
                 {extraWarning && (
-                  <View style={styles.warningBanner}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      backgroundColor: 'rgba(247, 175, 93, 0.1)',
+                      borderRadius: 8,
+                      paddingVertical: 10,
+                      paddingHorizontal: 12,
+                      marginBottom: 20,
+                    }}>
                     <Icon
                       name="information-circle-outline"
                       size={16}
                       color="#F7AF5D"
                     />
-                    <Text style={styles.warningText}>{extraWarning}</Text>
+                    <Text
+                      style={{
+                        flex: 1,
+                        fontSize: 13,
+                        fontWeight: '400',
+                        color: '#F7AF5D',
+                        lineHeight: 18,
+                      }}>
+                      {extraWarning}
+                    </Text>
                   </View>
                 )}
 
                 {/* 要求输入的文字 */}
-                <Text style={styles.requiredLabel}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: colors.text2,
+                    marginBottom: 8,
+                  }}>
                   确定要终止？请输入以下文字：
                 </Text>
-                <View style={styles.requiredTextBox}>
-                  <Text style={styles.requiredText}>{requiredText}</Text>
+                <View
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginBottom: 16,
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: '500',
+                      color: '#F7AF5D',
+                      lineHeight: 22,
+                    }}>
+                    {requiredText}
+                  </Text>
                 </View>
 
                 {/* 输入框 */}
                 <TextInput
-                  style={styles.textInput}
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    fontSize: 15,
+                    color: colors.text,
+                    marginBottom: 24,
+                  }}
                   value={inputText}
                   onChangeText={setInputText}
                   placeholder="请在此输入..."
-                  placeholderTextColor="#858699"
+                  placeholderTextColor={colors.text2}
                   autoCorrect={false}
                   autoCapitalize="none"
                   contextMenuHidden={true}
                 />
 
                 {/* 按钮区域 */}
-                <View style={styles.buttonContainer}>
+                <View style={{ flexDirection: 'row', gap: 12 }}>
                   <TouchableOpacity
-                    style={styles.cancelButton}
+                    style={{
+                      flex: 1,
+                      height: 48,
+                      backgroundColor: colors.border,
+                      borderRadius: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                     onPress={handleClose}>
-                    <Text style={styles.cancelButtonText}>{cancelText}</Text>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: '500',
+                        color: colors.primary,
+                      }}>
+                      {cancelText}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[
-                      styles.confirmButton,
-                      !isMatch && styles.confirmButtonDisabled,
-                    ]}
+                    style={{
+                      flex: 1,
+                      height: 48,
+                      backgroundColor: isMatch
+                        ? colors.primary
+                        : colors.primaryMuted,
+                      borderRadius: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                     disabled={!isMatch}
                     onPress={handleConfirm}>
                     <Text
-                      style={[
-                        styles.confirmButtonText,
-                        !isMatch && styles.confirmButtonTextDisabled,
-                      ]}>
+                      style={{
+                        fontSize: 16,
+                        fontWeight: '500',
+                        color: isMatch ? '#FFFFFF' : colors.text2,
+                      }}>
                       {confirmText}
                     </Text>
                   </TouchableOpacity>
@@ -260,167 +401,5 @@ const InputConfirmModal: React.FC<InputConfirmModalProps> = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  keyboardAvoiding: {
-    width: '100%',
-  },
-  modalContainer: {
-    backgroundColor: '#14141C',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    margin: 8,
-    paddingHorizontal: 16,
-    paddingTop: 39,
-    paddingBottom: 45,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 1,
-    elevation: 5,
-  },
-  handle: {
-    position: 'absolute',
-    top: 6,
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  iconContainer: {
-    width: 53,
-    height: 53,
-    borderRadius: 26.5,
-    backgroundColor: 'rgba(247, 175, 93, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 30,
-  },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#181821',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 20,
-  },
-  bannerText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#858699',
-    lineHeight: 20,
-    letterSpacing: -0.1,
-  },
-  warningBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(247, 175, 93, 0.1)',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginBottom: 20,
-  },
-  warningText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '400',
-    color: '#F7AF5D',
-    lineHeight: 18,
-  },
-  requiredLabel: {
-    fontSize: 13,
-    color: '#858699',
-    marginBottom: 8,
-  },
-  requiredTextBox: {
-    backgroundColor: '#181821',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  requiredText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#F7AF5D',
-    lineHeight: 22,
-  },
-  textInput: {
-    backgroundColor: '#181821',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#2A2A36',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    color: '#FFFFFF',
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    height: 48,
-    backgroundColor: '#1C1C26',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#7A5AF8',
-  },
-  confirmButton: {
-    flex: 1,
-    height: 48,
-    backgroundColor: '#7A5AF8',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  confirmButtonDisabled: {
-    backgroundColor: '#2A2A36',
-  },
-  confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  confirmButtonTextDisabled: {
-    color: '#858699',
-  },
-});
 
 export default InputConfirmModal;

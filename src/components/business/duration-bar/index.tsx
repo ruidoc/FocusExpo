@@ -8,6 +8,7 @@
  *   [████████████░░░░]
  */
 
+import { useCustomTheme } from '@/config/theme';
 import { useBenefitStore, usePlanStore, useRecordStore } from '@/stores';
 import { addLiveFocusDelta, getLiveFocusDelta } from '@/utils/live-focus';
 import React from 'react';
@@ -25,6 +26,7 @@ const formatMinutes = (min: number): string => {
 };
 
 const DayDurationBar: React.FC = () => {
+  const { colors } = useCustomTheme();
   const { is_subscribed, day_duration } = useBenefitStore();
   const pstore = usePlanStore();
   const rstore = useRecordStore();
@@ -51,19 +53,19 @@ const DayDurationBar: React.FC = () => {
   const progress = used / totalDuration;
   const isExhausted = displayUsed >= totalDuration;
 
-  const trackColor = isExhausted ? '#EF4444' : '#7A5AF8';
-  const bgColor = '#2A2A3A';
+  const trackColor = isExhausted ? '#EF4444' : colors.primary;
+  const bgColor = colors.border;
 
   return (
     <View className="mt-3">
       {/* 标签行 */}
       <View className="flex-row justify-between items-center mb-2">
-        <Text className="text-[12px]" style={{ color: '#858699' }}>
+        <Text className="text-[12px]" style={{ color: colors.text2 }}>
           今日专注时长
         </Text>
         <Text
           className="text-[12px]"
-          style={{ color: isExhausted ? '#EF4444' : '#858699' }}>
+          style={{ color: isExhausted ? '#EF4444' : colors.text2 }}>
           {formatMinutes(displayUsed)} / {formatMinutes(totalDuration)}
         </Text>
       </View>

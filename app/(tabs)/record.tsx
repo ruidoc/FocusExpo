@@ -6,9 +6,9 @@ import {
   useStatisticStore,
 } from '@/stores';
 import type { Period } from '@/stores/statistic';
+import { useCustomTheme } from '@/config/theme';
 import { addLiveFocusDelta, getLiveFocusDelta } from '@/utils/live-focus';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useTheme } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   RefreshControl,
@@ -24,7 +24,7 @@ const App = () => {
   const astore = useAppStore();
   const pstore = usePlanStore();
   const rstore = useRecordStore();
-  const { colors, dark } = useTheme();
+  const { colors, isDark } = useCustomTheme();
   const [period, setPeriod] = useState<Period>('today');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -125,9 +125,9 @@ const App = () => {
         : item.actual_mins,
     }));
   }, [currentApps, items, liveDelta]);
-  const TEXT2 = dark ? '#6B7280' : '#94A3B8';
-  const ACCENT = '#7A5AF8';
-  const unitTextColor = dark ? '#FFFFFF' : colors.text2;
+  const TEXT2 = colors.text3;
+  const ACCENT = colors.primary;
+  const unitTextColor = colors.text;
 
   const isAppCurrentlyLocked = (appId: string) =>
     pstore.has_active_task() &&
@@ -198,10 +198,10 @@ const App = () => {
                 className="px-4 py-[7px] rounded-[20px]"
                 style={{
                   backgroundColor: active
-                    ? '#7A5AF8'
-                    : dark
-                      ? '#1C1C26'
-                      : '#F5F7FB',
+                    ? colors.primary
+                    : isDark
+                      ? colors.border
+                      : colors.muted,
                 }}
                 onPress={() => {
                   setPeriod(p.key);
@@ -210,7 +210,7 @@ const App = () => {
                 <Text
                   className="text-[13px] font-medium"
                   style={{
-                    color: active ? '#fff' : dark ? '#8A8A98' : '#94A3B8',
+                    color: active ? '#fff' : colors.text3,
                     fontWeight: active ? '600' : '500',
                   }}>
                   {p.label}
@@ -231,9 +231,9 @@ const App = () => {
           <View
             className="mx-4 mt-1 mb-4 rounded-3xl py-5"
             style={{
-              backgroundColor: dark ? '#1C1C26' : '#fff',
-              borderWidth: dark ? 0 : StyleSheet.hairlineWidth,
-              borderColor: '#E5E7EB',
+              backgroundColor: colors.surface,
+              borderWidth: isDark ? 0 : StyleSheet.hairlineWidth,
+              borderColor: colors.border,
             }}>
             <View className="flex-row justify-between">
               <View className="flex-1 items-center">
@@ -246,7 +246,7 @@ const App = () => {
                 className="my-1"
                 style={{
                   width: StyleSheet.hairlineWidth,
-                  backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
+                  backgroundColor: colors.border,
                 }}
               />
               <View className="flex-1 items-center">
@@ -259,7 +259,7 @@ const App = () => {
                 className="my-1"
                 style={{
                   width: StyleSheet.hairlineWidth,
-                  backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
+                  backgroundColor: colors.border,
                 }}
               />
               <View className="flex-1 items-center">
@@ -305,9 +305,9 @@ const App = () => {
               <View
                 className="mx-4 mb-4 rounded-3xl overflow-hidden"
                 style={{
-                  backgroundColor: dark ? '#1C1C26' : '#fff',
-                  borderWidth: dark ? 0 : StyleSheet.hairlineWidth,
-                  borderColor: '#E5E7EB',
+                  backgroundColor: colors.surface,
+                  borderWidth: isDark ? 0 : StyleSheet.hairlineWidth,
+                  borderColor: colors.border,
                 }}>
                 {(() => {
                   const sortedItems = displayItems
@@ -335,7 +335,7 @@ const App = () => {
                           <View
                             className="h-px mx-4"
                             style={{
-                              backgroundColor: dark ? '#2A2A3A' : '#E5E7EB',
+                              backgroundColor: colors.border,
                             }}
                           />
                         )}
@@ -347,7 +347,7 @@ const App = () => {
                                 className="h-1.5 rounded-full mr-2"
                                 style={{
                                   width: barWidth,
-                                  backgroundColor: dark ? '#4B5563' : '#9CA3AF',
+                                  backgroundColor: colors.text3,
                                 }}
                               />
                               <Text

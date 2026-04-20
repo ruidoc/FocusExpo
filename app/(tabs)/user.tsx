@@ -1,8 +1,9 @@
 import { DayDurationBar } from '@/components/business';
 import { FieldGroup, FieldItem, Flex, Toast } from '@/components/ui';
 import { useBenefitStore, useSubscriptionStore, useUserStore } from '@/stores';
+import { useCustomTheme } from '@/config/theme';
 import Icon from '@expo/vector-icons/Ionicons';
-import { useFocusEffect, useTheme } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -12,7 +13,7 @@ const App = () => {
   const store = useUserStore();
   const subStore = useSubscriptionStore();
   const bstore = useBenefitStore();
-  const { dark } = useTheme();
+  const { colors, isDark } = useCustomTheme();
   const insets = useSafeAreaInsets();
   const showVip = bstore.features.includes('show-vip');
 
@@ -53,7 +54,7 @@ const App = () => {
   }: {
     icon: keyof typeof Icon.glyphMap;
     size?: number;
-  }) => <Icon name={icon} size={size} color={dark ? '#6B7280' : '#94A3B8'} />;
+  }) => <Icon name={icon} size={size} color={colors.text3} />;
 
   useFocusEffect(
     useCallback(() => {
@@ -76,7 +77,7 @@ const App = () => {
   return (
     <ScrollView
       className="flex-1"
-      style={{ backgroundColor: dark ? '#14141C' : '#fff' }}>
+      style={{ backgroundColor: colors.background }}>
       {/* 个人信息 */}
       <Flex
         className="justify-between items-center px-6 pb-5"
@@ -95,19 +96,18 @@ const App = () => {
               <>
                 <Text
                   className="text-[22px] font-semibold mb-0.5"
-                  style={{ color: dark ? '#E5E7EB' : '#0F172A' }}>
-                  {store.uInfo.username}
-                </Text>
+                  style={{ color: colors.text }}>
+                  {store.uInfo.username}</Text>
                 <Text
                   className="text-[13px]"
-                  style={{ color: dark ? '#8A8A98' : '#94A3B8' }}>
+                  style={{ color: colors.text3 }}>
                   {store.uInfo.phone || '请绑定手机号'}
                 </Text>
               </>
             ) : (
               <Text
                 className="text-[22px] font-semibold"
-                style={{ color: dark ? '#E5E7EB' : '#0F172A' }}>
+                style={{ color: colors.text }}>
                 请登录
               </Text>
             )}
@@ -121,7 +121,7 @@ const App = () => {
             <Icon
               name="chevron-forward"
               size={20}
-              color={dark ? '#6B7280' : '#94A3B8'}
+              color={colors.text3}
             />
           </TouchableOpacity>
         )}
@@ -141,16 +141,16 @@ const App = () => {
           style={
             isActive
               ? {
-                  backgroundColor: dark ? '#1C1A14' : '#FFFBF0',
+                  backgroundColor: isDark ? '#1C1A14' : '#FFFBF0',
                   borderWidth: 0,
-                  borderColor: dark
+                  borderColor: isDark
                     ? 'rgba(212,164,74,0.25)'
                     : 'rgba(212,164,74,0.35)',
                 }
               : {
-                  backgroundColor: dark ? '#1C1C26' : '#F5F7FB',
+                  backgroundColor: isDark ? colors.border : colors.muted,
                   borderWidth: 0,
-                  borderColor: dark ? '#2A2A3A' : '#E5E7EB',
+                  borderColor: isDark ? '#2A2A3A' : '#E5E7EB',
                 }
           }>
           <View className="flex-row items-center justify-between">
@@ -160,7 +160,7 @@ const App = () => {
                 <Text
                   className="text-base font-semibold"
                   style={{
-                    color: isActive ? '#D4A44A' : dark ? '#8A8A98' : '#64748B',
+                    color: isActive ? '#D4A44A' : isDark ? '#8A8A98' : '#64748B',
                   }}>
                   {isActive ? 'Pro 会员' : 'Pro 会员'}
                 </Text>
@@ -188,7 +188,7 @@ const App = () => {
               <View className="gap-0.5">
                 <Text
                   className="text-[11px]"
-                  style={{ color: dark ? '#7A7060' : '#B8A080' }}>
+                  style={{ color: isDark ? '#7A7060' : '#B8A080' }}>
                   订阅来源
                 </Text>
                 <Text
@@ -200,7 +200,7 @@ const App = () => {
               <View className="gap-0.5">
                 <Text
                   className="text-[11px]"
-                  style={{ color: dark ? '#7A7060' : '#B8A080' }}>
+                  style={{ color: isDark ? '#7A7060' : '#B8A080' }}>
                   到期时间
                 </Text>
                 <Text
@@ -213,7 +213,7 @@ const App = () => {
                 <View className="gap-0.5">
                   <Text
                     className="text-[11px]"
-                    style={{ color: dark ? '#7A7060' : '#B8A080' }}>
+                    style={{ color: isDark ? '#7A7060' : '#B8A080' }}>
                     状态
                   </Text>
                   <Text

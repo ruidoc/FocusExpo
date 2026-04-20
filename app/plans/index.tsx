@@ -107,16 +107,15 @@ const App = () => {
             <TouchableOpacity
               key={option.key}
               activeOpacity={0.7}
-              className={`px-3.5 py-1.5 rounded-2xl border ${
-                active
-                  ? 'bg-[#303044] border-[#45455C]'
-                  : 'bg-card border-[#2E2E3A]'
-              } ${index > 0 ? 'ml-2' : ''}`}
+              className={`px-3.5 py-1.5 rounded-2xl border ${index > 0 ? 'ml-2' : ''}`}
+              style={{
+                backgroundColor: active ? colors.ring : colors.card,
+                borderColor: active ? colors.border : colors.border,
+              }}
               onPress={() => handleFilterChange(option.key)}>
               <Text
-                className={`text-[13px] ${
-                  active ? 'text-white font-semibold' : 'text-[#999]'
-                }`}>
+                className={`text-[13px] ${active ? 'font-semibold' : ''}`}
+                style={{ color: active ? colors.text : colors.text3 }}>
                 {option.label}
               </Text>
             </TouchableOpacity>
