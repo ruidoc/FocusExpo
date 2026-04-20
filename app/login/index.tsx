@@ -14,7 +14,7 @@ const CODE_COOLDOWN = 60;
 
 const App = () => {
   const store = useUserStore();
-  const { colors, isDark } = useCustomTheme();
+  const { colors } = useCustomTheme();
   const [loading, setLoading] = useState(false);
   const [agree, setAgree] = useState(false);
   const [isbind, setIsbind] = useState(false);

@@ -166,7 +166,7 @@ const App = () => {
                 ))}
                 <Text
                   className="mt-2 text-sm leading-6"
-                  style={{ color: colors.notification || '#ef4444' }}>
+                  style={{ color: colors.danger }}>
                   注销后数据不可恢复，请谨慎操作。
                 </Text>
               </View>
