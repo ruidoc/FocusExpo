@@ -118,9 +118,13 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
 
   // 灰色系，替代原蓝色
   const mutedColor = colors.text3;
-  const mutedBg = isDark ? 'rgba(156, 163, 175, 0.15)' : 'rgba(156, 163, 175, 0.12)';
+  const mutedBg = isDark
+    ? 'rgba(156, 163, 175, 0.15)'
+    : 'rgba(156, 163, 175, 0.12)';
   // 当前待完成步骤的强调色
-  const highlightBg = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.06)';
+  const highlightBg = isDark
+    ? 'rgba(255, 255, 255, 0.12)'
+    : 'rgba(0, 0, 0, 0.06)';
   const actionBlue = '#2575FC';
 
   const isStep1Current = !step1Completed;
@@ -152,7 +156,9 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
         className="w-full p-4 rounded-3xl mb-3 flex-row items-center"
         style={{
           backgroundColor: isCompleted
-            ? (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)')
+            ? isDark
+              ? 'rgba(255, 255, 255, 0.05)'
+              : 'rgba(0, 0, 0, 0.03)'
             : isCurrent
               ? highlightBg
               : mutedBg,
@@ -161,9 +167,13 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
           className="w-9 h-9 rounded-full items-center justify-center mr-4"
           style={{
             backgroundColor: isCompleted
-              ? (isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)')
+              ? isDark
+                ? 'rgba(255, 255, 255, 0.08)'
+                : 'rgba(0, 0, 0, 0.05)'
               : isCurrent
-                ? (isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)')
+                ? isDark
+                  ? 'rgba(255, 255, 255, 0.2)'
+                  : 'rgba(0, 0, 0, 0.1)'
                 : 'rgba(156, 163, 175, 0.2)',
           }}>
           {isCompleted ? (
@@ -178,7 +188,9 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
         </View>
 
         <View className="flex-1">
-          <Text className="text-lg font-semibold mb-0.5" style={{ color: colors.text }}>
+          <Text
+            className="text-lg font-semibold mb-0.5"
+            style={{ color: colors.text }}>
             {title}
           </Text>
           {isCompleted ? (
@@ -187,9 +199,7 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
             <Text
               className="text-sm"
               style={{
-                color: isCurrent
-                  ? colors.text2
-                  : colors.text3,
+                color: isCurrent ? colors.text2 : colors.text3,
               }}>
               {desc}
             </Text>
@@ -214,10 +224,14 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
       <View className="flex-1 px-6">
         {/* 标题 */}
         <View className="mb-9">
-          <Text className="text-2xl font-bold mb-2 tracking-tight text-center" style={{ color: colors.text }}>
+          <Text
+            className="text-2xl font-bold mb-2 tracking-tight text-center"
+            style={{ color: colors.text }}>
             准备屏蔽{getSceneLabel()}应用
           </Text>
-          <Text className="text-base leading-6 text-center" style={{ color: colors.text2 }}>
+          <Text
+            className="text-base leading-6 text-center"
+            style={{ color: colors.text2 }}>
             设置权限并选择应用，只需两步
           </Text>
         </View>
@@ -238,7 +252,9 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
         {/* 隐私说明 - 仅在 Step 1 未完成时显示 */}
         {!step1Completed && (
           <View className="mx-1 mb-6 px-1">
-            <Text className="text-sm font-medium mb-3" style={{ color: colors.text2 }}>
+            <Text
+              className="text-sm font-medium mb-3"
+              style={{ color: colors.text2 }}>
               为什么需要这个权限？
             </Text>
 
@@ -251,7 +267,9 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
                   style={{ marginTop: 2, marginRight: 8 }}
                 />
                 <View className="flex-1">
-                  <Text className="text-xs font-medium mb-0.5" style={{ color: colors.text2 }}>
+                  <Text
+                    className="text-xs font-medium mb-0.5"
+                    style={{ color: colors.text2 }}>
                     实现系统级屏蔽
                   </Text>
                   <Text className="text-xs" style={{ color: colors.text3 }}>
@@ -268,7 +286,9 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
                   style={{ marginTop: 2, marginRight: 8 }}
                 />
                 <View className="flex-1">
-                  <Text className="text-xs font-medium mb-0.5" style={{ color: colors.text2 }}>
+                  <Text
+                    className="text-xs font-medium mb-0.5"
+                    style={{ color: colors.text2 }}>
                     我们看不到你的数据
                   </Text>
                   <Text className="text-xs" style={{ color: colors.text3 }}>
@@ -285,7 +305,9 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
                   style={{ marginTop: 2, marginRight: 8 }}
                 />
                 <View className="flex-1">
-                  <Text className="text-xs font-medium mb-0.5" style={{ color: colors.text2 }}>
+                  <Text
+                    className="text-xs font-medium mb-0.5"
+                    style={{ color: colors.text2 }}>
                     你的隐私是安全的
                   </Text>
                   <Text className="text-xs" style={{ color: colors.text3 }}>
@@ -326,9 +348,11 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
       </View>
 
       {/* 底部按钮 */}
-      <View className="px-6 pb-8">
+      <View className="px-10 pb-8">
         {step1Completed && step2Completed && (
-          <Text className="text-center text-xs mb-3" style={{ color: colors.text3 }}>
+          <Text
+            className="text-center text-xs mb-3"
+            style={{ color: colors.text3 }}>
             接下来，将进入 2 分钟快速体验
           </Text>
         )}

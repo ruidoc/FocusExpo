@@ -1,6 +1,6 @@
 import { Button, Toast } from '@/components/ui';
-import { useState } from 'react';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { useState } from 'react';
 import { Platform } from 'react-native';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
   type?: 'primary' | 'ghost' | 'custom';
   onSuccess: (data: any) => void;
   onError?: (error: any) => void;
+  onDisabledPress?: (continueLogin: () => void) => void;
 }
 
 const App = (props: Props) => {
@@ -19,11 +20,7 @@ const App = (props: Props) => {
     return null;
   }
 
-  const onButtonClicked = async () => {
-    if (props.disabled) {
-      return Toast('请阅读并勾选下方隐私政策');
-    }
-
+  const doAppleLogin = async () => {
     try {
       // 检查 Apple 登录是否可用
       const isAvailable = await AppleAuthentication.isAvailableAsync();
@@ -79,12 +76,28 @@ const App = (props: Props) => {
     }
   };
 
+  const onButtonClicked = () => {
+    if (props.disabled) {
+      if (props.onDisabledPress) {
+        props.onDisabledPress(() => {
+          void doAppleLogin();
+        });
+        return;
+      }
+
+      Toast('请阅读并勾选下方隐私政策');
+      return;
+    }
+
+    void doAppleLogin();
+  };
+
   return (
     <Button
       type={props.type || 'primary'}
       loading={loading}
       loadingText="登录中..."
-      style={{ marginBottom: 15 }}
+      style={{ marginBottom: 10 }}
       onPress={onButtonClicked}>
       {props.label || 'Apple 登录'}
     </Button>

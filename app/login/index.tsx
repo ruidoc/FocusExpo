@@ -272,7 +272,7 @@ const App = () => {
 
         {!isbind && (
           <View className="px-6 pb-8">
-            <Privicy onChange={setAgree} />
+            <Privicy agree={agree} onChange={setAgree} />
           </View>
         )}
       </View>

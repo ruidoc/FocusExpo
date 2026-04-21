@@ -127,7 +127,7 @@ const LoginPrompt = ({ onComplete }: LoginPromptProps) => {
 
       <View className="px-6 pb-6">
         <View className="mb-6">
-          <Privicy onChange={setAgree} />
+          <Privicy agree={agree} onChange={setAgree} />
         </View>
         <Wechat type="custom" disabled={!agree} onSuccess={loginResult} />
 

@@ -163,7 +163,7 @@ const App = () => {
             </TouchableOpacity>
           </Flex>
         </View>
-        <Privicy onChange={setAgree} />
+        <Privicy agree={agree} onChange={setAgree} />
       </LinearGradient>
     </Keyboard>
   );

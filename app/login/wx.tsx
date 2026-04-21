@@ -80,7 +80,7 @@ const App = () => {
             className="mt-2"
           /> */}
         </View>
-        <Privicy onChange={setAgree} />
+        <Privicy agree={agree} onChange={setAgree} />
       </Flex>
     </LinearGradient>
   );

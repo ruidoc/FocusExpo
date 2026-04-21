@@ -189,10 +189,14 @@ const QuickExperience = ({
         <View className="flex-1 px-6 items-center pt-12">
           {/* 标题区 */}
           <View className="mb-9">
-            <Text className="text-2xl font-bold mb-2 text-center tracking-tight" style={{ color: colors.text }}>
+            <Text
+              className="text-2xl font-bold mb-2 text-center tracking-tight"
+              style={{ color: colors.text }}>
               一切准备就绪
             </Text>
-            <Text className="text-base text-center leading-6" style={{ color: colors.text2 }}>
+            <Text
+              className="text-base text-center leading-6"
+              style={{ color: colors.text2 }}>
               {copy.readySubtitle}
             </Text>
           </View>
@@ -201,7 +205,9 @@ const QuickExperience = ({
           <View
             className="w-full p-5 rounded-3xl items-center"
             style={{
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+              backgroundColor: isDark
+                ? 'rgba(255, 255, 255, 0.05)'
+                : 'rgba(0, 0, 0, 0.04)',
             }}>
             <Text className="text-[15px] mb-4" style={{ color: colors.text2 }}>
               即将锁定的应用
@@ -218,8 +224,14 @@ const QuickExperience = ({
               {astore.ios_selected_apps.length > 9 && (
                 <View
                   className="w-[50px] h-[50px] rounded-xl items-center justify-center"
-                  style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)' }}>
-                  <Text className="font-bold text-sm" style={{ color: colors.text2 }}>
+                  style={{
+                    backgroundColor: isDark
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : 'rgba(0, 0, 0, 0.06)',
+                  }}>
+                  <Text
+                    className="font-bold text-sm"
+                    style={{ color: colors.text2 }}>
                     +{astore.ios_selected_apps.length - 9}
                   </Text>
                 </View>
@@ -228,7 +240,11 @@ const QuickExperience = ({
 
             <View
               className="w-[50%] h-px mb-3"
-              style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)' }}
+              style={{
+                backgroundColor: isDark
+                  ? 'rgba(255, 255, 255, 0.06)'
+                  : 'rgba(0, 0, 0, 0.04)',
+              }}
             />
 
             <Text className="text-[14px]" style={{ color: colors.text3 }}>
@@ -238,7 +254,7 @@ const QuickExperience = ({
         </View>
 
         {/* 底部按钮 */}
-        <View className="px-6 pb-8">
+        <View className="px-10 pb-8">
           <Button
             text="立即锁定"
             onPress={handleStart}
@@ -259,7 +275,9 @@ const QuickExperience = ({
         {/* 庆祝区 */}
         <View className="items-center pt-12 mb-2">
           <Icon name="checkmark-circle-outline" size={100} color="#10b981" />
-          <Text className="text-2xl mt-4 font-bold mb-2 text-center tracking-tight" style={{ color: colors.text }}>
+          <Text
+            className="text-2xl mt-4 font-bold mb-2 text-center tracking-tight"
+            style={{ color: colors.text }}>
             🎉 恭喜，应用锁定成功！
           </Text>
         </View>
@@ -276,8 +294,14 @@ const QuickExperience = ({
           {astore.ios_selected_apps.length > 6 && (
             <View
               className="w-11 h-11 rounded-xl items-center justify-center"
-              style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)' }}>
-              <Text className="font-bold text-xs" style={{ color: colors.text2 }}>
+              style={{
+                backgroundColor: isDark
+                  ? 'rgba(255, 255, 255, 0.08)'
+                  : 'rgba(0, 0, 0, 0.06)',
+              }}>
+              <Text
+                className="font-bold text-xs"
+                style={{ color: colors.text2 }}>
                 +{astore.ios_selected_apps.length - 6}
               </Text>
             </View>
@@ -291,7 +315,9 @@ const QuickExperience = ({
             style={{ color: colors.text }}>
             {remaining > 0 ? formatTime(remaining) : '0:00'}
           </Text>
-          <Text className="text-base text-center" style={{ color: colors.text2 }}>
+          <Text
+            className="text-base text-center"
+            style={{ color: colors.text2 }}>
             {remaining > 0 ? '倒计时结束后，自动解锁' : '已解锁'}
           </Text>
         </View>
@@ -300,7 +326,9 @@ const QuickExperience = ({
         <View
           className="px-5 py-4 rounded-2xl w-full"
           style={{
-            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+            backgroundColor: isDark
+              ? 'rgba(255, 255, 255, 0.05)'
+              : 'rgba(0, 0, 0, 0.04)',
           }}>
           <View className="flex-row items-center mb-3">
             <Icon
@@ -309,13 +337,17 @@ const QuickExperience = ({
               color={colors.primary}
               style={{ marginRight: 8 }}
             />
-            <Text className="text-sm font-medium" style={{ color: colors.text }}>
+            <Text
+              className="text-sm font-medium"
+              style={{ color: colors.text }}>
               如何验证锁定效果？
             </Text>
           </View>
 
           <View className="gap-y-1.5 pl-5">
-            <Text className="text-xs" style={{ color: colors.text2 }}>1. 退出这个页面</Text>
+            <Text className="text-xs" style={{ color: colors.text2 }}>
+              1. 退出这个页面
+            </Text>
             <Text className="text-xs" style={{ color: colors.text2 }}>
               2. 找到被锁定的应用，尝试打开
             </Text>

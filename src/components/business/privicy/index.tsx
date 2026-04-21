@@ -34,7 +34,13 @@ const Privicy = (props: Props) => {
         onPress={() => changeStage(!agree)}
         activeColor={colors.primary}
       />
-      <Text className="ml-1.5 text-white/70 text-sm">已阅读并同意</Text>
+      <Text
+        className="mx-1 text-sm"
+        style={{
+          color: colors.text2,
+        }}>
+        已阅读并同意
+      </Text>
       <Pressable onPress={handleLinkPress}>
         <Text style={{ color: colors.primary }} className="text-sm">
           《隐私政策》

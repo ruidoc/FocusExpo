@@ -1,7 +1,7 @@
 import { Apple, Privicy } from '@/components/business';
 import { Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
-import { useHomeStore, useUserStore } from '@/stores';
+import { useHomeStore, usePlanStore, useUserStore } from '@/stores';
 import {
   markOnboardingCompleted,
   trackLoginFailed,
@@ -11,7 +11,7 @@ import {
 import Icon from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 
 interface ValueGuideProps {
   problem: 'video' | 'game' | 'study' | 'other' | null;
@@ -88,20 +88,31 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
     );
   };
 
-  const completeWithLogin = () => {
+  const completeWithLogin = async () => {
     markOnboardingCompleted();
     trackOnboardingCompleted({
       with_login: true,
       entry_source: 'onboarding',
       screen_name: 'onboarding_value_guide',
     });
-    router.replace({
-      pathname: '/plans/target',
-      params: {
-        from: 'onboarding',
-        problem: problem || 'other',
-      },
-    });
+
+    // 检查用户是否已有契约，有则跳过 target 直接去首页
+    try {
+      await usePlanStore.getState().getPlans();
+    } catch {}
+    const hasPlans = usePlanStore.getState().cus_plans.length > 0;
+
+    if (hasPlans) {
+      router.replace('/(tabs)');
+    } else {
+      router.replace({
+        pathname: '/plans/target',
+        params: {
+          from: 'onboarding',
+          problem: problem || 'other',
+        },
+      });
+    }
     onComplete();
   };
 
@@ -116,17 +127,23 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
       <View className="flex-1 px-6">
         {/* 顶部成功提示 */}
         <View className="items-center mb-10 pt-2 gap-2">
-          <Text className="text-[26px] font-bold text-center tracking-tight" style={{ color: colors.text }}>
+          <Text
+            className="text-[26px] font-bold text-center tracking-tight"
+            style={{ color: colors.text }}>
             一次锁定不够
           </Text>
-          <Text className="text-2xl font-bold text-center tracking-tight" style={{ color: colors.text }}>
+          <Text
+            className="text-2xl font-bold text-center tracking-tight"
+            style={{ color: colors.text }}>
             你需要契约来约束自己！
           </Text>
         </View>
 
         {/* 问题 → 解决方案 */}
         <View className="mb-5">
-          <Text className="text-base mb-1 leading-6" style={{ color: colors.text2 }}>
+          <Text
+            className="text-base mb-1 leading-6"
+            style={{ color: colors.text2 }}>
             主动性专注，消耗意志力，很难长期坚持下去
           </Text>
           <Text className="text-base leading-7" style={{ color: colors.text2 }}>
@@ -141,26 +158,38 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
         <View
           className="rounded-3xl p-5 mb-5"
           style={{
-            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+            backgroundColor: isDark
+              ? 'rgba(255, 255, 255, 0.05)'
+              : 'rgba(0, 0, 0, 0.04)',
           }}>
           <View className="flex-row items-center mb-4 gap-2">
             <Icon name="alarm-outline" size={22} color={accentColor} />
-            <Text className="text-lg font-semibold" style={{ color: colors.text }}>专注契约</Text>
+            <Text
+              className="text-lg font-semibold"
+              style={{ color: colors.text }}>
+              专注契约
+            </Text>
           </View>
 
           <View className="gap-y-3">
             {scheduleItems.map((item, index) => (
               <View key={index} className="flex-row items-center">
-                <Text className="text-base font-medium w-14 pl-2" style={{ color: colors.text2 }}>
+                <Text
+                  className="text-base font-medium w-14 pl-2"
+                  style={{ color: colors.text2 }}>
                   {item.time}
                 </Text>
                 <Icon
                   name="chevron-forward"
                   size={16}
-                  color={isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)'}
+                  color={
+                    isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.2)'
+                  }
                   style={{ marginRight: 12 }}
                 />
-                <Text className="text-base flex-1" style={{ color: colors.text }}>
+                <Text
+                  className="text-base flex-1"
+                  style={{ color: colors.text }}>
                   {item.label}
                 </Text>
               </View>
@@ -193,15 +222,27 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
       </View>
 
       {/* 底部操作区 */}
-      <View className="flex px-6 pb-2">
+      <View className="flex px-10 pb-2">
         <Apple
           type="custom"
           disabled={!agree}
+          onDisabledPress={doLogin => {
+            Alert.alert('隐私协议', '已阅读并同意隐私协议和用户协议', [
+              { text: '取消', style: 'cancel' },
+              {
+                text: '同意',
+                onPress: () => {
+                  setAgree(true);
+                  doLogin();
+                },
+              },
+            ]);
+          }}
           onSuccess={appleLoginResult}
           label="登录后创建契约"
         />
         <View className="flex-row items-center justify-center">
-          <Privicy onChange={setAgree} />
+          <Privicy agree={agree} onChange={setAgree} />
         </View>
       </View>
     </View>
