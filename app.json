@@ -2,7 +2,7 @@
   "expo": {
     "name": "专注契约",
     "slug": "focusvow",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./src/assets/images/logo.png",
     "scheme": [
@@ -109,7 +109,7 @@
       }
     },
     "owner": "freeshore",
-    "runtimeVersion": "1.0.2",
+    "runtimeVersion": "1.0.3",
     "updates": {
       "url": "https://u.expo.dev/17655fd0-b6e6-4f12-b988-e23ef2f0c593"
     }
