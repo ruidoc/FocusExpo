@@ -17,6 +17,8 @@ export const USER_ACTIVATION_KEYS = {
   QUICK_START_HINT_DISMISSED: 'quick_start_hint_dismissed', // 是否关闭过快速专注提示
 };
 
+type OnboardingProblem = 'video' | 'game' | 'study' | 'other';
+
 /**
  * 用户激活状态类型
  */
@@ -161,7 +163,114 @@ export const resetUserActivation = () => {
   storage.delete(USER_ACTIVATION_KEYS.FIRST_FOCUS_DATE);
   storage.delete(USER_ACTIVATION_KEYS.SHOW_CELEBRATION);
   storage.delete(USER_ACTIVATION_KEYS.QUICK_START_HINT_DISMISSED);
+  clearOnboardingTargetPendingState();
+  clearOnboardingOptionalTargetState();
   console.log('[UserActivation] State reset');
+};
+
+/**
+ * 登录后但尚未创建首个自动契约时，用于冷启动回到 target 引导。
+ */
+const ONBOARDING_TARGET_PENDING_KEY = 'onboarding_target_pending_state';
+const ONBOARDING_OPTIONAL_TARGET_KEY = 'onboarding_optional_target_state';
+const MAX_TARGET_PENDING_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 天
+
+export type OnboardingTargetPendingState = {
+  problem: OnboardingProblem;
+  updated_at: number;
+};
+
+export type OnboardingOptionalTargetState = {
+  problem: OnboardingProblem;
+  completed_tasks: string;
+  updated_at: number;
+};
+
+function isValidOnboardingTargetPendingState(
+  data: OnboardingTargetPendingState | undefined,
+): data is OnboardingTargetPendingState {
+  if (!data) return false;
+  if (
+    data.problem !== 'video' &&
+    data.problem !== 'game' &&
+    data.problem !== 'study' &&
+    data.problem !== 'other'
+  ) {
+    return false;
+  }
+  if (typeof data.updated_at !== 'number') return false;
+  if (Date.now() - data.updated_at > MAX_TARGET_PENDING_AGE_MS) return false;
+  return true;
+}
+
+export const setOnboardingTargetPendingState = (problem: OnboardingProblem) => {
+  storage.setObject(ONBOARDING_TARGET_PENDING_KEY, {
+    problem,
+    updated_at: Date.now(),
+  });
+};
+
+export const getOnboardingTargetPendingState = ():
+  | OnboardingTargetPendingState
+  | undefined => {
+  const data = storage.getObject<OnboardingTargetPendingState>(
+    ONBOARDING_TARGET_PENDING_KEY,
+  );
+  if (!isValidOnboardingTargetPendingState(data)) {
+    clearOnboardingTargetPendingState();
+    return undefined;
+  }
+  return data;
+};
+
+export const clearOnboardingTargetPendingState = () => {
+  storage.delete(ONBOARDING_TARGET_PENDING_KEY);
+};
+
+function isValidOnboardingOptionalTargetState(
+  data: OnboardingOptionalTargetState | undefined,
+): data is OnboardingOptionalTargetState {
+  if (!data) return false;
+  if (
+    data.problem !== 'video' &&
+    data.problem !== 'game' &&
+    data.problem !== 'study' &&
+    data.problem !== 'other'
+  ) {
+    return false;
+  }
+  if (!data.completed_tasks) return false;
+  if (typeof data.updated_at !== 'number') return false;
+  if (Date.now() - data.updated_at > MAX_TARGET_PENDING_AGE_MS) return false;
+  return true;
+}
+
+export const setOnboardingOptionalTargetState = (input: {
+  problem: OnboardingProblem;
+  completedTasks: string;
+}) => {
+  storage.setObject(ONBOARDING_OPTIONAL_TARGET_KEY, {
+    problem: input.problem,
+    completed_tasks: input.completedTasks,
+    updated_at: Date.now(),
+  });
+};
+
+export const getOnboardingOptionalTargetState = ():
+  | OnboardingOptionalTargetState
+  | undefined => {
+  const data = storage.getObject<OnboardingOptionalTargetState>(
+    ONBOARDING_OPTIONAL_TARGET_KEY,
+  );
+  if (!isValidOnboardingOptionalTargetState(data)) {
+    clearOnboardingOptionalTargetState();
+    return undefined;
+  }
+  return data;
+};
+
+export const clearOnboardingOptionalTargetState = () => {
+  storage.delete(ONBOARDING_OPTIONAL_TARGET_KEY);
 };
 
 /**

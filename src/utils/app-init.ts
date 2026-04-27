@@ -28,18 +28,7 @@ export async function initAppData(): Promise<void> {
   console.log('[AppInit] 初始化用户状态...');
   const isLoggedIn = await ustore.init();
 
-  // 已登录：同步远程数据（验证 token + 拉取业务数据，不阻塞后续初始化）
-  if (isLoggedIn) {
-    console.log('[AppInit] 同步远程数据...');
-    ustore.syncRemoteData();
-  }
-
-  // 获取 iOS 应用列表
-  console.log('[AppInit] 获取 iOS 应用列表...');
-  astore.initIosSelectedApps();
-  await astore.getIosApps();
-
-  // 从存储中恢复计划数据
+  // 先从本地恢复计划，避免异步远程同步后又被旧缓存覆盖。
   const once_plans = storage.getString('once_plans');
   const cus_plans = storage.getString('cus_plans');
   const exit_plan_ids = storage.getString('exit_plan_ids');
@@ -57,6 +46,17 @@ export async function initAppData(): Promise<void> {
   if (paused_plan_id) {
     pstore.setPaused(paused_plan_id);
   }
+
+  // 已登录：同步远程数据（验证 token + 拉取业务数据，不阻塞后续初始化）
+  if (isLoggedIn) {
+    console.log('[AppInit] 同步远程数据...');
+    ustore.syncRemoteData();
+  }
+
+  // 获取 iOS 应用列表
+  console.log('[AppInit] 获取 iOS 应用列表...');
+  astore.initIosSelectedApps();
+  await astore.getIosApps();
 
   // 初始化 debug store
   dstore.init();

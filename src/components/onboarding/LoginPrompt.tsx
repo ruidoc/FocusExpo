@@ -105,7 +105,7 @@ const LoginPrompt = ({ onComplete }: LoginPromptProps) => {
           <FeatureItem
             icon="time-outline"
             title="自定义专注时长"
-            desc="不再局限于5分钟，自由设定"
+            desc="不再局限于2分钟，自由设定"
           />
           <FeatureItem
             icon="apps-outline"

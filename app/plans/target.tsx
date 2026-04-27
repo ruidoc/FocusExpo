@@ -1,7 +1,7 @@
 import { Page } from '@/components/business';
 import { Button } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
-import { trackEvent } from '@/utils';
+import { setOnboardingOptionalTargetState, trackEvent } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -86,6 +86,8 @@ const TargetPage = () => {
   ).length;
   const currentTask =
     completedCount < TARGET_TASKS.length ? TARGET_TASKS[completedCount] : null;
+  const canSkipCurrentTask =
+    fromOnboarding && completedCount > 0 && !!currentTask;
 
   useEffect(() => {
     if (fromOnboarding) {
@@ -130,6 +132,28 @@ const TargetPage = () => {
         appSelectHint: task.appSelectHint,
       },
     });
+  };
+
+  const enterHome = () => {
+    if (router.canDismiss()) {
+      router.dismissAll();
+    }
+    router.replace('/(tabs)');
+  };
+
+  const handleSkipOptionalTask = () => {
+    const completedTasks = Array.from(completedTaskIds).join(',');
+    trackEvent('target_optional_task_skipped', {
+      entry_source: fromOnboarding ? 'onboarding' : 'normal',
+      problem,
+      completed_count: completedCount,
+      current_task_id: currentTask?.id,
+    });
+    setOnboardingOptionalTargetState({
+      problem,
+      completedTasks,
+    });
+    enterHome();
   };
 
   return (
@@ -269,6 +293,14 @@ const TargetPage = () => {
                   onPress={() => handleCreateTask(currentTask)}
                   text={`创建第 ${completedCount + 1} 个契约`}
                 />
+                {canSkipCurrentTask && (
+                  <Text
+                    onPress={handleSkipOptionalTask}
+                    className="text-center text-sm font-medium mt-4 py-2"
+                    style={{ color: colors.text3 }}>
+                    先进入首页，稍后再加
+                  </Text>
+                )}
               </View>
             </View>
           ) : (
@@ -298,12 +330,7 @@ const TargetPage = () => {
                 </Text>
                 <Button
                   className="w-[140px]"
-                  onPress={() => {
-                    if (router.canDismiss()) {
-                      router.dismissAll();
-                    }
-                    router.replace('/(tabs)');
-                  }}
+                  onPress={enterHome}
                   text="进入首页"
                 />
               </View>

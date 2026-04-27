@@ -13,9 +13,14 @@ import staticData from '@/config/static.json';
 import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useBenefitStore, usePlanStore } from '@/stores';
 import {
+  clearOnboardingOptionalTargetState,
+  clearOnboardingTargetPendingState,
   getCurrentMinute,
+  markOnboardingCompleted,
+  markPlanCreated,
   parseRepeat,
   trackEvent,
+  trackOnboardingCompleted,
   trackPlanCreated,
 } from '@/utils';
 import { useFocusEffect } from '@react-navigation/native';
@@ -55,6 +60,7 @@ const App = () => {
   const targetProblem = params.problem as string | undefined;
   const appSelectHint = params.appSelectHint as string | undefined;
   const completedTasksParam = params.completedTasks as string | undefined;
+  const afterCreate = params.afterCreate as string | undefined;
 
   const [title, setTitle] = useState(() => {
     // 预设模式：使用预设名称
@@ -511,6 +517,7 @@ const App = () => {
               entry_source: entrySource,
               screen_name: 'plans_add',
             });
+            markPlanCreated();
             trackSubmitFinished('success');
 
             if (fromTarget) {
@@ -539,14 +546,40 @@ const App = () => {
   };
 
   const navigateToTarget = () => {
-    const mergedCompletedTasks = Array.from(
+    const mergedCompletedTaskList = Array.from(
       new Set(
         [completedTasksParam, targetTaskId]
           .flatMap(item => item?.split(',') || [])
           .map(item => item.trim())
           .filter(Boolean),
       ),
-    ).join(',');
+    );
+    const mergedCompletedTasks = mergedCompletedTaskList.join(',');
+    const isFirstTargetCompletion =
+      mergedCompletedTaskList.length >= 1 && !completedTasksParam;
+
+    if (isFirstTargetCompletion) {
+      markOnboardingCompleted();
+      clearOnboardingTargetPendingState();
+      trackOnboardingCompleted({
+        with_login: true,
+        entry_source: 'onboarding',
+        screen_name: 'plans_add',
+        completed_target_count: mergedCompletedTaskList.length,
+      });
+    }
+
+    if (mergedCompletedTaskList.length >= 2) {
+      clearOnboardingOptionalTargetState();
+    }
+
+    if (afterCreate === 'home') {
+      if (router.canDismiss()) {
+        router.dismissAll();
+      }
+      router.replace('/(tabs)');
+      return;
+    }
 
     router.replace({
       pathname: '/plans/target',

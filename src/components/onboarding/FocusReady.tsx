@@ -7,6 +7,8 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Platform, Text, View } from 'react-native';
 
+const FOCUS_DURATION = 2;
+
 interface FocusReadyProps {
   onNext: () => void;
   setSelectedAppName: (name: string) => void;
@@ -30,15 +32,15 @@ const FocusReady = ({ onNext, setSelectedAppName }: FocusReadyProps) => {
       start: now.format('HH:mm'),
       start_min: cur_minute,
       start_sec: cur_secend,
-      end: now.add(5, 'minute').format('HH:mm'),
-      end_min: cur_minute + 5,
-      end_sec: cur_secend + 5 * 60,
+      end: now.add(FOCUS_DURATION, 'minute').format('HH:mm'),
+      end_min: cur_minute + FOCUS_DURATION,
+      end_sec: cur_secend + FOCUS_DURATION * 60,
       repeat: 'once',
       mode: 'shield',
     });
 
     if (Platform.OS === 'ios') {
-      await startAppLimits(5, newId);
+      await startAppLimits(FOCUS_DURATION, newId);
       // Set first selected app name for display
       if (astore.ios_selected_apps.length > 0) {
         setSelectedAppName(astore.ios_selected_apps[0].name || '');
@@ -61,7 +63,7 @@ const FocusReady = ({ onNext, setSelectedAppName }: FocusReadyProps) => {
           准备开启
         </Text>
         <Text className="text-lg text-muted-foreground text-center mb-12 px-4">
-          接下来 <Text className="text-primary font-bold">5 分钟</Text>，{'\n'}
+          接下来 <Text className="text-primary font-bold">2 分钟</Text>，{'\n'}
           这些应用将被限制使用
         </Text>
 
@@ -87,7 +89,7 @@ const FocusReady = ({ onNext, setSelectedAppName }: FocusReadyProps) => {
 
       <View className="px-6 pb-8">
         <Button
-          text="开始 5 分钟专注"
+          text="开始 2 分钟专注"
           onPress={handleBlock}
           loading={loading}
           className="w-full rounded-2xl h-14"

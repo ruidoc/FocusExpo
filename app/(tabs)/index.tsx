@@ -154,9 +154,7 @@ const App = () => {
         <HomeHeader />
 
         {/* 中央时间流动组件 */}
-        <View className="flex-1 items-center mt-[60px] mb-[30px]">
-          {renderMainContent()}
-        </View>
+        <View className="flex-1 items-center">{renderMainContent()}</View>
       </ScrollView>
       {/* 通知权限提醒 */}
       {!pmstore.pm_notify && (

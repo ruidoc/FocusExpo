@@ -4,7 +4,9 @@ import { useCustomTheme } from '@/config/theme';
 import { useHomeStore, usePlanStore, useUserStore } from '@/stores';
 import {
   clearOnboardingRecoveryState,
+  clearOnboardingTargetPendingState,
   markOnboardingCompleted,
+  setOnboardingTargetPendingState,
   trackLoginFailed,
   trackLoginStarted,
   trackOnboardingCompleted,
@@ -91,12 +93,6 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
 
   const completeWithLogin = async () => {
     clearOnboardingRecoveryState();
-    markOnboardingCompleted();
-    trackOnboardingCompleted({
-      with_login: true,
-      entry_source: 'onboarding',
-      screen_name: 'onboarding_value_guide',
-    });
 
     // 检查用户是否已有契约，有则跳过 target 直接去首页
     try {
@@ -105,8 +101,17 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
     const hasPlans = usePlanStore.getState().cus_plans.length > 0;
 
     if (hasPlans) {
+      clearOnboardingTargetPendingState();
+      markOnboardingCompleted();
+      trackOnboardingCompleted({
+        with_login: true,
+        entry_source: 'onboarding',
+        screen_name: 'onboarding_value_guide',
+        skipped_target: true,
+      });
       router.replace('/(tabs)');
     } else {
+      setOnboardingTargetPendingState(problem || 'other');
       router.replace({
         pathname: '/plans/target',
         params: {

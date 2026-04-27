@@ -140,7 +140,7 @@ const FocusButton = () => {
 
   return (
     <>
-      <Flex className="justify-center">
+      <Flex className="justify-center mt-[12%]">
         <TimeFlow />
       </Flex>
       <Flex className="justify-center mt-[30px] mb-[50px]">

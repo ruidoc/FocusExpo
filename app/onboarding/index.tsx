@@ -19,7 +19,7 @@ export type ProblemType = 'video' | 'game' | 'study' | 'other' | null;
  * Plan B+ Onboarding 流程（4步）
  * 1. GoalSelect - 用户画像收集
  * 2. PermissionSetup - 权限授权 + 选择应用
- * 3. QuickExperience - 5分钟专注体验
+ * 3. QuickExperience - 2分钟专注体验
  * 4. ValueGuide - 价值引导 + 登录
  */
 const TOTAL_STEPS = 4;

@@ -87,6 +87,41 @@ const PlanStore = combine(
       (get() as any).resetPlan();
     },
 
+    upsertCusPlan: (plan: any) => {
+      const normalizedPlan = {
+        ...plan,
+        repeat: parseRepeat(plan.repeat),
+      };
+      const nextPlans = [
+        normalizedPlan,
+        ...get().cus_plans.filter(p => p.id !== normalizedPlan.id),
+      ];
+
+      set({ cus_plans: nextPlans });
+      storage.set('cus_plans', JSON.stringify(nextPlans));
+
+      const today = dayjs();
+      const repeat = parseRepeat(normalizedPlan.repeat);
+      const startsTodayOrEarlier =
+        !normalizedPlan.start_date ||
+        !today.isBefore(dayjs(normalizedPlan.start_date), 'day');
+      const endsTodayOrLater =
+        !normalizedPlan.end_date ||
+        !today.isAfter(dayjs(normalizedPlan.end_date), 'day');
+      const repeatsToday = Array.isArray(repeat) && repeat.includes(today.day());
+      const isTodayPlan = startsTodayOrEarlier && endsTodayOrLater && repeatsToday;
+      const todayWithoutCurrent = get().today_plans.filter(
+        p => p.id !== normalizedPlan.id,
+      );
+
+      set({
+        today_plans: isTodayPlan
+          ? [normalizedPlan, ...todayWithoutCurrent]
+          : todayWithoutCurrent,
+      });
+      (get() as any).resetPlan();
+    },
+
     setOncePlans: (plans: any[]) => {
       set({ once_plans: plans });
       storage.set('once_plans', JSON.stringify(plans));
@@ -272,6 +307,7 @@ const PlanStore = combine(
         form_data.repeat = form_data.repeat.join(',');
         let res: HttpRes = await http.post('/plan/add', form_data);
         if (res.statusCode === 200) {
+          (get() as any).upsertCusPlan(res.data);
           fun(res);
           (get() as any).updateIOSPlan(res.data);
           (get() as any).getPlans();
@@ -308,6 +344,7 @@ const PlanStore = combine(
         form_data.repeat = form_data.repeat.join(',');
         let res: HttpRes = await http.put(`/plan/edit/${id}`, form_data);
         if (res.statusCode === 200) {
+          (get() as any).upsertCusPlan({ ...form_data, id });
           fun(res);
           (get() as any).updateIOSPlan(form_data);
           (get() as any).getPlans();
@@ -359,6 +396,7 @@ const PlanStore = combine(
             repeat: parseRepeat(r.repeat),
           }));
           set({ today_plans: plans });
+          (get() as any).resetPlan();
         }
       } catch (error) {
         console.log(error);
