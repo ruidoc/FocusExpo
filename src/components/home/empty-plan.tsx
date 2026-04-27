@@ -25,6 +25,17 @@ interface RecommendationCardProps {
   onClose: () => void;
 }
 
+type HomeActionType = 'create-plan' | 'quick-start' | 'view-plans';
+
+interface HomeAction {
+  title: string;
+  desc: string;
+  primaryText: string;
+  primaryAction: HomeActionType;
+  secondaryText?: string;
+  secondaryAction?: HomeActionType;
+}
+
 const RecommendationCard = ({
   title,
   desc,
@@ -109,9 +120,11 @@ const EmptyPlan = ({ onQuickStartLayout }: EmptyPlanProps) => {
 
   const nextPlan = pstore.next_plan;
   const gap = nextPlan ? nextPlan.start_min - nowMinute : 0;
+  const todayPlanCount = pstore.today_plans.length;
   const remainingMinutes = bstore.day_duration - bstore.today_used;
   const isQuotaExhausted =
     !bstore.is_subscribed && bstore.day_duration > 0 && remainingMinutes <= 0;
+  const isNextPlanSoon = !!nextPlan && gap <= 60;
   const optionalSleepTask = {
     id: 'sleep',
     title: '一周不熬夜玩手机',
@@ -171,34 +184,92 @@ const EmptyPlan = ({ onQuickStartLayout }: EmptyPlanProps) => {
     setOptionalTarget(undefined);
   };
 
+  const homeAction: HomeAction = (() => {
+    if (isQuotaExhausted) {
+      return {
+        title: '今天的专注额度已用完',
+        desc: '先保留节奏，明天继续让契约自动执行',
+        primaryText: '查看我的契约',
+        primaryAction: 'view-plans',
+      };
+    }
+
+    if (todayPlanCount === 0) {
+      return {
+        title: '先让一个时段自动锁定起来',
+        desc: '设好时间和应用，到点自动执行，不用每天手动开启',
+        primaryText: '创建第一个契约',
+        primaryAction: 'create-plan',
+        secondaryText: '临时使用？快速专注',
+        secondaryAction: 'quick-start',
+      };
+    }
+
+    if (todayPlanCount < 2) {
+      return {
+        title: '再补一个容易分心的时段',
+        desc: '把晚间、学习前或工作前这类高风险时间提前锁住',
+        primaryText: '再加一个契约',
+        primaryAction: 'create-plan',
+        secondaryText: '临时使用？快速专注',
+        secondaryAction: 'quick-start',
+      };
+    }
+
+    if (isNextPlanSoon) {
+      return {
+        title: '下一个契约快开始了',
+        desc: '到点会自动锁定，不需要手动开启',
+        primaryText: '查看我的契约',
+        primaryAction: 'view-plans',
+        secondaryText: '现在临时专注',
+        secondaryAction: 'quick-start',
+      };
+    }
+
+    return {
+      title: '现在有一段空档',
+      desc: '如果马上要学习或工作，可以先临时锁定一会儿',
+      primaryText: '快速开始',
+      primaryAction: 'quick-start',
+      secondaryText: '再加一个契约',
+      secondaryAction: 'create-plan',
+    };
+  })();
+
+  const runHomeAction = (action: HomeActionType) => {
+    if (action === 'quick-start') {
+      return toRoute('/quick-start');
+    }
+    if (action === 'view-plans') {
+      return toRoute('/plans');
+    }
+    return toRoute('/plans/presets');
+  };
+
   const actionArea = (
     <View className="w-full gap-4">
-      <Button text="创建契约" onPress={() => toRoute('/plans/presets')} />
+      <Button
+        text={homeAction.primaryText}
+        onPress={() => runHomeAction(homeAction.primaryAction)}
+      />
 
-      {isQuotaExhausted ? (
-        <View className="items-center py-3">
-          <Text className="text-sm text-center" style={{ color: colors.text3 }}>
-            今日额度已用完，明天再来吧
-          </Text>
-          <Text
-            className="text-[12px] text-center mt-1"
-            style={{ color: colors.text3, opacity: 0.6 }}>
-            自律需要长期坚持，保持节奏
-          </Text>
-        </View>
-      ) : (
+      {homeAction.secondaryText && homeAction.secondaryAction && (
         <TouchableOpacity
           className="flex-row items-center justify-center py-3 gap-[2px]"
-          onLayout={e => onQuickStartLayout?.(e.nativeEvent.layout)}
-          onPress={() => toRoute('/quick-start')}>
-          <Text className="text-sm mr-1" style={{ color: colors.text2 }}>
-            临时使用？
-          </Text>
-          <Icon name="flash" size={14} color={colors.primary} />
+          onLayout={
+            homeAction.secondaryAction === 'quick-start'
+              ? e => onQuickStartLayout?.(e.nativeEvent.layout)
+              : undefined
+          }
+          onPress={() => runHomeAction(homeAction.secondaryAction!)}>
+          {homeAction.secondaryAction === 'quick-start' && (
+            <Icon name="flash" size={14} color={colors.primary} />
+          )}
           <Text
             className="text-sm font-semibold"
             style={{ color: colors.primary }}>
-            快速专注
+            {homeAction.secondaryText}
           </Text>
         </TouchableOpacity>
       )}
@@ -261,12 +332,12 @@ const EmptyPlan = ({ onQuickStartLayout }: EmptyPlanProps) => {
               <Text
                 className="text-2xl font-semibold mb-2 text-center"
                 style={{ color: colors.text }}>
-                自律不是靠忍，是靠规则
+                {homeAction.title}
               </Text>
               <Text
                 className="text-base text-center mb-8 leading-5"
                 style={{ color: colors.text2 }}>
-                多一个契约，多一段被锁定的专注
+                {homeAction.desc}
               </Text>
               {actionArea}
             </View>
@@ -284,12 +355,12 @@ const EmptyPlan = ({ onQuickStartLayout }: EmptyPlanProps) => {
             <Text
               className="text-2xl font-semibold mt-5 mb-2 text-center"
               style={{ color: colors.text }}>
-              改变，从一个契约开始
+              {homeAction.title}
             </Text>
             <Text
               className="text-base text-center mb-8 leading-5"
               style={{ color: colors.text2 }}>
-              设定时间段，每日自动锁定分心应用
+              {homeAction.desc}
             </Text>
           </View>
           {actionArea}
