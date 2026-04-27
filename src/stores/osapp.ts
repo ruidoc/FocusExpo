@@ -34,7 +34,22 @@ const AppStore = combine(
     // 设置iOS选择的应用
     setIosSelectedApps: (apps: any[]) => {
       set({ ios_selected_apps: apps });
+      storage.set('ios_selected_apps', JSON.stringify(apps || []));
       console.log('选中的：', apps);
+    },
+
+    // 从本地恢复 iOS 选择的应用（用于冷启动后继续展示 onboarding 第3步图标）
+    initIosSelectedApps: () => {
+      try {
+        const cached = storage.getString('ios_selected_apps');
+        if (!cached) return;
+        const apps = JSON.parse(cached);
+        if (Array.isArray(apps)) {
+          set({ ios_selected_apps: apps });
+        }
+      } catch (error) {
+        console.log('恢复选中应用失败：', error);
+      }
     },
 
     // 设置iOS选择的应用

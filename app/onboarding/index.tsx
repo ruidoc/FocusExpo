@@ -7,8 +7,10 @@ import {
 } from '@/components/onboarding';
 import { Process } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
+import { getOnboardingRecoveryState } from '@/utils';
 import Icon from '@expo/vector-icons/Ionicons';
 import React, { useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { Animated, Dimensions, TouchableOpacity, View } from 'react-native';
 
 export type ProblemType = 'video' | 'game' | 'study' | 'other' | null;
@@ -30,6 +32,14 @@ const OnboardingScreen = () => {
   const [isFocusActive, setIsFocusActive] = useState(false); // 是否处于专注生效阶段
   const slideAnim = useRef(new Animated.Value(0)).current;
   const { colors, isDark } = useCustomTheme();
+
+  useEffect(() => {
+    const recovery = getOnboardingRecoveryState();
+    if (recovery?.step === 3 && recovery.phase === 'active') {
+      setStep(3);
+      setIsFocusActive(true);
+    }
+  }, []);
 
   const goNext = () => {
     if (step >= TOTAL_STEPS) return;
@@ -108,8 +118,8 @@ const OnboardingScreen = () => {
     outputRange: [-screenWidth, 0, screenWidth],
   });
 
-  // 第一步不显示返回按钮，专注生效阶段也不显示返回按钮
-  const showBackButton = step > 1 && !isFocusActive;
+  // 第3步开始是流程检查点，用户走过一次后不再允许回到前面的步骤
+  const showBackButton = step === 2 && !isFocusActive;
 
   return (
     <Page safe decoration>

@@ -36,6 +36,7 @@ export async function initAppData(): Promise<void> {
 
   // 获取 iOS 应用列表
   console.log('[AppInit] 获取 iOS 应用列表...');
+  astore.initIosSelectedApps();
   await astore.getIosApps();
 
   // 从存储中恢复计划数据

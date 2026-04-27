@@ -2,7 +2,16 @@ import { AppToken } from '@/components/business';
 import { Button, Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useHomeStore, usePlanStore } from '@/stores';
-import { startAppLimits, stopAppLimits } from '@/utils/permission';
+import {
+  clearOnboardingRecoveryState,
+  getOnboardingRecoveryState,
+  setOnboardingQuickExperienceRecovery,
+} from '@/utils';
+import {
+  getIOSFocusStatus,
+  startAppLimits,
+  stopAppLimits,
+} from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
 import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
@@ -19,6 +28,14 @@ type Phase = 'ready' | 'active';
 
 // 专注时长（分钟）
 const FOCUS_DURATION = 2;
+
+const normalizeNativeTimestamp = (
+  value?: number | null,
+): number | undefined => {
+  if (!value || Number.isNaN(value)) return undefined;
+  // 兼容原生返回秒/毫秒时间戳
+  return value > 1_000_000_000_000 ? value : value * 1000;
+};
 
 const QuickExperience = ({
   problem,
@@ -45,6 +62,48 @@ const QuickExperience = ({
     onboardingOncePlanIdRef.current = null;
     pstore.resetPlan();
   };
+
+  // 冷启动恢复：若用户在第3步 active 阶段被杀进程，重新进入时继续当前体验
+  useEffect(() => {
+    let cancelled = false;
+
+    const recoverFromState = async () => {
+      const recovery = getOnboardingRecoveryState();
+      if (!recovery || recovery.step !== 3 || recovery.phase !== 'active') {
+        return;
+      }
+
+      const nativeStatus = await getIOSFocusStatus();
+      if (cancelled) return;
+
+      // 本地与原生冲突时以原生为准：原生不活跃则清理恢复态，避免误恢复
+      if (!nativeStatus?.active) {
+        clearOnboardingRecoveryState();
+        return;
+      }
+
+      const nativePlanId = nativeStatus.plan_id || undefined;
+      if (nativePlanId && nativePlanId !== recovery.once_plan_id) {
+        clearOnboardingRecoveryState();
+        return;
+      }
+
+      const nativeEndAt = normalizeNativeTimestamp(nativeStatus.end_at);
+      const endAt = nativeEndAt || recovery.end_at;
+      onboardingOncePlanIdRef.current = recovery.once_plan_id;
+      endTimeRef.current = endAt;
+      const sec = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+      setRemaining(sec);
+      setPhase('active');
+      onPhaseChange?.('active');
+    };
+
+    recoverFromState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [onPhaseChange]);
 
   // 根据 problem 获取个性化文案
   const getPersonalizedCopy = () => {
@@ -130,6 +189,12 @@ const QuickExperience = ({
       mode: 'shield',
     });
     onboardingOncePlanIdRef.current = newId;
+    const endAt = startTime + FOCUS_DURATION * 60 * 1000;
+    setOnboardingQuickExperienceRecovery({
+      oncePlanId: newId,
+      endAt,
+      startedAt: startTime,
+    });
 
     try {
       const started = await startAppLimits(FOCUS_DURATION, newId, 'shield', {
@@ -139,6 +204,7 @@ const QuickExperience = ({
       });
       if (!started) {
         clearOnboardingOncePlan();
+        clearOnboardingRecoveryState();
         return;
       }
       // 设置应用名称供后续使用
@@ -151,13 +217,14 @@ const QuickExperience = ({
         await new Promise(r => setTimeout(r, MIN_LOADING_MS - elapsed));
       }
 
-      endTimeRef.current = startTime + FOCUS_DURATION * 60 * 1000;
+      endTimeRef.current = endAt;
       setPhase('active');
       // 通知父组件进入 active 阶段，禁用返回按钮
       onPhaseChange?.('active');
     } catch (error) {
       console.log('QuickExperience handleStart error', error);
       clearOnboardingOncePlan();
+      clearOnboardingRecoveryState();
       Toast('启动锁定失败，请重试', 'error');
     } finally {
       setLoading(false);
@@ -176,6 +243,7 @@ const QuickExperience = ({
     }
 
     clearOnboardingOncePlan();
+    clearOnboardingRecoveryState();
 
     endTimeRef.current = 0;
     onPhaseChange?.('ready');
@@ -340,16 +408,16 @@ const QuickExperience = ({
             <Text
               className="text-sm font-medium"
               style={{ color: colors.text }}>
-              如何验证锁定效果？
+              建议在 30 秒内完成验证并返回
             </Text>
           </View>
 
           <View className="gap-y-1.5 pl-5">
             <Text className="text-xs" style={{ color: colors.text2 }}>
-              1. 退出这个页面
+              1. 切到桌面，尝试打开任一被锁定应用
             </Text>
             <Text className="text-xs" style={{ color: colors.text2 }}>
-              2. 找到被锁定的应用，尝试打开
+              2. 验证后请立即回到本页，避免体验中断
             </Text>
           </View>
         </View>
@@ -362,7 +430,7 @@ const QuickExperience = ({
       <View className="px-6 pb-8 mx-6">
         <Button
           onPress={handleConfirm}
-          text="我已确认"
+          text="已验证，继续下一步"
           type="ghost"
           className="w-full rounded-3xl border-1"
           textClassName="text-lg"

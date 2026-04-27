@@ -3,6 +3,7 @@ import { Toast } from '@/components/ui';
 import { useCustomTheme } from '@/config/theme';
 import { useHomeStore, usePlanStore, useUserStore } from '@/stores';
 import {
+  clearOnboardingRecoveryState,
   markOnboardingCompleted,
   trackLoginFailed,
   trackLoginStarted,
@@ -35,27 +36,27 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
     switch (problem) {
       case 'video':
         return {
-          example1: '自动锁定短视频',
-          example2: '自动锁定游戏',
-          example3: '自动锁定所有干扰',
+          example1: '锁定短视频，先进入工作状态',
+          example2: '锁定游戏，避免下午被带走',
+          example3: '锁定干扰应用，留出睡前时间',
         };
       case 'game':
         return {
-          example1: '自动锁定游戏',
-          example2: '自动锁定短视频',
-          example3: '自动锁定所有干扰',
+          example1: '锁定游戏，先进入学习状态',
+          example2: '锁定短视频，避免下午被带走',
+          example3: '锁定干扰应用，留出睡前时间',
         };
       case 'study':
         return {
-          example1: '自动锁定短视频',
-          example2: '自动锁定游戏',
-          example3: '自动锁定所有干扰',
+          example1: '锁定短视频，先进入学习状态',
+          example2: '锁定游戏，避免下午被带走',
+          example3: '锁定干扰应用，留出睡前时间',
         };
       default:
         return {
-          example1: '自动锁定短视频',
-          example2: '自动锁定游戏',
-          example3: '自动锁定所有干扰',
+          example1: '锁定干扰应用，先进入专注状态',
+          example2: '锁定短视频，避免下午被带走',
+          example3: '锁定干扰应用，留出睡前时间',
         };
     }
   };
@@ -89,6 +90,7 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
   };
 
   const completeWithLogin = async () => {
+    clearOnboardingRecoveryState();
     markOnboardingCompleted();
     trackOnboardingCompleted({
       with_login: true,
@@ -130,12 +132,12 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
           <Text
             className="text-[26px] font-bold text-center tracking-tight"
             style={{ color: colors.text }}>
-            一次锁定不够
+            刚才这次有效
           </Text>
           <Text
             className="text-2xl font-bold text-center tracking-tight"
             style={{ color: colors.text }}>
-            你需要契约来约束自己！
+            接下来让它自动发生
           </Text>
         </View>
 
@@ -144,12 +146,12 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
           <Text
             className="text-base mb-1 leading-6"
             style={{ color: colors.text2 }}>
-            主动性专注，消耗意志力，很难长期坚持下去
+            临时锁定能挡住一次分心，但每天手动开启，很容易忘
           </Text>
           <Text className="text-base leading-7" style={{ color: colors.text2 }}>
             更好的方式：
             <Text className="font-semibold" style={{ color: '#15b79e' }}>
-              创建契约，定时执行
+              设置固定时间，到点自动锁定
             </Text>
           </Text>
         </View>
@@ -167,7 +169,7 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
             <Text
               className="text-lg font-semibold"
               style={{ color: colors.text }}>
-              专注契约
+              每日专注契约
             </Text>
           </View>
 
@@ -198,7 +200,7 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
         </View>
 
         <Text className="text-sm text-center" style={{ color: colors.text3 }}>
-          到点自动执行，无需手动开启
+          创建后，到点自动执行，无需每次手动开启
         </Text>
 
         {/* 功能亮点 */}
@@ -239,7 +241,7 @@ const ValueGuide = ({ problem, onComplete }: ValueGuideProps) => {
             ]);
           }}
           onSuccess={appleLoginResult}
-          label="登录后创建契约"
+          label="登录并创建我的契约"
         />
         <View className="flex-row items-center justify-center">
           <Privicy agree={agree} onChange={setAgree} />

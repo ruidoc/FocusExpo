@@ -155,6 +155,7 @@ const App = () => {
     return [];
   });
   const [submitting, setSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
 
   // 时长模式：true = 长期有效，false = 自定义时长
   const [isLongTerm, setIsLongTerm] = useState(() => {
@@ -258,18 +259,69 @@ const App = () => {
   });
 
   const submit = async () => {
-    try {
-      trackEvent('plan_submit_clicked', {
-        mode: isEditing ? 'edit' : 'create',
-        screen_name: 'plans_add',
-        entry_source: entrySource,
-        plan_id: pstore.editing_plan?.id,
+    const submitId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const submitStartedAt = Date.now();
+    const submitMode = isEditing ? 'edit' : 'create';
+    const submitBaseProps = {
+      submit_id: submitId,
+      mode: submitMode,
+      screen_name: 'plans_add',
+      entry_source: entrySource,
+      plan_id: pstore.editing_plan?.id,
+    };
+    let submitLockAcquired = false;
+
+    const releaseSubmitLock = () => {
+      if (submitLockAcquired) {
+        submitLockRef.current = false;
+        submitLockAcquired = false;
+      }
+      setSubmitting(false);
+    };
+
+    const trackSubmitBlocked = (reason: string, releaseLock = true) => {
+      trackEvent('plan_submit_blocked', {
+        ...submitBaseProps,
+        reason,
       });
+      trackEvent('plan_submit_finished', {
+        ...submitBaseProps,
+        result: 'blocked',
+        blocked_reason: reason,
+        duration_ms: Date.now() - submitStartedAt,
+      });
+      if (releaseLock) {
+        releaseSubmitLock();
+      }
+    };
+
+    const trackSubmitFinished = (
+      result: 'success' | 'failed',
+      failureStage?: 'api_response' | 'network' | 'unknown',
+    ) => {
+      trackEvent('plan_submit_finished', {
+        ...submitBaseProps,
+        result,
+        failure_stage: result === 'failed' ? failureStage || 'unknown' : undefined,
+        duration_ms: Date.now() - submitStartedAt,
+      });
+    };
+
+    if (submitLockRef.current || submitting) {
+      trackSubmitBlocked('submitting_in_progress', false);
+      return;
+    }
+    submitLockRef.current = true;
+    submitLockAcquired = true;
+
+    try {
+      trackEvent('plan_submit_clicked', submitBaseProps);
 
       let { name, start, end, start_date, end_date, repeat } = form;
       name = title;
       // 验证计划名称
       if (!name.trim()) {
+        trackSubmitBlocked('empty_name');
         return Toast('请输入契约名称', 'error');
       }
 
@@ -278,16 +330,19 @@ const App = () => {
         !isLongTerm &&
         (!end_date || !dayjs(end_date).isAfter(dayjs(start_date), 'day'))
       ) {
+        trackSubmitBlocked('end_date_invalid');
         return Toast('结束日期必须大于开始日期', 'error');
       }
       // 验证应用选择（仅iOS）
       if (selectedApps.length === 0) {
+        trackSubmitBlocked('no_apps_selected');
         return Toast('请先选择要限制的应用', 'error');
       }
 
       let start_day = dayjs(start);
       let end_day = dayjs(end);
       if (end_day.diff(start_day, 'minute') < 20) {
+        trackSubmitBlocked('duration_too_short');
         return Toast('时间间隔最少20分钟', 'error');
       }
       const newStart = start_day.hour() * 60 + start_day.minute();
@@ -310,10 +365,14 @@ const App = () => {
         });
       console.log('overlap：', pstore.all_plans);
       if (overlap) {
+        trackSubmitBlocked('time_overlap');
         return Toast('与其他契约时间重叠', 'error');
       }
 
       const planDuration = end_day.diff(start_day, 'minute');
+
+      // 提前进入提交态，避免前置异步阶段被重复点击触发多次提交
+      setSubmitting(true);
 
       // 从 target 预填充的应用需要先同步到服务器和 UserDefaults，否则原生 Token 转换会失败
       if (fromTarget && selectedApps.length > 0) {
@@ -323,7 +382,7 @@ const App = () => {
           // 同步失败，清空预填充，提示用户重新选择
           setSelectedApps([]);
           setForm(prev => ({ ...prev, apps: [] }));
-          setSubmitting(false);
+          trackSubmitBlocked('target_apps_sync_failed');
           return Toast('请重新选择要锁定的应用', 'info');
         }
       }
@@ -344,6 +403,7 @@ const App = () => {
         );
 
         if (remaining !== null && planDuration > remaining) {
+          trackSubmitBlocked('day_quota_exceeded');
           return Toast(
             remaining <= 0
               ? '今日专注时长已用完，无法创建'
@@ -353,14 +413,13 @@ const App = () => {
         }
 
         if (planDuration > latestBenefit.day_duration) {
+          trackSubmitBlocked('day_total_exceeded');
           return Toast(
             `每日可用时长为 ${latestBenefit.day_duration} 分钟，请调整时间`,
             'info',
           );
         }
       }
-
-      setSubmitting(true);
 
       let subinfo: any = { ...form };
       subinfo.name = name.trim();
@@ -385,6 +444,7 @@ const App = () => {
               app_count: subinfo.apps.length,
               plan_mode: subinfo.mode,
             });
+            trackSubmitFinished('success');
 
             const nowMin = getCurrentMinute();
             const inWindow =
@@ -410,7 +470,8 @@ const App = () => {
 
             router.back();
           } else {
-            setSubmitting(false);
+            releaseSubmitLock();
+            trackSubmitFinished('failed', 'unknown');
             Toast('契约更新失败，请稍后重试', 'error');
           }
         });
@@ -450,6 +511,7 @@ const App = () => {
               entry_source: entrySource,
               screen_name: 'plans_add',
             });
+            trackSubmitFinished('success');
 
             if (fromTarget) {
               navigateToTarget();
@@ -462,13 +524,15 @@ const App = () => {
               router.back();
             }
           } else {
-            setSubmitting(false);
+            releaseSubmitLock();
+            trackSubmitFinished('failed', 'unknown');
             Toast('网络不佳，请重试', 'error');
           }
         });
       }
     } catch (error) {
-      setSubmitting(false);
+      releaseSubmitLock();
+      trackSubmitFinished('failed', 'network');
       Toast('网络不佳，请重试', 'error');
       console.log('契约签订失败：', error);
     }

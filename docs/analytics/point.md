@@ -6,7 +6,7 @@
 
 ## 设计原则
 
-1. **按业务域分组**：统一收敛为 `paywall`、`purchase`、`restore`、`subscription` 四组。
+1. **按业务域分组**：统一收敛为 `paywall`、`purchase`、`restore`、`subscription`、`plan` 五组。
 2. **保持现有格式**：事件名与属性名统一使用 `snake_case`。
 3. **自动补前缀**：代码中使用裸事件名，发送到 PostHog 时统一补齐为 `focus_xxx`。
 4. **页面埋点前端打**：页面进入、点击、切换等 UI 行为由前端发送。
@@ -23,6 +23,7 @@
 | `purchase` | 真实购买交易 | 发起购买、购买成功、失败、取消 | 前端为主，成功结果服务端优先 |
 | `restore` | 恢复购买流程 | 开始恢复、恢复完成、恢复失败 | 前端发起，结果服务端优先 |
 | `subscription` | 订阅状态与同步 | 权益页、管理订阅、同步、状态变化、续费、到期、退款、webhook | 前端仅页面行为，其余服务端优先 |
+| `plan` | 契约创建转化 | 创建/编辑契约提交、拦截、成功、失败 | 前端 |
 
 ---
 
@@ -61,6 +62,13 @@ Apple webhook / 后端状态处理
     ├─ subscription_renewed
     ├─ subscription_expired
     └─ subscription_refunded
+
+用户创建或编辑契约
+    ↓
+【plan 提交流】
+    ├─ plan_submit_clicked
+    ├─ plan_submit_blocked
+    └─ plan_submit_finished
 ```
 
 ---
@@ -130,6 +138,18 @@ Apple webhook / 后端状态处理
 | `transaction_id` | Apple 交易 ID |
 | `notification_type` | Apple 通知类型 |
 | `notification_subtype` | Apple 通知子类型 |
+
+### 契约提交字段
+
+| 字段 | 说明 | 建议值 |
+|---|---|---|
+| `submit_id` | 单次提交链路 ID，用于串联 clicked / blocked / finished | 时间戳 + 随机串 |
+| `mode` | 提交模式 | `create` / `edit` |
+| `plan_id` | 编辑场景的契约 ID | 契约 ID |
+| `result` | 提交最终结果 | `success` / `failed` / `blocked` |
+| `blocked_reason` | 被前置校验拦截的原因 | 见 plan 组字段建议 |
+| `failure_stage` | 失败阶段 | `api_response` / `network` / `unknown` |
+| `duration_ms` | 从点击到结束的耗时 | 毫秒 |
 
 ---
 
@@ -217,6 +237,36 @@ Apple webhook / 后端状态处理
 | `subscription_refunded` | `product_id`, `period` | `product_name`, `subscription_status`, `is_entitled`, `expires_at`, `change_reason` |
 | `subscription_webhook_processed` | `notification_type` | `notification_subtype`, `product_id`, `period`, `subscription_status` |
 
+### 5. plan 组
+
+| 事件名 | 中文说明 | 触发时机 | 触发端 |
+|---|---|---|---|
+| `plan_submit_clicked` | 点击提交契约 | 用户在新建/编辑契约页点击提交按钮时 | 前端 |
+| `plan_submit_blocked` | 契约提交被拦截 | 表单校验、额度限制、重复点击等原因导致未进入最终提交时 | 前端 |
+| `plan_submit_finished` | 契约提交结束 | 提交成功、失败或被拦截后统一记录结果和耗时 | 前端 |
+
+#### plan 组字段建议
+
+| 事件名 | 必填字段 | 可选字段 |
+|---|---|---|
+| `plan_submit_clicked` | `submit_id`, `mode`, `screen_name` | `entry_source`, `plan_id` |
+| `plan_submit_blocked` | `submit_id`, `mode`, `screen_name`, `reason` | `entry_source`, `plan_id` |
+| `plan_submit_finished` | `submit_id`, `mode`, `screen_name`, `result`, `duration_ms` | `entry_source`, `plan_id`, `blocked_reason`, `failure_stage` |
+
+`plan_submit_blocked.reason` / `plan_submit_finished.blocked_reason` 建议值：
+
+| 值 | 说明 |
+|---|---|
+| `submitting_in_progress` | 重复点击，已有提交在进行中 |
+| `empty_name` | 契约名称为空 |
+| `end_date_invalid` | 结束日期无效 |
+| `no_apps_selected` | 未选择要限制的 App |
+| `duration_too_short` | 时间间隔少于 20 分钟 |
+| `time_overlap` | 与已有契约时间重叠 |
+| `target_apps_sync_failed` | 从 target 预填的 App 同步失败 |
+| `day_quota_exceeded` | 超出今日剩余可用时长 |
+| `day_total_exceeded` | 超出每日总时长限制 |
+
 ---
 
 ## 最终推荐事件列表
@@ -229,8 +279,9 @@ Apple webhook / 后端状态处理
 | `purchase` | `purchase_started`, `purchase_completed`, `purchase_failed`, `purchase_cancelled` |
 | `restore` | `restore_started`, `restore_completed`, `restore_failed` |
 | `subscription` | `rights_page_viewed`, `manage_subscription_clicked`, `subscription_sync_started`, `subscription_sync_completed`, `subscription_sync_failed`, `subscription_status_changed`, `subscription_renewed`, `subscription_expired`, `subscription_refunded`, `subscription_webhook_processed` |
+| `plan` | `plan_submit_clicked`, `plan_submit_blocked`, `plan_submit_finished` |
 
-合计 **21 个事件**。
+合计 **24 个事件**。
 
 ---
 
@@ -252,12 +303,12 @@ Apple webhook / 后端状态处理
 
 ## 落地建议
 
-1. 前端先补齐 `paywall_*`、`purchase_started`、`purchase_cancelled`、`restore_started`、`rights_*`。
+1. 前端先补齐 `paywall_*`、`purchase_started`、`purchase_cancelled`、`restore_started`、`rights_*`、`plan_submit_*`。
 2. 服务端负责 `purchase_completed`、`restore_completed`、`subscription_*` 的主口径。
 3. 如果前端存在实时体验需要，可保留少量兜底事件，但分析和报表以服务端为准。
 4. 新增埋点函数时，统一放入 `src/utils/analytics.ts`，命名保持与事件名语义一致。
 
 ---
 
-**更新时间**: 2026-04-08
+**更新时间**: 2026-04-27
 **维护者**: GPT / Cursor

@@ -163,3 +163,61 @@ export const resetUserActivation = () => {
   storage.delete(USER_ACTIVATION_KEYS.QUICK_START_HINT_DISMISSED);
   console.log('[UserActivation] State reset');
 };
+
+/**
+ * Onboarding 第3步恢复状态（用于杀进程后恢复到 QuickExperience）
+ */
+const ONBOARDING_RECOVERY_KEY = 'onboarding_recovery_state';
+const MAX_RECOVERY_AGE_MS = 12 * 60 * 60 * 1000; // 12 小时
+
+export type OnboardingRecoveryState = {
+  step: 3;
+  phase: 'active';
+  once_plan_id: string;
+  end_at: number;
+  started_at: number;
+  updated_at: number;
+};
+
+function isValidOnboardingRecoveryState(
+  data: OnboardingRecoveryState | undefined,
+): data is OnboardingRecoveryState {
+  if (!data) return false;
+  if (data.step !== 3 || data.phase !== 'active') return false;
+  if (!data.once_plan_id) return false;
+  if (typeof data.end_at !== 'number' || typeof data.started_at !== 'number') {
+    return false;
+  }
+  if (typeof data.updated_at !== 'number') return false;
+  if (Date.now() - data.updated_at > MAX_RECOVERY_AGE_MS) return false;
+  return true;
+}
+
+export const setOnboardingQuickExperienceRecovery = (input: {
+  oncePlanId: string;
+  endAt: number;
+  startedAt: number;
+}) => {
+  const payload: OnboardingRecoveryState = {
+    step: 3,
+    phase: 'active',
+    once_plan_id: input.oncePlanId,
+    end_at: input.endAt,
+    started_at: input.startedAt,
+    updated_at: Date.now(),
+  };
+  storage.setObject(ONBOARDING_RECOVERY_KEY, payload);
+};
+
+export const getOnboardingRecoveryState = (): OnboardingRecoveryState | undefined => {
+  const data = storage.getObject<OnboardingRecoveryState>(ONBOARDING_RECOVERY_KEY);
+  if (!isValidOnboardingRecoveryState(data)) {
+    clearOnboardingRecoveryState();
+    return undefined;
+  }
+  return data;
+};
+
+export const clearOnboardingRecoveryState = () => {
+  storage.delete(ONBOARDING_RECOVERY_KEY);
+};

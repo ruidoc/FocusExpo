@@ -1,5 +1,5 @@
 import { useHomeStore, usePermisStore } from '@/stores';
-import { getUserActivationState } from '@/utils';
+import { getOnboardingRecoveryState, getUserActivationState } from '@/utils';
 import { checkScreenTimePermission } from '@/utils/permission';
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -47,7 +47,8 @@ const Index = () => {
 
   // 如果用户是新用户且命中onboarding实验，导航到引导页
   if (userState.isNewUser) {
-    initialRoute = '/others/welcome';
+    const recovery = getOnboardingRecoveryState();
+    initialRoute = recovery ? '/onboarding' : '/others/welcome';
   } else {
     console.log('完成过onboarding，直接进入首页');
   }

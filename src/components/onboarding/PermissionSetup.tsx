@@ -3,7 +3,7 @@ import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useHomeStore } from '@/stores';
 import { getScreenTimePermission, selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { InteractionManager, Platform, Text, View } from 'react-native';
 
 interface PermissionSetupProps {
@@ -15,6 +15,7 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
   const store = useHomeStore();
   const astore = useAppStore();
   const { colors, isDark } = useCustomTheme();
+  const [authorizing, setAuthorizing] = useState(false);
 
   const step1Completed = store.ios_screen_time_permission;
   const step2Completed = astore.ios_selected_apps.length > 0;
@@ -44,8 +45,12 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
   };
 
   const handleStep1 = () => {
+    if (authorizing) return;
     if (Platform.OS === 'ios') {
-      checkIOSPermission();
+      setAuthorizing(true);
+      checkIOSPermission().finally(() => {
+        setAuthorizing(false);
+      });
     }
   };
 
@@ -147,7 +152,8 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
     disabled: boolean;
     isCurrent: boolean;
   }) => {
-    const actionLabel = step === 1 ? '去授权' : '去选择';
+    const actionLabel =
+      step === 1 ? (authorizing ? '授权中...' : '去授权') : '去选择';
 
     return (
       <Flex
@@ -244,7 +250,7 @@ const PermissionSetup = ({ problem, onNext }: PermissionSetupProps) => {
             desc="让系统能够强制锁定应用"
             isCompleted={!!step1Completed}
             onPress={handleStep1}
-            disabled={!!step1Completed}
+            disabled={!!step1Completed || authorizing}
             isCurrent={isStep1Current}
           />
         </View>
