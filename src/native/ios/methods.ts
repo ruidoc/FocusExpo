@@ -228,6 +228,29 @@ export async function startAppLimits(
 }
 
 /**
+ * 保存刷视频守护规则：选中的 App 当天累计使用达到阈值后自动锁定
+ */
+export async function startVideoGuard(
+  thresholdMinutes: number,
+): Promise<boolean> {
+  if (Platform.OS !== 'ios') {
+    return false;
+  }
+  try {
+    await getNativeModule()!.startVideoGuard(thresholdMinutes);
+    return true;
+  } catch (error) {
+    if (isDeviceActivityExcessiveError(error)) {
+      Toast('锁定规则过多，触发系统限制', 'error');
+      return false;
+    }
+    console.error('[NativeModule.startVideoGuard]', error);
+    Toast(getErrorMessage(error), 'error');
+    return false;
+  }
+}
+
+/**
  * 停止应用限制（通用）
  */
 export async function stopAppLimits(): Promise<boolean> {

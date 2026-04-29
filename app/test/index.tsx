@@ -34,6 +34,13 @@ const TEST_ITEMS: TestItem[] = [
     icon: 'document-text-outline',
     route: '/plans/target',
   },
+  {
+    id: 'video-guard',
+    title: '刷视频守护',
+    description: '刷视频守护功能测试',
+    icon: 'shield-checkmark-outline',
+    route: '/video-guard/index',
+  },
 ];
 
 const TestIndexPage = () => {

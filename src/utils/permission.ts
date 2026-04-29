@@ -4,6 +4,7 @@ import {
   requestScreenTimePermission as nativeRequestScreenTimePermission,
   selectAppsToLimit as nativeSelectAppsToLimit,
   startAppLimits as nativeStartAppLimits,
+  startVideoGuard as nativeStartVideoGuard,
   stopAppLimits as nativeStopAppLimits,
 } from '@/native/ios';
 import type { AppDetail, AppSelectionResult, FocusStatus } from '@/native/type';
@@ -98,6 +99,15 @@ export async function startAppLimits(
   });
   const result = await nativeStartAppLimits(durationMinutes, planId, mode);
   console.log('startAppLimits result', result);
+  return result;
+}
+
+// 保存刷视频守护规则
+export async function startVideoGuard(
+  thresholdMinutes: number,
+): Promise<boolean> {
+  const result = await nativeStartVideoGuard(thresholdMinutes);
+  console.log('startVideoGuard result', result);
   return result;
 }
 

@@ -55,7 +55,7 @@ export interface FocusStatus {
   end_at?: number;
   total_minutes?: number;
   actual_mins?: number;
-  focus_type?: 'once' | 'periodic' | null;
+  focus_type?: 'once' | 'periodic' | 'video_guard' | null;
   mode?: 'shield' | 'allow' | null;
   paused_until?: number | null; // 暂停结束时间戳（仅用于 JS 端倒计时显示）
 }
@@ -123,6 +123,9 @@ export interface NativeModuleInterface {
     planId: string | null,
     mode: string,
   ): Promise<boolean>;
+
+  // 保存刷视频守护规则
+  startVideoGuard(thresholdMinutes: number): Promise<boolean>;
 
   // 停止应用限制（通用）
   stopAppLimits(): Promise<boolean>;

@@ -4,6 +4,7 @@ import { useCustomTheme } from '@/config/theme';
 import { useAppStore, useHomeStore } from '@/stores';
 import { selectAppsToLimit } from '@/utils/permission';
 import Icon from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 
 import {
@@ -106,6 +107,22 @@ const App = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
         <Flex className="flex-col" style={{ gap: 20 }}>
+          {Platform.OS === 'ios' && (
+            <Card
+              title="刷视频守护"
+              desc="达到使用阈值后自动锁定到当天结束"
+              action={
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  style={styles.addBtn}
+                  onPress={() => router.push('/video-guard')}>
+                  <Icon name="shield-checkmark-outline" size={18} color={colors.primary} />
+                  <Text style={styles.addIcon}>配置</Text>
+                </TouchableOpacity>
+              }
+            />
+          )}
+
           <Card
             title="限制的APP"
             desc="推荐添加游戏、短视频、社交类应用"

@@ -128,6 +128,10 @@ const RootLayout = () => {
                 }}
               />
               <Stack.Screen
+                name="video-guard/index"
+                options={{ title: '刷视频守护' }}
+              />
+              <Stack.Screen
                 name="plans/index"
                 options={{ title: '我的契约' }}
               />

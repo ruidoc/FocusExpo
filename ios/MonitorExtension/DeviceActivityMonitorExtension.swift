@@ -63,6 +63,8 @@ private func parsePlanDate(_ value: String?) -> Date? {
 class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     
     private let kPlansMap = "FocusOne.PlansMap"
+    private let videoGuardActivityName = "FocusOne.VideoGuard"
+    private let videoGuardEventName = "FocusOne.VideoGuard.Threshold"
     
     /// 当 DeviceActivity 监控区间开始时触发
     override func intervalDidStart(for activity: DeviceActivityName) {
@@ -78,6 +80,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // 1. 暂停恢复活动：不处理
         if activity.rawValue == "FocusOne.PauseResume" {
             logToJS(level: "log", message: "暂停恢复活动开始，无需处理")
+            return
+        }
+
+        if activity.rawValue == videoGuardActivityName {
+            resetVideoGuardDay(defaults: defaults)
+            logToJS(level: "log", message: "刷视频守护开始监听")
             return
         }
 
@@ -119,6 +127,11 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
         // 检查是否是暂停恢复活动，如果是则跳过处理
         if activity.rawValue == "FocusOne.PauseResume" { return }
+
+        if activity.rawValue == videoGuardActivityName {
+            endVideoGuardDay(defaults: defaults)
+            return
+        }
 
         // 非计划日的 schedule 触发时，startPlanSession 已跳过，此处也应跳过
         // 避免 clearAllSettings 清掉其他正在运行计划的 shield
@@ -227,6 +240,107 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             
             notifyEnd()
         }
+    }
+
+    override func eventDidReachThreshold(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
+        super.eventDidReachThreshold(event, activity: activity)
+
+        guard activity.rawValue == videoGuardActivityName,
+              event.rawValue == videoGuardEventName,
+              let defaults = UserDefaults(suiteName: "group.com.focusone") else {
+            return
+        }
+
+        triggerVideoGuardLock(defaults: defaults)
+    }
+
+    private func resetVideoGuardDay(defaults: UserDefaults) {
+        defaults.removeObject(forKey: "FocusOne.VideoGuardTriggeredThreshold")
+
+        if let session = FocusStateStore.loadSession(defaults: defaults),
+           session.focusType == "video_guard" {
+            let store = ManagedSettingsStore()
+            store.clearAllSettings()
+            FocusStateStore.clearSession(defaults: defaults)
+            defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
+        }
+    }
+
+    private func endVideoGuardDay(defaults: UserDefaults) {
+        if let session = FocusStateStore.loadSession(defaults: defaults),
+           session.focusType == "video_guard" {
+            let store = ManagedSettingsStore()
+            store.clearAllSettings()
+            FocusStateStore.clearSession(defaults: defaults)
+            defaults.removeObject(forKey: "FocusOne.CurrentShieldSelection")
+        }
+        defaults.removeObject(forKey: "FocusOne.VideoGuardTriggeredThreshold")
+    }
+
+    private func triggerVideoGuardLock(defaults: UserDefaults) {
+        if let session = FocusStateStore.loadSession(defaults: defaults),
+           session.focusType != "video_guard" {
+            logToJS(level: "log", message: "已有专注任务，跳过刷视频守护锁定")
+            return
+        }
+
+        guard let data = defaults.data(forKey: "FocusOne.VideoGuardSelection"),
+              let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else {
+            logToJS(level: "error", message: "刷视频守护锁定失败：无法读取应用选择")
+            return
+        }
+
+        let threshold = max(1, defaults.integer(forKey: "FocusOne.VideoGuardThresholdMinutes"))
+        let now = Date()
+        let calendar = Calendar.current
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: now)
+            ?? now.addingTimeInterval(60 * 60)
+        let remainingMinutes = max(1, Int(ceil(endOfDay.timeIntervalSince(now) / 60)))
+
+        defaults.set(threshold, forKey: "FocusOne.VideoGuardTriggeredThreshold")
+        defaults.set(data, forKey: "FocusOne.CurrentShieldSelection")
+        defaults.removeObject(forKey: "FocusOne.EndNotified")
+        FocusStateStore.clearWindow(defaults: defaults)
+
+        let session = FocusSessionRecord(
+            sessionId: FocusStateStore.makeSessionId(),
+            planId: "video_guard",
+            windowId: nil,
+            focusType: "video_guard",
+            mode: "shield",
+            entrySource: "video_guard",
+            state: .active,
+            startAt: now.timeIntervalSince1970,
+            endAt: endOfDay.timeIntervalSince1970,
+            totalMinutes: remainingMinutes,
+            pausedUntil: nil,
+            recordId: nil,
+            endReason: nil
+        )
+        FocusStateStore.saveSession(session, defaults: defaults)
+
+        let store = ManagedSettingsStore()
+        applyShield(store: store, selection: selection, mode: "shield")
+
+        Analytics.shared.track(
+            event: "video_guard_locked",
+            properties: [
+                "threshold_minutes": threshold,
+                "app_count": selection.applicationTokens.count,
+                "category_count": selection.categoryTokens.count
+            ]
+        )
+
+        let dCenter = CFNotificationCenterGetDarwinNotifyCenter()
+        let dName = CFNotificationName("com.focusone.focus.started" as CFString)
+        CFNotificationCenterPostNotification(dCenter, dName, nil, nil, true)
+
+        let content = UNMutableNotificationContent()
+        content.title = "已自动锁定"
+        content.body = "你今天已经使用这些应用 \(threshold) 分钟，先休息一下"
+        enqueueNotification(identifier: "VideoGuardLocked_\(Int(now.timeIntervalSince1970))", content: content)
+
+        logToJS(level: "log", message: "刷视频守护已锁定", data: ["threshold": threshold])
     }
 
     // MARK: - Pending Flush

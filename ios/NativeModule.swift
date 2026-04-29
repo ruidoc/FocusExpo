@@ -99,6 +99,7 @@ class NativeModule: RCTEventEmitter {
   private let center = DeviceActivityCenter()
   private let activityName = DeviceActivityName("FocusOne.ScreenTime")
   private let pauseResumeActivity = DeviceActivityName("FocusOne.PauseResume")
+  private let videoGuardActivity = DeviceActivityName("FocusOne.VideoGuard")
   private var hasListeners: Bool = false
   private var tickTimer: Timer?
   private var darwinObserverAdded: Bool = false
@@ -964,6 +965,71 @@ class NativeModule: RCTEventEmitter {
         )
       }
       reject("MONITORING_ERROR", "无法开始监控应用: \(error.localizedDescription)", error)
+    }
+  }
+
+  // 保存刷视频守护规则：每天累计使用达到阈值后锁到当天结束
+  @objc
+  func startVideoGuard(_ thresholdMinutes: NSNumber, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    guard let selection = self.loadSelection() else {
+      reject("NO_SELECTION", "没有选择需要限制的应用", nil)
+      return
+    }
+
+    let threshold = max(1, Int(truncating: thresholdMinutes))
+    let schedule = DeviceActivitySchedule(
+      intervalStart: DateComponents(hour: 0, minute: 0),
+      intervalEnd: DateComponents(hour: 23, minute: 59),
+      repeats: true
+    )
+    let eventName = DeviceActivityEvent.Name("FocusOne.VideoGuard.Threshold")
+    let event = DeviceActivityEvent(
+      applications: selection.applicationTokens,
+      categories: selection.categoryTokens,
+      webDomains: selection.webDomainTokens,
+      threshold: DateComponents(minute: threshold)
+    )
+
+    do {
+      center.stopMonitoring([videoGuardActivity])
+      try center.startMonitoring(
+        videoGuardActivity,
+        during: schedule,
+        events: [eventName: event]
+      )
+
+      if let defaults = UserDefaults.groupUserDefaults() {
+        let data = try JSONEncoder().encode(selection)
+        defaults.set(data, forKey: "FocusOne.VideoGuardSelection")
+        defaults.set(threshold, forKey: "FocusOne.VideoGuardThresholdMinutes")
+        defaults.removeObject(forKey: "FocusOne.VideoGuardTriggeredThreshold")
+      }
+
+      Analytics.shared.track(
+        event: "video_guard_saved",
+        properties: [
+          "threshold_minutes": threshold,
+          "app_count": selection.applicationTokens.count,
+          "category_count": selection.categoryTokens.count
+        ]
+      )
+
+      resolve(true)
+    } catch {
+      if isExcessiveActivitiesError(error) {
+        let currentCount = getRegisteredActivityCount()
+        print("【监控】⚠️ excessiveActivities 错误! source=video_guard, 当前已注册 \(currentCount) 个 schedule (上限20)")
+        Analytics.shared.track(
+          event: "error_locked_excessive",
+          properties: [
+            "source": "video_guard",
+            "threshold_minutes": threshold,
+            "error_message": error.localizedDescription,
+            "registered_activity_count": currentCount
+          ]
+        )
+      }
+      reject("MONITORING_ERROR", "无法保存刷视频守护: \(error.localizedDescription)", error)
     }
   }
   

@@ -37,6 +37,16 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
             if let session = FocusStateStore.loadSession(defaults: defaults),
                session.totalMinutes > 0,
                session.endAt > 0 {
+                if session.focusType == "video_guard" {
+                    let threshold = defaults.integer(forKey: "FocusOne.VideoGuardTriggeredThreshold")
+                    let text = threshold > 0
+                        ? "今日已使用 \(threshold) 分钟 · 明天自动恢复"
+                        : "今日已达到锁定阈值 · 明天自动恢复"
+                    subtitleLabel = ShieldConfiguration.Label(
+                        text: text,
+                        color: .secondaryLabel
+                    )
+                } else {
                 // 计算总时长（分钟）与结束时间
                 let totalMin = session.totalMinutes
                 let endDate = Date(timeIntervalSince1970: session.endAt)
@@ -48,6 +58,7 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
                     text: "总时长 \(totalMin) 分钟 · \(endStr) 结束",
                     color: .secondaryLabel
                 )
+                }
             }
             if let app = app, let appName = app.localizedDisplayName, !appName.isEmpty {
                 // 记录被屏蔽应用信息
